@@ -1,0 +1,159 @@
+SD2Cloud 1.0
+============
+
+Gerencie e proteja os cartões de memória do seu sd2psx, direto no PS2.
+
+O SD2Cloud roda no próprio PS2 e trabalha com os cartões de memória guardados no microSD dos dispositivos da
+família sd2psx com o firmware sd2psXtd (sd2psx, PSXMemCard, PSXMemCard Gen2, PicoMemcard+/Zero), sem
+necessidade de um PC.
+
+O QUE ELE FAZ
+Sincronização com a nuvem
+- Sincroniza os cartões de memória com o seu Google Drive, quando você quiser ou automaticamente sempre que
+  você sai de um jogo pelo IGR. Somente os cartões alterados são enviados.
+- Mantém um histórico de backups de cada cartão e restaura qualquer um deles, com verificação antes e depois
+  da gravação.
+Gerenciador de cartões de memória
+- Exibe os dados salvos de cada cartão como o navegador do PS2, com os ícones 3D animados.
+- Copia, move e elimina dados salvos entre os cartões do microSD, e envia um item avulso ao Google Drive como
+  arquivo .psu.
+- Organiza os cartões em abas: cartões numerados, cartões de jogos (Game ID) e cartões de boot.
+
+REQUISITOS
+- Dispositivo da família sd2psx com o firmware sd2psXtd (suporte a MMCE).
+- Uma forma de abrir o SD2Cloud: a aba Apps do OPL, o wLaunchELF ou qualquer outro programa que abra um
+  ELF. Recomenda-se um OPL com suporte a MMCE, como o RiptOPL (https://github.com/NathanNeurotic/Open-PS2-Loader).
+  Sem esse suporte, o OPL não lista os apps do microSD do sd2psx e não tem a opção "Slot(s) de Bootcard
+  IGR": com cartões de Game ID, o sd2psx continua no cartão do jogo ao sair pelo IGR, o PS2 volta para o
+  navegador em vez de abrir o SD2Cloud, e a sincronização automática não acontece.
+- Para a sincronização automática após o jogo: o OPL, que abre o SD2Cloud pelo IGR.
+- Para os recursos de nuvem: PS2 com adaptador de rede (integrado nos modelos Slim) conectado ao roteador por
+  cabo, e uma conta do Google.
+
+INSTALAÇÃO
+1. Extraia este arquivo .zip na raiz do microSD do sd2psx. Serão criadas as pastas APPS/SD2Cloud (o
+   aplicativo) e SD2Cloud, com o arquivo sd2cloud.ini (as configurações; é possível editá-lo no PC antes
+   do primeiro uso). O arquivo traz somente as opções: cada uma é explicada no sd2cloud.example.ini, que
+   fica ao lado dele.
+2. Abra o SD2Cloud: pela aba Apps do OPL, ou executando APPS/SD2Cloud/SD2CLOUD.ELF em qualquer programa
+   que abra um ELF (o wLaunchELF, por exemplo). A pasta não precisa ficar em APPS.
+   Se o seu OPL não lista os apps do microSD do sd2psx (versão sem suporte a MMCE), copie também a pasta
+   APPS/SD2Cloud para a pasta APPS do pendrive USB ou do cartão do MX4SIO e abra o SD2Cloud por lá. Ele
+   passa a vez para a cópia do microSD, onde ficam as configurações, o assistente de IGR e as atualizações.
+3. Sem uma conta do Google conectada, o SD2Cloud pergunta se você deseja conectá-la agora. Escolhendo
+   "Agora não", ele abre direto na tela principal; a conta pode ser conectada depois, em Configurações
+   (START). Para conectar, acesse google.com/device no celular ou no computador (ou use o QR code) e digite
+   o código exibido na TV. O SD2Cloud tem acesso apenas aos arquivos que ele mesmo cria no seu Drive.
+4. Logo depois de conectar a conta, o SD2Cloud pergunta se você deseja ativar a sincronização automática
+   (veja SINCRONIZAÇÃO AUTOMÁTICA). Aceitando, ele instala o assistente de IGR e mostra o caminho a informar
+   no OPL; recusando, ela pode ser ativada depois em Configurações (START).
+5. Em seguida, o SD2Cloud oferece a sincronização de todos os cartões. A partir daí, somente os cartões
+   alterados são enviados. Cada sincronização cria um backup do cartão no Drive.
+   Mesmo sem sincronizar, o SD2Cloud registra o estado de cada cartão na primeira vez que o vê: a
+   sincronização automática após o IGR envia apenas os cartões alterados a partir daí.
+
+TELA PRINCIPAL
+Os cartões ficam à esquerda, com um indicador de estado (verde = sincronizado; amarelo = não sincronizado
+ou nunca sincronizado). O cartão selecionado aparece à direita, com a data do último backup. Use os
+direcionais para cima e para baixo para escolher um cartão. O botão O fecha o aplicativo: escolha para onde
+ir em seguida (os programas da pasta APPS ou o menu do PS2); a última escolha fica guardada.
+Os cartões são separados em abas, exibidas acima da lista: Cartões (os numerados, Card1, Card2..., e as
+pastas com nome personalizado), Jogos (os cartões de Game ID, um por jogo) e Boot (o BootCard). Use os
+direcionais para a esquerda e para a direita, ou L1 e R1, para trocar de aba. Abas sem cartões não são
+exibidas.
+- X abre o cartão: os dados salvos, exibidos como no navegador do PS2. Nessa tela, QUADRADO sincroniza
+  o cartão; se ele já estiver sincronizado, o SD2Cloud avisa e permite sincronizar novamente.
+- TRIÂNGULO abre as opções do cartão selecionado: "Sincronizar agora" e "Restaurar backup" (veja
+  RESTAURAÇÃO).
+- START abre as configurações (veja CONFIGURAÇÕES).
+- X em um item de dados salvos abre a página do item, com as opções Copiar e Mover (para outro cartão do
+  microSD, escolhido nas mesmas abas da tela principal; o espaço livre do cartão de destino é exibido e um
+  cartão sem espaço suficiente não pode ser escolhido), Eliminar e Enviar ao Drive (apenas esse item, em
+  formato .psu, na pasta "Saves" ao lado dos backups do cartão). Não é possível alterar o cartão que está
+  em uso no sd2psx: selecione outro cartão no sd2psx antes.
+Toda operação que envia, grava ou elimina dados pede confirmação antes de começar. Durante uma
+sincronização, o botão O permite cancelar o envio; os cartões já enviados permanecem no Drive.
+
+CONFIGURAÇÕES (START)
+- Sincronizar todos os cartões: envia os cartões não sincronizados; se todos estiverem sincronizados, o
+  SD2Cloud avisa e permite sincronizar todos novamente.
+- Assistente de IGR: instala o assistente no cartão de memória em uso (veja SINCRONIZAÇÃO AUTOMÁTICA).
+  Depois de instalado, a mesma opção permite reinstalar (ou atualizar) e desinstalar o assistente.
+- Após o IGR, abrir: o programa iniciado depois da sincronização pelo IGR. As opções são Automático (o OPL
+  encontrado no microSD), os programas da pasta APPS e o menu do PS2.
+- Idioma e Backups por cartão (3, 5, 10, 20, 50 ou todos).
+- Verificar atualizações: procura uma versão nova na hora e, se houver, oferece a atualização.
+- Conta do Google: desconecta a conta (os backups no Drive são mantidos) ou conecta novamente.
+- Sobre o SD2Cloud: versão, créditos e licenças.
+As alterações são gravadas no sd2cloud.ini, que também pode ser editado no PC.
+
+SINCRONIZAÇÃO AUTOMÁTICA APÓS O JOGO (IGR)
+1. No SD2Cloud, pressione START e selecione "Assistente de IGR". O SD2Cloud informa o espaço que o
+   assistente ocupa no cartão de memória em uso (cerca de 95 KB) e o espaço livre, e pede confirmação antes
+   de instalar. O assistente é gravado em mc0:/BOOT/SD2CLOUD-IGR.ELF. Se o seu sd2psx usa o Autoboot, faça
+   a instalação com o BootCard em uso.
+2. Nas configurações do OPL, em "Definir saída do IGR", informe: mc?:/BOOT/SD2CLOUD-IGR.ELF
+3. No OPL, ative também "Slot(s) de Bootcard IGR" (página MMCE), no slot do sd2psx ou em BOTH: ao sair do
+   jogo, o OPL volta para o BootCard, onde o assistente está instalado.
+A partir daí, ao sair de um jogo pelo IGR, o SD2Cloud envia os cartões alterados, exibe "Envio concluído"
+e retorna ao OPL. Nesse modo, cancelar o envio também retorna ao OPL.
+O SD2Cloud pode ficar em qualquer pasta do microSD do sd2psx: sempre que é aberto, ele registra onde está
+no sd2cloud.ini ("app_path"), e o assistente o inicia a partir dali. Depois de movê-lo, abra-o uma vez.
+Para desinstalar o assistente, selecione "Assistente de IGR" novamente e escolha "Desinstalar"; depois,
+altere "Definir saída do IGR" no OPL.
+Sem instalar nada (pendrive USB): o IGR do OPL também abre programas de um pendrive USB. Se a pasta
+APPS/SD2Cloud estiver em um, formatado em FAT32, pule o passo 1 e informe em "Definir saída do IGR":
+mass:/APPS/SD2Cloud/SD2CLOUD-IGR.ELF
+Nada é gravado no cartão de memória. Para isso, o OPL carrega os drivers USB USBD.IRX e USBHDFSD.IRX de
+mc?:/SYS-CONF, onde o FMCB os instala. O assistente no cartão de memória só é necessário quando o SD2Cloud
+está apenas no microSD do sd2psx ou em um dispositivo que o IGR do OPL não lê (MX4SIO, HD).
+O programa aberto depois do IGR é escolhido em Configurações (START), entre os programas da pasta APPS do
+microSD. Se o seu OPL fica em outro dispositivo, informe o caminho no sd2cloud.ini, na seção [igr],
+começando pelo dispositivo: mc?:/ (cartão de memória), mass:/ (USB), mx4sio:/, ata:/ (HD interno exFAT) ou
+hdd0:PARTIÇÃO:pfs:/ (HD interno APA), por exemplo hdd0:__common:pfs:/APPS/OPL/OPNPS2LD.ELF. O SD2Cloud
+carrega somente os drivers desse dispositivo, no momento do retorno. Se o arquivo não for encontrado, ele
+abre o menu do PS2. A linha "name", abaixo de "return", dá a esse programa o nome exibido na tela.
+
+LOCAL DOS ARQUIVOS
+- APPS/SD2Cloud/   o aplicativo (atualizado pelo próprio SD2Cloud; veja ATUALIZAÇÃO).
+- SD2Cloud/        na raiz do microSD: sd2cloud.ini (as configurações; se for apagado, o SD2Cloud o
+                   recria), sd2cloud.example.ini (o que cada configuração significa; o SD2Cloud nunca
+                   lê este arquivo), state.ini (o registro do que já foi enviado) e token.dat (o acesso à sua
+                   conta do Google; não compartilhe este arquivo).
+- Google Drive:    "PS2 Memory Card Backups/<pasta do cartão>/<cartão> AAAA-MM-DD HHhMM.zip".
+                   São mantidos 10 backups por cartão por padrão; o mais antigo só é removido depois que
+                   o novo backup é verificado.
+
+ATUALIZAÇÃO
+O SD2Cloud não procura atualizações sozinho. Nas configurações (START), a opção "Verificar atualizações"
+consulta o GitHub para saber se há uma versão mais recente e, se houver, oferece a atualização. O aplicativo
+baixa os novos arquivos, verifica-os com o SHA-256 publicado no GitHub, substitui os anteriores e inicia a
+nova versão. As configurações são mantidas.
+Em seguida, atualize também o assistente de IGR: nas configurações, ele aparece como "Desatualizado"
+quando a versão gravada no cartão de memória é diferente.
+Para atualizar manualmente, copie apenas a pasta APPS/SD2Cloud do novo arquivo .zip (ou não substitua o
+sd2cloud.ini quando o Windows perguntar).
+
+RESTAURAÇÃO
+No PS2: selecione o cartão, pressione TRIÂNGULO e escolha "Restaurar backup"; escolha o backup e
+pressione X. Se o cartão foi alterado desde o último backup, o SD2Cloud o sincroniza antes, para que nenhum
+dado seja perdido. Em seguida, o backup é baixado, verificado, gravado sobre o cartão no microSD e verificado
+novamente.
+Não é possível restaurar o cartão que está em uso no sd2psx, pois o sd2psx mantém uma cópia dele na
+própria memória: selecione outro cartão no sd2psx antes.
+No PC: baixe o arquivo .zip do Drive e extraia o .mcd. Copie-o para o microSD com o PS2 desligado, ou
+abra-o no mymc+ para exportar dados de um único jogo.
+
+PRIVACIDADE
+Os dados vão do PS2 diretamente para o seu Google Drive. Nenhum outro servidor é utilizado e nenhuma
+informação é coletada. O acesso pode ser revogado a qualquer momento em
+myaccount.google.com/permissions.
+Além do Google, o SD2Cloud se comunica apenas com o GitHub, e somente quando você seleciona "Verificar
+atualizações": para saber se há uma versão mais recente e baixá-la, se você escolher atualizar.
+
+CRÉDITOS
+O visual é inspirado no PlayStation BB Navigator e no navegador de cartões de memória do PS2; todas as
+imagens do SD2Cloud são geradas pelo próprio aplicativo. Fonte: Varela Round (SIL Open Font License).
+Desenvolvido por MrRexD.
+
+Software de terceiros: veja THIRD-PARTY-NOTICES.txt.

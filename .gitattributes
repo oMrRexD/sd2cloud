@@ -1,0 +1,4 @@
+# the code is built on Linux (ps2dev): keep LF in the working copy too
+* text=auto eol=lf
+*.png binary
+*.ttf binary

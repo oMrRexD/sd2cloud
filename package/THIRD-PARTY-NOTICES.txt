@@ -1,0 +1,26 @@
+SD2Cloud is free software, distributed under the GNU General Public License version 3 (see LICENSE).
+It includes or links the following third-party software:
+
+- Varela Round font - Copyright 2023 The Varela Round Project Authors. SIL Open Font License 1.1, see OFL.txt.
+- FreeType - Portions of this software are copyright (C) The FreeType Project (www.freetype.org). All rights
+    reserved. Used under the FreeType License (FTL).
+- libpng - Copyright (c) the PNG Reference Library Authors. PNG Reference Library License version 2
+    (https://www.libpng.org/pub/png/src/libpng-LICENSE.txt).
+- zlib - Copyright (C) Jean-loup Gailly and Mark Adler. zlib License (https://zlib.net/zlib_license.html).
+- wolfSSL 5.8.2 (built with 4096-bit RSA support) - Copyright wolfSSL Inc. GNU General Public License v3
+    (https://www.wolfssl.com).
+- curl 8.17.0 - Copyright Daniel Stenberg and many contributors. curl License, MIT-style (https://curl.se/docs/copyright.html).
+- QR Code generator library (C) - Copyright (c) Project Nayuki. MIT License:
+    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+    associated documentation files (the "Software"), to deal in the Software without restriction,
+    including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+    and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
+    subject to the following conditions: The above copyright notice and this permission notice shall be
+    included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED "AS IS",
+    WITHOUT WARRANTY OF ANY KIND.
+- ps2sdk (including elf-loader, audsrv, libsd, mmceman and the IOP drivers) - Copyright the ps2dev
+    contributors. Academic Free License 2.0 (https://github.com/ps2dev/ps2sdk).
+- gsKit - Copyright the ps2dev contributors. Academic Free License 2.0 (https://github.com/ps2dev/gsKit).
+- ps2_drivers - Copyright Francisco Javier Trujillo Mata and contributors. GNU Library General Public License
+    version 2 (https://github.com/fjtrujy/ps2_drivers).
+- Mozilla CA certificate bundle (cacert.pem from https://curl.se/ca/cacert.pem) - Mozilla Public License 2.0.

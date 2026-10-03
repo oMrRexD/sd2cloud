@@ -1,0 +1,165 @@
+"""Checks that the texts on screen (messages.def) fit where they are drawn, in both languages.
+
+Measures like the app: the same font (Varela Round) at the same sizes, plus what the app's emboldening adds to each
+letter (font.c: the advance grows by the "bold" amount). Where each text goes and how wide that place is follows
+src/main.c and src/look.c (a 640 px screen; the frame's lines go from x = 36 to 604).
+
+usage: python tools/check_messages.py        (exits with an error if a text doesn't fit its place)
+"""
+import pathlib
+import re
+import sys
+
+from PIL import ImageFont
+
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+TTF = str(ROOT / "third_party/varelaround/VarelaRound-Regular.ttf")
+# the fonts of ui.c: pixels, emboldening in 1/64 pixel
+SPEC = {"text": (18, 40), "small": (15, 24), "title": (26, 52), "browser": (23, 56)}
+fonts = {k: ImageFont.truetype(TTF, px) for k, (px, bold) in SPEC.items()}
+
+
+def measure(font, s):
+    return round(fonts[font].getlength(s) + len(s) * SPEC[font][1] / 64)
+
+
+def count_lines(font, s, width):
+    """how many lines ui_paragraph uses (wraps at words and at line breaks)"""
+    n = 0
+    for part in s.split("\n"):
+        line = ""
+        for word in part.split():
+            test = f"{line} {word}" if line else word
+            if line and measure(font, test) > width:
+                n, line = n + 1, word
+            else:
+                line = test
+        n += 1 if line else 0
+    return n
+
+
+LONG_CARD = "SLUS-21065-1"          # a long card name, for the texts that show one
+LONG_DATE = "02/10/2026 21:10"
+LONG_SAVE = "Shin Megami Tensei: Digital Devil Saga 2"   # a long icon.sys title, for the questions about a save
+
+
+def fill(s, id_):
+    """%d, %lld and %s with the worst case"""
+    if "%s" in s and id_ in ("T_CONFIRM_COPY", "T_CONFIRM_MOVE", "T_DELETE_ASK", "T_CONFIRM_CLOUD"):
+        s = s.replace("%s", LONG_SAVE, 1).replace("%s", LONG_CARD)
+    if "%s" in s:
+        if id_ in ("T_HIST_TITLE", "T_RESTORE_TITLE", "T_RESTORE_IN_USE", "T_RESTORING", "T_CARD_IN_USE", "T_DONE_COPY",
+                   "T_DONE_MOVE", "T_DELETE_TEXT", "T_ERR_EXISTS", "T_ERR_FULL", "T_ERR_MC_CHECK"):
+            s = s.replace("%s", LONG_CARD)
+        elif id_ in ("T_CARD_LAST", "T_RESTORE_FROM"):
+            s = s.replace("%s", LONG_DATE)
+        else:
+            s = s.replace("%s", "v10.10" if "SD2Cloud" in s else "999 MB")
+    if id_ in ("T_HELPER_SPACE", "T_HELPER_SPACE_NEED", "T_HELPER_FULL", "T_FREE_KB", "T_SAVE_KB"):
+        s = s.replace("%d", "8192")   # KB of a memory card
+    return s.replace("%lld", "99999999").replace("%d", "99")
+
+
+DIALOG, WIDE = 440 - 56, 520 - 56   # the inside of the message boxes (normal and wide)
+# where each text is drawn: (font, width, lines allowed). 1 line = must not overflow; paragraphs wrap by
+# themselves, but more lines than the limit clutter the box.
+PLACE = {
+    # dialog titles (they wrap, but should take one line)
+    "T_IGR_TITLE": ("text", DIALOG, 1), "T_SEARCHING": ("text", DIALOG, 1), "T_LOGIN_OK": ("text", DIALOG, 1),
+    "T_LOGIN_ERROR": ("text", DIALOG, 1), "T_FIRST_TITLE": ("text", DIALOG, 1), "T_SUMMARY_OK": ("text", WIDE, 1),
+    "T_SUMMARY_PARTIAL": ("text", WIDE, 1), "T_SUMMARY_FAILED": ("text", WIDE, 1),
+    "T_CANCEL_TITLE": ("text", DIALOG, 1), "T_RESTORE_TITLE": ("text", WIDE, 1), "T_RESTORING": ("text", DIALOG, 1),
+    "T_RESTORE_OK": ("text", DIALOG, 1), "T_RESTORE_FAILED": ("text", DIALOG, 1), "T_RESTORE_CANCEL_TITLE": ("text", DIALOG, 1),
+    "T_IGR_DONE": ("text", DIALOG, 1), "T_OPTIONS": ("text", 300, 1),
+    # the sign-in box: the left column (the QR is on the right)
+    "T_LOGIN_TITLE": ("text", 298, 1), "T_LOGIN_OPEN": ("text", 298, 1), "T_LOGIN_ENTER": ("text", 298, 1),
+    "T_LOGIN_EXPIRES": ("small", 298, 1), "T_LOGIN_QR": ("small", 148, 1),
+    # under the big card: the status on the left of the counter, the last backup and the history's marker
+    "T_ST_NEW": ("text", 200, 1), "T_ST_CHANGED": ("text", 200, 1), "T_ST_UP_TO_DATE": ("text", 200, 1),
+    "T_ST_ERROR": ("text", 200, 1), "T_ST_SKIPPED": ("text", 200, 1), "T_CARD_LAST": ("small", 244, 1),
+    "T_HIST_SAME": ("small", 136, 1), "T_HIST_TITLE": ("small", 244, 1),
+    # the backup screen (the column on the right of the icon)
+    "T_BACKING_UP": ("text", 296, 1), "T_UPLOADING": ("small", 120, 1),
+    # the saves screen
+    "T_FREE_KB": ("text", 300, 1), "T_CARD_EMPTY": ("browser", 540, 1),
+    # inside the dialogs
+    "T_HELPER_ABOUT": ("text", WIDE, 2), "T_HELPER_WHERE": ("text", WIDE, 1), "T_HELPER_SPACE": ("text", WIDE, 1),
+    "T_HELPER_SPACE_NEED": ("text", WIDE, 1), "T_HELPER_OK": ("text", WIDE, 1),
+    "T_HELPER_UNINSTALL_ASK": ("text", DIALOG, 1), "T_HELPER_UNINSTALL_TEXT": ("text", DIALOG, 3),
+    "T_HELPER_ELSEWHERE": ("text", WIDE, 4), "T_HELPER_MISSING": ("text", WIDE, 2), "T_HELPER_USB": ("text", WIDE, 3),
+    "T_HELPER_USB_HINT": ("small", WIDE, 1),
+    "T_HELPER_AUTOBOOT": ("small", WIDE, 1), "T_FIRST_QUESTION": ("text", DIALOG, 2), "T_FIRST_AFTER": ("small", DIALOG, 1),
+    "T_CANCEL_TEXT": ("text", DIALOG, 2), "T_RESTORE_FROM": ("text", WIDE, 1), "T_RESTORE_TEXT": ("text", WIDE, 2),
+    "T_RESTORE_SAVE_FIRST": ("small", WIDE, 1), "T_RESTORE_IN_USE": ("small", WIDE, 2), "T_RESTORE_UNKNOWN": ("small", WIDE, 2),
+    "T_RESTORE_STEP_DOWNLOAD": ("text", DIALOG, 1), "T_RESTORE_STEP_WRITE": ("text", DIALOG, 1),
+    "T_RESTORE_CANCEL_TEXT": ("text", DIALOG, 1), "T_RETURNING": ("small", WIDE, 1), "T_HIST_LOADING": ("text", DIALOG, 1),
+    "T_HIST_EMPTY": ("text", 150, 3), "T_NO_CARDS": ("text", 150, 5), "T_IGR_NOTHING": ("text", DIALOG, 2),
+    # the settings (START): labels from x = 80, values up to x = 560 (cut with "..." past 200 px). The IGR helper's
+    # label is also the title of its dialog, which is wider
+    "T_SET_SYNC_ALL": ("text", 270, 1), "T_HELPER_TITLE": ("text", 270, 1), "T_SET_IGR_RETURN": ("text", 270, 1),
+    "T_SET_LANGUAGE": ("text", 270, 1), "T_SET_KEEP": ("text", 270, 1),
+    "T_SET_UPDATES": ("text", 270, 1), "T_SET_ACCOUNT": ("text", 270, 1), "T_SET_ABOUT": ("text", 270, 1),
+    "T_MENU_UPDATE": ("text", 440, 1), "T_PENDING_N": ("text", 200, 1), "T_NONE_PENDING": ("text", 200, 1), "T_UPDATE_AVAILABLE": ("text", 200, 1),
+    "T_HELPER_NOT_INSTALLED": ("text", 200, 1), "T_ACCOUNT_OFF": ("text", 200, 1),
+    "T_SYNC_NOW": ("text", 330, 1), "T_EXIT_TO": ("text", 330, 1), "T_ALL_SYNCED": ("text", DIALOG, 1), "T_AUTO_ASK": ("text", WIDE, 3), "T_AUTO_WHERE": ("small", WIDE, 2),
+    "T_AUTO_OPL": ("text", WIDE, 1), "T_ABOUT_CREDITS": ("small", WIDE, 3), "T_ABOUT_LICENSES": ("small", WIDE, 1), "T_AUTO_NOTE": ("small", WIDE, 1), "T_AUTO_DONE": ("text", WIDE, 1), "T_CONNECT_HINT": ("small", DIALOG, 2),
+    # the box with a list (a card's options, the exit menu): title and items centered in 380 px
+    "T_RESTORE_BACKUP": ("text", 330, 1), "T_HELPER_REINSTALL": ("text", 330, 1), "T_HELPER_UNINSTALL": ("text", 330, 1),
+    "T_UPDATE": ("text", 330, 1),
+    # "Copy to" / "Move to": the title over the destination card, and what goes under it
+    "T_COPY_TO": ("text", 200, 1), "T_MOVE_TO": ("text", 200, 1), "T_NO_ROOM": ("small", 200, 1),
+    # a save's page: the column on the right, centered on x = 452
+    "T_COPY": ("browser", 304, 1), "T_MOVE": ("browser", 304, 1), "T_DELETE": ("browser", 304, 1),
+    "T_TO_CLOUD": ("browser", 304, 1), "T_SAVE_KB": ("text", 304, 1),
+    # the tabs over the list of cards (FONT_SMALL, the three side by side over the 208 px list)
+    "T_TAB_CARDS": ("small", 70, 1), "T_TAB_GAMES": ("small", 60, 1), "T_TAB_BOOT": ("small", 50, 1),
+    "T_DELETE_ASK": ("text", DIALOG, 3), "T_CONFIRM_COPY": ("text", DIALOG, 3),
+    "T_CONFIRM_MOVE": ("text", DIALOG, 3), "T_CONFIRM_CLOUD": ("text", DIALOG, 3), "T_CLOUD_DONE": ("text", DIALOG, 1), "T_DONE_DELETE": ("text", DIALOG, 1),
+}
+PARAGRAPH = ("text", DIALOG, 3)     # error messages and the rest: up to 3 lines in a box
+
+# the button legends at the bottom: (texts, the last one apart at the right edge). They go from the right edge
+# (x = 596) toward the left and must not pass x = 40
+LEGENDS = [
+    (("T_MENU_EXIT", "T_OPEN", "T_OPTIONS", "T_SETTINGS"), True, True), (("T_BACK", "T_OPEN", "T_SYNC"), False, False),
+    (("T_BACK", "T_DELETE"), False, False), (("T_BACK", "T_SELECT"), False, False), (("T_BACK", "T_RESTORE"), False, False),
+    (("T_CANCEL_NO", "T_CANCEL_YES"), False, False), (("T_LATER", "T_YES"), False, False),
+    (("T_BACK", "T_HELPER_INSTALL"), False, False), (("T_CANCEL",), False, False), (("T_BACK", "T_SYNC"), False, False),
+    (("T_BACK", "T_LOGOUT_YES"), False, False), (("T_BACK", "T_HELPER_UNINSTALL"), False, False), (("T_LATER", "T_AUTO_ON"), False, False), (("T_FINISH",), False, False), (("T_LATER", "T_CONNECT"), False, False),
+]
+
+
+def legend_width(texts, apart, start=False):
+    """start = the last button is START: its name in a small box (look.c start_button) instead of a 20 px symbol"""
+    w = sum(measure("text", t) + 26 for t in texts) + 26 * (len(texts) - 1)
+    if start:
+        w += measure("small", "START") + 10 - 20
+    return w + (70 - 26 if apart and len(texts) > 1 else 0)
+
+
+def main():
+    txt = (ROOT / "src" / "messages.def").read_text(encoding="utf-8")
+    items = re.findall(r'^X\((\w+),\s*"((?:[^"\\]|\\.)*)",\s*"((?:[^"\\]|\\.)*)"\)', txt, re.M)
+    texts = {id_: (en.replace('\\"', '"'), pt.replace('\\"', '"')) for id_, en, pt in items}
+    bad = 0
+    for id_, (en, pt) in texts.items():
+        font, width, max_lines = PLACE.get(id_, PARAGRAPH)
+        for lang, s in (("en", en), ("pt", pt)):
+            s = fill(s, id_)
+            w = measure(font, s)
+            n = 1 if w <= width else count_lines(font, s, width)
+            if n > max_lines:
+                bad += 1
+                print(f"  DOESN'T FIT  {id_} [{lang}] {w} px / {width} px ({n} lines, max {max_lines}): {s}")
+    for ids, apart, start in LEGENDS:
+        for k, lang in enumerate(("en", "pt")):
+            w = legend_width([texts[i][k] for i in ids], apart, start)
+            if w > 596 - 40:
+                bad += 1
+                print(f"  LEGEND TOO WIDE [{lang}] {w} px: {' / '.join(texts[i][k] for i in ids)}")
+    print(f"{len(items)} texts x 2 languages and {len(LEGENDS)} legends checked; {bad} problem(s)")
+    return 1 if bad else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
