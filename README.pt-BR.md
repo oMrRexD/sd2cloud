@@ -2,6 +2,10 @@
 
 **Gerencie e proteja os cartões de memória do seu sd2psx, direto no PS2.**
 
+> [!WARNING]
+> O SD2Cloud está em estágio inicial e ainda foi pouco testado. Antes de copiar, mover, apagar ou restaurar dados
+> salvos com ele, faça um backup dos seus cartões de memória: copie a pasta `MemoryCards` do microSD para um PC.
+
 O SD2Cloud roda no próprio PS2 e trabalha com os cartões de memória guardados no microSD dos dispositivos da
 família sd2psx com o firmware [sd2psXtd](https://github.com/sd2psXtd/firmware) (sd2psx, PSXMemCard, PSXMemCard
 Gen2, PicoMemcard+/Zero), sem necessidade de um PC.
@@ -120,11 +124,22 @@ O SD2Cloud é escrito em C com o toolchain do [ps2dev](https://github.com/ps2dev
 
 1. `tools/build_ports.sh` compila o wolfSSL e o curl com suporte a RSA de 4096 bits em `ports4096/` (o HTTPS do
    Google exige isso).
-2. Crie um cliente OAuth do tipo "TVs e dispositivos de entrada limitada" no Google Cloud Console, com a Drive API
+2. `tools/build_mmceman.sh` compila o mmceman, o driver do sd2psx, em `third_party/mmceman/` (o que vem com o SDK
+   pode travar o sd2psx em transferências longas).
+3. Crie um cliente OAuth do tipo "TVs e dispositivos de entrada limitada" no Google Cloud Console, com a Drive API
    ativada, e gere o `src/credentials.h`: `python tools/make_credentials.py client_secret.json src/credentials.h`.
-3. `make` gera o `dist/SD2CLOUD.ELF` e o assistente de IGR (`igr/`); `make TEST=1` gera uma versão de teste para o
+4. `make` gera o `dist/SD2CLOUD.ELF` e o assistente de IGR (`igr/`); `make TEST=1` gera uma versão de teste para o
    PCSX2.
-4. `python tools/make_release.py` monta a release em `dist/`, com os textos de `package/`.
+5. `python tools/make_release.py` monta a release em `dist/`, com os textos de `package/`.
+
+## Relatar bugs e colaborar
+
+Encontrou um problema? Abra uma [issue](../../issues/new/choose) e preencha o formulário: a versão do SD2Cloud, o
+console, o dispositivo sd2psx e o firmware dele, como o SD2Cloud foi aberto e os passos que levam ao problema.
+Ideias e sugestões também são bem-vindas por lá. As issues podem ser escritas em português ou em inglês.
+
+Pull requests são bem-vindos. O [CONTRIBUTING.md](CONTRIBUTING.md) explica como compilar, as convenções do código e
+o que conferir antes de enviar um.
 
 ## Créditos e licença
 

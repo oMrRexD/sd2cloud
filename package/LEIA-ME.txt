@@ -3,6 +3,9 @@ SD2Cloud 1.0
 
 Gerencie e proteja os cartões de memória do seu sd2psx, direto no PS2.
 
+AVISO: o SD2Cloud está em estágio inicial e ainda foi pouco testado. Antes de copiar, mover, apagar ou restaurar
+dados salvos com ele, faça um backup dos seus cartões de memória: copie a pasta MemoryCards do microSD para um PC.
+
 O SD2Cloud roda no próprio PS2 e trabalha com os cartões de memória guardados no microSD dos dispositivos da
 família sd2psx com o firmware sd2psXtd (sd2psx, PSXMemCard, PSXMemCard Gen2, PicoMemcard+/Zero), sem
 necessidade de um PC.

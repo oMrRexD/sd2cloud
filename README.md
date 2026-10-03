@@ -2,6 +2,10 @@
 
 **Manage and back up your sd2psx memory cards, right on your PS2.**
 
+> [!WARNING]
+> SD2Cloud is at an early stage and has not been widely tested yet. Before copying, moving, deleting or restoring
+> saved data with it, back up your memory cards: copy the `MemoryCards` folder of the microSD to a PC.
+
 SD2Cloud runs on the PS2 itself and works with the memory cards stored on the microSD of sd2psx-family devices
 running the [sd2psXtd](https://github.com/sd2psXtd/firmware) firmware (sd2psx, PSXMemCard, PSXMemCard Gen2,
 PicoMemcard+/Zero). No PC is required.
@@ -114,10 +118,21 @@ only contacts GitHub, and only when you select Check for updates in the settings
 SD2Cloud is written in C with the [ps2dev](https://github.com/ps2dev) toolchain (ps2sdk, ps2sdk-ports, gsKit).
 
 1. `tools/build_ports.sh` builds wolfSSL and curl with 4096-bit RSA support into `ports4096/` (Google's HTTPS needs it).
-2. Create an OAuth client of type "TVs and Limited Input devices" in the Google Cloud Console, with the Drive API
+2. `tools/build_mmceman.sh` builds mmceman, the sd2psx driver, into `third_party/mmceman/` (the one that comes with
+   the SDK can hang the sd2psx during long transfers).
+3. Create an OAuth client of type "TVs and Limited Input devices" in the Google Cloud Console, with the Drive API
    enabled, and generate `src/credentials.h`: `python tools/make_credentials.py client_secret.json src/credentials.h`.
-3. `make` builds `dist/SD2CLOUD.ELF` and the IGR helper (`igr/`); `make TEST=1` builds a test version for PCSX2.
-4. `python tools/make_release.py` packages the release in `dist/`, with the texts in `package/`.
+4. `make` builds `dist/SD2CLOUD.ELF` and the IGR helper (`igr/`); `make TEST=1` builds a test version for PCSX2.
+5. `python tools/make_release.py` packages the release in `dist/`, with the texts in `package/`.
+
+## Reporting bugs and contributing
+
+Found a problem? Open an [issue](../../issues/new/choose) and fill in the form: the SD2Cloud version, the console,
+the sd2psx device and its firmware, how SD2Cloud was started and the steps that lead to the problem. Ideas and
+suggestions are welcome there too. Issues can be written in English or in Portuguese.
+
+Pull requests are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) explains how to build, the conventions of the code
+and what to check before sending one.
 
 ## Credits and license
 

@@ -1,0 +1,18 @@
+name: Suggestion
+description: An idea or an improvement for SD2Cloud
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: You can write in English or in Portuguese.
+  - type: textarea
+    id: idea
+    attributes:
+      label: What you would like SD2Cloud to do
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it would help
+      description: The situation where you missed it, and how you deal with it today.

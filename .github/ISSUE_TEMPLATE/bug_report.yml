@@ -1,0 +1,55 @@
+name: Bug report
+description: Something in SD2Cloud does not work as it should
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting. You can write in English or in Portuguese.
+
+        If saved data was damaged, keep a copy of the affected `.mcd` file before trying anything else.
+  - type: input
+    id: version
+    attributes:
+      label: SD2Cloud version
+      description: Shown in Settings (START), next to About SD2Cloud.
+      placeholder: "1.0"
+    validations:
+      required: true
+  - type: input
+    id: console
+    attributes:
+      label: Console
+      description: The model of the PS2, if you know it.
+      placeholder: SCPH-90010
+  - type: input
+    id: device
+    attributes:
+      label: sd2psx device and firmware
+      description: The device (sd2psx, PSXMemCard, PSXMemCard Gen2, PicoMemcard+/Zero) and its sd2psXtd version.
+    validations:
+      required: true
+  - type: input
+    id: started
+    attributes:
+      label: How SD2Cloud was started
+      description: The program that opened it (which OPL build, wLaunchELF, the IGR helper...) and where SD2Cloud is stored.
+      placeholder: Apps tab of OPL, from the sd2psx microSD
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: >-
+        What you did, step by step, what happened and what you expected instead. The exact text of an error message
+        helps, and so does a photo of the screen.
+    validations:
+      required: true
+  - type: textarea
+    id: more
+    attributes:
+      label: Anything else
+      description: >-
+        For example: how many cards are on the microSD and of which kinds (numbered, Game ID, boot), how the PS2 is
+        connected to the network, and the lines you changed in sd2cloud.ini.
