@@ -1,0 +1,79 @@
+diff --git a/mmceman/src/mmce_fs.c b/mmceman/src/mmce_fs.c
+index ca6f618..e3f49b6 100644
+--- a/mmceman/src/mmce_fs.c
++++ b/mmceman/src/mmce_fs.c
+@@ -131,7 +131,9 @@ int mmce_fs_open(iomanX_iop_file_t *file, const char *name, int flags, int mode)
+     } else {
+         DPRINTF("%s ERROR: Got bad fd: %i\n", __func__, rdbuf[0x1]);
+         file->privdata = NULL;
+-        return -1;
++        // -ENOENT only when the card itself answers that the file does not exist. A timeout or a garbled reply
++        // (above) stays -1, so the caller can tell a missing file from a failure of the bus.
++        return -ENOENT;
+     }
+ 
+     return 0;
+@@ -164,22 +166,25 @@ int mmce_fs_close(iomanX_iop_file_t *file)
+     res = mmce_sio2_tx_rx_pio(sizeof(wrbuf), sizeof(rdbuf), wrbuf, rdbuf, &timeout_1s);
+     mmce_sio2_unlock();
+ 
++    // The handle slot goes back to the pool on every exit, not only after a clean close: the fd is gone whatever
++    // the card answers, and a slot left behind by a timeout or an error is never reused (the pool has 16).
+     if (res == -1) {
+         DPRINTF("%s ERROR: P1 - Timedout waiting for /ACK\n", __func__);
++        *(int*)file->privdata = -1;
+         return -1;
+     }
+ 
+     if (rdbuf[0x1] != MMCE_REPLY_CONST) {
+         DPRINTF("%s ERROR: Invalid response from card. Got 0x%x, Expected 0x%x\n", __func__, rdbuf[0x1], MMCE_REPLY_CONST);
++        *(int*)file->privdata = -1;
+         return -1;
+     }
+ 
+-    if (rdbuf[0x4] == 0x0) {
+-        *(int*)file->privdata = -1;
+-    } else {
++    if (rdbuf[0x4] != 0x0) {
+         res = rdbuf[0x4];
+         DPRINTF("%s ERROR: got return value %i\n", __func__, res);
+     }
++    *(int*)file->privdata = -1;
+ 
+     return res;
+ }
+@@ -630,9 +635,10 @@ int mmce_fs_dopen(iomanX_iop_file_t *file, const char *name)
+     if (rdbuf[0x1] != 0xff) {
+         *(int*)file->privdata = rdbuf[0x1];
+     } else {
++        // -ENOENT only when the card itself answers that the directory does not exist (see mmce_fs_open).
+         DPRINTF("%s ERROR: Got invalid fd: %i\n", __func__, rdbuf[0x1]);
+         file->privdata = NULL;
+-        return -1;
++        return -ENOENT;
+     }
+ 
+     return 0;
+@@ -659,18 +665,22 @@ int mmce_fs_dclose(iomanX_iop_file_t *file)
+     res = mmce_sio2_tx_rx_pio(0x4, 0x6, wrbuf, rdbuf, &timeout_1s);
+     mmce_sio2_unlock();
+ 
++    // As in mmce_fs_close: the slot is released on the failure paths too.
+     if (res == -1) {
+         DPRINTF("%s ERROR: P1 - Timedout waiting for /ACK\n", __func__);
++        *(int*)file->privdata = -1;
+         return -1;
+     }
+ 
+     if (rdbuf[0x1] != MMCE_REPLY_CONST) {
+         DPRINTF("%s ERROR: Invalid response from card. Got 0x%x, Expected 0x%x\n", __func__, rdbuf[0x1], MMCE_REPLY_CONST);
++        *(int*)file->privdata = -1;
+         return -1;
+     }
+ 
+     if (rdbuf[0x4] != 0x0) {
+         DPRINTF("%s ERROR: Card failed to close dir %i, return value %i\n", __func__, (u8)*(int*)file->privdata, rdbuf[0x1]);
++        *(int*)file->privdata = -1;
+         return -1;
+     }
+ 

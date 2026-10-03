@@ -16,12 +16,13 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    # the ps2dev toolchain (ps2sdk, ps2sdk-ports, gsKit) the releases are built and tested with, pinned by digest: the
-    # mmceman and the sio2man embedded in the program must come from the same SDK
+    # the ps2dev toolchain (ps2sdk, ps2sdk-ports, gsKit) the releases are built and tested with, pinned by digest, so
+    # that every build links the same SDK
     container: ps2dev/ps2dev@sha256:c64ae69c9817865ed98ff054e4ae5360b9e280ed952c97946bca95d9d35be995
     steps:
+      # tar: actions/cache needs GNU tar to save, the image only has BusyBox's
       - name: Install the build tools
-        run: apk add --no-cache build-base cmake git python3 zip
+        run: apk add --no-cache build-base cmake git python3 tar zip
 
       - uses: actions/checkout@v4
 
@@ -35,6 +36,11 @@ jobs:
       - name: Build wolfSSL and curl
         if: steps.ports.outputs.cache-hit != 'true'
         run: sh tools/build_ports.sh
+
+      # the sd2psx driver (tools/build_mmceman.sh): the mmceman in the image is older than its sio2man and can hang
+      # the sd2psx, so the program embeds this one
+      - name: Build mmceman
+        run: sh tools/build_mmceman.sh
 
       # The Google OAuth client comes from the repository's secrets. A pull request from a fork has no access to them:
       # it gets placeholders, enough to check that the code compiles (that build cannot sign in to Google)

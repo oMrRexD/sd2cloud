@@ -12,8 +12,9 @@ igr/mmceman_irx.c
 credentials.h
 client_secret*.json
 
-# wolfSSL + curl built by tools/build_ports.sh, and their sources
+# wolfSSL + curl built by tools/build_ports.sh and mmceman built by tools/build_mmceman.sh, and their sources
 ports4096/
+third_party/mmceman/mmceman.irx
 third_party/src/
 
 

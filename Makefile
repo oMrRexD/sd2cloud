@@ -1,6 +1,7 @@
 # SD2Cloud (PS2 app). Needs the ps2dev toolchain (ps2sdk, ps2sdk-ports, gsKit) with PS2DEV/PS2SDK/GSKIT set.
 # Once, before the first build:
 #   - tools/build_ports.sh: wolfSSL + curl with 4096-bit RSA in ports4096/ (without it Google's HTTPS fails with -155);
+#   - tools/build_mmceman.sh: the sd2psx driver in third_party/mmceman/ (the SDK's can hang the sd2psx);
 #   - src/credentials.h: python tools/make_credentials.py <client_secret.json> src/credentials.h (Google Cloud OAuth
 #     client of type "TVs and Limited Input devices").
 # make         -> dist/SD2CLOUD.ELF and dist/SD2CLOUD-IGR.ELF (the IGR helper, built in igr/)
@@ -8,6 +9,7 @@
 #                 (without a script it runs as IGR)
 # Then python tools/make_release.py packages the release in dist/.
 PORTS4096 ?= ports4096
+MMCEMAN ?= third_party/mmceman/mmceman.irx
 DIST = dist
 
 ifeq ($(TEST),1)
@@ -39,13 +41,16 @@ EE_LIBS = -lcurl -lwolfssl -lfreetype -lpng -lz -lsocket -lps2_drivers -laudsrv 
 EE_CFLAGS += -Os -Wall -Wno-format-truncation $(EXTRA_CFLAGS)
 
 .PHONY: all igr clean
-all: $(PORTS4096)/lib/libwolfssl.a src/credentials.h $(EE_BIN_PACKED)
+all: $(PORTS4096)/lib/libwolfssl.a $(MMCEMAN) src/credentials.h $(EE_BIN_PACKED)
 ifneq ($(TEST),1)
 all: igr
 endif
 
 $(PORTS4096)/lib/libwolfssl.a:
 	@echo "wolfSSL with 4096-bit RSA is missing: run tools/build_ports.sh first (or set PORTS4096)." && false
+
+$(MMCEMAN):
+	@echo "mmceman is missing: run tools/build_mmceman.sh first (or set MMCEMAN)." && false
 
 src/credentials.h:
 	@echo "src/credentials.h is missing: python tools/make_credentials.py <client_secret.json> src/credentials.h" && false
@@ -55,8 +60,8 @@ $(EE_BIN_PACKED): $(EE_BIN)
 	ps2-packer $< $@ > /dev/null
 
 # the IGR helper: its own small program, in igr/ (its test variant is built there with make TEST=1, after make clean)
-igr:
-	$(MAKE) -C igr
+igr: $(MMCEMAN)
+	$(MAKE) -C igr MMCEMAN=$(abspath $(MMCEMAN))
 	@mkdir -p $(DIST)
 	cp igr/SD2CLOUD-IGR.ELF $(DIST)/
 
@@ -81,10 +86,15 @@ $(OBJ_DIR)/asset_font_ttf.c: third_party/varelaround/VarelaRound-Regular.ttf
 	@mkdir -p $(OBJ_DIR)
 	bin2c $< $@ asset_font_ttf
 
-# the mmceman comes from the same SDK as the sio2man built into ps2_drivers (mixing versions hangs the sd2psx)
 $(OBJ_DIR)/irx_%.c: $(PS2SDK)/iop/irx/%.irx
 	@mkdir -p $(OBJ_DIR)
 	bin2c $< $@ $*_irx
+
+# mmceman is the one built by tools/build_mmceman.sh, not the SDK's: that one is older than the sio2man built into
+# ps2_drivers, and the pair can hang the sd2psx in a long transfer
+$(OBJ_DIR)/irx_mmceman.c: $(MMCEMAN)
+	@mkdir -p $(OBJ_DIR)
+	bin2c $< $@ mmceman_irx
 
 # the HDD driver variant that also handles the PS2's own (OSD) partitions
 $(OBJ_DIR)/irx_ps2hdd.c: $(PS2SDK)/iop/irx/ps2hdd-osd.irx
