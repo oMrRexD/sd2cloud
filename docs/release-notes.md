@@ -1,6 +1,9 @@
-# SD2Cloud v1.0
+# SD2Cloud v1.0.1
 
 **Manage and back up your sd2psx memory cards, right on your PS2.**
+
+### What's new in 1.0.1
+- Fixed: starting a sync from the saved data screen of a memory card with many saves could leave the network without an address from the router and then freeze SD2Cloud. If you have 1.0, update from Settings > Check for updates, or copy the new files over the old ones.
 
 SD2Cloud runs on the PS2 itself and works with the memory cards on the microSD of sd2psx-family devices (sd2psXtd firmware: sd2psx, PSXMemCard, PSXMemCard Gen2, PicoMemcard+/Zero). No PC required.
 
@@ -25,9 +28,10 @@ SD2Cloud runs on the PS2 itself and works with the memory cards on the microSD o
 - Interface inspired by the PlayStation BB Navigator, with sound effects.
 - English and Portuguese.
 
-**Installation:** extract `SD2Cloud-v1.0.zip` to the root of the sd2psx microSD and open SD2Cloud from the OPL Apps tab. See README.txt for details.
+**Installation:** extract `SD2Cloud-v1.0.1.zip` to the root of the sd2psx microSD and open SD2Cloud from the OPL Apps tab. See README.txt for details.
 
 ---
 
 **Gerencie e proteja os cartões de memória do seu sd2psx, direto no PS2.**
-Instalação: extraia o `SD2Cloud-v1.0.zip` na raiz do microSD do sd2psx e abra o SD2Cloud pela aba Apps do OPL. Consulte o LEIA-ME.txt para mais detalhes.
+Novidade da 1.0.1: corrigido o travamento ao sincronizar a partir da tela de dados salvos de um cartão de memória com muitos saves (a rede ficava sem endereço do roteador e o SD2Cloud congelava).
+Instalação: extraia o `SD2Cloud-v1.0.1.zip` na raiz do microSD do sd2psx e abra o SD2Cloud pela aba Apps do OPL. Consulte o LEIA-ME.txt para mais detalhes.

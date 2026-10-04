@@ -1,5 +1,5 @@
-SD2Cloud 1.0
-============
+SD2Cloud 1.0.1
+==============
 
 Gerencie e proteja os cartões de memória do seu sd2psx, direto no PS2.
 
