@@ -5,18 +5,18 @@
 #   - src/credentials.h: python tools/make_credentials.py <client_secret.json> src/credentials.h (Google Cloud OAuth
 #     client of type "TVs and Limited Input devices").
 # make         -> dist/SD2CLOUD.ELF and dist/SD2CLOUD-IGR.ELF (the IGR helper, built in igr/)
-# make TEST=1  -> dist/SD2CLOUD-TEST.ELF: "(test)" folder on Drive, keeps 3 backups, a script.txt presses the buttons
+# make DEBUG=1  -> dist/SD2CLOUD-DEBUG.ELF: "(debug)" folder on Drive, keeps 3 backups, a script.txt presses the buttons
 #                 (without a script it runs as IGR)
 # Then python tools/make_release.py packages the release in dist/.
 PORTS4096 ?= ports4096
 MMCEMAN ?= third_party/mmceman/mmceman.irx
 DIST = dist
 
-ifeq ($(TEST),1)
-OBJ_DIR = obj-test
-EE_BIN = $(OBJ_DIR)/sd2cloud-test-unpacked.elf
-EE_BIN_PACKED = $(DIST)/SD2CLOUD-TEST.ELF
-EE_CFLAGS += -DTEST
+ifeq ($(DEBUG),1)
+OBJ_DIR = obj-debug
+EE_BIN = $(OBJ_DIR)/sd2cloud-debug-unpacked.elf
+EE_BIN_PACKED = $(DIST)/SD2CLOUD-DEBUG.ELF
+EE_CFLAGS += -DDEBUG_BUILD
 else
 OBJ_DIR = obj
 EE_BIN = $(OBJ_DIR)/sd2cloud-unpacked.elf
@@ -43,7 +43,7 @@ EE_CFLAGS += -Os -Wall -Wno-format-truncation $(EXTRA_CFLAGS)
 
 .PHONY: all igr clean
 all: $(PORTS4096)/lib/libwolfssl.a $(MMCEMAN) src/credentials.h $(EE_BIN_PACKED)
-ifneq ($(TEST),1)
+ifneq ($(DEBUG),1)
 all: igr
 endif
 
@@ -60,7 +60,7 @@ $(EE_BIN_PACKED): $(EE_BIN)
 	@mkdir -p $(DIST)
 	ps2-packer $< $@ > /dev/null
 
-# the IGR helper: its own small program, in igr/ (its test variant is built there with make TEST=1, after make clean)
+# the IGR helper: its own small program, in igr/ (its debug variant is built there with make DEBUG=1, after make clean)
 igr: $(MMCEMAN)
 	$(MAKE) -C igr MMCEMAN=$(abspath $(MMCEMAN))
 	@mkdir -p $(DIST)
@@ -125,7 +125,7 @@ $(OBJ_DIR)/cacert_pem.o: $(OBJ_DIR)/cacert_pem.c
 	$(EE_CC) -c $< -o $@
 
 clean:
-	rm -rf obj obj-test $(DIST)/SD2CLOUD.ELF $(DIST)/SD2CLOUD-TEST.ELF
+	rm -rf obj obj-debug $(DIST)/SD2CLOUD.ELF $(DIST)/SD2CLOUD-DEBUG.ELF
 	$(MAKE) -C igr clean
 
 include $(PS2SDK)/samples/Makefile.pref

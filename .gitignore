@@ -1,6 +1,6 @@
 # build output
 obj/
-obj-test/
+obj-debug/
 dist/
 *-unpacked.elf
 *.ELF

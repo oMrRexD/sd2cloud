@@ -33,7 +33,7 @@ enum { IMG_SPACE, IMG_GLOW, IMG_BUTTONS, IMG_CARD, IMG_MINICARD, IMG_COUNT };
 
 int ui_init(void);                 /* 0 = ok; starts the drawing thread (a black screen until the first scene) */
 void ui_end(void);                 /* stops the drawing thread */
-#ifdef TEST
+#ifdef DEBUG_BUILD
 void ui_abort(void);               /* the same without waiting for the frame being drawn (the rescue, in system.c) */
 #endif
 int ui_width(void);
@@ -86,7 +86,7 @@ enum { BUTTON_CROSS, BUTTON_CIRCLE, BUTTON_TRIANGLE, BUTTON_SQUARE,
        BUTTON_START };   /* START has no symbol: look_legend writes its name in a small box */
 void ui_button(int button, float x, float y, float size);
 
-#ifdef TEST
+#ifdef DEBUG_BUILD
 /* saves the next frame drawn (to check the screens on a PC); waits until the scene has been on screen for a moment,
  * so its fade-in is over */
 int ui_capture(const char *path);

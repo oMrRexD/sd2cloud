@@ -128,7 +128,7 @@ O SD2Cloud é escrito em C com o toolchain do [ps2dev](https://github.com/ps2dev
    pode travar o sd2psx em transferências longas).
 3. Crie um cliente OAuth do tipo "TVs e dispositivos de entrada limitada" no Google Cloud Console, com a Drive API
    ativada, e gere o `src/credentials.h`: `python tools/make_credentials.py client_secret.json src/credentials.h`.
-4. `make` gera o `dist/SD2CLOUD.ELF` e o assistente de IGR (`igr/`); `make TEST=1` gera uma versão de teste para o
+4. `make` gera o `dist/SD2CLOUD.ELF` e o assistente de IGR (`igr/`); `make DEBUG=1` gera uma versão de debug para o
    PCSX2.
 5. `python tools/make_release.py` monta a release em `dist/`, com os textos de `package/`.
 

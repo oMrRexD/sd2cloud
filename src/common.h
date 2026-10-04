@@ -44,14 +44,14 @@ int device_of(const char *path);
  * -1 = couldn't ask; -2 = not on an MMCE device (testing on PCSX2) */
 int mmce_active_card(int *channel);
 void go_osd(void) __attribute__((noreturn));
-#ifdef TEST
-int test_has_script(void);
-int test_take(char mark);                   /* the next letter of the script is this one: consume it */
-int test_digit(void);                       /* the next letter is a digit: consume it (-1 = it isn't) */
-void test_capture_if(char mark);            /* the next letter of the script is this one: capture and stop */
-void test_capture_and_stop(void) __attribute__((noreturn));
-extern int testNoLinkOnce, testNoDhcpOnce, testNoZero;
-void test_log_memory(const char *when);
+#ifdef DEBUG_BUILD
+int debug_has_script(void);
+int debug_take(char mark);                   /* the next letter of the script is this one: consume it */
+int debug_digit(void);                       /* the next letter is a digit: consume it (-1 = it isn't) */
+void debug_capture_if(char mark);            /* the next letter of the script is this one: capture and stop */
+void debug_capture_and_stop(void) __attribute__((noreturn));
+extern int debugNoLinkOnce, debugNoDhcpOnce, debugNoZero;
+void debug_log_memory(const char *when);
 #endif
 
 /* ------------------------------------------------------------ buffer and files (files.c) */

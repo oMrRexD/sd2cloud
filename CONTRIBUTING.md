@@ -28,7 +28,7 @@ it.
 1. Fork the repository and create a branch from `main`.
 2. Build it: the steps are in the [README](README.md#building). GitHub Actions also builds every pull request; that
    build has no Google credentials, so it only shows that the code compiles.
-3. Test it and say in the pull request how: `make TEST=1` builds a test version for PCSX2, and on a real console
+3. Test it and say in the pull request how: `make DEBUG=1` builds a debug version for PCSX2, and on a real console
    say which sd2psx device and firmware were used.
 4. Keep one subject per pull request.
 

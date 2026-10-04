@@ -1,10 +1,10 @@
-# SD2CLOUD-IGR.ELF (the IGR helper). Build with: make   (TEST=1: runs SD2CLOUD-TEST.ELF instead)
+# SD2CLOUD-IGR.ELF (the IGR helper). Build with: make   (DEBUG=1: runs SD2CLOUD-DEBUG.ELF instead)
 # mmceman is the one built by tools/build_mmceman.sh (see the main Makefile)
 MMCEMAN ?= ../third_party/mmceman/mmceman.irx
-ifeq ($(TEST),1)
-EE_BIN = igr-test-unpacked.elf
-EE_BIN_PACKED = SD2CLOUD-IGR-TEST.ELF
-EE_CFLAGS += -DTEST
+ifeq ($(DEBUG),1)
+EE_BIN = igr-debug-unpacked.elf
+EE_BIN_PACKED = SD2CLOUD-IGR-DEBUG.ELF
+EE_CFLAGS += -DDEBUG_BUILD
 else
 EE_BIN = igr-unpacked.elf
 EE_BIN_PACKED = SD2CLOUD-IGR.ELF
@@ -26,7 +26,7 @@ mmceman_irx.c: $(MMCEMAN)
 	bin2c $< $@ mmceman_irx
 
 clean:
-	rm -f *.o *-unpacked.elf SD2CLOUD-IGR.ELF SD2CLOUD-IGR-TEST.ELF mmceman_irx.c
+	rm -f *.o *-unpacked.elf SD2CLOUD-IGR.ELF SD2CLOUD-IGR-DEBUG.ELF mmceman_irx.c
 
 include $(PS2SDK)/samples/Makefile.pref
 include $(PS2SDK)/samples/Makefile.eeglobal

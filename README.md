@@ -122,7 +122,7 @@ SD2Cloud is written in C with the [ps2dev](https://github.com/ps2dev) toolchain 
    the SDK can hang the sd2psx during long transfers).
 3. Create an OAuth client of type "TVs and Limited Input devices" in the Google Cloud Console, with the Drive API
    enabled, and generate `src/credentials.h`: `python tools/make_credentials.py client_secret.json src/credentials.h`.
-4. `make` builds `dist/SD2CLOUD.ELF` and the IGR helper (`igr/`); `make TEST=1` builds a test version for PCSX2.
+4. `make` builds `dist/SD2CLOUD.ELF` and the IGR helper (`igr/`); `make DEBUG=1` builds a debug version for PCSX2.
 5. `python tools/make_release.py` packages the release in `dist/`, with the texts in `package/`.
 
 ## Reporting bugs and contributing

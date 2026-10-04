@@ -10,10 +10,10 @@
 #include <strings.h>
 #include "common.h"
 
-#ifndef TEST
+#ifndef DEBUG_BUILD
 #define STATE_FILE "state.ini"
 #else
-#define STATE_FILE "state-test.ini"   /* the test build doesn't touch the real state */
+#define STATE_FILE "state-debug.ini"   /* the debug build doesn't touch the real state */
 #endif
 #define MAX_FOLDERS (2 * MAX_CARDS + 8)   /* each card folder and its Saves folder, and the main one */
 

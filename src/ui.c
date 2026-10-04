@@ -16,7 +16,7 @@
 #include <kernel.h>
 #include <gsKit.h>
 #include <dmaKit.h>
-#ifdef TEST
+#ifdef DEBUG_BUILD
 #include <screenshot.h>
 #endif
 #include "font.h"
@@ -86,7 +86,7 @@ static void (*volatile sceneFn)(float t);
 static volatile u64 sceneStart;
 static u64 clockStart;
 static unsigned char drawStack[128 * 1024] __attribute__((aligned(16)));   /* FreeType renders new glyphs here */
-#ifdef TEST
+#ifdef DEBUG_BUILD
 static const char *volatile capturePath;
 static volatile int captureResult;
 #endif
@@ -134,7 +134,7 @@ static void flip_now(void)
     gsKit_setactive(gs);
 }
 
-#ifdef TEST
+#ifdef DEBUG_BUILD
 /* the SDK's capture (ps2_screenshot) masks PATH3 through VIF1 on every line and only releases it by writing an
  * MSKPATH3(0) straight into the VIF1 FIFO; on PCSX2 that doesn't take and gsKit hangs on the next draw. Here the
  * MSKPATH3(0) goes by DMA on the VIF1 channel (D1), like a normal packet. */
@@ -169,7 +169,7 @@ static void draw_loop(void *arg)
         if (fn)
             fn((now_ms() - sceneStart) / 1000.0f);
         gsKit_queue_exec(gs);
-#ifdef TEST
+#ifdef DEBUG_BUILD
         if (capturePath && now_ms() - sceneStart > 700) {
             /* the frame that was just drawn is in the draw buffer until the flip; read as CT32 (CT24 is stored in
              * 32-bit words): the SDK's CT24 conversion reads the bytes out of order */
@@ -189,8 +189,8 @@ static void draw_loop(void *arg)
         do
             WaitSema(vsyncSema);
         while (now_ms() - t0 < spent + (spent / 3 > 3 ? spent / 3 : 3));
-#ifdef TEST
-        {   /* how long the frames take, every 5 s (TEST builds) */
+#ifdef DEBUG_BUILD
+        {   /* how long the frames take, every 5 s (debug builds) */
             static u64 sum, last;
             static unsigned int n, worst;
             sum += spent, n++;
@@ -233,7 +233,7 @@ void ui_scene(void (*draw)(float t))
 
 float ui_clock(void) { return (now_ms() - clockStart) / 1000.0f; }
 
-#ifdef TEST
+#ifdef DEBUG_BUILD
 int ui_capture(const char *path)
 {
     if (drawThread < 0)
@@ -323,7 +323,7 @@ int ui_init(void)
     log_msg("drawing thread: priority %d (main thread %d); screen %dx%d, %s, anti-flicker %s", th.initial_priority,
             me.current_priority, gs->Width, gs->Height, gs->Interlace == GS_INTERLACED ? "interlaced" : "progressive",
             antiFlicker ? "on" : "off");
-#ifdef TEST
+#ifdef DEBUG_BUILD
     log_msg("semaphores: the frame's %d, the screen's lock %d", vsyncSema, lockSema);
 #endif
     StartThread(drawThread, NULL);
@@ -351,7 +351,7 @@ void ui_end(void)
     }
 }
 
-#ifdef TEST
+#ifdef DEBUG_BUILD
 void ui_abort(void)
 {
     if (drawThread >= 0 && drawThread != GetThreadId())

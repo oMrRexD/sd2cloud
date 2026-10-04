@@ -30,20 +30,20 @@
 extern unsigned char mmceman_irx[];
 extern unsigned int size_mmceman_irx;
 
-#ifndef TEST
+#ifndef DEBUG_BUILD
 #define ELF "SD2CLOUD.ELF"
 #else
-#define ELF "SD2CLOUD-TEST.ELF"
+#define ELF "SD2CLOUD-DEBUG.ELF"
 #endif
 
 /* the roots a microSD can be at: the sd2psx in either slot (and PCSX2's host: when testing) */
 static const char *const roots[] = {"mmce0:/", "mmce1:/",
-#ifdef TEST
+#ifdef DEBUG_BUILD
                                     "host:",
 #endif
                                     NULL};
 
-#ifdef TEST
+#ifdef DEBUG_BUILD
 /* what was tried before the reset, written to the microSD once it can be reached (igr-log.txt in the data folder) */
 static char tried[600];
 static void note(const char *what, const char *path, int r)
@@ -156,7 +156,7 @@ int main(int argc, char *argv[])
     init_fileXio_driver();
     init_sio2man_driver();
     SifExecModuleBuffer(mmceman_irx, size_mmceman_irx, 0, NULL, NULL);
-#ifdef TEST
+#ifdef DEBUG_BUILD
     {
         int fd = open("mmce0:/SD2Cloud/igr-log.txt", O_WRONLY | O_CREAT | O_TRUNC, 0666);
         if (fd >= 0) {

@@ -3,7 +3,7 @@
 
 ## How it was tested
 
-<!-- PCSX2 (make TEST=1) or a real console; on a console, which sd2psx device and firmware. -->
+<!-- PCSX2 (make DEBUG=1) or a real console; on a console, which sd2psx device and firmware. -->
 
 ## Checklist
 

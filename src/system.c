@@ -5,7 +5,7 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
-#ifdef TEST
+#ifdef DEBUG_BUILD
 #include <malloc.h>
 #include <audsrv.h>
 #endif
@@ -84,7 +84,7 @@ int igrMode;
 static char padArea[256] __attribute__((aligned(64)));
 static int padOpen;
 static int logFd = -1;          /* host:log.txt, only when testing on PCSX2 */
-#ifdef TEST
+#ifdef DEBUG_BUILD
 static buffer_t logRam;         /* on the console the log goes to the card only at the end, in a single file */
 #endif
 
@@ -92,10 +92,10 @@ static buffer_t logRam;         /* on the console the log goes to the card only 
 
 static int logSema = -1;          /* the log is written from more than one thread */
 
-/* is anyone keeping the log? On the console only the test build does: the release doesn't even format the lines */
+/* is anyone keeping the log? On the console only the debug build does: the release doesn't even format the lines */
 static int log_kept(void)
 {
-#ifdef TEST
+#ifdef DEBUG_BUILD
     return 1;
 #else
     return logFd >= 0;
@@ -110,7 +110,7 @@ void log_raw(const char *d, size_t n)
         WaitSema(logSema);
     if (logFd >= 0)
         write(logFd, d, n);
-#ifdef TEST
+#ifdef DEBUG_BUILD
     if (logRam.len < 4 * 1024 * 1024)
         buf_append(&logRam, d, n);
 #endif
@@ -151,8 +151,8 @@ u32 pad_buttons(void)
     return 0xffff ^ b.btns;
 }
 
-#ifdef TEST
-/* Test build: a script.txt in the data folder ("X O T Q R S U D < >", T = triangle, Q = square, R = R1, S = START,
+#ifdef DEBUG_BUILD
+/* Debug build: a script.txt in the data folder ("X O T Q R S U D < >", T = triangle, Q = square, R = R1, S = START,
  * U/D = up/down,
  * < > = left/right)
  * presses the buttons instead of someone holding the controller; "H" hands over to the real controller. "K" presses circle in the middle of an upload or
@@ -175,7 +175,7 @@ static void rescue_stop(void);
 static void run_probes(void);
 static void probes_read(void);
 
-int test_has_script(void) { return hasScript; }
+int debug_has_script(void) { return hasScript; }
 
 static void script_read(void)
 {
@@ -195,7 +195,7 @@ static void script_read(void)
     buf_free(&b);
 }
 
-void test_capture_and_stop(void)
+void debug_capture_and_stop(void)
 {
     if (logFd >= 0)
         ui_capture("host:screen.tga");
@@ -205,7 +205,7 @@ void test_capture_and_stop(void)
 }
 
 /* is the next letter of the script this one? (consumes it) */
-int test_take(char mark)
+int debug_take(char mark)
 {
     while (script[scriptPos] == ' ' || script[scriptPos] == '\r' || script[scriptPos] == '\n')
         scriptPos++;
@@ -216,7 +216,7 @@ int test_take(char mark)
 }
 
 /* the next letter is a digit: consume it and return its value (-1 = not a digit) */
-int test_digit(void)
+int debug_digit(void)
 {
     char c = script[scriptPos];
     if (c < '0' || c > '9')
@@ -225,10 +225,10 @@ int test_digit(void)
     return c - '0';
 }
 
-void test_capture_if(char mark)
+void debug_capture_if(char mark)
 {
-    if (test_take(mark))
-        test_capture_and_stop();
+    if (debug_take(mark))
+        debug_capture_and_stop();
 }
 
 static u32 script_next_button(u32 mask)
@@ -239,7 +239,7 @@ static u32 script_next_button(u32 mask)
         u32 b = ch == 'X' ? PAD_CROSS : ch == 'O' ? PAD_CIRCLE : ch == 'T' ? PAD_TRIANGLE : ch == 'Q' ? PAD_SQUARE : ch == 'R' ? PAD_R1
               : ch == 'S' ? PAD_START : ch == 'U' ? PAD_UP : ch == 'D' ? PAD_DOWN : ch == '<' ? PAD_LEFT : ch == '>' ? PAD_RIGHT : 0;
         if (ch == 'C')
-            test_capture_and_stop();
+            debug_capture_and_stop();
         if (ch == 'H') {   /* hand over: from here on the real controller (to watch it on PCSX2) */
             log_msg("[script] H: the controller from now on");
             hasScript = 0;
@@ -273,7 +273,7 @@ static u32 script_next_button(u32 mask)
 u32 wait_button(u32 mask, int seconds)
 {
     u64 end = now_ms() + (u64)seconds * 1000, release = now_ms() + 2000;
-#ifdef TEST
+#ifdef DEBUG_BUILD
     if (hasScript && seconds == 0) {
         u32 b = script_next_button(mask);
         if (b)
@@ -302,7 +302,7 @@ u32 wait_nav_ms(u32 mask, int ms)
     static u64 next;
     u32 now = pad_buttons() & mask;
     u64 end = now_ms() + (ms > 0 ? ms : 0);
-#ifdef TEST
+#ifdef DEBUG_BUILD
     if (hasScript) {
         u32 b;
         if (ms >= 0)
@@ -379,16 +379,16 @@ void card_time_local(int year, int month, int day, int hour, int minute, int sec
  * first try failed for lack of a cable and a backup tried again). Every later call only waits for the cable and the
  * router again. A plugged cable has its link in 1-3 s, so 5 s without it = no cable; the router gets its own time. */
 static int netStarted;
-#ifdef TEST
-int testNoLinkOnce;   /* script "N": the first try finds no cable (PCSX2 can't unplug one) */
-int testNoDhcpOnce;   /* script "n": the first try gets no address from the router */
-int testNoZero;      /* script "u": the network starts without the heap it takes being zeroed (see network_up) */
+#ifdef DEBUG_BUILD
+int debugNoLinkOnce;   /* script "N": the first try finds no cable (PCSX2 can't unplug one) */
+int debugNoDhcpOnce;   /* script "n": the first try gets no address from the router */
+int debugNoZero;      /* script "u": the network starts without the heap it takes being zeroed (see network_up) */
 #endif
 
 static int link_up(void)
 {
-#ifdef TEST
-    if (testNoLinkOnce)
+#ifdef DEBUG_BUILD
+    if (debugNoLinkOnce)
         return 0;
 #endif
     return NetManIoctl(NETMAN_NETIF_IOCTL_GET_LINK_STATUS, NULL, 0, NULL, 0) == NETMAN_NETIF_ETH_LINK_STATE_UP;
@@ -397,8 +397,8 @@ static int link_up(void)
 static int dhcp_bound(void)
 {
     t_ip_info i;
-#ifdef TEST
-    if (testNoDhcpOnce)
+#ifdef DEBUG_BUILD
+    if (debugNoDhcpOnce)
         return 0;
 #endif
     if (ps2ip_getconfig("sm0", &i) < 0 || !i.dhcp_enabled)
@@ -432,11 +432,11 @@ static int start_dhcp(int restart)
     return ps2ip_setconfig(&i) < 0 ? -1 : 0;
 }
 
-#ifdef TEST
+#ifdef DEBUG_BUILD
 /* how much memory is in use: on the EE, where the heap ends now (it grows from the end of the program towards the
  * main thread's stack, at the top of the 32 MB) and how much of it is taken; on the IOP, the largest block its heap
  * still gives, by trying */
-void test_log_memory(const char *when)
+void debug_log_memory(const char *when)
 {
     struct mallinfo m = mallinfo();
     int lo = 0, hi = 2048;
@@ -483,7 +483,7 @@ void *__wrap_memalign(size_t align, size_t size)
     return zeroed(__real_memalign(align, size), size, align >= 64 && align % 64 == 0 && size % 64 == 0);
 }
 
-#ifdef TEST
+#ifdef DEBUG_BUILD
 /* which of the IOP's services still answer, each asked from a thread of its own that is given 3 seconds (a call that
  * never comes back stays there: the test is over anyway once one is found dead) */
 extern void *_gp;
@@ -523,7 +523,7 @@ static void ask(const char *who, void (*f)(void *), int n)
 
 /* every thread of the program: where it starts (addr2line names it), its priority (0 = the first to run) and what it
  * is doing (status 1 running, 2 ready, 4 waiting, 8 suspended, 16 dormant; waiting 1 = asleep, 2 = on a semaphore) */
-void test_log_threads(const char *when)
+void debug_log_threads(const char *when)
 {
     int id;
     log_msg("EE threads %s:", when);
@@ -537,9 +537,9 @@ void test_log_threads(const char *when)
     }
 }
 
-void test_ask_iop(const char *when)
+void debug_ask_iop(const char *when)
 {
-    test_log_threads(when);
+    debug_log_threads(when);
     log_msg("IOP services %s:", when);
     ask("its heap", ask_heap, 0);
     ask("the network driver", ask_netman, 1);
@@ -554,12 +554,12 @@ int network_up(void)
     int fresh = !netStarted, i;
     u64 t0 = now_ms();
     if (!netStarted) {
-#ifdef TEST
-        test_log_memory("before the network drivers");
+#ifdef DEBUG_BUILD
+        debug_log_memory("before the network drivers");
 #endif
         zeroNew = 1;   /* see __wrap_malloc */
-#ifdef TEST
-        if (testNoZero) {   /* script "u": as it was before, to see the difference */
+#ifdef DEBUG_BUILD
+        if (debugNoZero) {   /* script "u": as it was before, to see the difference */
             zeroNew = 0;
             log_msg("network: starting WITHOUT zeroing what it takes from the heap");
         }
@@ -577,18 +577,18 @@ int network_up(void)
         if (i != 0)
             return T_NET_ERR_DRIVERS;
         netStarted = 1;
-#ifdef TEST
-        test_log_memory("after the network drivers");
+#ifdef DEBUG_BUILD
+        debug_log_memory("after the network drivers");
 #endif
     }
     if (wait_for(link_up, 5000) != 0) {
         log_msg("network: no link (cable?) after %d ms", (int)(now_ms() - t0));
-#ifdef TEST
-        testNoLinkOnce = 0;
+#ifdef DEBUG_BUILD
+        debugNoLinkOnce = 0;
 #endif
         return T_NET_ERR_LINK;
     }
-#ifdef TEST
+#ifdef DEBUG_BUILD
     log_msg("network: link up after %d ms", (int)(now_ms() - t0));
 #endif
     if (!dhcp_bound()) {
@@ -596,14 +596,14 @@ int network_up(void)
             start_dhcp(1);
         if (wait_for(dhcp_bound, igrMode ? 12000 : 20000) != 0) {
             log_msg("network: link up, but no address from the router");
-#ifdef TEST
-            testNoDhcpOnce = 0;
+#ifdef DEBUG_BUILD
+            debugNoDhcpOnce = 0;
             {
                 t_ip_info i;
                 memset(&i, 0, sizeof(i));
                 ps2ip_getconfig("sm0", &i);
                 log_msg("network: DHCP enabled %d, status %d, address %08x", i.dhcp_enabled, i.dhcp_status, (unsigned)i.ipaddr.s_addr);
-                test_ask_iop("after the router didn't answer");
+                debug_ask_iop("after the router didn't answer");
             }
 #endif
             return T_NET_ERR_DHCP;
@@ -750,7 +750,7 @@ void system_init(int argc, char *argv[])
         if (argv[i] && strcmp(argv[i], "-handover") == 0)
             appTookOver = 1;
     }
-#ifdef TEST
+#ifdef DEBUG_BUILD
     {   /* PCSX2 only starts programs from host: a started-from.txt in the data folder says which path to pretend it was
          * started from (not for the copy that takes over, which comes with one more argument) */
         static char pretend[200];
@@ -786,12 +786,12 @@ void system_init(int argc, char *argv[])
         hand_over(argc, argv);
     if (init_joystick_driver(false) == JOYSTICK_INIT_STATUS_OK)
         padOpen = padPortOpen(0, 0, padArea);
-#ifdef TEST
+#ifdef DEBUG_BUILD
     script_read();
 #endif
     log_msg(APP_NAME " " APP_VERSION " -- program in %s (%s), data in %s, %s%s%s", appDir, appPath, dataDir, igrMode ? "IGR" : "manual",
             appTookOver ? ", took over from a copy on another device" : "", appElsewhere ? ", started from another device" : "");
-#ifdef TEST
+#ifdef DEBUG_BUILD
     rescue_init();
 #endif
 }
@@ -800,11 +800,11 @@ void system_init(int argc, char *argv[])
  * on, they would write over the next program. With card = 1, only what reads the sd2psx comes back. */
 static void iop_cleanup(int card)
 {
-#ifdef TEST
+#ifdef DEBUG_BUILD
     rescue_stop();
     if (logRam.len) {
         char c[260];
-        snprintf(c, sizeof(c), "%stest-log.txt", dataDir);
+        snprintf(c, sizeof(c), "%sdebug-log.txt", dataDir);
         file_write(c, logRam.data, logRam.len);
     }
 #endif
@@ -963,7 +963,7 @@ void run_elf(const char *path)
     if ((q = strstr(c, "mmce?:")) != NULL)
         q[4] = (strncmp(sdRoot, "mmce", 4) == 0) ? sdRoot[4] : '0';
     log_msg("(end: running %s)", c);
-#ifdef TEST
+#ifdef DEBUG_BUILD
     run_probes();
 #endif
     if (dev == DEV_SD) {
@@ -988,8 +988,8 @@ void run_elf(const char *path)
         ;
 }
 
-#ifdef TEST
-/* ------------------------------------------------------------ the rescue (test builds, on a console)
+#ifdef DEBUG_BUILD
+/* ------------------------------------------------------------ the rescue (debug builds, on a console)
 
    Tests on a console run with nobody at the controller, started by a launcher that takes commands over the network.
    rescue.txt in the data folder lists what to open (one path per line, the ones on the sd2psx first) when the test
@@ -1003,8 +1003,8 @@ static int mainThread = -1, watchThread = -1, watchAlarm = -1;
 static volatile int rescuing;
 static u64 rescueAt;
 static char watchStack[0x8000] __attribute__((aligned(16)));
-char testCrashStack[0x8000] __attribute__((aligned(16)));
-u32 testCrashInfo[5];   /* cause, where, the address it tried, ra, sp */
+char debugCrashStack[0x8000] __attribute__((aligned(16)));
+u32 debugCrashInfo[5];   /* cause, where, the address it tried, ra, sp */
 
 static void load_sd_drivers(int sd)
 {
@@ -1032,7 +1032,7 @@ static void rescue(const char *why)
     iop_reset();
     load_sd_drivers(1);
     if (!again && logRam.len) {
-        snprintf(c, sizeof(c), "%stest-log.txt", dataDir);
+        snprintf(c, sizeof(c), "%sdebug-log.txt", dataDir);
         file_write(c, logRam.data, logRam.len);
     }
     for (i = 0; i < nRescue; i++) {
@@ -1061,19 +1061,19 @@ static void rescue(const char *why)
 }
 
 /* an exception: the kernel jumps here, still in its own mode. Note what happened and return from the exception into
- * test_crash_entry, on a stack of its own (the one that crashed may be the problem) */
-void test_exception_stub(void);
-void test_crash_entry(void) __attribute__((noreturn, used));
+ * debug_crash_entry, on a stack of its own (the one that crashed may be the problem) */
+void debug_exception_stub(void);
+void debug_crash_entry(void) __attribute__((noreturn, used));
 __asm__(
     ".text\n"
     ".p2align 4\n"
     ".set push\n"
     ".set noreorder\n"
     ".set noat\n"
-    ".globl test_exception_stub\n"
-    ".ent test_exception_stub\n"
-    "test_exception_stub:\n"
-    "    la    $k0, testCrashInfo\n"
+    ".globl debug_exception_stub\n"
+    ".ent debug_exception_stub\n"
+    "debug_exception_stub:\n"
+    "    la    $k0, debugCrashInfo\n"
     "    mfc0  $k1, $13\n"
     "    sw    $k1, 0($k0)\n"
     "    mfc0  $k1, $14\n"
@@ -1082,23 +1082,23 @@ __asm__(
     "    sw    $k1, 8($k0)\n"
     "    sw    $ra, 12($k0)\n"
     "    sw    $sp, 16($k0)\n"
-    "    la    $sp, testCrashStack + 0x7ff0\n"
-    "    la    $k0, test_crash_entry\n"
+    "    la    $sp, debugCrashStack + 0x7ff0\n"
+    "    la    $k0, debug_crash_entry\n"
     "    mtc0  $k0, $14\n"
     "    sync.p\n"
     "    eret\n"
     "    nop\n"
-    ".end test_exception_stub\n"
+    ".end debug_exception_stub\n"
     ".set pop\n"
 );
 
-void test_crash_entry(void)
+void debug_crash_entry(void)
 {
     static char t[160];
     EIntr();
     snprintf(t, sizeof(t), "crashed: exception %d at %08x, address %08x, ra %08x, sp %08x (thread %d, the main one is %d)",
-             (int)((testCrashInfo[0] >> 2) & 31), (unsigned)testCrashInfo[1], (unsigned)testCrashInfo[2], (unsigned)testCrashInfo[3],
-             (unsigned)testCrashInfo[4], GetThreadId(), mainThread);
+             (int)((debugCrashInfo[0] >> 2) & 31), (unsigned)debugCrashInfo[1], (unsigned)debugCrashInfo[2], (unsigned)debugCrashInfo[3],
+             (unsigned)debugCrashInfo[4], GetThreadId(), mainThread);
     rescue(t);
 }
 
@@ -1191,11 +1191,11 @@ static void rescue_init(void)
         return;
     mainThread = GetThreadId();
     for (i = 1; i <= 3; i++)
-        SetVTLBRefillHandler(i, test_exception_stub);
+        SetVTLBRefillHandler(i, debug_exception_stub);
     for (i = 4; i <= 7; i++)
-        SetVCommonHandler(i, test_exception_stub);
+        SetVCommonHandler(i, debug_exception_stub);
     for (i = 10; i <= 13; i++)
-        SetVCommonHandler(i, test_exception_stub);
+        SetVCommonHandler(i, debug_exception_stub);
     memset(&th, 0, sizeof(th));
     th.func = watch_loop;
     th.stack = watchStack;

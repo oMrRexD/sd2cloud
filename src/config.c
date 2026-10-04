@@ -92,9 +92,9 @@ void config_read(void)
     configExists = ini_read(path, on_config, NULL) == 0;
     if (!configExists)
         log_msg("no %s: using the defaults", path);
-#ifdef TEST
-    /* the test build uses another Drive folder and keeps only 3, to exercise the rotation without touching real backups */
-    snprintf(cfg.drive_folder + strlen(cfg.drive_folder), sizeof(cfg.drive_folder) - strlen(cfg.drive_folder), " (test)");
+#ifdef DEBUG_BUILD
+    /* the debug build uses another Drive folder and keeps only 3, to exercise the rotation without touching real backups */
+    snprintf(cfg.drive_folder + strlen(cfg.drive_folder), sizeof(cfg.drive_folder) - strlen(cfg.drive_folder), " (debug)");
     cfg.keep = 3;
     cfg.n_rules = 0;
 #endif

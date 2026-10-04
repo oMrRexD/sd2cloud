@@ -372,8 +372,8 @@ static void leave(const char *target)
 {
     sound_play(SND_EXIT);
     sound_wait(SND_EXIT);
-#ifdef TEST
-    test_capture_if('F');   /* the last screen, before leaving */
+#ifdef DEBUG_BUILD
+    debug_capture_if('F');   /* the last screen, before leaving */
 #endif
     return_to(target);
 }
@@ -388,9 +388,9 @@ static void checking_progress(int i, int n, const card_t *c)
     dlg_line(FONT_TEXT, COLOR_DIM, 0, t);
     dlg_bar(n ? (i * 1000) / n : 0, NULL);
     dlg_show();
-#ifdef TEST
+#ifdef DEBUG_BUILD
     if (n && i * 2 >= n)
-        test_capture_if('P');
+        debug_capture_if('P');
 #endif
 }
 
@@ -449,10 +449,10 @@ static void show_login(const char *url, const char *code, int seconds)
     login.minutes = (seconds + 59) / 60;
     ui_unlock();
     ui_scene(scene_login);
-#ifdef TEST
-    /* on PCSX2 the login screen is captured and the test stops there (see test_capture_and_stop in system.c) */
+#ifdef DEBUG_BUILD
+    /* on PCSX2 the login screen is captured and the test stops there (see debug_capture_and_stop in system.c) */
     if (!strncmp(appDir, "host:", 5))
-        test_capture_and_stop();
+        debug_capture_and_stop();
 #endif
 }
 
@@ -508,8 +508,8 @@ static void watch_cancel(void)
     if (down && !circleDown)
         cancelLatched = 1;
     circleDown = down;
-#ifdef TEST
-    if (test_take('K'))
+#ifdef DEBUG_BUILD
+    if (debug_take('K'))
         cancelLatched = 1;
 #endif
 }
@@ -609,10 +609,10 @@ static void upload_screen(long long done, long long total)
     ui_scene(scene_upload);
 }
 
-#ifdef TEST
+#ifdef DEBUG_BUILD
 /* script "V<n>" at the start: shows the backup screen of card n (in the menu's order) for 1.5 s without sending
  * anything, and captures it: to check the icons on PCSX2 */
-static void test_preview(int k)
+static void debug_preview(int k)
 {
     u64 end;
     if (k < 0 || k >= nCards)
@@ -625,7 +625,7 @@ static void test_preview(int k)
         upload_screen((long long)(now_ms() - iconStart), 3000);
         sleep_ms(100);
     }
-    test_capture_and_stop();
+    debug_capture_and_stop();
 }
 #endif
 
@@ -640,9 +640,9 @@ static int on_progress(long long done, long long total)
         }
     }
     upload_screen(done, total);
-#ifdef TEST
-    if (done * 2 >= total && done > 0 && test_take('E'))
-        test_capture_and_stop();
+#ifdef DEBUG_BUILD
+    if (done * 2 >= total && done > 0 && debug_take('E'))
+        debug_capture_and_stop();
 #endif
     return 0;
 }
@@ -1141,9 +1141,9 @@ static int restore_progress(int phase, long long done, long long total)
     if (phase < RESTORE_WRITE)
         dlg_buttons(BUTTON_CIRCLE, T_CANCEL, 0, 0);
     dlg_show();
-#ifdef TEST
+#ifdef DEBUG_BUILD
     if (total && done * 2 >= total)
-        test_capture_if(phase == RESTORE_WRITE ? 'W' : 'E');
+        debug_capture_if(phase == RESTORE_WRITE ? 'W' : 'E');
 #endif
     return 0;
 }
@@ -2813,12 +2813,12 @@ static void manual(void)
         leave(cfg.manual_return);
     }
     cards_check(checking_progress);
-#ifdef TEST
-    if (test_take('V'))
-        test_preview(test_digit());
+#ifdef DEBUG_BUILD
+    if (debug_take('V'))
+        debug_preview(debug_digit());
 #endif
     helperState = helper_status();
-#ifdef TEST
+#ifdef DEBUG_BUILD
     {   /* checks the in-use detection on PCSX2: the root signature of the card in slot 1 against each .mcd's */
         char seen[65], file[65];
         if (mc_root_signature(0, seen) == 0)
@@ -2843,16 +2843,16 @@ static void manual(void)
             sound_play(SND_BACK);
         }
     }
-#ifdef TEST
-    if (test_take('N'))
-        testNoLinkOnce = 1;
-    if (test_take('n'))
-        testNoDhcpOnce = 1;
-    if (test_take('u'))
-        testNoZero = 1;
+#ifdef DEBUG_BUILD
+    if (debug_take('N'))
+        debugNoLinkOnce = 1;
+    if (debug_take('n'))
+        debugNoDhcpOnce = 1;
+    if (debug_take('u'))
+        debugNoZero = 1;
 #endif
-#ifdef TEST
-    if (test_take('A'))   /* the questions after the first sign-in, without signing in */
+#ifdef DEBUG_BUILD
+    if (debug_take('A'))   /* the questions after the first sign-in, without signing in */
         offer_auto_sync();
 #endif
     if (google_has_access() && state_empty())
@@ -2976,9 +2976,9 @@ int main(int argc, char *argv[])
     state_read();
     token_read();
     google_set_poll(watch_cancel);
-#ifdef TEST
+#ifdef DEBUG_BUILD
     if (!igrMode)
-        igrMode = test_has_script() ? test_take('I') : 1;   /* on the console, with nobody at the controller: run as IGR */
+        igrMode = debug_has_script() ? debug_take('I') : 1;   /* on the console, with nobody at the controller: run as IGR */
 #endif
     if (igrMode)
         igr();
