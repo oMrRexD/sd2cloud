@@ -1,9 +1,12 @@
-# SD2Cloud v1.0.1
+# SD2Cloud v1.1
 
 **Manage and back up your sd2psx memory cards, right on your PS2.**
 
-### What's new in 1.0.1
-- Fixed: starting a sync from the saved data screen of a memory card with many saves could leave the network without an address from the router and then freeze SD2Cloud. If you have 1.0, update from Settings > Check for updates, or copy the new files over the old ones.
+### What's new in 1.1
+- Backup format: in the settings (or `format` in `sd2cloud.ini`), choose whether each card goes to Drive as the sd2psx's own `.mcd` or as a `.ps2`, the format PCSX2 uses: take the `.ps2` out of the backup's zip and put it in PCSX2's memory card folder. Backups in either format can be restored, whatever is set.
+- From 1.0.1: starting a sync from the saved data screen of a memory card with many saves no longer leaves the network without an address and freezes SD2Cloud.
+
+To update, use Settings > Check for updates, or copy the new files over the old ones.
 
 SD2Cloud runs on the PS2 itself and works with the memory cards on the microSD of sd2psx-family devices (sd2psXtd firmware: sd2psx, PSXMemCard, PSXMemCard Gen2, PicoMemcard+/Zero). No PC required.
 
@@ -22,16 +25,16 @@ SD2Cloud runs on the PS2 itself and works with the memory cards on the microSD o
 ### Also
 - Every operation that uploads, writes or deletes data asks for confirmation; uploads can be cancelled with the Circle button.
 - For OPL builds that do not list the apps on the sd2psx microSD: copy the `APPS/SD2Cloud` folder to a USB drive or an MX4SIO card as well and open SD2Cloud from there. On a USB drive, OPL's IGR can run the helper from that folder, with nothing installed on the memory card.
-- Settings on START: sync all cards, IGR helper, the program to open after IGR, language, backups per card, check for updates, Google account and About. Changes are saved to `SD2Cloud/sd2cloud.ini` on the microSD.
+- Settings on START: sync all cards, IGR helper, the program to open after IGR, language, backups per card, backup format, check for updates, Google account and About. Changes are saved to `SD2Cloud/sd2cloud.ini` on the microSD.
 - Returns to OPL on the microSD, a memory card, USB, MX4SIO or the internal HDD (exFAT or APA), loading only the drivers of that device.
 - Built-in updates, verified against the SHA-256 published on GitHub.
 - Interface inspired by the PlayStation BB Navigator, with sound effects.
 - English and Portuguese.
 
-**Installation:** extract `SD2Cloud-v1.0.1.zip` to the root of the sd2psx microSD and open SD2Cloud from the OPL Apps tab. See README.txt for details.
+**Installation:** extract `SD2Cloud-v1.1.zip` to the root of the sd2psx microSD and open SD2Cloud from the OPL Apps tab. See README.txt for details.
 
 ---
 
 **Gerencie e proteja os cartões de memória do seu sd2psx, direto no PS2.**
-Novidade da 1.0.1: corrigido o travamento ao sincronizar a partir da tela de dados salvos de um cartão de memória com muitos saves (a rede ficava sem endereço do roteador e o SD2Cloud congelava).
-Instalação: extraia o `SD2Cloud-v1.0.1.zip` na raiz do microSD do sd2psx e abra o SD2Cloud pela aba Apps do OPL. Consulte o LEIA-ME.txt para mais detalhes.
+Novidade da 1.1: nas configurações (ou em `format` no `sd2cloud.ini`) dá para escolher se cada cartão vai ao Drive como `.mcd`, o formato do sd2psx, ou como `.ps2`, o formato usado pelo PCSX2. Os dois formatos podem ser restaurados. Inclui a correção da 1.0.1 (travamento ao sincronizar a partir da tela de dados salvos de um cartão com muitos saves).
+Instalação: extraia o `SD2Cloud-v1.1.zip` na raiz do microSD do sd2psx e abra o SD2Cloud pela aba Apps do OPL. Consulte o LEIA-ME.txt para mais detalhes.
