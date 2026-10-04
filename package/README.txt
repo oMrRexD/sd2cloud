@@ -1,5 +1,5 @@
-SD2Cloud 1.2.2
-==============
+SD2Cloud 1.3
+============
 
 Manage and back up your sd2psx memory cards, right on your PS2.
 
@@ -67,7 +67,10 @@ and R1, to switch tabs. Tabs without cards are not shown. The last tab, Files, h
 microSD and a USB drive for .psu files (see FILES).
 - X opens the card: its saved data, displayed as in the PS2 browser. On that screen, SQUARE syncs the card;
   if it is already synced, SD2Cloud says so and lets you sync it again.
-- TRIANGLE opens the selected card's options: "Sync now" and "Restore a backup" (see RESTORING).
+- TRIANGLE opens the selected card's options: "Sync now", "Restore a backup" (see RESTORING) and "Copy to a
+  device": the whole card goes, as a file, to a folder of the microSD or of a USB drive. Pick the device, go to
+  the folder and press TRIANGLE; SD2Cloud asks whether to write a .mcd (sd2psx) or a .ps2 (PCSX2), then reads the
+  file back and compares it.
 - START opens the settings (see SETTINGS).
 - X on a saved data item opens its page, with Copy and Move (to another card on the microSD, chosen from the
   same tabs as the main screen; the destination's free space is shown, and a card without enough space cannot

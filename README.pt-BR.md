@@ -44,6 +44,8 @@ Gen2, PicoMemcard+/Zero), sem necessidade de um PC.
 - Copia, move e elimina dados salvos entre os cartões do microSD (o espaço livre do destino é exibido), e envia
   um item avulso ao Google Drive como arquivo `.psu`.
 - Organiza os cartões em abas: cartões numerados, cartões de jogos (Game ID) e cartões de boot.
+- Copia um cartão inteiro, como arquivo `.mcd` ou `.ps2`, para uma pasta do microSD ou de um pendrive USB (nas
+  opções do cartão).
 - Importa e exporta arquivos `.psu`: a aba **Arquivos** navega pelas pastas do microSD e de um pendrive USB (FAT32
   ou exFAT), instala um `.psu` em qualquer cartão e grava qualquer item de um cartão como `.psu`. O que é gravado
   é lido de volta e comparado.
@@ -90,7 +92,7 @@ O [LEIA-ME.txt](package/LEIA-ME.txt) incluído na release explica cada tela em d
 
 | Tela | Botões |
 |---|---|
-| Tela principal | Cima/Baixo: cartão · Esquerda/Direita ou L1/R1: aba · X: abrir o cartão · TRIÂNGULO: opções do cartão (sincronizar agora, restaurar backup) · START: configurações · O: sair |
+| Tela principal | Cima/Baixo: cartão · Esquerda/Direita ou L1/R1: aba · X: abrir o cartão · TRIÂNGULO: opções do cartão (sincronizar agora, restaurar backup, copiar para dispositivo) · START: configurações · O: sair |
 | Dentro de um cartão | X: abrir um item · QUADRADO: sincronizar este cartão · O: voltar |
 | Página de um item | Copiar · Mover · Eliminar · Enviar ao Drive |
 | Aba Arquivos | X: abrir o dispositivo, uma pasta ou um arquivo `.psu` (e então **Importar para cartão**) · TRIÂNGULO: exportar um item de um cartão para a pasta exibida (também pelo **Copiar** da página de um item, cujos destinos incluem esta aba) · Esquerda/Direita: uma página acima ou abaixo · O: voltar |

@@ -108,7 +108,7 @@ PLACE = {
     "T_SYNC_NOW": ("text", 330, 1), "T_EXIT_TO": ("text", 330, 1), "T_ALL_SYNCED": ("text", DIALOG, 1), "T_AUTO_ASK": ("text", WIDE, 3), "T_AUTO_WHERE": ("small", WIDE, 2),
     "T_AUTO_OPL": ("text", WIDE, 1), "T_ABOUT_CREDITS": ("small", WIDE, 3), "T_ABOUT_LICENSES": ("small", WIDE, 1), "T_AUTO_NOTE": ("small", WIDE, 1), "T_AUTO_DONE": ("text", WIDE, 1), "T_CONNECT_HINT": ("small", DIALOG, 2),
     # the box with a list (a card's options, the exit menu): title and items centered in 380 px
-    "T_RESTORE_BACKUP": ("text", 330, 1), "T_HELPER_REINSTALL": ("text", 330, 1), "T_HELPER_UNINSTALL": ("text", 330, 1),
+    "T_RESTORE_BACKUP": ("text", 330, 1), "T_COPY_DEVICE": ("text", 330, 1), "T_HELPER_REINSTALL": ("text", 330, 1), "T_HELPER_UNINSTALL": ("text", 330, 1),
     "T_UPDATE": ("text", 330, 1),
     # "Copy to" / "Move to": the title over the destination card, and what goes under it
     "T_COPY_TO": ("text", 200, 1), "T_MOVE_TO": ("text", 200, 1), "T_NO_ROOM": ("small", 200, 1),
@@ -139,7 +139,7 @@ LEGENDS = [
     (("T_CANCEL_NO", "T_CANCEL_YES"), False, False), (("T_LATER", "T_YES"), False, False),
     (("T_BACK", "T_HELPER_INSTALL"), False, False), (("T_CANCEL",), False, False), (("T_BACK", "T_SYNC"), False, False),
     (("T_BACK", "T_LOGOUT_YES"), False, False), (("T_BACK", "T_HELPER_UNINSTALL"), False, False), (("T_LATER", "T_AUTO_ON"), False, False), (("T_FINISH",), False, False), (("T_LATER", "T_CONNECT"), False, False), (("T_LATER", "T_NEVER_ASK", "T_CONNECT"), False, False),
-    (("T_MENU_EXIT", "T_OPEN", "T_SETTINGS"), True, True), (("T_BACK", "T_OPEN", "T_EXPORT_SAVE"), False, False),
+    (("T_MENU_EXIT", "T_OPEN", "T_SETTINGS"), True, True), (("T_BACK", "T_OPEN", "T_EXPORT_SAVE"), False, False), (("T_BACK", "T_OPEN", "T_EXPORT"), False, False),
     (("T_BACK", "T_EXPORT"), False, False), (("T_BACK", "T_REPLACE"), False, False), (("T_BACK", "T_IMPORT_YES"), False, False),
 ]
 

@@ -1,5 +1,5 @@
-SD2Cloud 1.2.2
-==============
+SD2Cloud 1.3
+============
 
 Gerencie e proteja os cartões de memória do seu sd2psx, direto no PS2.
 
@@ -71,8 +71,10 @@ exibidas. A última aba, Arquivos, não tem cartões: ela percorre o microSD e u
 arquivos .psu (veja ARQUIVOS).
 - X abre o cartão: os dados salvos, exibidos como no navegador do PS2. Nessa tela, QUADRADO sincroniza
   o cartão; se ele já estiver sincronizado, o SD2Cloud avisa e permite sincronizar novamente.
-- TRIÂNGULO abre as opções do cartão selecionado: "Sincronizar agora" e "Restaurar backup" (veja
-  RESTAURAÇÃO).
+- TRIÂNGULO abre as opções do cartão selecionado: "Sincronizar agora", "Restaurar backup" (veja
+  RESTAURAÇÃO) e "Copiar para dispositivo": o cartão inteiro vai, como arquivo, para uma pasta do microSD ou de
+  um pendrive USB. Escolha o dispositivo, vá até a pasta e pressione TRIÂNGULO; o SD2Cloud pergunta se grava um
+  .mcd (sd2psx) ou um .ps2 (PCSX2), e depois lê o arquivo de volta e compara.
 - START abre as configurações (veja CONFIGURAÇÕES).
 - X em um item de dados salvos abre a página do item, com as opções Copiar e Mover (para outro cartão do
   microSD, escolhido nas mesmas abas da tela principal; o espaço livre do cartão de destino é exibido e um

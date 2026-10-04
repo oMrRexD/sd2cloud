@@ -241,3 +241,72 @@ out:
     free(o.buf);
     return r;
 }
+
+/* A card's file copied to a folder of the microSD or of a USB drive (dest), as it is (.mcd) or with the ECC bytes a
+ * .ps2 has, then read back and compared by its SHA-256. Only one of the two files is open at a time, a piece of the
+ * card each turn: on the sd2psx the card and its copy can't both be open. 0 = ok (a copy that failed is removed) */
+#define PIECE (512 * 1024)
+
+int card_export(const card_t *c, const char *dest, int ps2, int (*progress)(long long done, long long total))
+{
+    unsigned char *in = malloc(PIECE), *out = ps2 ? malloc(PIECE / PAGE * PAGE_ECC) : NULL;
+    unsigned char h1[WC_SHA256_DIGEST_SIZE], h2[WC_SHA256_DIGEST_SIZE];
+    wc_Sha256 sha;
+    long long total = c->size, at = 0, wrote = 0, back = 0;
+    int r = -1, fd, n = 0, k, got, done;
+    ecc_tables();
+    wc_InitSha256(&sha);
+    if (!in || (ps2 && !out) || total <= 0)
+        goto end;
+    while (at < total) {
+        const unsigned char *d = in;
+        if ((fd = open(c->path, O_RDONLY)) < 0)
+            goto end;
+        lseek(fd, (long)at, SEEK_SET);
+        for (n = 0; n < PIECE && (got = read(fd, in + n, BLOCK)) > 0; n += got)
+            ;
+        close(fd);
+        if (n <= 0 || (ps2 && n % PAGE))
+            goto end;
+        k = n;
+        if (ps2) {
+            k = add_ecc(in, n, out);
+            d = out;
+        }
+        wc_Sha256Update(&sha, d, k);
+        if ((fd = open(dest, wrote ? O_WRONLY : O_WRONLY | O_CREAT | O_TRUNC, 0666)) < 0)
+            goto end;
+        if (wrote)
+            lseek(fd, (long)wrote, SEEK_SET);
+        for (done = 0; done < k; done += got)
+            if ((got = write(fd, d + done, k - done > BLOCK ? BLOCK : k - done)) <= 0)
+                break;
+        if (close(fd) < 0 || done < k)
+            goto end;
+        at += n;
+        wrote += k;
+        if (progress)
+            progress(at, total * 2);
+    }
+    wc_Sha256Final(&sha, h1);
+    wc_InitSha256(&sha);
+    if ((fd = open(dest, O_RDONLY)) < 0)
+        goto end;
+    while ((n = read(fd, in, BLOCK)) > 0) {
+        wc_Sha256Update(&sha, in, n);
+        back += n;
+        if (progress && !(back % PIECE))
+            progress(total + back * total / wrote, total * 2);
+    }
+    close(fd);
+    wc_Sha256Final(&sha, h2);
+    if (n == 0 && back == wrote && !memcmp(h1, h2, sizeof(h1)))
+        r = 0;
+end:
+    wc_Sha256Free(&sha);
+    free(in);
+    free(out);
+    if (r != 0)
+        unlink(dest);
+    return r;
+}

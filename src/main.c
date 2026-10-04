@@ -1686,6 +1686,7 @@ static struct {
     card_t *c;
     save_view_t *v;
 } fbGive;
+static card_t *fbCard;   /* a whole card is being copied to a device: triangle in files_screen writes it there */
 static void files_screen(int dev);
 
 static void scene_dest(float t)
@@ -2122,16 +2123,25 @@ static void card_screen(card_t *c) { card_grid(c, 0); }
 
 static void card_options(card_t *c)
 {
-    static const char *items[2];
-    int k = 0;
+    static const char *items[3], *devices[FDEVS];
+    int k = 0, d;
     for (;;) {   /* circle in what comes next comes back here; circle here goes back to the main screen */
         items[0] = T(T_SYNC_NOW);
         items[1] = T(T_RESTORE_BACKUP);
-        if ((k = choose(c->base, items, 2, k)) < 0)
+        items[2] = T(T_COPY_DEVICE);
+        if ((k = choose(c->base, items, 3, k)) < 0)
             return;
         if (k == 0) {
             if (sync_card(c))
                 return;   /* synced: back to the main screen, where its new status shows */
+        } else if (k == 2) {   /* the whole card, as a file, to a folder of the microSD or of a USB drive */
+            for (d = 0; d < FDEVS; d++)
+                devices[d] = T(deviceText[d]);
+            if ((d = choose(T(T_COPY_DEVICE), devices, FDEVS, 0)) >= 0) {
+                fbCard = c;
+                files_screen(d);
+                fbCard = NULL;
+            }
         } else {
             icon_t *ic = newest_icon(c);
             history_screen(c, ic);
@@ -2311,7 +2321,7 @@ static void scene_files(float t)
         ui_text_right(FONT_SMALL, FB_RIGHT, FB_Y0 + FB_ROWS * FB_ROW + 2, 0x8E98AA, s);
     }
     {
-        legend_t l[3] = {{BUTTON_CIRCLE, T(T_BACK)}, {BUTTON_CROSS, T(T_OPEN)}, {BUTTON_TRIANGLE, T(T_EXPORT_SAVE)}};
+        legend_t l[3] = {{BUTTON_CIRCLE, T(T_BACK)}, {BUTTON_CROSS, T(T_OPEN)}, {BUTTON_TRIANGLE, T(fbCard ? T_EXPORT : T_EXPORT_SAVE)}};
         look_legend(l, 3, 0);
     }
 }
@@ -2412,6 +2422,48 @@ static int export_save(card_t *c, save_view_t *v, char file[40])
     return ok;
 }
 
+static int card_export_progress(long long done, long long total)
+{
+    ui_lock();
+    dlg.permille = total ? (int)(done * 1000 / total) : 0;
+    ui_unlock();
+    return 0;
+}
+
+/* a whole card as a file in the folder shown: .mcd or .ps2 (asked, starting on the format the backups use), read
+ * back and compared. 1 = written */
+static int export_card(card_t *c)
+{
+    static const char *const formats[2] = {".mcd (sd2psx)", ".ps2 (PCSX2)"};
+    char file[64], path[470], t[300], f[100];
+    int ps2, r;
+    if ((ps2 = choose(c->base, formats, 2, cfg.ps2)) < 0)
+        return 0;
+    snprintf(file, sizeof(file), "%s.%s", c->base, ps2 ? "ps2" : "mcd");
+    snprintf(path, sizeof(path), "%s%s", fb.dir, file);
+    snprintf(t, sizeof(t), T(T_CONFIRM_EXPORT), c->base);
+    snprintf(f, sizeof(f), T(T_EXPORT_FILE), file);
+    if (!confirm(t, f, T_EXPORT))
+        return 0;
+    if (file_exists(path)) {
+        snprintf(t, sizeof(t), T(T_EXPORT_REPLACE), file);
+        if (!confirm(t, NULL, T_REPLACE))
+            return 0;
+    }
+    dlg_new(0, NULL);
+    dlg_line(FONT_TEXT, COLOR_TEXT, 0, T(T_WORKING_EXPORT));
+    dlg_bar(0, NULL);
+    dlg_show();
+    r = card_export(c, path, ps2, card_export_progress);
+    log_msg("export card %s to %s: %d", c->id, path, r);
+    if (r == 0) {
+        snprintf(t, sizeof(t), T(T_DONE_EXPORT), file);
+        message_wait(0, NULL, COLOR_OK, t);
+    } else
+        message_wait(0, NULL, COLOR_ERROR, T(T_ERR_EXPORT));
+    return r == 0;
+}
+
 /* triangle: which card, then which of its saves */
 static void export_here(void)
 {
@@ -2488,7 +2540,10 @@ static void files_screen(int dev)
                 sound_play(SND_BACK);
         } else if ((b & PAD_TRIANGLE) && !fb.error) {
             sound_play(SND_CONFIRM);
-            if (fbGive.c) {   /* came from a save's "Copy": that save goes into this folder, and back to its page */
+            if (fbCard) {   /* came from a card's options: the whole card goes into this folder */
+                if (export_card(fbCard))
+                    return;
+            } else if (fbGive.c) {   /* came from a save's "Copy": that save goes into this folder, and back to its page */
                 char file[40];
                 if (export_save(fbGive.c, fbGive.v, file))
                     return;
