@@ -5,7 +5,8 @@
  * their index (mcfs.c), and shows them: the list of cards on the left and the selected one, big, on the right. X opens
  * a card (its saves, the PS2 browser's way) to back it up now or to restore one of its backups from Drive; triangle
  * opens the options (back up the changed cards or all of them, the IGR helper, updating SD2Cloud). The first time it
- * connects the Google account (code + QR) and asks whether to back up every card.
+ * connects the Google account (code + QR) and asks whether to back up every card. The last tab, Files, browses the
+ * microSD and a USB drive: a .psu file there can be imported into a card, and a save of a card exported as one.
  * IGR (started by the SD2CLOUD-IGR.ELF helper that OPL runs as "Exit to"): without asking anything, sends the new and
  * changed cards, says it's done (with a sound) and always returns to OPL, even without internet.
  * During any upload, circle asks whether to cancel; cancelling leaves SD2Cloud.
@@ -21,6 +22,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <strings.h>
+#include <unistd.h>
 #include <dirent.h>
 #include <kernel.h>
 #include <libpad.h>
@@ -974,21 +976,28 @@ static void scroll_to(int cursor, int *top)
 
 /* -------- the cards in groups, one shown at a time, chosen with left/right (or L1/R1) over the list: the numbered
  * cards (CardN, with the folders the user named), the game cards (Game ID) and the boot cards. A group without cards
- * isn't offered; with a single group there are no tabs at all. Used by the main screen and by "Copy to" / "Move to" */
+ * isn't offered; with a single group there are no tabs at all. Used by the main screen and by "Copy to" / "Move to".
+ * The main screen has one more group, which isn't of cards: the devices whose files can be browsed (a .psu to import
+ * into a card, a folder to export a save to) */
 
-enum { TAB_CARDS, TAB_GAMES, TAB_BOOT, TABS };
-static const int tabText[TABS] = {T_TAB_CARDS, T_TAB_GAMES, T_TAB_BOOT};
+enum { TAB_CARDS, TAB_GAMES, TAB_BOOT, TAB_FILES, TABS };
+static const int tabText[TABS] = {T_TAB_CARDS, T_TAB_GAMES, T_TAB_BOOT, T_TAB_FILES};
 #define TAB_Y      78     /* the tabs: over the list, on the line of the title on the right */
 #define TAB_GAP    22
 #define TAB_KEYS   (PAD_LEFT | PAD_RIGHT | PAD_L1 | PAD_R1)
 
+/* the devices of the Files group: the sd2psx's own microSD and a USB drive */
+enum { FDEV_SD, FDEV_USB, FDEVS };
+static const int deviceText[FDEVS] = {T_DEV_SD, T_DEV_USB};
+
 typedef struct {
     int tab;                  /* the group shown */
-    int count[TABS];          /* how many cards each group has */
+    int count[TABS];          /* how many cards each group has (the Files group: how many devices) */
     int n, idx[MAX_CARDS];    /* the shown group's cards (indexes in cards[]) */
     int cursor, top;          /* in the shown group */
     int keep[TABS][2];        /* each group's cursor and top: switching back lands on the same card */
     const card_t *skip;       /* a card left out (the one a save is copied from) */
+    int files;                /* the Files group is offered too */
 } tabs_t;
 
 static int tab_of(const card_t *c)
@@ -1010,18 +1019,24 @@ static void tabs_show(tabs_t *g, int tab)
         if (tab_of(&cards[i]) == tab)
             g->idx[g->n++] = i;
     }
+    if (g->files)
+        g->count[TAB_FILES] = FDEVS;
+    if (tab == TAB_FILES)
+        g->n = FDEVS;
     g->tab = tab;
     g->cursor = g->keep[tab][0] < g->n ? g->keep[tab][0] : 0;
     g->top = g->keep[tab][1];
     scroll_to(g->cursor, &g->top);
 }
 
-/* from scratch, on the first group that has cards; skip = a card to leave out (with ui_lock held) */
-static void tabs_init(tabs_t *g, const card_t *skip)
+/* from scratch, on the first group that has cards; skip = a card to leave out; files = with the Files group (with
+ * ui_lock held) */
+static void tabs_init(tabs_t *g, const card_t *skip, int files)
 {
     int k;
     memset(g, 0, sizeof(*g));
     g->skip = skip;
+    g->files = files;
     tabs_show(g, TAB_CARDS);
     for (k = 0; k < TABS && !g->count[k]; k++)
         ;
@@ -1038,7 +1053,8 @@ static int tabs_next(const tabs_t *g, int dir)
     return -1;
 }
 
-static card_t *tabs_card(const tabs_t *g) { return g->n ? &cards[g->idx[g->cursor]] : NULL; }
+/* the selected card (NULL = the group has none, or it's the Files group) */
+static card_t *tabs_card(const tabs_t *g) { return g->n && g->tab != TAB_FILES ? &cards[g->idx[g->cursor]] : NULL; }
 
 /* up/down move the cursor, left/right change the group (with the sound). 1 = the press was one of those */
 static int tabs_nav(tabs_t *g, u32 b)
@@ -1071,7 +1087,7 @@ static const tabs_t *rowsOf;   /* the groups list_rows is drawing (its callbacks
 static const char *tabs_text(int i, char *buf)
 {
     (void)buf;
-    return cards[rowsOf->idx[i]].base;
+    return rowsOf->tab == TAB_FILES ? T(deviceText[i]) : cards[rowsOf->idx[i]].base;
 }
 
 static u32 tabs_dot(int i) { return status_color(&cards[rowsOf->idx[i]]); }
@@ -1082,6 +1098,8 @@ static void tabs_draw(const tabs_t *g, int dots)
 {
     int k, shown = 0, w = 0, x, lh = ui_line_height(FONT_SMALL);
     float cy = TAB_Y + lh / 2.0f + 1;
+    if (g->tab == TAB_FILES)
+        dots = 0;
     for (k = 0; k < TABS; k++)
         if (g->count[k])
             w += (shown++ ? TAB_GAP : 0) + ui_measure(FONT_SMALL, T(tabText[k]));
@@ -1353,6 +1371,7 @@ static struct {
     int n, cursor, top;    /* top = the first row on screen */
     long long freeBytes;
     u64 since;             /* when the cursor last moved (the selected icon starts turning from the front) */
+    int pick;              /* a save is being picked to export: X takes it instead of opening its page */
 } brw;
 
 static void grid_cell(int i, float height, float *cx, float *cy)
@@ -1412,7 +1431,10 @@ static void scene_browser(float t)
         look_arrow(W / 2.0f, 92, 0, 0x3A5AE0);
     if (last < brw.n)
         look_arrow(W / 2.0f, 340, 1, 0x3A5AE0);
-    {
+    if (brw.pick) {
+        legend_t l[2] = {{BUTTON_CIRCLE, T(T_BACK)}, {BUTTON_CROSS, T(T_EXPORT)}};
+        look_legend(l, 2, 0);
+    } else {
         legend_t l[3] = {{BUTTON_CIRCLE, T(T_BACK)}, {BUTTON_CROSS, T(T_OPEN)}, {BUTTON_SQUARE, T(T_SYNC)}};
         look_legend(l, 3, 0);
     }
@@ -1553,12 +1575,16 @@ static int choose(const char *title, const char *const *items, int n, int start)
 }
 
 /* -------- a save's page, like the PS2 browser's: the icon big on the left; the card, the name, the date and the
- * size on the right, and what can be done with it */
+ * size on the right, and what can be done with it. Also the page of a save still in a .psu file, which has the
+ * file's name where the card's would be */
 
 static const int saveOptions[] = {T_COPY, T_MOVE, T_DELETE, T_TO_CLOUD};
-#define SAVE_OPTIONS 4
+static const int psuOptions[] = {T_IMPORT};
 static struct {
     save_view_t *v;
+    char where[160];          /* the card the save is on, or the .psu file it is in */
+    const int *options;
+    int nOptions;
     char date[40], size[40];
     int cursor;
     u64 since;
@@ -1582,7 +1608,7 @@ static void scene_save(float t)
     ui_light(190, 318, 110, 34, 0xFFFFFF, 0x26);
     if (v->icon)
         icon_draw(v->icon, 190, 232, 214, (now_ms() - sp.since) / 1000.0f);
-    text_center_shadow(FONT_TEXT, cx, y, 0xE8E8EC, brw.card->base);
+    text_center_shadow(FONT_TEXT, cx, y, 0xE8E8EC, sp.where);
     y += 26;
     if (v->line1[0])
         text_center_shadow(FONT_BROWSER, cx, y, 0xE6E640, v->line1), y += lh;
@@ -1593,8 +1619,8 @@ static void scene_save(float t)
     y += 6;
     text_center_shadow(FONT_TEXT, cx, y, 0xE4E4E8, sp.date);
     text_center_shadow(FONT_TEXT, cx, y + 23, 0xE4E4E8, sp.size);
-    for (i = 0, y = 232; i < SAVE_OPTIONS; i++, y += 31) {
-        const char *s = T(saveOptions[i]);
+    for (i = 0, y = 232; i < sp.nOptions; i++, y += 31) {
+        const char *s = T(sp.options[i]);
         float x = (int)(cx - ui_measure(FONT_BROWSER, s) / 2);
         if (i == sp.cursor)
             look_glow_text(FONT_BROWSER, x, y, 0x3A88C8, 0x7AD8FF, s);
@@ -1627,7 +1653,8 @@ static void op_result(int r, int okText, const card_t *other)
         snprintf(t, sizeof(t), T(okText), other ? other->base : "");
     else
         snprintf(t, sizeof(t), T(r == MCFS_ERR_EXISTS ? T_ERR_EXISTS : r == MCFS_ERR_FULL ? T_ERR_FULL
-                                 : r == MCFS_ERR_CHECK ? T_ERR_MC_CHECK : T_ERR_MC_WRITE), other ? other->base : "");
+                                 : r == MCFS_ERR_CHECK ? T_ERR_MC_CHECK : r == MCFS_ERR_BAD ? T_ERR_PSU : T_ERR_MC_WRITE),
+                 other ? other->base : "");
     message_wait(0, NULL, r == MCFS_OK ? COLOR_OK : COLOR_ERROR, t);
 }
 
@@ -1646,7 +1673,7 @@ static void save_name(const save_view_t *v, char *out, size_t size)
 static struct {
     tabs_t g;
     const char *title;
-    long long need;                   /* the save's size */
+    long long need;                   /* the save's size (0 = the card is only being picked, nothing goes into it) */
     long long freeBytes[MAX_CARDS];   /* each card's free space, once read (-2 = not yet, -1 = unknown) */
     icon_t *icon;                     /* the selected game card's icon, once read */
     int iconCard;                     /* which card that icon is of (-1 = none) */
@@ -1707,14 +1734,14 @@ static void dest_info(void)
     ui_unlock();
 }
 
-/* the card picked (NULL = circle). need = the save's size */
-static card_t *choose_dest(const card_t *from, int move, long long need)
+/* the card picked (NULL = circle). from = a card to leave out, title = the text over the card, need = the save's size */
+static card_t *choose_dest(const card_t *from, int title, long long need)
 {
     card_t *c = NULL;
     int i;
     ui_lock();
-    tabs_init(&dst.g, from);
-    dst.title = T(move ? T_MOVE_TO : T_COPY_TO);
+    tabs_init(&dst.g, from, 0);
+    dst.title = T(title);
     dst.need = need;
     for (i = 0; i < MAX_CARDS; i++)
         dst.freeBytes[i] = -2;
@@ -1764,7 +1791,7 @@ static int save_transfer(card_t *c, save_view_t *v, int move)
         return 0;
     }
     mcfs_save_info(c->path, v->s.folder, &bytes, &files);
-    if (!(to = choose_dest(c, move, bytes)))
+    if (!(to = choose_dest(c, move ? T_MOVE_TO : T_COPY_TO, bytes)))
         return 0;
     {
         char name[100], t[200];
@@ -1878,18 +1905,20 @@ static void save_to_cloud(card_t *c, save_view_t *v)
     }
 }
 
-/* 1 = the card changed (the list has to be read again) */
-static int save_screen(card_t *c, int i)
+static void fit(int font, char *s, size_t size, int maxw);
+
+/* what the page shows: the save, where it is, its size and what can be done with it */
+static void save_page(save_view_t *v, const char *where, long long bytes, const int *options, int n)
 {
-    save_view_t *v = &brw.saves[i];
     unsigned long long w = v->s.when;
-    long long bytes = 0;
-    int files = 0;
     datetime_t d;
-    mcfs_save_info(c->path, v->s.folder, &bytes, &files);
     card_time_local((int)(w >> 40), (w >> 32) & 0xFF, (w >> 24) & 0xFF, (w >> 16) & 0xFF, (w >> 8) & 0xFF, w & 0xFF, &d);
     ui_lock();
     sp.v = v;
+    snprintf(sp.where, sizeof(sp.where), "%s", where);
+    fit(FONT_TEXT, sp.where, sizeof(sp.where), 304);
+    sp.options = options;
+    sp.nOptions = n;
     if (i18n_is_pt())
         snprintf(sp.date, sizeof(sp.date), "%02d/%02d/%04d  %02d:%02d:%02d", d.day, d.month, d.year, d.hour, d.minute, d.second);
     else
@@ -1898,6 +1927,11 @@ static int save_screen(card_t *c, int i)
     sp.cursor = 0;
     sp.since = now_ms();
     ui_unlock();
+}
+
+/* the page until something is chosen: the option's text id, or 0 (circle) */
+static int save_page_choice(void)
+{
     for (;;) {
         u32 b;
         ui_scene(scene_save);
@@ -1906,15 +1940,29 @@ static int save_screen(card_t *c, int i)
             sound_play(SND_BACK);
             return 0;
         }
-        if (b & (PAD_UP | PAD_DOWN)) {
+        if (b & PAD_CROSS) {
+            sound_play(SND_CONFIRM);
+            return sp.options[sp.cursor];
+        }
+        if (sp.nOptions > 1) {
             ui_lock();
-            sp.cursor = (b & PAD_UP) ? (sp.cursor + SAVE_OPTIONS - 1) % SAVE_OPTIONS : (sp.cursor + 1) % SAVE_OPTIONS;
+            sp.cursor = (b & PAD_UP) ? (sp.cursor + sp.nOptions - 1) % sp.nOptions : (sp.cursor + 1) % sp.nOptions;
             ui_unlock();
             sound_play(SND_MOVE);
-            continue;
         }
-        sound_play(SND_CONFIRM);
-        switch (saveOptions[sp.cursor]) {
+    }
+}
+
+/* 1 = the card changed (the list has to be read again) */
+static int save_screen(card_t *c, int i)
+{
+    save_view_t *v = &brw.saves[i];
+    long long bytes = 0;
+    int files = 0, k;
+    mcfs_save_info(c->path, v->s.folder, &bytes, &files);
+    save_page(v, c->base, bytes, saveOptions, 4);
+    while ((k = save_page_choice()) != 0) {
+        switch (k) {
         case T_COPY:
             save_transfer(c, v, 0);
             break;
@@ -1931,6 +1979,7 @@ static int save_screen(card_t *c, int i)
             break;
         }
     }
+    return 0;
 }
 
 /* -------- syncing one card (□ in its saves, "Sync now" in its options): asked first; a card that is already synced
@@ -1985,23 +2034,26 @@ static void browser_load(card_t *c, int cursor)
     log_msg("%s: %d saves, %lld bytes free", c->id, n, freeBytes);
 }
 
-static void card_screen(card_t *c)
+/* a card's saves. With pick, to choose one of them: returns the save picked (the screen stays loaded, for its name
+ * and icon: browser_close when done with it) or -1; without it, always -1 */
+static int card_grid(card_t *c, int pick)
 {
     brw.n = 0;
+    brw.pick = pick;
     browser_load(c, 0);
     ui_scene(scene_browser);
     for (;;) {
         /* reads the icons one by one while nobody presses anything */
         int pending = 1, n = brw.n;
-        u32 b;
-        while (pending && !(b = wait_nav_ms(PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT | PAD_CROSS | PAD_CIRCLE | PAD_SQUARE, 0)))
+        u32 b, keys = PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT | PAD_CROSS | PAD_CIRCLE | (pick ? 0 : PAD_SQUARE);
+        while (pending && !(b = wait_nav_ms(keys, 0)))
             pending = load_next_icon();
         if (!pending)
-            b = wait_nav(PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT | PAD_CROSS | PAD_CIRCLE | PAD_SQUARE);
+            b = wait_nav(keys);
         if (b & PAD_CIRCLE) {
             sound_play(SND_BACK);
             browser_close();
-            return;
+            return -1;
         }
         if (b & (PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT)) {
             int k = brw.cursor;
@@ -2027,6 +2079,8 @@ static void card_screen(card_t *c)
             }
         } else if ((b & PAD_CROSS) && n) {
             sound_play(SND_CONFIRM);
+            if (pick)
+                return brw.cursor;
             if (save_screen(c, brw.cursor))
                 browser_load(c, brw.cursor);
             ui_scene(scene_browser);
@@ -2037,6 +2091,8 @@ static void card_screen(card_t *c)
         }
     }
 }
+
+static void card_screen(card_t *c) { card_grid(c, 0); }
 
 /* -------- △ on a card: what can be done with it as a whole */
 
@@ -2063,6 +2119,356 @@ static void card_options(card_t *c)
     }
 }
 
+/* -------- the Files group: a device's folders and files. X on a .psu file opens the save it holds, to import it into
+ * a card; triangle exports a save of a card, as a .psu file, into the folder shown */
+
+#define FB_MAX     512    /* entries of a folder (the ones past it are left out) */
+#define FB_ROWS    9
+#define FB_X       70
+#define FB_RIGHT   570
+#define FB_Y0      114
+#define FB_ROW     26
+#define FB_NAME_W  360    /* a name's room: the file's size goes on its right */
+#define FB_DIM     0x6F7C94   /* a file that isn't a .psu: listed, but there's nothing to do with it */
+
+static struct {
+    int dev;                   /* FDEV_* */
+    char root[16], dir[400];   /* the device's root and the folder shown: a name can be appended to either */
+    dir_entry_t *list;
+    int n, cursor, top;
+    int loading, error;        /* the folder is being read; it couldn't be read */
+    char title[200];           /* the device and the folder, without the start of the path when it's too long */
+    char selected[260];        /* the selected name, cut to fit (the others are cut as they're drawn) */
+} fb;
+
+static int is_psu(const char *name)
+{
+    size_t n = strlen(name);
+    return n > 4 && !strcasecmp(name + n - 4, ".psu");
+}
+
+/* with ui_lock held: they measure with the fonts */
+static void fb_select(void)
+{
+    fb.selected[0] = 0;
+    if (fb.cursor < fb.n) {
+        snprintf(fb.selected, sizeof(fb.selected), "%s", fb.list[fb.cursor].name);
+        utf8_fix(fb.selected, sizeof(fb.selected));
+        fit(FONT_TEXT, fb.selected, sizeof(fb.selected), FB_NAME_W);
+    }
+}
+
+static void fb_title(void)
+{
+    char path[400];
+    const char *p = path, *q;
+    size_t n;
+    snprintf(path, sizeof(path), "/%s", fb.dir + strlen(fb.root));
+    if ((n = strlen(path)) > 1)
+        path[n - 1] = 0;
+    utf8_fix(path, sizeof(path));
+    snprintf(fb.title, sizeof(fb.title), "%s:  %s", T(deviceText[fb.dev]), p);
+    while (ui_measure(FONT_TEXT, fb.title) > FB_RIGHT - FB_X && (q = strchr(p + 1, '/')) != NULL) {
+        p = q;
+        snprintf(fb.title, sizeof(fb.title), "%s:  ...%s", T(deviceText[fb.dev]), p);
+    }
+}
+
+static void fb_scroll(void)
+{
+    if (fb.cursor < fb.top)
+        fb.top = fb.cursor;
+    if (fb.cursor >= fb.top + FB_ROWS)
+        fb.top = fb.cursor - FB_ROWS + 1;
+}
+
+/* reads the folder shown; on = the name the cursor goes to (NULL = the first one) */
+static void fb_load(const char *on)
+{
+    int n, i, cursor = 0;
+    ui_lock();   /* the list isn't drawn while it's being read into */
+    fb.n = 0;
+    fb.loading = 1;
+    ui_unlock();
+    n = dir_list(fb.dir, fb.list, FB_MAX);
+    for (i = 0; on && i < n; i++)
+        if (!strcmp(fb.list[i].name, on))
+            cursor = i;
+    ui_lock();
+    fb.error = n < 0;
+    fb.n = n < 0 ? 0 : n;
+    fb.cursor = cursor;
+    fb.top = 0;
+    fb_scroll();
+    fb_title();
+    fb_select();
+    fb.loading = 0;
+    ui_unlock();
+    log_msg("files: %s: %d entries", fb.dir, n);
+#ifdef DEBUG_BUILD
+    for (i = 0; i < n && i < 60; i++)   /* what a script has to walk through to reach a file */
+        log_msg("  %d: %s%s (%lld bytes)", i, fb.list[i].name, fb.list[i].dir ? "/" : "", fb.list[i].size);
+#endif
+}
+
+static void fb_enter(const char *name)
+{
+    size_t n = strlen(fb.dir);
+    if (n + strlen(name) + 2 > sizeof(fb.dir)) {
+        message_wait(0, NULL, COLOR_ERROR, T(T_DIR_ERROR));
+        return;
+    }
+    snprintf(fb.dir + n, sizeof(fb.dir) - n, "%s/", name);
+    fb_load(NULL);
+}
+
+/* to the folder above, with the cursor on the one it came from. 0 = it's the device's root already */
+static int fb_up(void)
+{
+    char from[256], *p;
+    size_t n = strlen(fb.dir);
+    if (n <= strlen(fb.root))
+        return 0;
+    fb.dir[n - 1] = 0;
+    p = strrchr(fb.dir, '/');
+    if (!p)
+        p = strrchr(fb.dir, ':');
+    p = p && p + 1 >= fb.dir + strlen(fb.root) ? p + 1 : fb.dir + strlen(fb.root);
+    snprintf(from, sizeof(from), "%s", p);
+    *p = 0;
+    fb_load(from);
+    return 1;
+}
+
+static void scene_files(float t)
+{
+    int i, y, lh = ui_line_height(FONT_TEXT);
+    look_space();
+    look_frame();
+    ui_alpha(look_fade(t));
+    look_title(FB_X, 82, fb.title, 0);
+    for (i = fb.top, y = FB_Y0; i < fb.n && i < fb.top + FB_ROWS; i++, y += FB_ROW) {
+        const dir_entry_t *e = &fb.list[i];
+        int usable = e->dir || is_psu(e->name);
+        float my = y + lh / 2.0f + 1;
+        if (e->dir) {   /* a small folder */
+            ui_rect(FB_X, my - 8, 7, 3, 0xD9B95C, 0x58);
+            ui_rect(FB_X, my - 6, 16, 12, 0xD9B95C, 0x58);
+        } else if (usable)
+            ui_image(IMG_MINICARD, FB_X + 2, my - 8, 13, 15, 0xFFFFFF, 0x80);
+        else
+            ui_rect(FB_X + 3, my - 7, 10, 13, FB_DIM, 0x38);
+        if (i == fb.cursor) {
+            if (usable)
+                look_item(FB_X + 28, y, fb.selected, 1, 0);
+            else
+                look_glow_text(FONT_TEXT, FB_X + 28, y, FB_DIM, 0xA8B2C6, fb.selected);
+        } else {
+            char name[260];
+            snprintf(name, sizeof(name), "%s", e->name);
+            utf8_fix(name, sizeof(name));
+            ui_text_fit(FONT_TEXT, FB_X + 28, y, FB_NAME_W, usable ? COLOR_ITEM : FB_DIM, name);
+        }
+        if (!e->dir) {
+            char s[24];
+            format_size(e->size, s, sizeof(s));
+            ui_text_right(FONT_SMALL, FB_RIGHT, y + 2, usable ? COLOR_DIM : FB_DIM, s);
+        }
+    }
+    if (!fb.n && !fb.loading)
+        ui_text_center(FONT_TEXT, W / 2.0f, 200, fb.error ? COLOR_WARN : COLOR_DIM, T(fb.error ? T_DIR_ERROR : T_DIR_EMPTY));
+    if (fb.top > 0)
+        look_arrow(W / 2.0f, FB_Y0 - 12, 0, 0x6E9AE0);
+    if (fb.top + FB_ROWS < fb.n)
+        look_arrow(W / 2.0f, FB_Y0 + FB_ROWS * FB_ROW + 2, 1, 0x6E9AE0);
+    if (fb.n) {
+        char s[24];
+        snprintf(s, sizeof(s), "%d/%d", fb.cursor + 1, fb.n);
+        ui_text_right(FONT_SMALL, FB_RIGHT, FB_Y0 + FB_ROWS * FB_ROW + 2, 0x8E98AA, s);
+    }
+    {
+        legend_t l[3] = {{BUTTON_CIRCLE, T(T_BACK)}, {BUTTON_CROSS, T(T_OPEN)}, {BUTTON_TRIANGLE, T(T_EXPORT_SAVE)}};
+        look_legend(l, 3, 0);
+    }
+}
+
+/* X on a .psu file: the page of the save it holds, from where it can be imported into a card */
+static void psu_screen(const char *file)
+{
+    static save_view_t v;
+    char path[660], name[160], t[300];
+    mcfs_psu_t info;
+    buffer_t iconsys = {0}, ico = {0};
+    icon_t *ic;
+    card_t *to;
+    int r;
+    snprintf(path, sizeof(path), "%s%s", fb.dir, file);
+    message(0, NULL, COLOR_TEXT, T(T_LOADING));
+    r = mcfs_psu_info(path, &info, &iconsys, &ico);
+    log_msg("files: %s: %d (%s, %lld bytes in %d files)", path, r, info.folder, info.bytes, info.files);
+    if (r != MCFS_OK) {
+        message_wait(0, NULL, COLOR_ERROR, T(T_ERR_PSU));
+        return;
+    }
+    ic = iconsys.len ? icon_load(&iconsys, &ico) : NULL;
+    buf_free(&iconsys);
+    buf_free(&ico);
+    ui_lock();
+    memset(&v, 0, sizeof(v));
+    snprintf(v.s.folder, sizeof(v.s.folder), "%s", info.folder);
+    v.s.when = info.when;
+    v.icon = ic;
+    v.tried = 1;
+    if (ic) {
+        snprintf(v.line1, sizeof(v.line1), "%s", ic->line1);
+        snprintf(v.line2, sizeof(v.line2), "%s", ic->line2);
+    }
+    ui_unlock();
+    snprintf(name, sizeof(name), "%s", file);
+    utf8_fix(name, sizeof(name));
+    save_page(&v, name, info.bytes, psuOptions, 1);
+    while (save_page_choice()) {
+        if (!nCards) {
+            message_wait(0, NULL, COLOR_WARN, T(T_NO_CARDS_SD));
+            continue;
+        }
+        if (!(to = choose_dest(NULL, T_IMPORT_TO, info.bytes)))
+            continue;
+        save_name(&v, name, sizeof(name));
+        snprintf(t, sizeof(t), T(T_CONFIRM_IMPORT), name, to->base);
+        if (!confirm(t, NULL, T_IMPORT_YES) || card_busy(to))
+            continue;
+        message(0, NULL, COLOR_TEXT, T(T_WORKING_IMPORT));
+        r = mcfs_import_psu(path, to->path);
+        log_msg("import %s into %s: %d", path, to->id, r);
+        cards_recheck(to);
+        op_result(r, T_DONE_IMPORT, to);
+    }
+    ui_scene(scene_frame);   /* off the screen before the icon goes */
+    ui_lock();
+    icon_free(ic);
+    v.icon = NULL;
+    ui_unlock();
+}
+
+/* a save of a card as a .psu file in the folder shown, read back and compared. 1 = written (file = its name) */
+static int export_save(card_t *c, save_view_t *v, char file[40])
+{
+    char name[160], path[460], t[300];
+    buffer_t psu = {0};
+    int r, ok = 0;
+    size_t i;
+    snprintf(file, 40, "%s.psu", v->s.folder);
+    for (i = 0; file[i]; i++)   /* what a file's name can't have on FAT */
+        if ((unsigned char)file[i] < 0x20 || strchr("\\/:*?\"<>|", file[i]))
+            file[i] = '_';
+    snprintf(path, sizeof(path), "%s%s", fb.dir, file);
+    save_name(v, name, sizeof(name));
+    snprintf(t, sizeof(t), T(T_CONFIRM_EXPORT), name);
+    snprintf(name, sizeof(name), T(T_EXPORT_FILE), file);
+    if (!confirm(t, name, T_EXPORT))
+        return 0;
+    if (file_exists(path)) {
+        snprintf(t, sizeof(t), T(T_EXPORT_REPLACE), file);
+        if (!confirm(t, NULL, T_REPLACE))
+            return 0;
+    }
+    message(0, NULL, COLOR_TEXT, T(T_WORKING_EXPORT));
+    r = mcfs_export_psu(c->path, v->s.folder, &psu);
+    if (r == MCFS_OK && !(ok = file_write_checked(path, psu.data, psu.len)))
+        unlink(path);   /* half a file, or one that reads back different, is no use to anyone */
+    log_msg("export %s of %s to %s (%u bytes): %d, %s", v->s.folder, c->id, path, (unsigned)psu.len, r,
+            ok ? "written and read back" : "not written");
+    buf_free(&psu);
+    if (ok) {
+        snprintf(t, sizeof(t), T(T_DONE_EXPORT), file);
+        message_wait(0, NULL, COLOR_OK, t);
+    } else
+        message_wait(0, NULL, COLOR_ERROR, T(T_ERR_EXPORT));
+    return ok;
+}
+
+/* triangle: which card, then which of its saves */
+static void export_here(void)
+{
+    char file[40];
+    card_t *c;
+    int i, ok;
+    if (!nCards) {
+        message_wait(0, NULL, COLOR_WARN, T(T_NO_CARDS_SD));
+        return;
+    }
+    if (!(c = choose_dest(NULL, T_EXPORT_FROM, 0)) || (i = card_grid(c, 1)) < 0)
+        return;
+    ok = export_save(c, &brw.saves[i], file);
+    browser_close();
+    if (ok)
+        fb_load(file);   /* the folder again, on the new file */
+}
+
+static void files_screen(int dev)
+{
+    if (dev == FDEV_USB) {
+        message(0, NULL, COLOR_TEXT, T(T_USB_SEARCHING));
+        if (usb_open(6000) != 0) {
+            message_wait(0, NULL, COLOR_WARN, T(T_USB_NONE));
+            return;
+        }
+    }
+    if (!fb.list && !(fb.list = calloc(FB_MAX, sizeof(dir_entry_t))))
+        return;
+    fb.dev = dev;
+    snprintf(fb.root, sizeof(fb.root), "%s", dev == FDEV_USB ? "mass0:/" : sdRoot);
+    snprintf(fb.dir, sizeof(fb.dir), "%s", fb.root);
+    fb_load(NULL);
+    for (;;) {
+        u32 b;
+        ui_scene(scene_files);
+        b = wait_nav(PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT | PAD_CROSS | PAD_CIRCLE | PAD_TRIANGLE);
+        if (b & (PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT)) {   /* left and right: a screenful at a time */
+            int k = fb.cursor;
+            if (!fb.n)
+                continue;
+            if (b & PAD_UP)
+                k = (k + fb.n - 1) % fb.n;
+            else if (b & PAD_DOWN)
+                k = (k + 1) % fb.n;
+            else if (b & PAD_LEFT)
+                k = k >= FB_ROWS ? k - FB_ROWS : 0;
+            else
+                k = k + FB_ROWS < fb.n ? k + FB_ROWS : fb.n - 1;
+            if (k != fb.cursor) {
+                ui_lock();
+                fb.cursor = k;
+                fb_scroll();
+                fb_select();
+                ui_unlock();
+                sound_play(SND_MOVE);
+            }
+        } else if (b & PAD_CIRCLE) {
+            sound_play(SND_BACK);
+            if (!fb_up())
+                return;
+        } else if (b & PAD_CROSS) {
+            char name[256];
+            if (!fb.n)
+                continue;
+            snprintf(name, sizeof(name), "%s", fb.list[fb.cursor].name);
+            if (fb.list[fb.cursor].dir) {
+                sound_play(SND_CONFIRM);
+                fb_enter(name);
+            } else if (is_psu(name)) {
+                sound_play(SND_CONFIRM);
+                psu_screen(name);
+            } else
+                sound_play(SND_BACK);
+        } else if ((b & PAD_TRIANGLE) && !fb.error) {
+            sound_play(SND_CONFIRM);
+            export_here();
+        }
+    }
+}
+
 /* -------- the main screen: the cards on the left, in their groups (tabs), the selected one big on the right */
 
 static struct {
@@ -2079,6 +2485,13 @@ static void scene_menu(float t)
     look_frame();
     ui_alpha(look_fade(t));
     tabs_draw(&menu.g, 1);
+    if (menu.g.tab == TAB_FILES) {   /* the devices: what the group is for, where a card's picture would be */
+        legend_t l[3] = {{BUTTON_CIRCLE, T(T_MENU_EXIT)}, {BUTTON_CROSS, T(T_OPEN)}, {BUTTON_START, T(T_SETTINGS)}};
+        look_legend(l, 3, 1);
+        ui_text_center(FONT_TEXT, CARD_CX, 82, 0x7E8AA0, T(deviceText[menu.g.cursor]));
+        ui_paragraph(FONT_SMALL, CARD_X - 16, CARD_Y + 70, LOOK_CARD_W + 32, COLOR_DIM, T(T_FILES_HINT));
+        return;
+    }
     {
         legend_t l[4] = {{BUTTON_CIRCLE, T(T_MENU_EXIT)}, {BUTTON_CROSS, T(T_OPEN)}, {BUTTON_TRIANGLE, T(T_OPTIONS)},
                          {BUTTON_START, T(T_SETTINGS)}};
@@ -2881,7 +3294,7 @@ static void manual(void)
     for (i = 0; i < nCards && !is_selected(&cards[i], 1); i++)
         ;
     ui_lock();
-    tabs_init(&menu.g, NULL);
+    tabs_init(&menu.g, NULL, 1);
     if (i < nCards) {
         int k;
         tabs_show(&menu.g, tab_of(&cards[i]));
@@ -2902,10 +3315,13 @@ static void manual(void)
         }
         if (tabs_nav(&menu.g, b))
             continue;
-        if ((b & PAD_CROSS) && menu.g.n) {
+        if ((b & PAD_CROSS) && menu.g.tab == TAB_FILES) {
+            sound_play(SND_CONFIRM);
+            files_screen(menu.g.cursor);
+        } else if ((b & PAD_CROSS) && tabs_card(&menu.g)) {
             sound_play(SND_CONFIRM);
             card_screen(tabs_card(&menu.g));
-        } else if ((b & PAD_TRIANGLE) && menu.g.n) {
+        } else if ((b & PAD_TRIANGLE) && tabs_card(&menu.g)) {
             sound_play(SND_CONFIRM);
             card_options(tabs_card(&menu.g));
         } else if (b & PAD_START) {

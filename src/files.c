@@ -2,9 +2,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+/* only to list a folder (dir_list), with fileXio's own descriptors: never mixed with newlib's */
+#define NEWLIB_PORT_AWARE
+#include <fileXio_rpc.h>
+#include <iox_stat.h>
 #include <wolfssl/options.h>
 #include <wolfssl/wolfcrypt/sha256.h>
 #include "common.h"
@@ -75,8 +80,7 @@ int file_write(const char *path, const unsigned char *d, size_t n)
     return r;
 }
 
-/* writes a file and reads it back. 1 = it's there, as it should be */
-static int write_checked(const char *path, const unsigned char *d, size_t n)
+int file_write_checked(const char *path, const unsigned char *d, size_t n)
 {
     buffer_t b = {0};
     int ok = file_write(path, d, n) == 0 && file_read(path, &b) == 0 && b.len == n && (!n || memcmp(b.data, d, n) == 0);
@@ -89,7 +93,7 @@ int file_replace(const char *path, const unsigned char *d, size_t n)
     char tmp[260];
     snprintf(tmp, sizeof(tmp), "%s.new", path);
     unlink(tmp);
-    if (!write_checked(tmp, d, n)) {
+    if (!file_write_checked(tmp, d, n)) {
         unlink(tmp);
         return -1;
     }
@@ -97,10 +101,44 @@ int file_replace(const char *path, const unsigned char *d, size_t n)
     if (rename(tmp, path) == 0)
         return 0;
     /* a file system that can't rename (the sd2psx's): written again in its place; the .new stays if that fails */
-    if (!write_checked(path, d, n))
+    if (!file_write_checked(path, d, n))
         return -1;
     unlink(tmp);
     return 0;
+}
+
+static int by_kind_and_name(const void *a, const void *b)
+{
+    const dir_entry_t *x = a, *y = b;
+    return x->dir != y->dir ? y->dir - x->dir : strcasecmp(x->name, y->name);
+}
+
+/* through fileXio itself: one call gives each entry's name, kind and size (readdir gives only the name, and asking
+ * for the rest file by file would take long on the sd2psx). The folder is read whole and closed before returning */
+int dir_list(const char *path, dir_entry_t *list, int max)
+{
+    static iox_dirent_t e;
+    char c[400];
+    size_t len;
+    int fd, n = 0;
+    snprintf(c, sizeof(c), "%s", path);
+    len = strlen(c);
+    if (len > 1 && c[len - 1] == '/' && c[len - 2] != ':')   /* "dev:/folder", but "dev:/" for the root */
+        c[len - 1] = 0;
+    fd = fileXioDopen(c);
+    if (fd < 0)
+        return -1;
+    while (n < max && fileXioDread(fd, &e) > 0) {
+        if (!strcmp(e.name, ".") || !strcmp(e.name, ".."))
+            continue;
+        snprintf(list[n].name, sizeof(list[0].name), "%s", e.name);
+        list[n].dir = FIO_S_ISDIR(e.stat.mode) ? 1 : 0;
+        list[n].size = ((long long)e.stat.hisize << 32) | e.stat.size;
+        n++;
+    }
+    fileXioDclose(fd);
+    qsort(list, n, sizeof(list[0]), by_kind_and_name);
+    return n;
 }
 
 void ensure_data_dir(void)

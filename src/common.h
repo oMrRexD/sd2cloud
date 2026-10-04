@@ -43,6 +43,9 @@ int device_of(const char *path);
 /* the card the sd2psx is emulating right now: its number (0 = BootCard, a game card or a named folder) and channel.
  * -1 = couldn't ask; -2 = not on an MMCE device (testing on PCSX2) */
 int mmce_active_card(int *channel);
+/* a USB drive (mass0:), for the file browser: loads its drivers the first time, then waits up to ms for the drive.
+ * 0 = it's there */
+int usb_open(int ms);
 void go_osd(void) __attribute__((noreturn));
 #ifdef DEBUG_BUILD
 int debug_has_script(void);
@@ -64,7 +67,16 @@ void buf_free(buffer_t *b);
 int file_read(const char *path, buffer_t *b);
 int file_write(const char *path, const unsigned char *d, size_t n);
 int file_replace(const char *path, const unsigned char *d, size_t n);   /* .new -> verify -> rename */
+int file_write_checked(const char *path, const unsigned char *d, size_t n);   /* written and read back: 1 = it's there, as it should be */
 int file_exists(const char *path);
+/* what a folder has (a path ending in /): the folders first, then the files, each by name. Returns how many (the
+ * ones past max are left out), or -1 when it can't be read */
+typedef struct {
+    char name[256];
+    int dir;
+    long long size;
+} dir_entry_t;
+int dir_list(const char *path, dir_entry_t *list, int max);
 void ensure_data_dir(void);                 /* creates <sd>SD2Cloud/ if needed */
 void ensure_dir(const char *dir);           /* creates a folder (a path ending in /) and the ones above it, if needed */
 /* reads an .ini: cb(section, key, value) for each "key = value" (section "" before the first one) */
@@ -200,12 +212,24 @@ int mcfs_list_saves(const char *path, mcfs_save_t *list, int max, long long *fre
 /* the icon.sys and the 3D icon of a save from that list. 0 = ok */
 int mcfs_save_icon(const char *path, const mcfs_save_t *save, buffer_t *iconsys, buffer_t *ico);
 /* changing a card (a .mcd that the sd2psx is NOT using right now): copy a save to another card (read back and
- * compared), delete a save, export a save as a .psu. 0 = ok, else MCFS_ERR_* */
-enum { MCFS_OK = 0, MCFS_ERR_IO = -1, MCFS_ERR_EXISTS = -2, MCFS_ERR_FULL = -3, MCFS_ERR_NOT_FOUND = -4, MCFS_ERR_CHECK = -5 };
+ * compared), delete a save, export a save as a .psu, import one from a .psu file (also read back and compared).
+ * 0 = ok, else MCFS_ERR_* (BAD = the file isn't a .psu this can use) */
+enum { MCFS_OK = 0, MCFS_ERR_IO = -1, MCFS_ERR_EXISTS = -2, MCFS_ERR_FULL = -3, MCFS_ERR_NOT_FOUND = -4, MCFS_ERR_CHECK = -5,
+       MCFS_ERR_BAD = -6 };
 int mcfs_save_info(const char *path, const char *folder, long long *bytes, int *files);
 int mcfs_copy_save(const char *from, const char *folder, const char *to);
 int mcfs_delete_save(const char *path, const char *folder);
 int mcfs_export_psu(const char *path, const char *folder, buffer_t *out);
+/* what a .psu file holds: the save's folder, when it was last saved, its files' sizes added up, and its icon (the
+ * buffers stay empty when it has none) */
+typedef struct {
+    char folder[33];
+    unsigned long long when;
+    long long bytes;
+    int files;
+} mcfs_psu_t;
+int mcfs_psu_info(const char *psu, mcfs_psu_t *info, buffer_t *iconsys, buffer_t *ico);
+int mcfs_import_psu(const char *psu, const char *to);
 
 /* ------------------------------------------------------------ stream.c */
 /* reads the .mcd and hands out the .zip in CHUNK pieces (a multiple of 256 KB; the last one smaller) */

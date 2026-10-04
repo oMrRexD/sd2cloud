@@ -41,18 +41,22 @@ def count_lines(font, s, width):
 LONG_CARD = "SLUS-21065-1"          # a long card name, for the texts that show one
 LONG_DATE = "02/10/2026 21:10"
 LONG_SAVE = "Shin Megami Tensei: Digital Devil Saga 2"   # a long icon.sys title, for the questions about a save
+LONG_FILE = "BASLUS-21065SAVEDATA0001.psu"   # a long name of an exported save
 
 
 def fill(s, id_):
     """%d, %lld and %s with the worst case"""
-    if "%s" in s and id_ in ("T_CONFIRM_COPY", "T_CONFIRM_MOVE", "T_DELETE_ASK", "T_CONFIRM_CLOUD"):
+    if "%s" in s and id_ in ("T_CONFIRM_COPY", "T_CONFIRM_MOVE", "T_DELETE_ASK", "T_CONFIRM_CLOUD", "T_CONFIRM_IMPORT",
+                             "T_CONFIRM_EXPORT"):
         s = s.replace("%s", LONG_SAVE, 1).replace("%s", LONG_CARD)
     if "%s" in s:
         if id_ in ("T_HIST_TITLE", "T_RESTORE_TITLE", "T_RESTORE_IN_USE", "T_RESTORING", "T_CARD_IN_USE", "T_DONE_COPY",
-                   "T_DONE_MOVE", "T_DELETE_TEXT", "T_ERR_EXISTS", "T_ERR_FULL", "T_ERR_MC_CHECK"):
+                   "T_DONE_MOVE", "T_DELETE_TEXT", "T_ERR_EXISTS", "T_ERR_FULL", "T_ERR_MC_CHECK", "T_DONE_IMPORT"):
             s = s.replace("%s", LONG_CARD)
         elif id_ in ("T_CARD_LAST", "T_RESTORE_FROM"):
             s = s.replace("%s", LONG_DATE)
+        elif id_ in ("T_EXPORT_FILE", "T_EXPORT_REPLACE", "T_DONE_EXPORT"):
+            s = s.replace("%s", LONG_FILE)
         else:
             s = s.replace("%s", "v10.10" if "SD2Cloud" in s else "999 MB")
     if id_ in ("T_HELPER_SPACE", "T_HELPER_SPACE_NEED", "T_HELPER_FULL", "T_FREE_KB", "T_SAVE_KB"):
@@ -111,8 +115,17 @@ PLACE = {
     # a save's page: the column on the right, centered on x = 452
     "T_COPY": ("browser", 304, 1), "T_MOVE": ("browser", 304, 1), "T_DELETE": ("browser", 304, 1),
     "T_TO_CLOUD": ("browser", 304, 1), "T_SAVE_KB": ("text", 304, 1),
-    # the tabs over the list of cards (FONT_SMALL, the three side by side over the 208 px list)
+    # the tabs over the list of cards (FONT_SMALL, the four side by side, centered on the 208 px list)
     "T_TAB_CARDS": ("small", 70, 1), "T_TAB_GAMES": ("small", 60, 1), "T_TAB_BOOT": ("small", 50, 1),
+    "T_TAB_FILES": ("small", 70, 1),
+    # the Files group: the devices in the list, what the group is for on the right, a folder that has nothing to show
+    "T_DEV_SD": ("text", 172, 1), "T_DEV_USB": ("text", 172, 1), "T_FILES_HINT": ("small", 212, 5),
+    "T_DIR_ERROR": ("text", 500, 1), "T_DIR_EMPTY": ("text", 500, 1),
+    # a .psu file's page and the card pickers over it; the questions and answers of importing and exporting
+    "T_IMPORT": ("browser", 304, 1), "T_IMPORT_TO": ("text", 200, 1), "T_EXPORT_FROM": ("text", 200, 1),
+    "T_CONFIRM_IMPORT": ("text", DIALOG, 3), "T_CONFIRM_EXPORT": ("text", DIALOG, 3), "T_EXPORT_FILE": ("text", DIALOG, 2),
+    "T_DONE_IMPORT": ("text", DIALOG, 1), "T_DONE_EXPORT": ("text", DIALOG, 2), "T_LOADING": ("text", DIALOG, 1),
+    "T_USB_SEARCHING": ("text", DIALOG, 1), "T_WORKING_IMPORT": ("text", DIALOG, 1), "T_WORKING_EXPORT": ("text", DIALOG, 1),
     "T_DELETE_ASK": ("text", DIALOG, 3), "T_CONFIRM_COPY": ("text", DIALOG, 3),
     "T_CONFIRM_MOVE": ("text", DIALOG, 3), "T_CONFIRM_CLOUD": ("text", DIALOG, 3), "T_CLOUD_DONE": ("text", DIALOG, 1), "T_DONE_DELETE": ("text", DIALOG, 1),
 }
@@ -126,6 +139,8 @@ LEGENDS = [
     (("T_CANCEL_NO", "T_CANCEL_YES"), False, False), (("T_LATER", "T_YES"), False, False),
     (("T_BACK", "T_HELPER_INSTALL"), False, False), (("T_CANCEL",), False, False), (("T_BACK", "T_SYNC"), False, False),
     (("T_BACK", "T_LOGOUT_YES"), False, False), (("T_BACK", "T_HELPER_UNINSTALL"), False, False), (("T_LATER", "T_AUTO_ON"), False, False), (("T_FINISH",), False, False), (("T_LATER", "T_CONNECT"), False, False),
+    (("T_MENU_EXIT", "T_OPEN", "T_SETTINGS"), True, True), (("T_BACK", "T_OPEN", "T_EXPORT_SAVE"), False, False),
+    (("T_BACK", "T_EXPORT"), False, False), (("T_BACK", "T_REPLACE"), False, False), (("T_BACK", "T_IMPORT_YES"), False, False),
 ]
 
 

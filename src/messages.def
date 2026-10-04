@@ -2,7 +2,8 @@
  * curly quotes or button symbols: the buttons are drawn separately).
  * Kept short on purpose: it's a TV screen, and whatever needs explaining goes in the README. The tone is a system
  * application's: Portuguese uses "Não foi possível..." for errors, "Deseja...?" for questions and "cartão de memória"
- * (never "save"); a question about one save names it ("Deseja eliminar \"%s\"?") instead of a vague "estes dados".
+ * (never "save", but for the file browser's "Exportar save": the word a .psu is known by); a question about one save
+ * names it ("Deseja eliminar \"%s\"?") instead of a vague "estes dados".
  * English uses "Unable to..." and plain sentences. After changing them, run
  * tools/check_messages.py (measures each text with the font and flags what doesn't fit its line). */
 X(T_SEARCHING, "Searching for memory cards...", "Procurando cartões de memória...")
@@ -137,6 +138,7 @@ X(T_CONFIRM_CLOUD_TEXT, "A .psu file will be created in the Saves folder, next t
 X(T_TAB_CARDS, "Cards", "Cartões")
 X(T_TAB_GAMES, "Games", "Jogos")
 X(T_TAB_BOOT, "Boot", "Boot")
+X(T_TAB_FILES, "Files", "Arquivos")
 X(T_NO_ROOM, "Not enough free space", "Espaço insuficiente")
 X(T_OPEN, "Open", "Abrir")
 X(T_SYNC, "Sync", "Sincronizar")
@@ -202,3 +204,29 @@ X(T_HELPER_UNINSTALL_ERROR, "Unable to remove the IGR helper from the memory car
 X(T_HELPER_ELSEWHERE, "SD2Cloud was opened from another device. To install the helper on the memory card, also copy the APPS/SD2Cloud folder to the sd2psx microSD.", "O SD2Cloud foi aberto a partir de outro dispositivo. Para instalar o assistente no cartão de memória, copie também a pasta APPS/SD2Cloud para o microSD do sd2psx.")
 X(T_HELPER_USB, "If that device is a USB drive, nothing needs to be installed. In OPL, set \"IGR Path\" to:", "Se esse dispositivo for um pendrive USB, não é preciso instalar nada. No OPL, em \"Definir saída do IGR\", informe:")
 X(T_HELPER_USB_HINT, "Optional with SD2Cloud on a USB drive: see the README.", "Opcional com o SD2Cloud em um pendrive: veja o LEIA-ME.")
+X(T_DEV_SD, "microSD", "microSD")
+X(T_DEV_USB, "USB drive", "Dispositivo USB")
+X(T_FILES_HINT, "Import .psu files into your memory cards, or export saved data from them as .psu files.", "Importe arquivos .psu para os cartões de memória ou exporte dados salvos como arquivos .psu.")
+X(T_LOADING, "Loading...", "Carregando...")
+X(T_USB_SEARCHING, "Looking for a USB drive...", "Procurando dispositivo USB...")
+X(T_USB_NONE, "No USB drive was found. It must be formatted as FAT32 or exFAT.", "Nenhum dispositivo USB foi encontrado. Ele deve estar formatado em FAT32 ou exFAT.")
+X(T_DIR_ERROR, "Unable to read this folder.", "Não foi possível ler esta pasta.")
+X(T_DIR_EMPTY, "This folder is empty.", "Esta pasta está vazia.")
+X(T_EXPORT_SAVE, "Export save", "Exportar save")
+X(T_EXPORT, "Export", "Exportar")
+X(T_EXPORT_FROM, "Export from", "Exportar de")
+X(T_CONFIRM_EXPORT, "Export \"%s\" to this folder?", "Deseja exportar \"%s\" para esta pasta?")
+X(T_EXPORT_FILE, "File: %s", "Arquivo: %s")
+X(T_EXPORT_REPLACE, "%s already exists in this folder. Replace it?", "%s já existe nesta pasta. Deseja substituí-lo?")
+X(T_REPLACE, "Replace", "Substituir")
+X(T_WORKING_EXPORT, "Exporting...", "Exportando...")
+X(T_DONE_EXPORT, "Exported as %s.", "Exportado como %s.")
+X(T_ERR_EXPORT, "Unable to write the file.", "Não foi possível gravar o arquivo.")
+X(T_IMPORT, "Import to card", "Importar para cartão")
+X(T_IMPORT_YES, "Import", "Importar")
+X(T_IMPORT_TO, "Import to", "Importar para")
+X(T_CONFIRM_IMPORT, "Import \"%s\" to %s?", "Deseja importar \"%s\" para %s?")
+X(T_WORKING_IMPORT, "Importing...", "Importando...")
+X(T_DONE_IMPORT, "Imported to %s.", "Importação em %s concluída.")
+X(T_ERR_PSU, "This file is not a valid .psu save file.", "Este arquivo não é um .psu válido.")
+X(T_NO_CARDS_SD, "No memory cards were found on the microSD.", "Nenhum cartão de memória foi encontrado no microSD.")

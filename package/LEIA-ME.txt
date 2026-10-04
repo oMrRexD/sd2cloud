@@ -21,6 +21,8 @@ Gerenciador de cartões de memória
 - Copia, move e elimina dados salvos entre os cartões do microSD, e envia um item avulso ao Google Drive como
   arquivo .psu.
 - Organiza os cartões em abas: cartões numerados, cartões de jogos (Game ID) e cartões de boot.
+- Importa arquivos .psu para qualquer cartão e exporta qualquer item de um cartão como arquivo .psu, a partir
+  do microSD ou de um pendrive USB e para eles (veja ARQUIVOS).
 
 REQUISITOS
 - Dispositivo da família sd2psx com o firmware sd2psXtd (suporte a MMCE).
@@ -76,6 +78,24 @@ exibidas.
   em uso no sd2psx: selecione outro cartão no sd2psx antes.
 Toda operação que envia, grava ou elimina dados pede confirmação antes de começar. Durante uma
 sincronização, o botão O permite cancelar o envio; os cartões já enviados permanecem no Drive.
+
+ARQUIVOS
+A última aba da tela principal, Arquivos, lista os dispositivos cujas pastas podem ser percorridas: o microSD
+do sd2psx e um pendrive USB (FAT32 ou exFAT). Os drivers de USB só são carregados quando o pendrive é aberto.
+X abre o dispositivo, uma pasta ou um arquivo .psu; O volta uma pasta; os direcionais para a esquerda e para
+a direita avançam uma página por vez. Todas as pastas e arquivos são listados, mas só os arquivos .psu podem
+ser abertos.
+- Importar: X em um arquivo .psu abre a página dos dados salvos que ele contém (nome, ícone, data e tamanho).
+  "Importar para cartão" pede então o cartão, escolhido nas mesmas abas da tela principal. O arquivo é
+  verificado por inteiro antes de o cartão ser alterado, e o que é gravado é lido de volta e comparado. Um
+  cartão que já tem dados com o mesmo nome, ou sem espaço suficiente, fica como está: elimine ou mova esse
+  item antes.
+- Exportar: na pasta onde o arquivo deve ficar, TRIÂNGULO pede o cartão e depois o item. O arquivo recebe o
+  nome da pasta do item (BASLUS-21065SAVE.psu, por exemplo), é lido de volta e comparado. Um arquivo com o
+  mesmo nome só é substituído depois da sua confirmação.
+O cartão que está em uso no sd2psx não pode receber uma importação: selecione outro cartão no sd2psx antes.
+Nomes com letras acentuadas podem aparecer abreviados, ou não abrir (limitação do driver de FAT do SDK do
+PS2): prefira nomes simples para as pastas usadas aqui.
 
 CONFIGURAÇÕES (START)
 - Sincronizar todos os cartões: envia os cartões não sincronizados; se todos estiverem sincronizados, o

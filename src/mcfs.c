@@ -661,30 +661,17 @@ int mcfs_save_info(const char *path, const char *folder, long long *bytes, int *
     return r;
 }
 
-int mcfs_copy_save(const char *from, const char *folder, const char *to)
+/* srcSave (read from another card or from a .psu) into a card, read back and compared before it counts */
+static int write_save(const char *to)
 {
     static unsigned char dir[MAX_ENTRIES][ENT];
+    char folder[33];
     root_find_t f;
     unsigned int cursor = 0, need, perCl, slot, first, dirFirst = FAT_END, i;
-    int r;
-    /* the save, from its card */
-    if (mc_open(&mc, from) < 0)
+    int r = MCFS_ERR_IO;
+    snprintf(folder, sizeof(folder), "%.32s", (const char *)srcSave.root + 64);
+    if (mc_open_mode(&mc, to, O_RDWR) < 0)
         return MCFS_ERR_IO;
-    r = read_save(&mc, folder, &srcSave);
-    close(mc.fd);
-    /* a folder inside the save (the PS2 never makes one) would be copied as an entry pointing nowhere */
-    for (i = 2; r == MCFS_OK && i < (unsigned int)srcSave.n; i++)
-        if (le16(srcSave.ent[i]) & DF_DIRECTORY)
-            r = MCFS_ERR_IO;
-    if (r != MCFS_OK) {
-        save_free(&srcSave);
-        return r;
-    }
-    if (mc_open_mode(&mc, to, O_RDWR) < 0) {
-        save_free(&srcSave);
-        return MCFS_ERR_IO;
-    }
-    r = MCFS_ERR_IO;
     if (find_in_root(&mc, folder, &f) != 0)
         goto out;
     if (f.found) {
@@ -759,6 +746,23 @@ out:
             close(mc.fd);
         save_free(&checkSave);
     }
+    return r;
+}
+
+int mcfs_copy_save(const char *from, const char *folder, const char *to)
+{
+    int r, i;
+    /* the save, from its card */
+    if (mc_open(&mc, from) < 0)
+        return MCFS_ERR_IO;
+    r = read_save(&mc, folder, &srcSave);
+    close(mc.fd);
+    /* a folder inside the save (the PS2 never makes one) would be copied as an entry pointing nowhere */
+    for (i = 2; r == MCFS_OK && i < srcSave.n; i++)
+        if (le16(srcSave.ent[i]) & DF_DIRECTORY)
+            r = MCFS_ERR_IO;
+    if (r == MCFS_OK)
+        r = write_save(to);
     save_free(&srcSave);
     return r;
 }
@@ -827,5 +831,134 @@ int mcfs_export_psu(const char *path, const char *folder, buffer_t *out)
     save_free(&srcSave);
     if (r != MCFS_OK)
         buf_free(out);
+    return r;
+}
+
+/* ------------------------------------------------------------ a save from a .psu file into a card */
+
+/* a name the card can hold: 1 to 32 bytes, none of them a control character or a slash */
+static int name_ok(const unsigned char *e)
+{
+    const char *s = (const char *)e + 64;
+    size_t n = strnlen(s, 33), i;
+    if (!n || n > 32 || !strcmp(s, ".") || !strcmp(s, ".."))
+        return 0;
+    for (i = 0; i < n; i++)
+        if ((unsigned char)s[i] < 0x20 || s[i] == '/')
+            return 0;
+    return 1;
+}
+
+/* the .psu as a save read from a card (srcSave), checked whole before anything is written anywhere: the sizes
+ * against the file's own, the names, no folder inside it, no name twice. The file is closed again before this
+ * returns: on the sd2psx it must not be open while a card is */
+static int read_psu(const char *path, save_raw_t *s)
+{
+    long size, at = ENT;
+    int fd = open(path, O_RDONLY), r = MCFS_ERR_BAD, i, k, n;
+    s->n = 0;
+    if (fd < 0)
+        return MCFS_ERR_IO;
+    size = lseek(fd, 0, SEEK_END);
+    lseek(fd, 0, SEEK_SET);
+    if (size < 3 * ENT || read(fd, s->root, ENT) != ENT)
+        goto out;
+    n = (int)le32(s->root + 4);
+    if (!(le16(s->root) & DF_DIRECTORY) || !name_ok(s->root) || n < 2 || n > MAX_ENTRIES)
+        goto out;
+    s->root[1] |= DF_EXISTS >> 8;
+    for (i = 0; i < n; i++) {
+        unsigned char *e = s->ent[i];
+        unsigned int len, done;
+        if (at + ENT > size || read(fd, e, ENT) != ENT)
+            goto out;
+        at += ENT;
+        s->n = i + 1;
+        if (i < 2) {   /* the folder's own two entries: where they point is set when the save goes into a card */
+            if (!(le16(e) & DF_DIRECTORY))
+                goto out;
+            memset(e + 64, 0, 32);
+            strcpy((char *)e + 64, i ? ".." : ".");
+            e[1] |= DF_EXISTS >> 8;
+            continue;
+        }
+        if ((le16(e) & DF_DIRECTORY) || !name_ok(e))
+            goto out;
+        for (k = 2; k < i; k++)
+            if (!strncmp((const char *)e + 64, (const char *)s->ent[k] + 64, 32))
+                goto out;
+        e[1] |= DF_EXISTS >> 8;
+        len = le32(e + 4);
+        if (len > (unsigned long)(size - at))
+            goto out;
+        buf_free(&s->data[i]);
+        if (len) {
+            if (!(s->data[i].data = malloc(len + 1))) {
+                r = MCFS_ERR_IO;
+                goto out;
+            }
+            s->data[i].cap = len + 1;
+            for (done = 0; done < len;) {
+                int got = read(fd, s->data[i].data + done, len - done > 64 * 1024 ? 64 * 1024 : len - done);
+                if (got <= 0)
+                    goto out;
+                done += got;
+            }
+            s->data[i].len = len;
+        }
+        at += (len + 1023) & ~1023u;   /* each file is padded to 1 KB (the last one's padding may be missing) */
+        if (len % 1024 && at <= size && lseek(fd, at, SEEK_SET) < 0)
+            goto out;
+    }
+    r = MCFS_OK;
+out:
+    close(fd);
+    if (r != MCFS_OK)
+        save_free(s);
+    return r;
+}
+
+/* the file of srcSave with that name (-1 = it has none) */
+static int psu_file(const char *name)
+{
+    int i;
+    for (i = 2; i < srcSave.n; i++)
+        if (!strncmp((const char *)srcSave.ent[i] + 64, name, 32))
+            return i;
+    return -1;
+}
+
+int mcfs_psu_info(const char *psu, mcfs_psu_t *info, buffer_t *iconsys, buffer_t *ico)
+{
+    int r = read_psu(psu, &srcSave), i, k;
+    buf_free(iconsys);
+    buf_free(ico);
+    memset(info, 0, sizeof(*info));
+    if (r != MCFS_OK)
+        return r;
+    snprintf(info->folder, sizeof(info->folder), "%.32s", (const char *)srcSave.root + 64);
+    info->when = mtime(srcSave.root);
+    for (i = 2; i < srcSave.n; i++)
+        info->bytes += le32(srcSave.ent[i] + 4), info->files++;
+    /* its icon, found the way a card's is: icon.sys names it */
+    if ((i = psu_file("icon.sys")) >= 0 && srcSave.data[i].len >= 964 && !memcmp(srcSave.data[i].data, "PS2D", 4)) {
+        char name[65];
+        snprintf(name, sizeof(name), "%.64s", (const char *)srcSave.data[i].data + 260);
+        if ((k = psu_file(name)) < 0 || !srcSave.data[k].len || srcSave.data[k].len > MAX_FILE ||
+            buf_append(iconsys, srcSave.data[i].data, srcSave.data[i].len) || buf_append(ico, srcSave.data[k].data, srcSave.data[k].len)) {
+            buf_free(iconsys);
+            buf_free(ico);
+        }
+    }
+    save_free(&srcSave);
+    return r;
+}
+
+int mcfs_import_psu(const char *psu, const char *to)
+{
+    int r = read_psu(psu, &srcSave);
+    if (r == MCFS_OK)
+        r = write_save(to);
+    save_free(&srcSave);
     return r;
 }

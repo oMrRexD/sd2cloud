@@ -19,6 +19,8 @@ Memory card manager
 - Copies, moves and deletes saved data between the cards on the microSD, and uploads a single item to Google
   Drive as a .psu file.
 - Organizes the cards in tabs: numbered cards, game (Game ID) cards and boot cards.
+- Imports .psu files into any card and exports any item of a card as a .psu file, from and to the microSD or
+  a USB drive (see FILES).
 
 REQUIREMENTS
 - An sd2psx-family device with the sd2psXtd firmware (MMCE support).
@@ -71,6 +73,22 @@ and R1, to switch tabs. Tabs without cards are not shown.
   sd2psx first.
 Every operation that uploads, writes or deletes data asks for confirmation first. During a sync, the O
 button cancels the upload; cards already uploaded remain on Drive.
+
+FILES
+The last tab of the main screen, Files, lists the devices whose folders can be browsed: the sd2psx microSD
+and a USB drive (FAT32 or exFAT). The USB drivers are loaded only when the USB drive is opened. X opens the
+device, a folder or a .psu file; O goes back one folder; Left and Right move a page at a time. Every folder
+and file is listed, but only .psu files can be opened.
+- Importing: X on a .psu file opens the page of the saved data it holds (name, icon, date and size). "Import
+  to card" then asks for the card, chosen from the same tabs as the main screen. The file is checked whole
+  before the card is touched, and what is written is read back and compared. A card that already has data
+  with the same name, or without enough space, is left as it is: delete or move that item first.
+- Exporting: in the folder where the file should go, TRIANGLE asks for the card and then for the item. The
+  file gets the item's folder name (BASLUS-21065SAVE.psu, for example), is read back and compared. A file
+  with the same name is only replaced after you confirm.
+The card currently in use by the sd2psx cannot receive an import: switch to another card on the sd2psx first.
+Names with accented letters may be shown abbreviated, or not open at all (a limit of the FAT driver of the
+PS2 SDK): prefer plain names for the folders you use here.
 
 SETTINGS (START)
 - Sync all cards: uploads the cards that are not synced; if all of them are, SD2Cloud says so and lets you
