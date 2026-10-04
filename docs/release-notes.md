@@ -1,10 +1,10 @@
-# SD2Cloud v1.1
+# SD2Cloud v1.2
 
 **Manage and back up your sd2psx memory cards, right on your PS2.**
 
-### What's new in 1.1
-- Backup format: in the settings (or `format` in `sd2cloud.ini`), choose whether each card goes to Drive as the sd2psx's own `.mcd` or as a `.ps2`, the format PCSX2 uses: take the `.ps2` out of the backup's zip and put it in PCSX2's memory card folder. Backups in either format can be restored, whatever is set.
-- From 1.0.1: starting a sync from the saved data screen of a memory card with many saves no longer leaves the network without an address and freezes SD2Cloud.
+### What's new in 1.2
+- Files: a new tab on the main screen browses the folders of the microSD and of a USB drive (FAT32 or exFAT). X on a `.psu` file opens the saved data it holds, to import it into any card; TRIANGLE exports an item of a card, as a `.psu`, into the folder shown. A file is checked whole before the card is changed, and what is written is read back and compared. No Google account or network is needed for this.
+- From 1.1: the backup format setting, `.mcd` (the sd2psx's own) or `.ps2` (the format PCSX2 uses).
 
 To update, use Settings > Check for updates, or copy the new files over the old ones.
 
@@ -21,6 +21,7 @@ SD2Cloud runs on the PS2 itself and works with the memory cards on the microSD o
 - Shows the saved data of each card the way the PS2 browser does, with animated 3D icons.
 - Copies, moves and deletes saved data between the cards on the microSD (the destination's free space is shown), and uploads a single item to Drive as a .psu file.
 - Organizes the cards in tabs: numbered cards, game (Game ID) cards and boot cards.
+- Imports `.psu` files into any card and exports any item of a card as a `.psu`, from and to the microSD or a USB drive (the Files tab).
 
 ### Also
 - Every operation that uploads, writes or deletes data asks for confirmation; uploads can be cancelled with the Circle button.
@@ -31,10 +32,10 @@ SD2Cloud runs on the PS2 itself and works with the memory cards on the microSD o
 - Interface inspired by the PlayStation BB Navigator, with sound effects.
 - English and Portuguese.
 
-**Installation:** extract `SD2Cloud-v1.1.zip` to the root of the sd2psx microSD and open SD2Cloud from the OPL Apps tab. See README.txt for details.
+**Installation:** extract `SD2Cloud-v1.2.zip` to the root of the sd2psx microSD and open SD2Cloud from the OPL Apps tab. See README.txt for details.
 
 ---
 
 **Gerencie e proteja os cartões de memória do seu sd2psx, direto no PS2.**
-Novidade da 1.1: nas configurações (ou em `format` no `sd2cloud.ini`) dá para escolher se cada cartão vai ao Drive como `.mcd`, o formato do sd2psx, ou como `.ps2`, o formato usado pelo PCSX2. Os dois formatos podem ser restaurados. Inclui a correção da 1.0.1 (travamento ao sincronizar a partir da tela de dados salvos de um cartão com muitos saves).
-Instalação: extraia o `SD2Cloud-v1.1.zip` na raiz do microSD do sd2psx e abra o SD2Cloud pela aba Apps do OPL. Consulte o LEIA-ME.txt para mais detalhes.
+Novidade da 1.2: a aba Arquivos, na tela principal, percorre as pastas do microSD e de um pendrive USB (FAT32 ou exFAT). X em um arquivo `.psu` abre os dados salvos que ele contém, para importar em qualquer cartão; TRIÂNGULO exporta um item de um cartão, como `.psu`, para a pasta exibida. O arquivo é verificado por inteiro antes de o cartão ser alterado, e o que é gravado é lido de volta e comparado. Não precisa de conta do Google nem de rede.
+Instalação: extraia o `SD2Cloud-v1.2.zip` na raiz do microSD do sd2psx e abra o SD2Cloud pela aba Apps do OPL. Consulte o LEIA-ME.txt para mais detalhes.
