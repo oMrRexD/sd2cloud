@@ -31,6 +31,7 @@ static void on_config(const char *s, const char *k, const char *v, void *u)
     (void)u;
     if (!strcasecmp(s, "general")) {
         if (!strcasecmp(k, "language")) COPY(cfg.language, v);
+        else if (!strcasecmp(k, "ask_connect")) cfg.no_ask_connect = !strcasecmp(v, "no");
         else if (!strcasecmp(k, "drive_folder") && *v && !strpbrk(v, "'\"\\")) {
             COPY(cfg.drive_folder, v);
             utf8_fix(cfg.drive_folder, sizeof(cfg.drive_folder));

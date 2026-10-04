@@ -1,4 +1,4 @@
-SD2Cloud 1.2.1
+SD2Cloud 1.2.2
 ==============
 
 Gerencie e proteja os cartões de memória do seu sd2psx, direto no PS2.
@@ -47,7 +47,8 @@ INSTALAÇÃO
    APPS/SD2Cloud para a pasta APPS do pendrive USB ou do cartão do MX4SIO e abra o SD2Cloud por lá. Ele
    passa a vez para a cópia do microSD, onde ficam as configurações, o assistente de IGR e as atualizações.
 3. Sem uma conta do Google conectada, o SD2Cloud pergunta se você deseja conectá-la agora. Escolhendo
-   "Agora não", ele abre direto na tela principal; a conta pode ser conectada depois, em Configurações
+   "Agora não", ele abre direto na tela principal ("Não perguntar mais", no TRIÂNGULO, faz o mesmo e a pergunta não volta:
+   ask_connect = no no sd2cloud.ini); a conta pode ser conectada depois, em Configurações
    (START). Para conectar, acesse google.com/device no celular ou no computador (ou use o QR code) e digite
    o código exibido na TV. O SD2Cloud tem acesso apenas aos arquivos que ele mesmo cria no seu Drive.
 4. Logo depois de conectar a conta, o SD2Cloud pergunta se você deseja ativar a sincronização automática

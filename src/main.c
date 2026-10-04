@@ -2877,7 +2877,8 @@ static void helper_remove(void)
 
 /* the IGR helper in the settings. Not installed: says what it does, where it goes and how much of the memory card it
  * takes, and installs it once the user agrees. Installed: installs it again (or updates it), or removes it */
-static void helper_screen(void)
+/* 1 = the helper was installed or removed (its state has to be read again) */
+static int helper_screen(void)
 {
     if (!helper_present()) {
         dlg_new(COLOR_TITLE, T(T_HELPER_TITLE));
@@ -2896,7 +2897,7 @@ static void helper_screen(void)
         dlg_show();
         wait_button(PAD_CIRCLE | PAD_CROSS, 0);
         sound_play(SND_BACK);
-        return;
+        return 0;
     }
     if (helperState == HELPER_SAME || helperState == HELPER_DIFFERENT) {
         static const char *items[2];
@@ -2904,10 +2905,10 @@ static void helper_screen(void)
         items[0] = T(helperState == HELPER_DIFFERENT ? T_UPDATE : T_HELPER_REINSTALL);
         items[1] = T(T_HELPER_UNINSTALL);
         if ((k = choose(T(T_HELPER_TITLE), items, 2, 0)) < 0)
-            return;
+            return 0;
         if (k == 1) {
             helper_remove();
-            return;
+            return 1;
         }
     }
     dlg_new(COLOR_TITLE, T(T_HELPER_TITLE));
@@ -2922,10 +2923,11 @@ static void helper_screen(void)
     dlg_show();
     if (!(wait_button(PAD_CROSS | PAD_CIRCLE, 0) & PAD_CROSS)) {
         sound_play(SND_BACK);
-        return;
+        return 0;
     }
     sound_play(SND_CONFIRM);
     helper_install_now(T_HELPER_OK);
+    return 1;
 }
 
 /* updates SD2Cloud: downloads, verifies, replaces and reopens the new version (which offers to update the memory
@@ -3194,8 +3196,8 @@ static void settings_screen(void)
             sync_all();
             break;
         case SET_HELPER:
-            helper_screen();
-            helperState = helper_status();
+            if (helper_screen())   /* only then: reading the helper back from the memory card takes seconds */
+                helperState = helper_status();
             break;
         case SET_IGR_RETURN:
             pick_return();
@@ -3250,17 +3252,28 @@ static void offer_auto_sync(void)
  * the network; the account can be connected in the settings). 1 = now */
 static int ask_connect(void)
 {
+    u32 b;
     dlg_new(COLOR_TITLE, T(T_SET_ACCOUNT));
     dlg_line(FONT_TEXT, COLOR_TEXT, 10, T(T_CONNECT_ASK));
     dlg_line(FONT_SMALL, COLOR_DIM, 0, T(T_CONNECT_HINT));
-    dlg_buttons(BUTTON_CIRCLE, T_LATER, BUTTON_CROSS, T_CONNECT);
+    /* three buttons: not now, never again (kept in sd2cloud.ini) and connect */
+    next.nlegend = 3;
+    next.legend[0].button = BUTTON_CIRCLE, next.legend[0].text = T(T_LATER);
+    next.legend[1].button = BUTTON_TRIANGLE, next.legend[1].text = T(T_NEVER_ASK);
+    next.legend[2].button = BUTTON_CROSS, next.legend[2].text = T(T_CONNECT);
     dlg_show();
-    if (wait_button(PAD_CROSS | PAD_CIRCLE, 0) & PAD_CROSS) {
+    b = wait_button(PAD_CROSS | PAD_CIRCLE | PAD_TRIANGLE, 0);
+    if (b & PAD_CROSS) {
         sound_play(SND_CONFIRM);
         return 1;
     }
     sound_play(SND_BACK);
-    log_msg("no Google account: later");
+    if (b & PAD_TRIANGLE) {
+        cfg.no_ask_connect = 1;
+        config_set("general", "ask_connect", "no");
+        message_wait(0, NULL, COLOR_TEXT, T(T_CONNECT_WHERE));
+    }
+    log_msg("no Google account: %s", (b & PAD_TRIANGLE) ? "don't ask again" : "later");
     return 0;
 }
 
@@ -3288,7 +3301,7 @@ static void manual(void)
                     log_msg("root signature: slot 1 %.16s, %s %.16s%s", seen, cards[i].id, file, strcmp(seen, file) ? "" : "  <- same card");
     }
 #endif
-    if (!google_has_access() && ask_connect()) {
+    if (!google_has_access() && !cfg.no_ask_connect && ask_connect()) {
         googleError[0] = 0;
         r = ensure_google(1);
         if (r == 0)

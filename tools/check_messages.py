@@ -138,7 +138,7 @@ LEGENDS = [
     (("T_BACK", "T_DELETE"), False, False), (("T_BACK", "T_SELECT"), False, False), (("T_BACK", "T_RESTORE"), False, False),
     (("T_CANCEL_NO", "T_CANCEL_YES"), False, False), (("T_LATER", "T_YES"), False, False),
     (("T_BACK", "T_HELPER_INSTALL"), False, False), (("T_CANCEL",), False, False), (("T_BACK", "T_SYNC"), False, False),
-    (("T_BACK", "T_LOGOUT_YES"), False, False), (("T_BACK", "T_HELPER_UNINSTALL"), False, False), (("T_LATER", "T_AUTO_ON"), False, False), (("T_FINISH",), False, False), (("T_LATER", "T_CONNECT"), False, False),
+    (("T_BACK", "T_LOGOUT_YES"), False, False), (("T_BACK", "T_HELPER_UNINSTALL"), False, False), (("T_LATER", "T_AUTO_ON"), False, False), (("T_FINISH",), False, False), (("T_LATER", "T_CONNECT"), False, False), (("T_LATER", "T_NEVER_ASK", "T_CONNECT"), False, False),
     (("T_MENU_EXIT", "T_OPEN", "T_SETTINGS"), True, True), (("T_BACK", "T_OPEN", "T_EXPORT_SAVE"), False, False),
     (("T_BACK", "T_EXPORT"), False, False), (("T_BACK", "T_REPLACE"), False, False), (("T_BACK", "T_IMPORT_YES"), False, False),
 ]

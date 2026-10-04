@@ -6,7 +6,7 @@
 #include <tamtypes.h>
 
 #define APP_NAME    "SD2Cloud"
-#define APP_VERSION "1.2.1"
+#define APP_VERSION "1.2.2"
 
 /* ------------------------------------------------------------ system.c */
 extern char appDir[200];    /* where the program lives: mmce0:/APPS/SD2Cloud/ (host:APPS/SD2Cloud/ on PCSX2) */
@@ -114,6 +114,7 @@ int i18n_is_pt(void);                       /* is the screen in Portuguese? */
 typedef struct {
     char language[8];
     char drive_folder[64];
+    int no_ask_connect;          /* [general] ask_connect = no: don't offer to connect a Google account at startup */
     int list_mode;               /* 0 = auto, 1 = only the cards in include */
     int types;                   /* TYPE_* */
     char include[1024], exclude[1024];
