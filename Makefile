@@ -36,7 +36,8 @@ EE_OBJS = $(addprefix $(OBJ_DIR)/, $(addsuffix .o, $(SOURCES)) qrcodegen.o cacer
           $(addprefix irx_, $(addsuffix .o, $(EMBEDDED_IRX))))
 EE_INCS += -Isrc -I. -Ithird_party/qrcodegen -I$(PORTS4096)/include -I$(PS2SDK)/ports/include \
            -I$(PS2SDK)/ports/include/freetype2 -I$(GSKIT)/include
-EE_LDFLAGS += -L$(PORTS4096)/lib -L$(PS2SDK)/ports/lib -L$(GSKIT)/lib
+# malloc and memalign go through system.c, which zeroes what the network libraries take while they start
+EE_LDFLAGS += -L$(PORTS4096)/lib -L$(PS2SDK)/ports/lib -L$(GSKIT)/lib -Wl,--wrap=malloc -Wl,--wrap=memalign
 EE_LIBS = -lcurl -lwolfssl -lfreetype -lpng -lz -lsocket -lps2_drivers -laudsrv -lmc -lelf-loader-nocolour -lpatches -lgskit -ldmakit -ldebug -lcdvd -lpthread -lpthreadglue -lm
 EE_CFLAGS += -Os -Wall -Wno-format-truncation $(EXTRA_CFLAGS)
 

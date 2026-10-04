@@ -391,19 +391,53 @@ static int start_dhcp(int restart)
     return ps2ip_setconfig(&i) < 0 ? -1 : 0;
 }
 
+/* While the network starts, what its libraries take from the heap comes zeroed and with nothing of it waiting in the
+ * cache (the Makefile wraps malloc and memalign for this). The SDK's netman takes its two frame tables from the heap
+ * and zeroes them through the uncached address only: on a heap that has been used (the icons of a card with many
+ * saves, just read), that memory was something else's a moment ago and a line of it is still in the cache, to be
+ * written over the zeros later. The driver then sees frames that don't exist: its transmit thread waits for the IOP,
+ * the IOP waits for the receive thread, which never runs again; the router's answer never arrives and the IOP stops
+ * serving sound and files. Seen on a console (not on PCSX2, which has no cache to disagree with the memory) */
+static int zeroNew;
+void *__real_malloc(size_t size);
+void *__real_memalign(size_t align, size_t size);
+
+static void *zeroed(void *p, size_t size, int whole_lines)
+{
+    if (zeroNew && p && size) {
+        memset(p, 0, size);
+        SyncDCache(p, (char *)p + size - 1);
+        if (whole_lines)   /* no neighbour shares these lines: they can go from the cache altogether */
+            InvalidDCache(p, (char *)p + size - 1);
+    }
+    return p;
+}
+
+void *__wrap_malloc(size_t size) { return zeroed(__real_malloc(size), size, 0); }
+
+void *__wrap_memalign(size_t align, size_t size)
+{
+    return zeroed(__real_memalign(align, size), size, align >= 64 && align % 64 == 0 && size % 64 == 0);
+}
+
 int network_up(void)
 {
     struct ip4_addr ip, nm, gw;
-    int fresh = !netStarted;
+    int fresh = !netStarted, i;
     u64 t0 = now_ms();
     if (!netStarted) {
-        if (init_network_driver(true) != EEIP_INIT_STATUS_OK)
+        zeroNew = 1;   /* see __wrap_malloc */
+        if (init_network_driver(true) != EEIP_INIT_STATUS_OK) {
+            zeroNew = 0;
             return T_NET_ERR_DRIVERS;
+        }
         ip4_addr_set_zero(&ip);
         ip4_addr_set_zero(&nm);
         ip4_addr_set_zero(&gw);
         ps2ipInit(&ip, &nm, &gw);
-        if (start_dhcp(0) != 0)
+        i = start_dhcp(0);
+        zeroNew = 0;
+        if (i != 0)
             return T_NET_ERR_DRIVERS;
         netStarted = 1;
     }
