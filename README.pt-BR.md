@@ -93,7 +93,7 @@ O [LEIA-ME.txt](package/LEIA-ME.txt) incluído na release explica cada tela em d
 | Tela principal | Cima/Baixo: cartão · Esquerda/Direita ou L1/R1: aba · X: abrir o cartão · TRIÂNGULO: opções do cartão (sincronizar agora, restaurar backup) · START: configurações · O: sair |
 | Dentro de um cartão | X: abrir um item · QUADRADO: sincronizar este cartão · O: voltar |
 | Página de um item | Copiar · Mover · Eliminar · Enviar ao Drive |
-| Aba Arquivos | X: abrir o dispositivo, uma pasta ou um arquivo `.psu` (e então **Importar para cartão**) · TRIÂNGULO: exportar um item de um cartão para a pasta exibida · Esquerda/Direita: uma página acima ou abaixo · O: voltar |
+| Aba Arquivos | X: abrir o dispositivo, uma pasta ou um arquivo `.psu` (e então **Importar para cartão**) · TRIÂNGULO: exportar um item de um cartão para a pasta exibida (também pelo **Copiar** da página de um item, cujos destinos incluem esta aba) · Esquerda/Direita: uma página acima ou abaixo · O: voltar |
 | Durante um envio | O: cancelar |
 
 ## Sincronização automática após o jogo (IGR)

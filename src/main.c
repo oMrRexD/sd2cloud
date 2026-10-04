@@ -1679,6 +1679,15 @@ static struct {
     int iconCard;                     /* which card that icon is of (-1 = none) */
 } dst;
 
+/* "Copy" also offers the Files group: a device picked there (destDevice) is browsed for the folder the save goes to,
+ * as a .psu (fbGive = the save being given to files_screen) */
+static int destFiles, destDevice = -1;
+static struct {
+    card_t *c;
+    save_view_t *v;
+} fbGive;
+static void files_screen(int dev);
+
 static void scene_dest(float t)
 {
     const card_t *c;
@@ -1740,7 +1749,9 @@ static card_t *choose_dest(const card_t *from, int title, long long need)
     card_t *c = NULL;
     int i;
     ui_lock();
-    tabs_init(&dst.g, from, 0);
+    tabs_init(&dst.g, from, destFiles);
+    destFiles = 0;
+    destDevice = -1;
     dst.title = T(title);
     dst.need = need;
     for (i = 0; i < MAX_CARDS; i++)
@@ -1759,6 +1770,11 @@ static card_t *choose_dest(const card_t *from, int title, long long need)
             continue;
         if (b & PAD_CIRCLE) {
             sound_play(SND_BACK);
+            break;
+        }
+        if ((b & PAD_CROSS) && dst.g.tab == TAB_FILES) {   /* a device: its folders are browsed next */
+            sound_play(SND_CONFIRM);
+            destDevice = dst.g.cursor;
             break;
         }
         if ((b & PAD_CROSS) && dst.g.n) {
@@ -1786,13 +1802,21 @@ static int save_transfer(card_t *c, save_view_t *v, int move)
     card_t *to;
     long long bytes = 0;
     int files = 0, r;
-    if (nCards < 2) {
+    if (nCards < 2 && move) {
         message_wait(0, NULL, COLOR_WARN, T(T_NO_OTHER_CARDS));
         return 0;
     }
     mcfs_save_info(c->path, v->s.folder, &bytes, &files);
-    if (!(to = choose_dest(c, move ? T_MOVE_TO : T_COPY_TO, bytes)))
+    destFiles = !move;   /* a copy can also go to a folder of the microSD or of a USB drive, as a .psu */
+    if (!(to = choose_dest(c, move ? T_MOVE_TO : T_COPY_TO, bytes))) {
+        if (destDevice >= 0) {
+            fbGive.c = c;
+            fbGive.v = v;
+            files_screen(destDevice);
+            fbGive.c = NULL;
+        }
         return 0;
+    }
     {
         char name[100], t[200];
         save_name(v, name, sizeof(name));
@@ -2457,14 +2481,19 @@ static void files_screen(int dev)
             if (fb.list[fb.cursor].dir) {
                 sound_play(SND_CONFIRM);
                 fb_enter(name);
-            } else if (is_psu(name)) {
+            } else if (is_psu(name) && !fbGive.c) {   /* not while a save's own page is waiting underneath */
                 sound_play(SND_CONFIRM);
                 psu_screen(name);
             } else
                 sound_play(SND_BACK);
         } else if ((b & PAD_TRIANGLE) && !fb.error) {
             sound_play(SND_CONFIRM);
-            export_here();
+            if (fbGive.c) {   /* came from a save's "Copy": that save goes into this folder, and back to its page */
+                char file[40];
+                if (export_save(fbGive.c, fbGive.v, file))
+                    return;
+            } else
+                export_here();
         }
     }
 }

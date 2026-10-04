@@ -1,5 +1,5 @@
-SD2Cloud 1.2
-============
+SD2Cloud 1.2.1
+==============
 
 Gerencie e proteja os cartões de memória do seu sd2psx, direto no PS2.
 
@@ -95,6 +95,8 @@ ser abertos.
 - Exportar: na pasta onde o arquivo deve ficar, TRIÂNGULO pede o cartão e depois o item. O arquivo recebe o
   nome da pasta do item (BASLUS-21065SAVE.psu, por exemplo), é lido de volta e comparado. Um arquivo com o
   mesmo nome só é substituído depois da sua confirmação.
+  O mesmo pode ser feito pela página de um item: Copiar também lista a aba Arquivos entre os destinos; escolha
+  o dispositivo, vá até a pasta e pressione TRIÂNGULO.
 O cartão que está em uso no sd2psx não pode receber uma importação: selecione outro cartão no sd2psx antes.
 Nomes com letras acentuadas podem aparecer abreviados, ou não abrir (limitação do driver de FAT do SDK do
 PS2): prefira nomes simples para as pastas usadas aqui.

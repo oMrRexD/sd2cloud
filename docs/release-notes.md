@@ -1,6 +1,9 @@
-# SD2Cloud v1.2
+# SD2Cloud v1.2.1
 
 **Manage and back up your sd2psx memory cards, right on your PS2.**
+
+### What's new in 1.2.1
+- Copy, on a save's page, now lists the Files tab among its destinations: pick the microSD or the USB drive, go to a folder and press TRIANGLE to export that save there as a `.psu`.
 
 ### What's new in 1.2
 - Files: a new tab on the main screen browses the folders of the microSD and of a USB drive (FAT32 or exFAT). X on a `.psu` file opens the saved data it holds, to import it into any card; TRIANGLE exports an item of a card, as a `.psu`, into the folder shown. A file is checked whole before the card is changed, and what is written is read back and compared. No Google account or network is needed for this.
@@ -32,10 +35,10 @@ SD2Cloud runs on the PS2 itself and works with the memory cards on the microSD o
 - Interface inspired by the PlayStation BB Navigator, with sound effects.
 - English and Portuguese.
 
-**Installation:** extract `SD2Cloud-v1.2.zip` to the root of the sd2psx microSD and open SD2Cloud from the OPL Apps tab. See README.txt for details.
+**Installation:** extract `SD2Cloud-v1.2.1.zip` to the root of the sd2psx microSD and open SD2Cloud from the OPL Apps tab. See README.txt for details.
 
 ---
 
 **Gerencie e proteja os cartões de memória do seu sd2psx, direto no PS2.**
-Novidade da 1.2: a aba Arquivos, na tela principal, percorre as pastas do microSD e de um pendrive USB (FAT32 ou exFAT). X em um arquivo `.psu` abre os dados salvos que ele contém, para importar em qualquer cartão; TRIÂNGULO exporta um item de um cartão, como `.psu`, para a pasta exibida. O arquivo é verificado por inteiro antes de o cartão ser alterado, e o que é gravado é lido de volta e comparado. Não precisa de conta do Google nem de rede.
-Instalação: extraia o `SD2Cloud-v1.2.zip` na raiz do microSD do sd2psx e abra o SD2Cloud pela aba Apps do OPL. Consulte o LEIA-ME.txt para mais detalhes.
+Novidade da 1.2.1: o Copiar da página de um item também lista a aba Arquivos entre os destinos, para exportar o `.psu` direto para uma pasta do microSD ou do pendrive. Novidade da 1.2: a aba Arquivos, na tela principal, percorre as pastas do microSD e de um pendrive USB (FAT32 ou exFAT). X em um arquivo `.psu` abre os dados salvos que ele contém, para importar em qualquer cartão; TRIÂNGULO exporta um item de um cartão, como `.psu`, para a pasta exibida. O arquivo é verificado por inteiro antes de o cartão ser alterado, e o que é gravado é lido de volta e comparado. Não precisa de conta do Google nem de rede.
+Instalação: extraia o `SD2Cloud-v1.2.1.zip` na raiz do microSD do sd2psx e abra o SD2Cloud pela aba Apps do OPL. Consulte o LEIA-ME.txt para mais detalhes.

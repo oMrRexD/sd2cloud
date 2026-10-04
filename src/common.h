@@ -6,7 +6,7 @@
 #include <tamtypes.h>
 
 #define APP_NAME    "SD2Cloud"
-#define APP_VERSION "1.2"
+#define APP_VERSION "1.2.1"
 
 /* ------------------------------------------------------------ system.c */
 extern char appDir[200];    /* where the program lives: mmce0:/APPS/SD2Cloud/ (host:APPS/SD2Cloud/ on PCSX2) */

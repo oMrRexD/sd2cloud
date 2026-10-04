@@ -1,5 +1,5 @@
-SD2Cloud 1.2
-============
+SD2Cloud 1.2.1
+==============
 
 Manage and back up your sd2psx memory cards, right on your PS2.
 
@@ -88,6 +88,8 @@ and file is listed, but only .psu files can be opened.
 - Exporting: in the folder where the file should go, TRIANGLE asks for the card and then for the item. The
   file gets the item's folder name (BASLUS-21065SAVE.psu, for example), is read back and compared. A file
   with the same name is only replaced after you confirm.
+  The same can be done from an item's page: Copy also lists the Files tab among the destinations; pick the
+  device, go to the folder and press TRIANGLE.
 The card currently in use by the sd2psx cannot receive an import: switch to another card on the sd2psx first.
 Names with accented letters may be shown abbreviated, or not open at all (a limit of the FAT driver of the
 PS2 SDK): prefer plain names for the folders you use here.

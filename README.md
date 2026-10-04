@@ -90,7 +90,7 @@ The [README.txt](package/README.txt) included in the release explains every scre
 | Main screen | Up/Down: card · Left/Right or L1/R1: tab · X: open the card · TRIANGLE: card options (sync now, restore a backup) · START: settings · O: exit |
 | Inside a card | X: open a save · SQUARE: sync this card · O: back |
 | A save's page | Copy · Move · Delete · Upload to Drive |
-| Files tab | X: open the device, a folder or a `.psu` file (then **Import to card**) · TRIANGLE: export a save of a card to the folder shown · Left/Right: a page up or down · O: back |
+| Files tab | X: open the device, a folder or a `.psu` file (then **Import to card**) · TRIANGLE: export a save of a card to the folder shown (also reached from **Copy** on a save's page, whose destinations include this tab) · Left/Right: a page up or down · O: back |
 | During an upload | O: cancel |
 
 ## Automatic sync after a game (IGR)
