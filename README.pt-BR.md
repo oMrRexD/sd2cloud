@@ -28,6 +28,9 @@ Gen2, PicoMemcard+/Zero), sem necessidade de um PC.
   sai de um jogo pelo IGR. Somente os cartões alterados são enviados.
 - Mantém um histórico de backups de cada cartão (10 por padrão) e restaura qualquer um deles, com verificação
   antes e depois da gravação. Um cartão alterado é sincronizado antes da restauração, para que nada se perca.
+- Envia cada cartão como `.mcd`, o formato do próprio sd2psx, ou, se você escolher nas configurações, como `.ps2`,
+  o formato usado pelo PCSX2: é só tirar o arquivo do zip do backup e ele está pronto para o emulador. Os dois
+  podem ser restaurados.
 - Conecta a conta uma única vez, com um código ou um QR code. O SD2Cloud tem acesso apenas aos arquivos que ele
   mesmo cria no seu Drive.
 

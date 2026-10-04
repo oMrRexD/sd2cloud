@@ -28,6 +28,8 @@ PicoMemcard+/Zero). No PC is required.
   Only the cards that changed are uploaded.
 - Keeps a history of backups for each card (10 by default) and restores any of them, verified before and after
   writing. A changed card is synced before it is restored, so nothing is lost.
+- Sends each card as the sd2psx's own `.mcd` or, if you choose so in the settings, as a `.ps2`, the format PCSX2
+  uses: take it out of the backup's zip and it is ready for the emulator. Both can be restored.
 - Signs in once with a code or a QR code. SD2Cloud can only access the files it creates in your Drive.
 
 **Memory card manager**

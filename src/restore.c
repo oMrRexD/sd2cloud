@@ -44,14 +44,17 @@ static int on_data(const unsigned char *d, size_t n, void *u)
 }
 
 /* where the deflate data is (after the local header, the name and the extra field), and the CRC32 and size of the
- * .mcd from the central directory. Only our own zips: one file, deflate, no comment */
-static int zip_entry(const buffer_t *z, const unsigned char **data, size_t *len, unsigned long *crc, unsigned long *size)
+ * file from the central directory; ps2 = it is a .ps2 (the card with 16 bytes of ECC after each page), not a .mcd.
+ * Only our own zips: one file, deflate, no comment */
+static int zip_entry(const buffer_t *z, const unsigned char **data, size_t *len, unsigned long *crc, unsigned long *size, int *ps2)
 {
     const unsigned char *p = z->data, *eocd, *cd;
-    size_t start, cdOff;
+    size_t start, cdOff, nameLen;
     if (z->len < 30 + 22 || le32(p) != 0x04034b50 || le16(p + 8) != 8)
         return -1;
-    start = 30 + le16(p + 26) + le16(p + 28);
+    nameLen = le16(p + 26);
+    *ps2 = nameLen > 4 && 30 + nameLen <= z->len && !strncasecmp((const char *)p + 30 + nameLen - 4, ".ps2", 4);
+    start = 30 + nameLen + le16(p + 28);
     eocd = p + z->len - 22;
     if (start >= z->len || le32(eocd) != 0x06054b50)
         return -1;
@@ -68,21 +71,24 @@ static int zip_entry(const buffer_t *z, const unsigned char **data, size_t *len,
     return 0;
 }
 
-/* inflates the whole .mcd: hashes it and, with fd >= 0, writes it. 0 = ok, -2 = cancelled */
-static int inflate_all(const unsigned char *src, size_t n, int fd, int phase, unsigned long size, char sha[65], unsigned long *crc,
-                       unsigned long *out, int (*progress)(int, long long, long long))
+/* inflates the whole file: checks it (crc and out are of the file as it is in the zip) and gets the .mcd out of it
+ * (a .ps2 loses the 16 bytes after each 512), which is hashed (sha, mcd = its size) and, with fd >= 0, written.
+ * 0 = ok, -2 = cancelled */
+static int inflate_all(const unsigned char *src, size_t n, int fd, int phase, unsigned long size, int ps2, char sha[65],
+                       unsigned long *crc, unsigned long *out, unsigned long *mcd, int (*progress)(int, long long, long long))
 {
     static unsigned char buf[BLOCK] __attribute__((aligned(64)));
     unsigned char h[WC_SHA256_DIGEST_SIZE];
     wc_Sha256 s;
     z_stream z;
     int st, r = -1, i;
+    unsigned at = 0;   /* a .ps2: where in the page and its 16 bytes (0..527) the next byte is */
     memset(&z, 0, sizeof(z));
     if (inflateInit2(&z, -15) != Z_OK)
         return -1;
     wc_InitSha256(&s);
     *crc = crc32(0, NULL, 0);
-    *out = 0;
+    *out = *mcd = 0;
     z.next_in = (unsigned char *)src;
     z.avail_in = n;
     do {
@@ -95,11 +101,27 @@ static int inflate_all(const unsigned char *src, size_t n, int fd, int phase, un
             goto out;
         }
         k = sizeof(buf) - z.avail_out;
-        wc_Sha256Update(&s, buf, k);
         *crc = crc32(*crc, buf, k);
         *out += k;
+        if (ps2) {   /* the pages move down over the ECC bytes of the ones before, in place */
+            size_t from = 0, to = 0;
+            while (from < k) {
+                size_t part = (at < 512 ? 512 : 528) - at;
+                if (part > k - from)
+                    part = k - from;
+                if (at < 512) {
+                    memmove(buf + to, buf + from, part);
+                    to += part;
+                }
+                from += part;
+                at = (at + part) % 528;
+            }
+            k = to;
+        }
+        wc_Sha256Update(&s, buf, k);
+        *mcd += k;
         if (fd >= 0 && k && write(fd, buf, k) != (int)k) {
-            log_msg("restore: write failed at %lu", *out);
+            log_msg("restore: write failed at %lu", *mcd);
             goto out;
         }
         if (progress && progress(phase, *out, size) && fd < 0) {   /* once it's writing there's no stopping halfway */
@@ -147,10 +169,10 @@ int restore_card(card_t *c, const drive_file_t *f, int (*progress)(int phase, lo
     download_ctx_t x = {{0}, f->size, progress, 0};
     const unsigned char *data;
     size_t len;
-    unsigned long zipCrc, zipSize, crc, size;
+    unsigned long zipCrc, zipSize, crc, size, mcd;
     char sha[65], back[65];
     card_state_t *e;
-    int r, fd;
+    int r, fd, ps2;
 
     googleError[0] = 0;
     log_msg("restore: %s from %s (%lld bytes)", c->id, f->name, f->size);
@@ -175,7 +197,7 @@ int restore_card(card_t *c, const drive_file_t *f, int (*progress)(int phase, lo
         buf_free(&x.zip);
         return r;
     }
-    if ((long long)x.zip.len != f->size || zip_entry(&x.zip, &data, &len, &zipCrc, &zipSize) != 0) {
+    if ((long long)x.zip.len != f->size || zip_entry(&x.zip, &data, &len, &zipCrc, &zipSize, &ps2) != 0) {
         log_msg("restore: got %u of %lld bytes, or not an SD2Cloud zip", (unsigned)x.zip.len, f->size);
         snprintf(googleError, sizeof(googleError), "%s", T(T_ERR_DOWNLOAD));
         buf_free(&x.zip);
@@ -183,14 +205,14 @@ int restore_card(card_t *c, const drive_file_t *f, int (*progress)(int phase, lo
     }
 
     /* 1st pass: check everything before touching the card */
-    r = inflate_all(data, len, -1, RESTORE_CHECK, zipSize, sha, &crc, &size, progress);
+    r = inflate_all(data, len, -1, RESTORE_CHECK, zipSize, ps2, sha, &crc, &size, &mcd, progress);
     if (r == -2) {
         buf_free(&x.zip);
         return -2;
     }
-    if (r != 0 || crc != zipCrc || size != zipSize || (f->sha_mcd[0] && strcasecmp(sha, f->sha_mcd) != 0)) {
-        log_msg("restore: the backup doesn't check out (crc %08lx/%08lx, size %lu/%lu, sha %.16s/%.16s)", crc, zipCrc, size,
-                zipSize, sha, f->sha_mcd);
+    if (r != 0 || crc != zipCrc || size != zipSize || (ps2 && size % 528) || (f->sha_mcd[0] && strcasecmp(sha, f->sha_mcd) != 0)) {
+        log_msg("restore: the backup doesn't check out (%s, crc %08lx/%08lx, size %lu/%lu, sha %.16s/%.16s)", ps2 ? ".ps2" : ".mcd",
+                crc, zipCrc, size, zipSize, sha, f->sha_mcd);
         snprintf(googleError, sizeof(googleError), "%s", T(T_ERR_BAD_BACKUP));
         buf_free(&x.zip);
         return -1;
@@ -204,21 +226,21 @@ int restore_card(card_t *c, const drive_file_t *f, int (*progress)(int phase, lo
         buf_free(&x.zip);
         return -1;
     }
-    r = inflate_all(data, len, fd, RESTORE_WRITE, zipSize, back, &crc, &size, progress);
+    r = inflate_all(data, len, fd, RESTORE_WRITE, zipSize, ps2, back, &crc, &size, &mcd, progress);
     if (close(fd) < 0)
         r = -1;
     buf_free(&x.zip);
     /* read back */
-    if (r != 0 || hash_file(c->path, back, zipSize, progress) != 0 || strcmp(back, sha) != 0) {
+    if (r != 0 || hash_file(c->path, back, mcd, progress) != 0 || strcmp(back, sha) != 0) {
         log_msg("restore: %s didn't check out after writing", c->path);
         snprintf(googleError, sizeof(googleError), "%s", T(T_ERR_WRITE));
         return -1;
     }
-    log_msg("restore: %s restored and verified (%lu bytes, sha %.16s)", c->id, size, sha);
+    log_msg("restore: %s restored and verified (%lu bytes%s, sha %.16s)", c->id, mcd, ps2 ? ", from a .ps2" : "", sha);
 
     /* the card now is that backup: same fingerprint and SHA as the last backup, so it shows as up to date and IGR
      * doesn't send it again */
-    c->size = size;
+    c->size = mcd;
     e = state_card(c->id, 1);
     if (mcfs_fingerprint(c->path, c->fingerprint, NULL) == 0 && e) {
         snprintf(e->fingerprint, sizeof(e->fingerprint), "%s", c->fingerprint);

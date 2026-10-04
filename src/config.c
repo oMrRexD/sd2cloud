@@ -40,6 +40,7 @@ static void on_config(const char *s, const char *k, const char *v, void *u)
         else if (!strcasecmp(k, "types")) cfg.types = parse_types(v);
         else if (!strcasecmp(k, "include")) COPY(cfg.include, v);
         else if (!strcasecmp(k, "exclude")) COPY(cfg.exclude, v);
+        else if (!strcasecmp(k, "format")) cfg.ps2 = !strcasecmp(v, "ps2") || !strcasecmp(v, ".ps2");
     } else if (!strcasecmp(s, "retention")) {
         int n = atoi(v);
         if (n < 0)

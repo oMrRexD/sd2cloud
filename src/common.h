@@ -106,6 +106,7 @@ typedef struct {
     int types;                   /* TYPE_* */
     char include[1024], exclude[1024];
     int keep;                    /* backups per card (0 = all) */
+    int ps2;                     /* the backups go as .ps2 (the card with its ECC bytes, as PCSX2 reads it), not .mcd */
     int n_rules;
     struct {
         char id[96];

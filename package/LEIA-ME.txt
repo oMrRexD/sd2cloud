@@ -85,6 +85,9 @@ CONFIGURAÇÕES (START)
 - Após o IGR, abrir: o programa iniciado depois da sincronização pelo IGR. As opções são Automático (o OPL
   encontrado no microSD), os programas da pasta APPS e o menu do PS2.
 - Idioma e Backups por cartão (3, 5, 10, 20, 50 ou todos).
+- Formato do backup: .mcd (o do próprio sd2psx) ou .ps2 (o formato usado pelo PCSX2: tire o arquivo do zip do
+  backup e coloque na pasta de cartões de memória do PCSX2). Os dois podem ser restaurados, seja qual for a
+  opção escolhida.
 - Verificar atualizações: procura uma versão nova na hora e, se houver, oferece a atualização.
 - Conta do Google: desconecta a conta (os backups no Drive são mantidos) ou conecta novamente.
 - Sobre o SD2Cloud: versão, créditos e licenças.

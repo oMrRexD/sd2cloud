@@ -80,6 +80,8 @@ SETTINGS (START)
 - After IGR, open: the program started after the IGR sync. The choices are Automatic (the OPL found on the
   microSD), the programs in the APPS folder and the PS2 menu.
 - Language and Backups per card (3, 5, 10, 20, 50 or all).
+- Backup format: .mcd (the sd2psx's own) or .ps2 (the format PCSX2 uses: take the file out of the backup's zip
+  and put it in PCSX2's memory card folder). Either one can be restored, whatever is set.
 - Check for updates: looks for a new version right away and, if there is one, offers to update.
 - Google account: disconnects the account (backups on Drive are kept) or connects it again.
 - About SD2Cloud: version, credits and licenses.

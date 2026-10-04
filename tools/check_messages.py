@@ -97,7 +97,7 @@ PLACE = {
     # the settings (START): labels from x = 80, values up to x = 560 (cut with "..." past 200 px). The IGR helper's
     # label is also the title of its dialog, which is wider
     "T_SET_SYNC_ALL": ("text", 270, 1), "T_HELPER_TITLE": ("text", 270, 1), "T_SET_IGR_RETURN": ("text", 270, 1),
-    "T_SET_LANGUAGE": ("text", 270, 1), "T_SET_KEEP": ("text", 270, 1),
+    "T_SET_LANGUAGE": ("text", 270, 1), "T_SET_KEEP": ("text", 270, 1), "T_SET_FORMAT": ("text", 270, 1),
     "T_SET_UPDATES": ("text", 270, 1), "T_SET_ACCOUNT": ("text", 270, 1), "T_SET_ABOUT": ("text", 270, 1),
     "T_MENU_UPDATE": ("text", 440, 1), "T_PENDING_N": ("text", 200, 1), "T_NONE_PENDING": ("text", 200, 1), "T_UPDATE_AVAILABLE": ("text", 200, 1),
     "T_HELPER_NOT_INSTALLED": ("text", 200, 1), "T_ACCOUNT_OFF": ("text", 200, 1),

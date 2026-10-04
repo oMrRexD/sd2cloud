@@ -2121,7 +2121,10 @@ static void helper_install_now(int doneTitle);
 /* -------- settings (START): syncing every card, the IGR helper, where to go after IGR, the language, how many backups
  * to keep, the update check, the Google account, about. Each change goes to sd2cloud.ini at once */
 
-enum { SET_SYNC_ALL, SET_HELPER, SET_IGR_RETURN, SET_LANGUAGE, SET_KEEP, SET_UPDATES, SET_ACCOUNT, SET_ABOUT,
+/* the file a card's backup holds: the sd2psx's own .mcd, or the card with its ECC bytes, which PCSX2 opens */
+static const char *const formatNames[2] = {".mcd (sd2psx)", ".ps2 (PCSX2)"};
+
+enum { SET_SYNC_ALL, SET_HELPER, SET_IGR_RETURN, SET_LANGUAGE, SET_KEEP, SET_FORMAT, SET_UPDATES, SET_ACCOUNT, SET_ABOUT,
        SET_MAX };
 #define SET_X      80     /* the labels; the values end at SET_RIGHT */
 #define SET_RIGHT  560
@@ -2293,6 +2296,7 @@ static void build_settings(void)
                                                                                     : T(T_AUTO));
     snprintf(v, sizeof(v), "%d", cfg.keep);
     set_item(&i, SET_KEEP, T(T_SET_KEEP), cfg.keep ? v : T(T_KEEP_ALL));
+    set_item(&i, SET_FORMAT, T(T_SET_FORMAT), formatNames[cfg.ps2]);
     if (updateAvailable)
         snprintf(v, sizeof(v), T(T_UPDATE_AVAILABLE), update_tag());
     set_item(&i, SET_UPDATES, T(T_SET_UPDATES), updateAvailable ? v : "");
@@ -2635,6 +2639,18 @@ static void pick_keep(void)
     config_set("retention", "default", v);
 }
 
+static void pick_format(void)
+{
+    static const char *items[2];
+    int k;
+    items[0] = formatNames[0];
+    items[1] = formatNames[1];
+    if ((k = choose(T(T_SET_FORMAT), items, 2, cfg.ps2)) < 0 || k == cfg.ps2)
+        return;
+    cfg.ps2 = k;
+    config_set("cards", "format", k ? "ps2" : "mcd");
+}
+
 /* connected: disconnects (after asking); not connected: signs in */
 static void account_screen(void)
 {
@@ -2747,6 +2763,9 @@ static void settings_screen(void)
             break;
         case SET_KEEP:
             pick_keep();
+            break;
+        case SET_FORMAT:
+            pick_format();
             break;
         case SET_UPDATES:
             check_updates_now();

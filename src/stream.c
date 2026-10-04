@@ -56,9 +56,63 @@ static void hex(const unsigned char *h, char *out)
         sprintf(out + i * 2, "%02x", h[i]);
 }
 
+/* The .ps2 of PCSX2 is the card as its flash chip holds it: after each 512-byte page come 16 bytes, 3 of error
+ * correction for each 128 bytes of the page and 4 unused. The .mcd of the sd2psx is the same card without them */
+#define PAGE     512
+#define PAGE_ECC (PAGE + 16)
+
+static unsigned char parityOf[256], columnsOf[256];
+
+static void ecc_tables(void)
+{
+    static const unsigned char masks[7] = {0x55, 0x33, 0x0F, 0x00, 0xAA, 0xCC, 0xF0};
+    int b, i;
+    if (columnsOf[1])
+        return;
+    for (b = 0; b < 256; b++) {
+        int a = b ^ (b >> 1);
+        a ^= a >> 2;
+        a ^= a >> 4;
+        parityOf[b] = a & 1;
+    }
+    for (b = 0; b < 256; b++)
+        for (i = 0; i < 7; i++)
+            columnsOf[b] |= parityOf[b & masks[i]] << i;
+}
+
+/* n bytes of whole pages -> the same pages with their 16 bytes each; returns how many bytes that makes */
+static int add_ecc(const unsigned char *in, int n, unsigned char *out)
+{
+    int page, part, i, made = 0;
+    for (page = 0; page + PAGE <= n; page += PAGE) {
+        unsigned char *spare = out + made + PAGE;
+        memcpy(out + made, in + page, PAGE);
+        for (part = 0; part < 4; part++) {
+            const unsigned char *d = in + page + part * 128;
+            int columns = 0x77, lines0 = 0x7F, lines1 = 0x7F;
+            for (i = 0; i < 128; i++) {
+                columns ^= columnsOf[d[i]];
+                if (parityOf[d[i]]) {
+                    lines0 ^= ~i;
+                    lines1 ^= i;
+                }
+            }
+            spare[part * 3] = columns;
+            spare[part * 3 + 1] = lines0 & 0x7F;
+            spare[part * 3 + 2] = lines1;
+        }
+        memset(spare + 12, 0, 4);
+        made += PAGE_ECC;
+    }
+    return made;
+}
+
 int stream_zip(const card_t *c, const datetime_t *t, stream_t *s, chunk_cb cb, void *u)
 {
-    static unsigned char block[BLOCK] __attribute__((aligned(64))), comp[BLOCK];
+    static unsigned char block[BLOCK] __attribute__((aligned(64))), comp[BLOCK], withEcc[BLOCK / PAGE * PAGE_ECC];
+    const unsigned char *in;
+    int ps2 = cfg.ps2, inLen;
+    unsigned long unc = 0;   /* the size of the file inside the zip: the card's, or more with the ECC */
     unsigned dosTime = (t->hour << 11) | (t->minute << 5) | (t->second / 2);
     unsigned dosDate = ((t->year - 1980) << 9) | (t->month << 5) | t->day;
     char name[80];
@@ -76,8 +130,9 @@ int stream_zip(const card_t *c, const datetime_t *t, stream_t *s, chunk_cb cb, v
     o.cb = cb;
     o.u = u;
     s->read = s->sent = 0;
-    snprintf(name, sizeof(name), "%s.mcd", c->base);
+    snprintf(name, sizeof(name), "%s.%s", c->base, ps2 ? "ps2" : "mcd");
     nameLen = strlen(name);
+    ecc_tables();
     if (!(o.buf = malloc(CHUNK)))
         return -1;
     fd = open(c->path, O_RDONLY);
@@ -108,10 +163,21 @@ int stream_zip(const card_t *c, const datetime_t *t, stream_t *s, chunk_cb cb, v
         if (n == 0)
             break;
         s->read += n;
-        wc_Sha256Update(&shaMcd, block, n);
-        crc = crc32(crc, block, n);
-        z.next_in = block;
-        z.avail_in = n;
+        wc_Sha256Update(&shaMcd, block, n);   /* always the .mcd's: what the card is compared by, whatever the format */
+        in = block;
+        inLen = n;
+        if (ps2) {
+            if (n % PAGE) {
+                log_msg("%s: %d bytes read, not whole pages: can't be sent as .ps2", c->id, n);
+                goto out_z;
+            }
+            in = withEcc;
+            inLen = add_ecc(block, n, withEcc);
+        }
+        unc += inLen;
+        crc = crc32(crc, in, inLen);
+        z.next_in = (unsigned char *)in;
+        z.avail_in = inLen;
         do {
             z.next_out = comp;
             z.avail_out = sizeof(comp);
@@ -144,11 +210,11 @@ int stream_zip(const card_t *c, const datetime_t *t, stream_t *s, chunk_cb cb, v
     }
 
     /* data descriptor, central directory (with the real values) and end of central directory */
-    p32(hdr, 0x08074b50); p32(hdr + 4, crc); p32(hdr + 8, z.total_out); p32(hdr + 12, s->total);
+    p32(hdr, 0x08074b50); p32(hdr + 4, crc); p32(hdr + 8, z.total_out); p32(hdr + 12, unc);
     emit(&o, hdr, 16);
     cdStart = s->sent;
     p32(hdr, 0x02014b50); p16(hdr + 4, 20); p16(hdr + 6, 20); p16(hdr + 8, 0x0008); p16(hdr + 10, 8);
-    p16(hdr + 12, dosTime); p16(hdr + 14, dosDate); p32(hdr + 16, crc); p32(hdr + 20, z.total_out); p32(hdr + 24, s->total);
+    p16(hdr + 12, dosTime); p16(hdr + 14, dosDate); p32(hdr + 16, crc); p32(hdr + 20, z.total_out); p32(hdr + 24, unc);
     p16(hdr + 28, nameLen); p16(hdr + 30, 0); p16(hdr + 32, 0); p16(hdr + 34, 0); p16(hdr + 36, 0); p32(hdr + 38, 0);
     p32(hdr + 42, 0);
     emit(&o, hdr, 46);
