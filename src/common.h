@@ -50,7 +50,8 @@ int test_take(char mark);                   /* the next letter of the script is 
 int test_digit(void);                       /* the next letter is a digit: consume it (-1 = it isn't) */
 void test_capture_if(char mark);            /* the next letter of the script is this one: capture and stop */
 void test_capture_and_stop(void) __attribute__((noreturn));
-extern int testNoLinkOnce;
+extern int testNoLinkOnce, testNoDhcpOnce, testNoZero;
+void test_log_memory(const char *when);
 #endif
 
 /* ------------------------------------------------------------ buffer and files (files.c) */

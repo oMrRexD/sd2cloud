@@ -43,14 +43,42 @@ static const char *const roots[] = {"mmce0:/", "mmce1:/",
 #endif
                                     NULL};
 
+#ifdef TEST
+/* what was tried before the reset, written to the microSD once it can be reached (igr-log.txt in the data folder) */
+static char tried[600];
+static void note(const char *what, const char *path, int r)
+{
+    char n[16], *p = n + sizeof(n) - 1;
+    int v = r < 0 ? -r : r;
+    *p = 0;
+    do
+        *--p = '0' + v % 10;
+    while ((v /= 10) != 0);
+    if (r < 0)
+        *--p = '-';
+    if (strlen(tried) + strlen(what) + strlen(path) + 24 < sizeof(tried)) {
+        strcat(tried, what);
+        strcat(tried, " ");
+        strcat(tried, path);
+        strcat(tried, " = ");
+        strcat(tried, p);
+        strcat(tried, "\r\n");
+    }
+}
+#else
+#define note(what, path, r)
+#endif
+
 static void run(const char *path)
 {
     static char *args[] = {"-igr", NULL};
     int fd = open(path, O_RDONLY);
+    note("open", path, fd);
     if (fd < 0)
         return;
     close(fd);
-    LoadELFFromFile(path, 1, args);
+    fd = LoadELFFromFile(path, 1, args);
+    note("LoadELFFromFile", path, fd);
 }
 
 /* Started from somewhere other than a memory card: SD2Cloud may be right next to this file, in the folder that was
@@ -128,6 +156,18 @@ int main(int argc, char *argv[])
     init_fileXio_driver();
     init_sio2man_driver();
     SifExecModuleBuffer(mmceman_irx, size_mmceman_irx, 0, NULL, NULL);
+#ifdef TEST
+    {
+        int fd = open("mmce0:/SD2Cloud/igr-log.txt", O_WRONLY | O_CREAT | O_TRUNC, 0666);
+        if (fd >= 0) {
+            write(fd, "started as ", 11);
+            write(fd, argc > 0 && argv[0] ? argv[0] : "(nothing)", strlen(argc > 0 && argv[0] ? argv[0] : "(nothing)"));
+            write(fd, "\r\n", 2);
+            write(fd, tried, strlen(tried));
+            close(fd);
+        }
+    }
+#endif
     /* the sd2psx may still be switching cards when OPL hands over: a few tries before giving up */
     for (i = 0; i < 6; i++) {
         for (k = 0; roots[k]; k++) {   /* where SD2Cloud said it is */

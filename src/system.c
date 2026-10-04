@@ -5,6 +5,10 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef TEST
+#include <malloc.h>
+#include <audsrv.h>
+#endif
 #include <string.h>
 #include <stdarg.h>
 #include <unistd.h>
@@ -157,9 +161,19 @@ u32 pad_buttons(void)
  * the next progress screen (P = checking the cards, E = uploading or downloading, W = writing a restored card, halfway
  * through); an "I" at the start runs as IGR; an "A" right after the cards are checked shows the questions that
  * follow the first sign-in (the automatic sync).
- * Without a script, the test also runs as IGR (main.c). */
+ * Without a script, the test also runs as IGR (main.c).
+ * "." waits a second on the screen it is on. Right after the cards are checked: "N" = the first try at the network
+ * finds no cable, "n" = it gets no address from the router, "u" = the network starts as it used to, without the heap
+ * it takes being zeroed (see __wrap_malloc). For the rescue (at the end of this file): "@<seconds>" at the very
+ * start is the test's time limit, "Y" hangs and "Z" crashes, to try it. */
 static char script[256];
 static int scriptPos, hasScript;
+static int nRescue, rescueSeconds = 300, pastEnd;
+static void rescue(const char *why) __attribute__((noreturn));
+static void rescue_init(void);
+static void rescue_stop(void);
+static void run_probes(void);
+static void probes_read(void);
 
 int test_has_script(void) { return hasScript; }
 
@@ -169,7 +183,13 @@ static void script_read(void)
     buffer_t b = {0};
     snprintf(c, sizeof(c), "%sscript.txt", dataDir);
     if (file_read(c, &b) == 0 && b.len) {
-        snprintf(script, sizeof(script), "%s", (char *)b.data);
+        const char *s = (char *)b.data;
+        if (*s == '@') {
+            rescueSeconds = atoi(s + 1);
+            for (s++; *s >= '0' && *s <= '9'; s++)
+                ;
+        }
+        snprintf(script, sizeof(script), "%s", s);
         hasScript = 1;
     }
     buf_free(&b);
@@ -225,12 +245,27 @@ static u32 script_next_button(u32 mask)
             hasScript = 0;
             return 0;
         }
+        if (ch == '.') {   /* a second on this screen, for whoever is watching */
+            sleep_ms(1000);
+            continue;
+        }
+        if (ch == 'Y') {
+            log_msg("[script] Y: hanging");
+            for (;;)
+                ;
+        }
+        if (ch == 'Z') {
+            log_msg("[script] Z: crashing");
+            *(volatile int *)0x40000000 = 1;   /* nothing is mapped there */
+        }
         if (b) {
             log_msg("[script] %c%s", ch, (b & mask) ? "" : " (not expected here)");
             return b;
         }
     }
     log_msg("[script] finished: O");
+    if (nRescue && ++pastEnd > 8)   /* a few circles may still close what is open; after that nobody is coming */
+        rescue("the script ended and the app is still open");
     return PAD_CIRCLE;
 }
 #endif
@@ -346,6 +381,8 @@ void card_time_local(int year, int month, int day, int hour, int minute, int sec
 static int netStarted;
 #ifdef TEST
 int testNoLinkOnce;   /* script "N": the first try finds no cable (PCSX2 can't unplug one) */
+int testNoDhcpOnce;   /* script "n": the first try gets no address from the router */
+int testNoZero;      /* script "u": the network starts without the heap it takes being zeroed (see network_up) */
 #endif
 
 static int link_up(void)
@@ -360,6 +397,10 @@ static int link_up(void)
 static int dhcp_bound(void)
 {
     t_ip_info i;
+#ifdef TEST
+    if (testNoDhcpOnce)
+        return 0;
+#endif
     if (ps2ip_getconfig("sm0", &i) < 0 || !i.dhcp_enabled)
         return 0;
     return i.dhcp_status == DHCP_STATE_BOUND;
@@ -391,6 +432,28 @@ static int start_dhcp(int restart)
     return ps2ip_setconfig(&i) < 0 ? -1 : 0;
 }
 
+#ifdef TEST
+/* how much memory is in use: on the EE, where the heap ends now (it grows from the end of the program towards the
+ * main thread's stack, at the top of the 32 MB) and how much of it is taken; on the IOP, the largest block its heap
+ * still gives, by trying */
+void test_log_memory(const char *when)
+{
+    struct mallinfo m = mallinfo();
+    int lo = 0, hi = 2048;
+    while (hi - lo > 16) {
+        int mid = (lo + hi) / 2;
+        void *p = SifAllocIopHeap(mid * 1024);
+        if (p) {
+            SifFreeIopHeap(p);
+            lo = mid;
+        } else
+            hi = mid;
+    }
+    log_msg("memory %s: EE heap ends at %08x (limit %08x), %d KB in use, %d KB free inside it; IOP largest free block %d KB", when,
+            (unsigned)sbrk(0), (unsigned)EndOfHeap(), (int)(m.uordblks / 1024), (int)(m.fordblks / 1024), lo);
+}
+#endif
+
 /* While the network starts, what its libraries take from the heap comes zeroed and with nothing of it waiting in the
  * cache (the Makefile wraps malloc and memalign for this). The SDK's netman takes its two frame tables from the heap
  * and zeroes them through the uncached address only: on a heap that has been used (the icons of a card with many
@@ -420,13 +483,87 @@ void *__wrap_memalign(size_t align, size_t size)
     return zeroed(__real_memalign(align, size), size, align >= 64 && align % 64 == 0 && size % 64 == 0);
 }
 
+#ifdef TEST
+/* which of the IOP's services still answer, each asked from a thread of its own that is given 3 seconds (a call that
+ * never comes back stays there: the test is over anyway once one is found dead) */
+extern void *_gp;
+static volatile int askDone;
+static int askResult;
+static char askStack[4][0x4000] __attribute__((aligned(16)));
+
+static void ask_netman(void *a) { (void)a; askResult = NetManIoctl(NETMAN_NETIF_IOCTL_GET_LINK_STATUS, NULL, 0, NULL, 0); askDone = 1; ExitDeleteThread(); }
+static void ask_heap(void *a) { void *p = SifAllocIopHeap(64); (void)a; askResult = p != NULL; if (p) SifFreeIopHeap(p); askDone = 1; ExitDeleteThread(); }
+static void ask_files(void *a) { (void)a; askResult = fileXioDevctl("mmce0:", 0x3, NULL, 0, NULL, 0); askDone = 1; ExitDeleteThread(); }
+static void ask_sound(void *a) { (void)a; askResult = audsrv_adpcm_set_volume_and_pan(23, MAX_VOLUME, 0); askDone = 1; ExitDeleteThread(); }
+
+static void ask(const char *who, void (*f)(void *), int n)
+{
+    ee_thread_t th;
+    ee_thread_status_t me;
+    int id;
+    u64 end = now_ms() + 3000;
+    ReferThreadStatus(GetThreadId(), &me);
+    memset(&th, 0, sizeof(th));
+    th.func = f;
+    th.stack = askStack[n];
+    th.stack_size = sizeof(askStack[0]);
+    th.gp_reg = &_gp;
+    th.initial_priority = me.current_priority;
+    askDone = 0;
+    if ((id = CreateThread(&th)) < 0)
+        return;
+    StartThread(id, NULL);
+    while (!askDone && now_ms() < end)
+        sleep_ms(50);
+    if (askDone)
+        log_msg("IOP: %s answered (%d)", who, askResult);
+    else
+        log_msg("IOP: %s DID NOT ANSWER in 3 s", who);
+}
+
+/* every thread of the program: where it starts (addr2line names it), its priority (0 = the first to run) and what it
+ * is doing (status 1 running, 2 ready, 4 waiting, 8 suspended, 16 dormant; waiting 1 = asleep, 2 = on a semaphore) */
+void test_log_threads(const char *when)
+{
+    int id;
+    log_msg("EE threads %s:", when);
+    for (id = 0; id < 256; id++) {
+        ee_thread_status_t st;
+        memset(&st, 0, sizeof(st));
+        if (ReferThreadStatus(id, &st) < 0 || !st.func || st.status == 0 || st.status == 16)   /* 0: a slot left by an old one */
+            continue;
+        log_msg("  thread %d: starts at %x, priority %d, status %d, waiting %d on %d", id, (unsigned)st.func, st.current_priority, st.status,
+                (int)st.waitType, (int)st.waitId);
+    }
+}
+
+void test_ask_iop(const char *when)
+{
+    test_log_threads(when);
+    log_msg("IOP services %s:", when);
+    ask("its heap", ask_heap, 0);
+    ask("the network driver", ask_netman, 1);
+    ask("the sound driver", ask_sound, 2);
+    ask("the sd2psx driver", ask_files, 3);
+}
+#endif
+
 int network_up(void)
 {
     struct ip4_addr ip, nm, gw;
     int fresh = !netStarted, i;
     u64 t0 = now_ms();
     if (!netStarted) {
+#ifdef TEST
+        test_log_memory("before the network drivers");
+#endif
         zeroNew = 1;   /* see __wrap_malloc */
+#ifdef TEST
+        if (testNoZero) {   /* script "u": as it was before, to see the difference */
+            zeroNew = 0;
+            log_msg("network: starting WITHOUT zeroing what it takes from the heap");
+        }
+#endif
         if (init_network_driver(true) != EEIP_INIT_STATUS_OK) {
             zeroNew = 0;
             return T_NET_ERR_DRIVERS;
@@ -440,6 +577,9 @@ int network_up(void)
         if (i != 0)
             return T_NET_ERR_DRIVERS;
         netStarted = 1;
+#ifdef TEST
+        test_log_memory("after the network drivers");
+#endif
     }
     if (wait_for(link_up, 5000) != 0) {
         log_msg("network: no link (cable?) after %d ms", (int)(now_ms() - t0));
@@ -448,11 +588,24 @@ int network_up(void)
 #endif
         return T_NET_ERR_LINK;
     }
+#ifdef TEST
+    log_msg("network: link up after %d ms", (int)(now_ms() - t0));
+#endif
     if (!dhcp_bound()) {
         if (!fresh)
             start_dhcp(1);
         if (wait_for(dhcp_bound, igrMode ? 12000 : 20000) != 0) {
             log_msg("network: link up, but no address from the router");
+#ifdef TEST
+            testNoDhcpOnce = 0;
+            {
+                t_ip_info i;
+                memset(&i, 0, sizeof(i));
+                ps2ip_getconfig("sm0", &i);
+                log_msg("network: DHCP enabled %d, status %d, address %08x", i.dhcp_enabled, i.dhcp_status, (unsigned)i.ipaddr.s_addr);
+                test_ask_iop("after the router didn't answer");
+            }
+#endif
             return T_NET_ERR_DHCP;
         }
     }
@@ -638,6 +791,9 @@ void system_init(int argc, char *argv[])
 #endif
     log_msg(APP_NAME " " APP_VERSION " -- program in %s (%s), data in %s, %s%s%s", appDir, appPath, dataDir, igrMode ? "IGR" : "manual",
             appTookOver ? ", took over from a copy on another device" : "", appElsewhere ? ", started from another device" : "");
+#ifdef TEST
+    rescue_init();
+#endif
 }
 
 /* Resets the IOP before handing over: the controller and the network write to EE memory by DMA and, if they stayed
@@ -645,6 +801,7 @@ void system_init(int argc, char *argv[])
 static void iop_cleanup(int card)
 {
 #ifdef TEST
+    rescue_stop();
     if (logRam.len) {
         char c[260];
         snprintf(c, sizeof(c), "%stest-log.txt", dataDir);
@@ -806,6 +963,9 @@ void run_elf(const char *path)
     if ((q = strstr(c, "mmce?:")) != NULL)
         q[4] = (strncmp(sdRoot, "mmce", 4) == 0) ? sdRoot[4] : '0';
     log_msg("(end: running %s)", c);
+#ifdef TEST
+    run_probes();
+#endif
     if (dev == DEV_SD) {
         iop_cleanup(1);
         LoadELFFromFile(c, 0, NULL);
@@ -827,3 +987,305 @@ void run_elf(const char *path)
     for (;;)
         ;
 }
+
+#ifdef TEST
+/* ------------------------------------------------------------ the rescue (test builds, on a console)
+
+   Tests on a console run with nobody at the controller, started by a launcher that takes commands over the network.
+   rescue.txt in the data folder lists what to open (one path per line, the ones on the sd2psx first) when the test
+   can't end by itself: the script ended with the app still open, its time ran out ("@<seconds>" at the start of the
+   script, 300 without it) or the program crashed. The log is saved first. Without a rescue.txt (PCSX2) none of this
+   exists. */
+
+extern void *_gp;
+static char rescuePaths[4][200];
+static int mainThread = -1, watchThread = -1, watchAlarm = -1;
+static volatile int rescuing;
+static u64 rescueAt;
+static char watchStack[0x8000] __attribute__((aligned(16)));
+char testCrashStack[0x8000] __attribute__((aligned(16)));
+u32 testCrashInfo[5];   /* cause, where, the address it tried, ra, sp */
+
+static void load_sd_drivers(int sd)
+{
+    SifExecModuleBuffer(iomanX_irx, size_iomanX_irx, 0, NULL, NULL);
+    SifExecModuleBuffer(fileXio_irx, size_fileXio_irx, 0, NULL, NULL);
+    if (sd) {
+        SifExecModuleBuffer(sio2man_irx, size_sio2man_irx, 0, NULL, NULL);
+        SifExecModuleBuffer(mmceman_irx, size_mmceman_irx, 0, NULL, NULL);
+    }
+    fileXioExit();   /* the RPC binding is from before the reset: made again */
+    fileXioInit();
+}
+
+static void rescue(const char *why)
+{
+    static char c[260], part[80];
+    int i, again = rescuing++;
+    if (GetThreadId() != mainThread)
+        SuspendThread(mainThread);
+    logSema = -1;   /* whoever held it has been stopped */
+    if (!again)
+        log_msg("[rescue] %s", why);
+    ui_abort();
+    padOpen = 0;
+    iop_reset();
+    load_sd_drivers(1);
+    if (!again && logRam.len) {
+        snprintf(c, sizeof(c), "%stest-log.txt", dataDir);
+        file_write(c, logRam.data, logRam.len);
+    }
+    for (i = 0; i < nRescue; i++) {
+        char *q;
+        int dev = device_of(rescuePaths[i]);
+        snprintf(c, sizeof(c), "%s", rescuePaths[i]);
+        if ((q = strstr(c, "mmce?:")) != NULL)
+            q[4] = (strncmp(sdRoot, "mmce", 4) == 0) ? sdRoot[4] : '0';
+        if (dev == DEV_SD) {
+            if (file_exists(c))
+                LoadELFFromFile(c, 0, NULL);   /* only comes back if it couldn't run it */
+            continue;
+        }
+        iop_reset();
+        load_sd_drivers(0);
+        if (open_device(dev, c, sizeof(c), part, sizeof(part)) == 0) {
+            if (part[0])
+                LoadELFFromFileWithPartition(c, part, 0, NULL);
+            else
+                LoadELFFromFile(c, 0, NULL);
+        }
+    }
+    ExecOSD(0, NULL);
+    for (;;)
+        ;
+}
+
+/* an exception: the kernel jumps here, still in its own mode. Note what happened and return from the exception into
+ * test_crash_entry, on a stack of its own (the one that crashed may be the problem) */
+void test_exception_stub(void);
+void test_crash_entry(void) __attribute__((noreturn, used));
+__asm__(
+    ".text\n"
+    ".p2align 4\n"
+    ".set push\n"
+    ".set noreorder\n"
+    ".set noat\n"
+    ".globl test_exception_stub\n"
+    ".ent test_exception_stub\n"
+    "test_exception_stub:\n"
+    "    la    $k0, testCrashInfo\n"
+    "    mfc0  $k1, $13\n"
+    "    sw    $k1, 0($k0)\n"
+    "    mfc0  $k1, $14\n"
+    "    sw    $k1, 4($k0)\n"
+    "    mfc0  $k1, $8\n"
+    "    sw    $k1, 8($k0)\n"
+    "    sw    $ra, 12($k0)\n"
+    "    sw    $sp, 16($k0)\n"
+    "    la    $sp, testCrashStack + 0x7ff0\n"
+    "    la    $k0, test_crash_entry\n"
+    "    mtc0  $k0, $14\n"
+    "    sync.p\n"
+    "    eret\n"
+    "    nop\n"
+    ".end test_exception_stub\n"
+    ".set pop\n"
+);
+
+void test_crash_entry(void)
+{
+    static char t[160];
+    EIntr();
+    snprintf(t, sizeof(t), "crashed: exception %d at %08x, address %08x, ra %08x, sp %08x (thread %d, the main one is %d)",
+             (int)((testCrashInfo[0] >> 2) & 31), (unsigned)testCrashInfo[1], (unsigned)testCrashInfo[2], (unsigned)testCrashInfo[3],
+             (unsigned)testCrashInfo[4], GetThreadId(), mainThread);
+    rescue(t);
+}
+
+static void on_watch_alarm(s32 id, u16 time, void *common)
+{
+    (void)id;
+    (void)time;
+    (void)common;
+    if (rescuing)
+        return;
+    if (iGetTimerSystemTime() / (kBUSCLK / 1000) < rescueAt) {
+        watchAlarm = iSetAlarm(kHBLNK_NTSC, on_watch_alarm, NULL);   /* about a second */
+        return;
+    }
+    watchAlarm = -1;
+    iSuspendThread(mainThread);
+    iWakeupThread(watchThread);
+}
+
+/* where a stopped thread was: the return addresses left on its stack (the words that point right after a call), from
+ * the deepest call up. The ones below where the thread is now are leftovers of earlier calls; the unpacked ELF and
+ * addr2line turn the list into function names */
+extern char _ftext[], _etext[];
+
+static void log_stack(int thread)
+{
+    static char t[200];
+    ee_thread_status_t st;
+    u32 *p, *end;
+    int n = 0;
+    memset(&st, 0, sizeof(st));
+    if (ReferThreadStatus(thread, &st) < 0 || !st.stack || st.stack_size <= 0)
+        return;
+    end = (u32 *)((char *)st.stack + st.stack_size);
+    t[0] = 0;
+    for (p = (u32 *)st.stack; p < end && n < 60; p++) {
+        u32 w = *p, op;
+        if (w < (u32)_ftext + 8 || w >= (u32)_etext || (w & 3))
+            continue;
+        op = *(u32 *)(w - 8);
+        if ((op & 0xFC000000) != 0x0C000000 && (op & 0xFC00003F) != 0x00000009)   /* a jal or a jalr */
+            continue;
+        snprintf(t + strlen(t), sizeof(t) - strlen(t), " %x", (unsigned)w);
+        if (++n % 12 == 0) {
+            log_msg("[rescue] stack of thread %d:%s", thread, t);
+            t[0] = 0;
+        }
+    }
+    if (t[0])
+        log_msg("[rescue] stack of thread %d:%s", thread, t);
+}
+
+static void watch_loop(void *arg)
+{
+    static char t[160];
+    ee_thread_status_t st;
+    ee_sema_t sema;
+    (void)arg;
+    SleepThread();
+    memset(&st, 0, sizeof(st));
+    ReferThreadStatus(mainThread, &st);
+    log_msg("[rescue] the log's semaphore is %d", logSema);
+    logSema = -1;
+    memset(&sema, 0, sizeof(sema));
+    if (st.waitType == 2 && ReferSemaStatus(st.waitId, &sema) >= 0)
+        log_msg("[rescue] semaphore %d: count %d of %d, %d waiting", (int)st.waitId, sema.count, sema.max_count, sema.wait_threads);
+    log_stack(mainThread);
+    snprintf(t, sizeof(t), "the time ran out (%d s); main thread: status %d, waiting %d on %d", rescueSeconds, st.status, st.waitType,
+             st.waitId);
+    rescue(t);
+}
+
+static void rescue_init(void)
+{
+    char c[260], *line;
+    buffer_t b = {0};
+    ee_thread_t th;
+    int i;
+    probes_read();
+    snprintf(c, sizeof(c), "%srescue.txt", dataDir);
+    if (file_read(c, &b) == 0 && b.len)
+        for (line = strtok((char *)b.data, "\r\n"); line && nRescue < 4; line = strtok(NULL, "\r\n")) {
+            snprintf(rescuePaths[nRescue], sizeof(rescuePaths[0]), "%s", line);
+            trim(rescuePaths[nRescue]);
+            if (rescuePaths[nRescue][0])
+                nRescue++;
+        }
+    buf_free(&b);
+    if (!nRescue)
+        return;
+    mainThread = GetThreadId();
+    for (i = 1; i <= 3; i++)
+        SetVTLBRefillHandler(i, test_exception_stub);
+    for (i = 4; i <= 7; i++)
+        SetVCommonHandler(i, test_exception_stub);
+    for (i = 10; i <= 13; i++)
+        SetVCommonHandler(i, test_exception_stub);
+    memset(&th, 0, sizeof(th));
+    th.func = watch_loop;
+    th.stack = watchStack;
+    th.stack_size = sizeof(watchStack);
+    th.gp_reg = &_gp;
+    th.initial_priority = 0;
+    watchThread = CreateThread(&th);
+    StartThread(watchThread, NULL);
+    rescueAt = now_ms() + (u64)rescueSeconds * 1000;
+    watchAlarm = SetAlarm(kHBLNK_NTSC, on_watch_alarm, NULL);
+    log_msg("[rescue] ready: %d s, then %s", rescueSeconds, rescuePaths[0]);
+}
+
+/* probe.txt in the data folder, one device per line ("mass:/", "mx4sio:/", "ata:/", "hdd0:__common:pfs:/"): right
+ * before leaving, the drivers of each one are loaded the way run_elf does and what is in its root goes to the log.
+ * It tries the devices a console has without writing to them and without the test losing the console. */
+static char probes[6][80];
+static int nProbes, probing;
+
+static void list_to_log(const char *dir)
+{
+    char t[400] = "";
+    struct dirent *e = NULL;
+    DIR *d = opendir(dir);
+    int n = 0;
+    if (!d) {
+        log_msg("[probe]   %s can't be opened", dir);
+        return;
+    }
+    while (n < 14 && (e = readdir(d)) != NULL) {
+        snprintf(t + strlen(t), sizeof(t) - strlen(t), "%s%s", n ? ", " : "", e->d_name);
+        n++;
+    }
+    closedir(d);
+    log_msg("[probe]   %s has: %s%s", dir, n ? t : "nothing", n == 14 ? ", ..." : "");
+}
+
+static void run_probes(void)
+{
+    static char c[260], part[80];
+    int i;
+    if (!nProbes)
+        return;
+    probing = 1;   /* the rescue stays on watch: a driver may hang */
+    iop_cleanup(0);
+    for (i = 0; i < nProbes; i++) {
+        int dev = device_of(probes[i]), r;
+        u64 t0 = now_ms();
+        iop_reset();
+        load_sd_drivers(0);
+        snprintf(c, sizeof(c), "%s", probes[i]);
+        log_msg("[probe] %s: loading its drivers", probes[i]);   /* in the log even if the rescue has to step in */
+        r = open_device(dev, c, sizeof(c), part, sizeof(part));
+        log_msg("[probe] %s: %d ms%s", probes[i], (int)(now_ms() - t0), r == 0 ? ", the path is there" : "");
+        if (dev == DEV_HDD) {
+            list_to_log("hdd0:");
+            list_to_log("pfs0:/");
+        } else if (dev == DEV_MC)
+            list_to_log("mc0:/");
+        else
+            list_to_log("mass0:/");
+    }
+    nProbes = probing = 0;
+    iop_reset();   /* back to the sd2psx alone: the log is written again on the way out */
+    load_sd_drivers(1);
+}
+
+static void probes_read(void)
+{
+    char c[260], *line;
+    buffer_t b = {0};
+    snprintf(c, sizeof(c), "%sprobe.txt", dataDir);
+    if (file_read(c, &b) == 0 && b.len)
+        for (line = strtok((char *)b.data, "\r\n"); line && nProbes < 6; line = strtok(NULL, "\r\n")) {
+            snprintf(probes[nProbes], sizeof(probes[0]), "%s", line);
+            trim(probes[nProbes]);
+            if (probes[nProbes][0])
+                nProbes++;
+        }
+    buf_free(&b);
+}
+
+/* leaving the normal way: the alarm must not ring inside the next program */
+static void rescue_stop(void)
+{
+    if (!nRescue || rescuing || probing)
+        return;
+    rescuing = 1;
+    if (watchAlarm >= 0)
+        ReleaseAlarm(watchAlarm);
+    watchAlarm = -1;
+}
+#endif

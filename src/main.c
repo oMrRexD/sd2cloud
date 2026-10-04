@@ -2846,6 +2846,10 @@ static void manual(void)
 #ifdef TEST
     if (test_take('N'))
         testNoLinkOnce = 1;
+    if (test_take('n'))
+        testNoDhcpOnce = 1;
+    if (test_take('u'))
+        testNoZero = 1;
 #endif
 #ifdef TEST
     if (test_take('A'))   /* the questions after the first sign-in, without signing in */

@@ -33,6 +33,9 @@ enum { IMG_SPACE, IMG_GLOW, IMG_BUTTONS, IMG_CARD, IMG_MINICARD, IMG_COUNT };
 
 int ui_init(void);                 /* 0 = ok; starts the drawing thread (a black screen until the first scene) */
 void ui_end(void);                 /* stops the drawing thread */
+#ifdef TEST
+void ui_abort(void);               /* the same without waiting for the frame being drawn (the rescue, in system.c) */
+#endif
 int ui_width(void);
 int ui_height(void);
 

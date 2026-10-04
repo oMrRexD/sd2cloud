@@ -323,6 +323,9 @@ int ui_init(void)
     log_msg("drawing thread: priority %d (main thread %d); screen %dx%d, %s, anti-flicker %s", th.initial_priority,
             me.current_priority, gs->Width, gs->Height, gs->Interlace == GS_INTERLACED ? "interlaced" : "progressive",
             antiFlicker ? "on" : "off");
+#ifdef TEST
+    log_msg("semaphores: the frame's %d, the screen's lock %d", vsyncSema, lockSema);
+#endif
     StartThread(drawThread, NULL);
     return 0;
 }
@@ -347,6 +350,20 @@ void ui_end(void)
         gs = NULL;
     }
 }
+
+#ifdef TEST
+void ui_abort(void)
+{
+    if (drawThread >= 0 && drawThread != GetThreadId())
+        TerminateThread(drawThread);
+    drawThread = -1;
+    if (vsyncHandler >= 0) {
+        DisableIntc(INTC_VBLANK_S);
+        RemoveIntcHandler(INTC_VBLANK_S, vsyncHandler);
+        vsyncHandler = -1;
+    }
+}
+#endif
 
 GSGLOBAL *ui_gs_global(void) { return gs; }
 int ui_width(void) { return gs->Width; }
