@@ -109,6 +109,10 @@ From then on, exiting a game with IGR starts SD2Cloud, which uploads the cards t
 The same option reinstalls or uninstalls the helper. SD2Cloud can be kept in any folder of the sd2psx microSD:
 when it is not in `APPS/SD2Cloud`, it records where it is in `sd2cloud.ini`, and the helper starts it from there.
 
+To pause the sync and keep everything installed, set **Automatic sync** to Off in Settings (START): IGR then goes
+straight to the program opened after it, without starting SD2Cloud. The same happens while no Google account is
+connected.
+
 **Without installing anything (USB drive).** OPL's IGR can also start a program from a USB drive. If the
 `APPS/SD2Cloud` folder is on one, formatted as FAT32, skip step 1 and set **IGR Path** to
 `mass:/APPS/SD2Cloud/SD2CLOUD-IGR.ELF`: nothing is written to the memory card. For this, OPL loads the USB drivers

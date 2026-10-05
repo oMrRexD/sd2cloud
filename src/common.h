@@ -6,7 +6,7 @@
 #include <tamtypes.h>
 
 #define APP_NAME    "SD2Cloud"
-#define APP_VERSION "1.3"
+#define APP_VERSION "1.3.1"
 
 /* ------------------------------------------------------------ system.c */
 extern char appDir[200];    /* where the program lives: mmce0:/APPS/SD2Cloud/ (host:APPS/SD2Cloud/ on PCSX2) */
@@ -127,6 +127,8 @@ typedef struct {
     } rules[MAX_RULES];
     char igr_return[200];
     char igr_name[64];           /* [igr] name: what to call the program in igr_return on screen ("" = by its path) */
+    int no_auto_sync;            /* [igr] auto_sync = no: IGR goes straight to igr_return, without syncing */
+    char igr_auto[200];          /* [app] igr_auto: what "auto" in igr_return led to, for the IGR helper */
     int igr_settle, igr_summary; /* seconds */
     char app_path[260];          /* [app] app_path: where the program is, for the IGR helper (written by the app) */
     char app_version[16];        /* [app] app_version: the version of that one (written by the app) */

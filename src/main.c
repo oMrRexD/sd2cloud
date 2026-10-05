@@ -8,7 +8,8 @@
  * connects the Google account (code + QR) and asks whether to back up every card. The last tab, Files, browses the
  * microSD and a USB drive: a .psu file there can be imported into a card, and a save of a card exported as one.
  * IGR (started by the SD2CLOUD-IGR.ELF helper that OPL runs as "Exit to"): without asking anything, sends the new and
- * changed cards, says it's done (with a sound) and always returns to OPL, even without internet.
+ * changed cards, says it's done (with a sound) and always returns to OPL, even without internet. With the automatic
+ * sync turned off in the settings, or without a Google account, it returns at once, without showing anything.
  * During any upload, circle asks whether to cancel; cancelling leaves SD2Cloud.
  *
  * The screens are scenes (ui.c draws the current one every frame on a thread of its own): each scene_* function
@@ -343,29 +344,38 @@ static int find_opl(char *out, size_t size)
 
 /* the path in the .ini (the main way: the user says where the OPL is), "osd" = the PS2 menu, "auto" = look for it
  * (find_opl). If a path on the sd2psx doesn't exist (typo, OPL moved), look for it before falling back to the menu; a
- * path on another device (USB, MX4SIO, HDD, memory card) is checked by run_elf, after loading that device's drivers */
+ * path on another device (USB, MX4SIO, HDD, memory card) is checked by run_elf, after loading that device's drivers.
+ * In out: the program to run, or "osd" */
+static void resolve_target(const char *target, char *out, size_t size)
+{
+    char *p;
+    snprintf(out, size, "%s", target);
+    if ((p = strstr(out, "mmce?:")) != NULL)   /* mmce?: becomes the microSD's slot */
+        p[4] = (strncmp(sdRoot, "mmce", 4) == 0) ? sdRoot[4] : '0';
+    if (strcasecmp(out, "osd") != 0 && strcasecmp(out, "auto") != 0 && device_of(out) == DEV_SD && !file_exists(out)) {
+        log_msg("the path in the .ini doesn't exist (%s): looking for the OPL", out);
+        snprintf(out, size, "auto");
+    }
+    if (!strcasecmp(out, "auto") && find_opl(out, size) != 0)
+        snprintf(out, size, "osd");
+}
+
+/* runs what resolve_target found */
+static void run_target(const char *resolved) __attribute__((noreturn));
+static void run_target(const char *resolved)
+{
+    log_msg("returning to: %s", resolved);
+    if (strcasecmp(resolved, "osd") != 0)
+        run_elf(resolved);
+    go_osd();
+}
+
 static void return_to(const char *target) __attribute__((noreturn));
 static void return_to(const char *target)
 {
-    char c[260], q[260], *p;
-    int found = -1;
-    snprintf(q, sizeof(q), "%s", target);
-    if ((p = strstr(q, "mmce?:")) != NULL)   /* mmce?: becomes the microSD's slot */
-        p[4] = (strncmp(sdRoot, "mmce", 4) == 0) ? sdRoot[4] : '0';
-    if (strcasecmp(q, "osd") != 0 && strcasecmp(q, "auto") != 0 && device_of(q) == DEV_SD && !file_exists(q)) {
-        log_msg("the path in the .ini doesn't exist (%s): looking for the OPL", q);
-        strcpy(q, "auto");
-    }
-    if (!strcasecmp(q, "auto"))
-        found = find_opl(c, sizeof(c));
-    log_msg("returning to: %s", found == 0 ? c : (!strcasecmp(q, "auto") ? "osd" : q));
-    if (!strcasecmp(q, "osd"))
-        go_osd();
-    if (strcasecmp(q, "auto") != 0)
-        run_elf(q);
-    if (found == 0)
-        run_elf(c);
-    go_osd();
+    char c[260];
+    resolve_target(target, c, sizeof(c));
+    run_target(c);
 }
 
 /* leaving with the exit sound: it plays to the end before the next program takes over */
@@ -2615,14 +2625,15 @@ static void menu_icon(void)
 static void offer_auto_sync(void);
 static void helper_install_now(int doneTitle);
 
-/* -------- settings (START): syncing every card, the IGR helper, where to go after IGR, the language, how many backups
- * to keep, the update check, the Google account, about. Each change goes to sd2cloud.ini at once */
+/* -------- settings (START): syncing every card, the automatic sync on or off, the IGR helper, where to go after IGR,
+ * the language, how many backups to keep, the update check, the Google account, about. Each change goes to
+ * sd2cloud.ini at once */
 
 /* the file a card's backup holds: the sd2psx's own .mcd, or the card with its ECC bytes, which PCSX2 opens */
 static const char *const formatNames[2] = {".mcd (sd2psx)", ".ps2 (PCSX2)"};
 
-enum { SET_SYNC_ALL, SET_HELPER, SET_IGR_RETURN, SET_LANGUAGE, SET_KEEP, SET_FORMAT, SET_UPDATES, SET_ACCOUNT, SET_ABOUT,
-       SET_MAX };
+enum { SET_SYNC_ALL, SET_AUTO_SYNC, SET_HELPER, SET_IGR_RETURN, SET_LANGUAGE, SET_KEEP, SET_FORMAT, SET_UPDATES,
+       SET_ACCOUNT, SET_ABOUT, SET_MAX };
 #define SET_X      80     /* the labels; the values end at SET_RIGHT */
 #define SET_RIGHT  560
 #define SET_Y0     122
@@ -2698,6 +2709,34 @@ static void target_on_sd(const char *target, char *out, size_t size)
     snprintf(out, size, "%s", target);
     if ((p = strstr(out, "mmce?:")) != NULL)
         p[4] = (strncmp(sdRoot, "mmce", 4) == 0) ? sdRoot[4] : '0';
+}
+
+/* is there a sync to do at IGR? Not with the automatic sync turned off in the settings, and not without a Google
+ * account: the choice in the settings is kept as it is meanwhile, for when an account is connected again */
+static int auto_sync_on(void) { return !cfg.no_auto_sync && google_has_access(); }
+
+/* With no sync to do, the IGR helper starts what comes after IGR by itself, without loading SD2Cloud (igr/igr.c). It
+ * reads the settings as they are, but can't look for the OPL that "auto" stands for: the one found here is left for
+ * it in the settings ([app] igr_auto), written only when it changes; with no OPL found the line is left empty, and
+ * the helper starts SD2Cloud, which looks again. found = what "auto" led to just now; NULL = look for it, which is
+ * only done while the helper has a use for it */
+static void note_igr_auto(const char *found)
+{
+    char c[260], t[200] = "";
+    if (strcasecmp(cfg.igr_return, "auto") != 0)
+        return;
+    if (!found) {
+        if (auto_sync_on())
+            return;
+        resolve_target("auto", c, sizeof(c));
+        found = c;
+    }
+    if (strcasecmp(found, "osd") != 0)
+        target_for_ini(found, t, sizeof(t));
+    if (strcasecmp(t, cfg.igr_auto) != 0) {
+        snprintf(cfg.igr_auto, sizeof(cfg.igr_auto), "%s", t);
+        config_set("app", "igr_auto", t);
+    }
 }
 
 /* the name the user gave in sd2cloud.ini ("name", under [manual] or [igr]) to the program that section's "return"
@@ -2784,6 +2823,7 @@ static void build_settings(void)
     if (changed > 1)
         snprintf(v, sizeof(v), T(T_PENDING_N), changed);
     set_item(&i, SET_SYNC_ALL, T(T_SET_SYNC_ALL), changed > 1 ? v : T(changed ? T_PENDING_ONE : T_NONE_PENDING));
+    set_item(&i, SET_AUTO_SYNC, T(T_IGR_TITLE), T(auto_sync_on() ? T_SYNC_ON : T_SYNC_OFF));
     set_item(&i, SET_HELPER, T(T_HELPER_TITLE), T(helperState == HELPER_SAME ? T_HELPER_INSTALLED
                                                 : helperState == HELPER_DIFFERENT ? T_HELPER_OUTDATED
                                                 : helperState == HELPER_NOT_INSTALLED ? T_HELPER_NOT_INSTALLED : T_HELPER_NA));
@@ -3096,6 +3136,26 @@ static void pick_return(void)
     }
     snprintf(now, sizeof(cfg.igr_return), "%s", values[k]);
     config_set("igr", "return", values[k]);
+    note_igr_auto(NULL);
+}
+
+/* the automatic sync at IGR, on or off: off, IGR goes straight to what comes after it. Without a Google account there
+ * is nothing to turn on */
+static void pick_auto_sync(void)
+{
+    static const char *items[2];
+    int k;
+    if (!google_has_access()) {
+        message_wait(COLOR_TITLE, T(T_IGR_TITLE), COLOR_TEXT, T(T_SYNC_NO_ACCOUNT));
+        return;
+    }
+    items[0] = T(T_SYNC_ON);
+    items[1] = T(T_SYNC_OFF);
+    if ((k = choose(T(T_IGR_TITLE), items, 2, cfg.no_auto_sync)) < 0 || k == cfg.no_auto_sync)
+        return;
+    cfg.no_auto_sync = k;
+    config_set("igr", "auto_sync", k ? "no" : "yes");
+    note_igr_auto(NULL);
 }
 
 static void pick_language(void)
@@ -3171,6 +3231,7 @@ static void account_screen(void)
         networkUp = network_up() == 0;
     }
     google_logout(networkUp && google_init() == 0);
+    note_igr_auto(NULL);
     message_wait(0, NULL, COLOR_OK, T(T_LOGOUT_DONE));
 }
 
@@ -3250,6 +3311,9 @@ static void settings_screen(void)
         case SET_SYNC_ALL:
             sync_all();
             break;
+        case SET_AUTO_SYNC:
+            pick_auto_sync();
+            break;
         case SET_HELPER:
             if (helper_screen())   /* only then: reading the helper back from the memory card takes seconds */
                 helperState = helper_status();
@@ -3300,6 +3364,10 @@ static void offer_auto_sync(void)
         return;
     }
     sound_play(SND_CONFIRM);
+    if (cfg.no_auto_sync) {   /* it had been turned off in the settings: this answer turns it on again */
+        cfg.no_auto_sync = 0;
+        config_set("igr", "auto_sync", "yes");
+    }
     helper_install_now(T_AUTO_DONE);
 }
 
@@ -3372,6 +3440,7 @@ static void manual(void)
             sound_play(SND_BACK);
         }
     }
+    note_igr_auto(NULL);
 #ifdef DEBUG_BUILD
     if (debug_take('N'))
         debugNoLinkOnce = 1;
@@ -3476,6 +3545,21 @@ int main(int argc, char *argv[])
 {
     int r;
     system_init(argc, argv);
+    token_read();
+#ifdef DEBUG_BUILD
+    if (!igrMode)
+        igrMode = debug_has_script() ? debug_take('I') : 1;   /* on the console, with nobody at the controller: run as IGR */
+#endif
+    /* IGR with no sync to do: straight to what comes after it, before the screen and the sound are even started. The
+     * helper does this by itself when it can (igr/igr.c); this is for when it can't: a helper from before it did, or
+     * a program on a device only SD2Cloud has the drivers for */
+    if (igrMode && !auto_sync_on()) {
+        char c[260];
+        log_msg("IGR: %s, nothing to sync", cfg.no_auto_sync ? "the automatic sync is off" : "no Google account");
+        resolve_target(cfg.igr_return, c, sizeof(c));
+        note_igr_auto(c);
+        run_target(c);
+    }
     i18n_select(cfg.language);
     /* first run: create the sd2cloud.ini with every option explained, in the screen's language */
     if (!configExists)
@@ -3506,12 +3590,7 @@ int main(int argc, char *argv[])
     sd2psxIcon = icon_make_sd2psx();
     ui_unlock();
     state_read();
-    token_read();
     google_set_poll(watch_cancel);
-#ifdef DEBUG_BUILD
-    if (!igrMode)
-        igrMode = debug_has_script() ? debug_take('I') : 1;   /* on the console, with nobody at the controller: run as IGR */
-#endif
     if (igrMode)
         igr();
     manual();

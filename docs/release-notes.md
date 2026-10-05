@@ -1,6 +1,10 @@
-# SD2Cloud v1.3
+# SD2Cloud v1.3.1
 
 **Manage and back up your sd2psx memory cards, right on your PS2.**
+
+### What's new in 1.3.1
+- Automatic sync can be turned off in Settings (Automatic sync: On or Off; `auto_sync` in `sd2cloud.ini`). Off, exiting a game with IGR goes straight to the program opened after it, without starting SD2Cloud. The same happens while no Google account is connected.
+- For this, update the IGR helper once: Settings > IGR helper > Update.
 
 ### What's new in 1.3
 - Copy to a device: a card's options (TRIANGLE on the main screen) can now copy the whole card, as a file, to a folder of the microSD or of a USB drive. SD2Cloud asks whether to write a `.mcd` (sd2psx) or a `.ps2` (PCSX2), then reads the file back and compares it.
@@ -36,16 +40,16 @@ SD2Cloud runs on the PS2 itself and works with the memory cards on the microSD o
 ### Also
 - Every operation that uploads, writes or deletes data asks for confirmation; uploads can be cancelled with the Circle button.
 - For OPL builds that do not list the apps on the sd2psx microSD: copy the `APPS/SD2Cloud` folder to a USB drive or an MX4SIO card as well and open SD2Cloud from there. On a USB drive, OPL's IGR can run the helper from that folder, with nothing installed on the memory card.
-- Settings on START: sync all cards, IGR helper, the program to open after IGR, language, backups per card, backup format, check for updates, Google account and About. Changes are saved to `SD2Cloud/sd2cloud.ini` on the microSD.
+- Settings on START: sync all cards, automatic sync on or off, IGR helper, the program to open after IGR, language, backups per card, backup format, check for updates, Google account and About. Changes are saved to `SD2Cloud/sd2cloud.ini` on the microSD.
 - Returns to OPL on the microSD, a memory card, USB, MX4SIO or the internal HDD (exFAT or APA), loading only the drivers of that device.
 - Built-in updates, verified against the SHA-256 published on GitHub.
 - Interface inspired by the PlayStation BB Navigator, with sound effects.
 - English and Portuguese.
 
-**Installation:** extract `SD2Cloud-v1.3.zip` to the root of the sd2psx microSD and open SD2Cloud from the OPL Apps tab. See README.txt for details.
+**Installation:** extract `SD2Cloud-v1.3.1.zip` to the root of the sd2psx microSD and open SD2Cloud from the OPL Apps tab. See README.txt for details.
 
 ---
 
 **Gerencie e proteja os cartões de memória do seu sd2psx, direto no PS2.**
-Novidade da 1.3: nas opções de um cartão (TRIÂNGULO na tela principal), "Copiar para dispositivo" grava o cartão inteiro, como `.mcd` ou `.ps2`, numa pasta do microSD ou de um pendrive USB. Novidade da 1.2.2: a pergunta sobre conectar a conta do Google ao abrir ganhou a resposta "Não perguntar mais" (TRIÂNGULO), e fechar a janela do assistente de IGR nas Configurações não trava mais por alguns segundos. Novidade da 1.2.1: o Copiar da página de um item também lista a aba Arquivos entre os destinos, para exportar o `.psu` direto para uma pasta do microSD ou do pendrive. Novidade da 1.2: a aba Arquivos, na tela principal, percorre as pastas do microSD e de um pendrive USB (FAT32 ou exFAT). X em um arquivo `.psu` abre os dados salvos que ele contém, para importar em qualquer cartão; TRIÂNGULO exporta um item de um cartão, como `.psu`, para a pasta exibida. O arquivo é verificado por inteiro antes de o cartão ser alterado, e o que é gravado é lido de volta e comparado. Não precisa de conta do Google nem de rede.
-Instalação: extraia o `SD2Cloud-v1.3.zip` na raiz do microSD do sd2psx e abra o SD2Cloud pela aba Apps do OPL. Consulte o LEIA-ME.txt para mais detalhes.
+Novidade da 1.3.1: a sincronização automática pode ser desativada em Configurações; desativada, ou sem conta do Google conectada, sair de um jogo pelo IGR vai direto para o programa aberto depois dele, sem iniciar o SD2Cloud (atualize o assistente de IGR uma vez, em Configurações). Novidade da 1.3: nas opções de um cartão (TRIÂNGULO na tela principal), "Copiar para dispositivo" grava o cartão inteiro, como `.mcd` ou `.ps2`, numa pasta do microSD ou de um pendrive USB. Novidade da 1.2.2: a pergunta sobre conectar a conta do Google ao abrir ganhou a resposta "Não perguntar mais" (TRIÂNGULO), e fechar a janela do assistente de IGR nas Configurações não trava mais por alguns segundos. Novidade da 1.2.1: o Copiar da página de um item também lista a aba Arquivos entre os destinos, para exportar o `.psu` direto para uma pasta do microSD ou do pendrive. Novidade da 1.2: a aba Arquivos, na tela principal, percorre as pastas do microSD e de um pendrive USB (FAT32 ou exFAT). X em um arquivo `.psu` abre os dados salvos que ele contém, para importar em qualquer cartão; TRIÂNGULO exporta um item de um cartão, como `.psu`, para a pasta exibida. O arquivo é verificado por inteiro antes de o cartão ser alterado, e o que é gravado é lido de volta e comparado. Não precisa de conta do Google nem de rede.
+Instalação: extraia o `SD2Cloud-v1.3.1.zip` na raiz do microSD do sd2psx e abra o SD2Cloud pela aba Apps do OPL. Consulte o LEIA-ME.txt para mais detalhes.

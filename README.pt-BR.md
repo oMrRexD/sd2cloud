@@ -112,6 +112,10 @@ A partir daí, ao sair de um jogo pelo IGR, o SD2Cloud envia os cartões alterad
 reinstala ou desinstala o assistente. O SD2Cloud pode ficar em qualquer pasta do microSD do sd2psx: quando não
 está em `APPS/SD2Cloud`, ele registra onde está no `sd2cloud.ini`, e o assistente o inicia a partir dali.
 
+Para pausar a sincronização sem desinstalar nada, deixe **Sincronização automática** como Desativada em
+Configurações (START): o IGR passa a ir direto para o programa aberto depois dele, sem iniciar o SD2Cloud. O mesmo
+acontece enquanto não há conta do Google conectada.
+
 **Sem instalar nada (pendrive USB).** O IGR do OPL também abre programas de um pendrive USB. Se a pasta
 `APPS/SD2Cloud` estiver em um, formatado em FAT32, pule o passo 1 e informe `mass:/APPS/SD2Cloud/SD2CLOUD-IGR.ELF`
 em **Definir saída do IGR**: nada é gravado no cartão de memória. Para isso, o OPL carrega os drivers USB

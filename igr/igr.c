@@ -13,8 +13,12 @@
  * It doesn't have to be on the memory card: OPL's IGR also runs an ELF from a USB drive ("mass:"), so with the
  * APPS/SD2Cloud folder copied to one, "Exit to" can point at this file right there. SD2Cloud is then next to it, and
  * is started from there.
+ *
+ * With no sync to do (the automatic sync turned off in SD2Cloud's settings, or no Google account connected), SD2Cloud
+ * isn't started at all: what comes after IGR is started from here (see skip_sync).
  */
 #include <string.h>
+#include <strings.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <kernel.h>
@@ -44,7 +48,7 @@ static const char *const roots[] = {"mmce0:/", "mmce1:/",
                                     NULL};
 
 #ifdef DEBUG_BUILD
-/* what was tried before the reset, written to the microSD once it can be reached (igr-log.txt in the data folder) */
+/* what was tried, written to the microSD once it can be reached (igr-log.txt in the data folder) */
 static char tried[600];
 static void note(const char *what, const char *path, int r)
 {
@@ -65,11 +69,25 @@ static void note(const char *what, const char *path, int r)
         strcat(tried, "\r\n");
     }
 }
+
+static void save_notes(const char *root)
+{
+    char file[48];
+    int fd;
+    strcpy(file, root);
+    strcat(file, "SD2Cloud/igr-log.txt");
+    if ((fd = open(file, O_WRONLY | O_CREAT | O_TRUNC, 0666)) >= 0) {
+        write(fd, tried, strlen(tried));
+        close(fd);
+    }
+}
 #else
 #define note(what, path, r)
+#define save_notes(root)
 #endif
 
-static void run(const char *path)
+/* igr = 1: SD2Cloud, told that it was IGR that started it; 0 = any other program */
+static void run(const char *path, int igr)
 {
     static char *args[] = {"-igr", NULL};
     int fd = open(path, O_RDONLY);
@@ -77,7 +95,7 @@ static void run(const char *path)
     if (fd < 0)
         return;
     close(fd);
-    fd = LoadELFFromFile(path, 1, args);
+    fd = LoadELFFromFile(path, igr, args);
     note("LoadELFFromFile", path, fd);
 }
 
@@ -99,43 +117,101 @@ static void run_next_to(const char *self)
     strcpy(path + dir, ELF);
     SifLoadFileInit();
     sbv_patch_disable_prefix_check();   /* the ROM's loader only takes a few devices otherwise */
-    run(path);
+    run(path, 1);
     SifLoadFileExit();   /* not there: on with the usual way, from scratch */
 }
 
-/* the "app_path" line of the settings on that microSD: where SD2Cloud said it is ("" = it didn't) */
-static void told_path(const char *root, char *out, int size)
+/* SD2Cloud's settings on the microSD being looked at, whole */
+static char ini[16 * 1024 + 1];
+
+/* a small text file of SD2Cloud's data folder on that microSD, whole, in text (which ends in a 0); 0 = it can't be
+ * read */
+static int read_text(const char *root, const char *name, char *text, int size)
 {
-    static char ini[16 * 1024 + 1];
-    char file[48], *p, *end;
+    char file[48];
     int fd, n;
-    out[0] = 0;
+    text[0] = 0;
     strcpy(file, root);
-    strcat(file, "SD2Cloud/sd2cloud.ini");
+    strcat(file, "SD2Cloud/");
+    strcat(file, name);
     if ((fd = open(file, O_RDONLY)) < 0)
-        return;
-    n = read(fd, ini, sizeof(ini) - 1);
+        return 0;
+    n = read(fd, text, size - 1);
     close(fd);
-    ini[n > 0 ? n : 0] = 0;
-    for (p = ini; *p; p = *end ? end + 1 : end) {
+    text[n > 0 ? n : 0] = 0;
+    return n > 0;
+}
+
+/* the value of a key in a section of such a text ("" = the lines before any section), read the way SD2Cloud reads
+ * it. In out, which stays "" when the key isn't there or its value doesn't fit; returns the value's length */
+static int setting(const char *text, const char *section, const char *key, char *out, int size)
+{
+    const char *p, *end;
+    int in = !section[0], s = strlen(section), k = strlen(key), n, i;
+    out[0] = 0;
+    if (!strncmp(text, "\xEF\xBB\xBF", 3))   /* the UTF-8 BOM, if the file was saved with Notepad */
+        text += 3;
+    for (p = text; *p; p = *end ? end + 1 : end) {
         end = p + strcspn(p, "\n");
         p += strspn(p, " \t");
-        if (strncmp(p, "app_path", 8) != 0)
+        if (*p == '[') {
+            in = !strncasecmp(p + 1, section, s) && p[1 + s] == ']';
             continue;
-        p += 8 + strspn(p + 8, " \t");
+        }
+        if (!in || strncasecmp(p, key, k) != 0)
+            continue;
+        p += k + strspn(p + k, " \t");
         if (*p != '=')
             continue;
         p++;
         p += strspn(p, " \t");
         n = strcspn(p, "\r\n");
+        for (i = 1; i < n; i++)   /* a comment after the value */
+            if (p[i] == ';' && (p[i - 1] == ' ' || p[i - 1] == '\t'))
+                n = i;
         while (n > 0 && (p[n - 1] == ' ' || p[n - 1] == '\t'))
             n--;
-        if (n > 0 && n < size) {
+        if (n < size) {
             memcpy(out, p, n);
             out[n] = 0;
         }
-        return;
+        return n;
     }
+    return 0;
+}
+
+/* a path as the settings keep it ("mmce?:" = whichever slot the sd2psx is in), on that microSD; 0 = it is on another
+ * device */
+static int on_sd(char *path, const char *root)
+{
+    if (!strncmp(path, "mmce?:", 6) && !strncmp(root, "mmce", 4))
+        path[4] = root[4];
+    return !strncmp(path, root, strchr(root, ':') - root + 1);
+}
+
+/* With no sync to do, SD2Cloud isn't needed, and loading it would only take time: the automatic sync turned off in
+ * its settings ([igr] auto_sync = no), or no Google account connected (no token in token.dat). What comes after IGR
+ * is then started from here: the program in [igr] return or, with "auto", the OPL SD2Cloud found the last time it
+ * looked ([app] igr_auto). Only a program on this microSD, or the PS2 menu: for anything else (another device, an OPL
+ * not looked for yet, a file that isn't there) SD2Cloud is started as usual, which has the drivers and does the same
+ * before it shows anything */
+static void skip_sync(const char *root)
+{
+    static char v[256], token[1024];
+    if (!setting(ini, "igr", "auto_sync", v, sizeof(v)) || strcasecmp(v, "no") != 0) {
+        read_text(root, "token.dat", token, sizeof(token));
+        if (setting(token, "", "refresh_token", v, sizeof(v)) > 0)
+            return;   /* on, with an account: there is a sync to do */
+    }
+    setting(ini, "igr", "return", v, sizeof(v));
+    if (!v[0] || !strcasecmp(v, "auto"))
+        setting(ini, "app", "igr_auto", v, sizeof(v));
+    note("nothing to sync, after IGR:", v, 0);
+    save_notes(root);
+    if (!strcasecmp(v, "osd"))
+        ExecOSD(0, NULL);
+    if (on_sd(v, root))
+        run(v, 0);
 }
 
 int main(int argc, char *argv[])
@@ -143,6 +219,7 @@ int main(int argc, char *argv[])
     static char path[256];
     int i, k;
     SifInitRpc(0);
+    note("started as", argc > 0 && argv[0] ? argv[0] : "(nothing)", argc);
     run_next_to(argc > 0 && argv[0] ? argv[0] : "");
     while (!SifIopReset("", 0))
         ;
@@ -156,31 +233,22 @@ int main(int argc, char *argv[])
     init_fileXio_driver();
     init_sio2man_driver();
     SifExecModuleBuffer(mmceman_irx, size_mmceman_irx, 0, NULL, NULL);
-#ifdef DEBUG_BUILD
-    {
-        int fd = open("mmce0:/SD2Cloud/igr-log.txt", O_WRONLY | O_CREAT | O_TRUNC, 0666);
-        if (fd >= 0) {
-            write(fd, "started as ", 11);
-            write(fd, argc > 0 && argv[0] ? argv[0] : "(nothing)", strlen(argc > 0 && argv[0] ? argv[0] : "(nothing)"));
-            write(fd, "\r\n", 2);
-            write(fd, tried, strlen(tried));
-            close(fd);
-        }
-    }
-#endif
+    save_notes("mmce0:/");
     /* the sd2psx may still be switching cards when OPL hands over: a few tries before giving up */
     for (i = 0; i < 6; i++) {
-        for (k = 0; roots[k]; k++) {   /* where SD2Cloud said it is */
-            told_path(roots[k], path, sizeof(path));
-            if (!strncmp(path, "mmce?:", 6) && !strncmp(roots[k], "mmce", 4))
-                path[4] = roots[k][4];   /* the microSD those settings are on */
+        for (k = 0; roots[k]; k++) {   /* what SD2Cloud's settings on that microSD say */
+            if (!read_text(roots[k], "sd2cloud.ini", ini, sizeof(ini)))
+                continue;
+            skip_sync(roots[k]);
+            setting(ini, "app", "app_path", path, sizeof(path));   /* where SD2Cloud said it is */
+            on_sd(path, roots[k]);
             if (path[0])
-                run(path);
+                run(path, 1);
         }
         for (k = 0; roots[k]; k++) {   /* its usual folder */
             strcpy(path, roots[k]);
             strcat(path, "APPS/SD2Cloud/" ELF);
-            run(path);
+            run(path, 1);
         }
         usleep(300 * 1000);
     }

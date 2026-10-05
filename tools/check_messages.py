@@ -69,7 +69,7 @@ DIALOG, WIDE = 440 - 56, 520 - 56   # the inside of the message boxes (normal an
 # themselves, but more lines than the limit clutter the box.
 PLACE = {
     # dialog titles (they wrap, but should take one line)
-    "T_IGR_TITLE": ("text", DIALOG, 1), "T_SEARCHING": ("text", DIALOG, 1), "T_LOGIN_OK": ("text", DIALOG, 1),
+    "T_SEARCHING": ("text", DIALOG, 1), "T_LOGIN_OK": ("text", DIALOG, 1),
     "T_LOGIN_ERROR": ("text", DIALOG, 1), "T_FIRST_TITLE": ("text", DIALOG, 1), "T_SUMMARY_OK": ("text", WIDE, 1),
     "T_SUMMARY_PARTIAL": ("text", WIDE, 1), "T_SUMMARY_FAILED": ("text", WIDE, 1),
     "T_CANCEL_TITLE": ("text", DIALOG, 1), "T_RESTORE_TITLE": ("text", WIDE, 1), "T_RESTORING": ("text", DIALOG, 1),
@@ -99,8 +99,9 @@ PLACE = {
     "T_RESTORE_CANCEL_TEXT": ("text", DIALOG, 1), "T_RETURNING": ("small", WIDE, 1), "T_HIST_LOADING": ("text", DIALOG, 1),
     "T_HIST_EMPTY": ("text", 150, 3), "T_NO_CARDS": ("text", 150, 5), "T_IGR_NOTHING": ("text", DIALOG, 2),
     # the settings (START): labels from x = 80, values up to x = 560 (cut with "..." past 200 px). The IGR helper's
-    # label is also the title of its dialog, which is wider
+    # and the automatic sync's labels are also the titles of their dialogs, which are wider
     "T_SET_SYNC_ALL": ("text", 270, 1), "T_HELPER_TITLE": ("text", 270, 1), "T_SET_IGR_RETURN": ("text", 270, 1),
+    "T_IGR_TITLE": ("text", 270, 1), "T_SYNC_ON": ("text", 200, 1), "T_SYNC_OFF": ("text", 200, 1),
     "T_SET_LANGUAGE": ("text", 270, 1), "T_SET_KEEP": ("text", 270, 1), "T_SET_FORMAT": ("text", 270, 1),
     "T_SET_UPDATES": ("text", 270, 1), "T_SET_ACCOUNT": ("text", 270, 1), "T_SET_ABOUT": ("text", 270, 1),
     "T_MENU_UPDATE": ("text", 440, 1), "T_PENDING_N": ("text", 200, 1), "T_NONE_PENDING": ("text", 200, 1), "T_UPDATE_AVAILABLE": ("text", 200, 1),

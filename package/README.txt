@@ -1,5 +1,5 @@
-SD2Cloud 1.3
-============
+SD2Cloud 1.3.1
+==============
 
 Manage and back up your sd2psx memory cards, right on your PS2.
 
@@ -101,6 +101,8 @@ PS2 SDK): prefer plain names for the folders you use here.
 SETTINGS (START)
 - Sync all cards: uploads the cards that are not synced; if all of them are, SD2Cloud says so and lets you
   sync them all again.
+- Automatic sync: On or Off. Off, exiting a game with IGR goes straight to the program of "After IGR,
+  open", without showing SD2Cloud. It also stays off while no Google account is connected.
 - IGR helper: installs the helper on the memory card in use (see AUTOMATIC SYNC). Once it is installed,
   the same option reinstalls it (or updates it) or uninstalls it.
 - After IGR, open: the program started after the IGR sync. The choices are Automatic (the OPL found on the
@@ -126,6 +128,9 @@ and returns to OPL. In this mode, cancelling the upload also returns to OPL.
 SD2Cloud can be kept in any folder of the sd2psx microSD: every time it is opened, it records where it is
 in sd2cloud.ini ("app_path"), and the helper starts it from there. After moving it, open it once.
 To uninstall the helper, select "IGR helper" again and choose "Uninstall"; then change "IGR Path" in OPL.
+To pause the sync and keep everything installed, set "Automatic sync" to Off in Settings (START): IGR then
+goes straight to the program opened after it, without starting SD2Cloud. The same happens while no Google
+account is connected.
 Without installing anything (USB drive): OPL's IGR can also start a program from a USB drive. If the
 APPS/SD2Cloud folder is on one, formatted as FAT32, skip step 1 and set "IGR Path" to:
 mass:/APPS/SD2Cloud/SD2CLOUD-IGR.ELF

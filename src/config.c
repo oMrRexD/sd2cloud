@@ -57,11 +57,13 @@ static void on_config(const char *s, const char *k, const char *v, void *u)
         else if (!strcasecmp(k, "name")) {
             COPY(cfg.igr_name, v);
             utf8_fix(cfg.igr_name, sizeof(cfg.igr_name));
-        } else if (!strcasecmp(k, "settle_seconds")) cfg.igr_settle = atoi(v);
+        } else if (!strcasecmp(k, "auto_sync")) cfg.no_auto_sync = !strcasecmp(v, "no");
+        else if (!strcasecmp(k, "settle_seconds")) cfg.igr_settle = atoi(v);
         else if (!strcasecmp(k, "summary_seconds")) cfg.igr_summary = atoi(v);
     } else if (!strcasecmp(s, "app")) {   /* written by the app itself */
         if (!strcasecmp(k, "app_path")) COPY(cfg.app_path, v);
         else if (!strcasecmp(k, "app_version")) COPY(cfg.app_version, v);
+        else if (!strcasecmp(k, "igr_auto")) COPY(cfg.igr_auto, v);
     } else if (!strcasecmp(s, "manual")) {
         if (!strcasecmp(k, "return")) COPY(cfg.manual_return, v);
         else if (!strcasecmp(k, "name")) {

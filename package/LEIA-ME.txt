@@ -1,5 +1,5 @@
-SD2Cloud 1.3
-============
+SD2Cloud 1.3.1
+==============
 
 Gerencie e proteja os cartões de memória do seu sd2psx, direto no PS2.
 
@@ -107,6 +107,9 @@ PS2): prefira nomes simples para as pastas usadas aqui.
 CONFIGURAÇÕES (START)
 - Sincronizar todos os cartões: envia os cartões não sincronizados; se todos estiverem sincronizados, o
   SD2Cloud avisa e permite sincronizar todos novamente.
+- Sincronização automática: Ativada ou Desativada. Desativada, sair de um jogo pelo IGR vai direto para o
+  programa de "Após o IGR, abrir", sem exibir o SD2Cloud. Também fica desativada enquanto não há conta do
+  Google conectada.
 - Assistente de IGR: instala o assistente no cartão de memória em uso (veja SINCRONIZAÇÃO AUTOMÁTICA).
   Depois de instalado, a mesma opção permite reinstalar (ou atualizar) e desinstalar o assistente.
 - Após o IGR, abrir: o programa iniciado depois da sincronização pelo IGR. As opções são Automático (o OPL
@@ -134,6 +137,9 @@ O SD2Cloud pode ficar em qualquer pasta do microSD do sd2psx: sempre que é aber
 no sd2cloud.ini ("app_path"), e o assistente o inicia a partir dali. Depois de movê-lo, abra-o uma vez.
 Para desinstalar o assistente, selecione "Assistente de IGR" novamente e escolha "Desinstalar"; depois,
 altere "Definir saída do IGR" no OPL.
+Para pausar a sincronização sem desinstalar nada, deixe "Sincronização automática" como Desativada em
+Configurações (START): o IGR passa a ir direto para o programa aberto depois dele, sem iniciar o SD2Cloud. O
+mesmo acontece enquanto não há conta do Google conectada.
 Sem instalar nada (pendrive USB): o IGR do OPL também abre programas de um pendrive USB. Se a pasta
 APPS/SD2Cloud estiver em um, formatado em FAT32, pule o passo 1 e informe em "Definir saída do IGR":
 mass:/APPS/SD2Cloud/SD2CLOUD-IGR.ELF
