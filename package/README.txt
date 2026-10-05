@@ -1,4 +1,4 @@
-SD2Cloud 1.3.1
+SD2Cloud 1.3.2
 ==============
 
 Manage and back up your sd2psx memory cards, right on your PS2.

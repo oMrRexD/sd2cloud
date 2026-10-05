@@ -1,10 +1,12 @@
-# SD2Cloud v1.3.1
+# SD2Cloud v1.3.2
 
 **Manage and back up your sd2psx memory cards, right on your PS2.**
 
-### What's new in 1.3.1
-- Automatic sync can be turned off in Settings (Automatic sync: On or Off; `auto_sync` in `sd2cloud.ini`). Off, exiting a game with IGR goes straight to the program opened after it, without starting SD2Cloud. The same happens while no Google account is connected.
-- For this, update the IGR helper once: Settings > IGR helper > Update.
+### What's new in 1.3.2
+- The programs in the APPS folder are listed by the name OPL shows, the `title` line of their `title.cfg`. A `Title` line in the same file, the description some packages add, was taking its place in Exit to and in After IGR, open.
+- A name too long for a list is cut with "..." instead of running out of its box.
+
+Thanks to nuno6573 for the report.
 
 To update, use Settings > Check for updates, or copy the new files over the old ones.
 
@@ -34,14 +36,16 @@ SD2Cloud runs on the PS2 itself and works with the memory cards on the microSD o
 - Interface inspired by the PlayStation BB Navigator, with sound effects.
 - English and Portuguese.
 
-**Installation:** extract `SD2Cloud-v1.3.1.zip` to the root of the sd2psx microSD and open SD2Cloud from the OPL Apps tab. See README.txt for details.
+**Installation:** extract `SD2Cloud-v1.3.2.zip` to the root of the sd2psx microSD and open SD2Cloud from the OPL Apps tab. See README.txt for details.
 
 ---
 
 **Gerencie e proteja os cartões de memória do seu sd2psx, direto no PS2.**
 
-**Novidades da 1.3.1**
-- A sincronização automática pode ser desativada em Configurações. Desativada, ou sem conta do Google conectada, sair de um jogo pelo IGR vai direto para o programa aberto depois dele, sem iniciar o SD2Cloud.
-- Para isso, atualize o assistente de IGR uma vez: Configurações > Assistente de IGR > Atualizar.
+**Novidades da 1.3.2**
+- Os programas da pasta APPS aparecem com o nome que o OPL mostra, a linha `title` do `title.cfg`. Uma linha `Title` no mesmo arquivo, a descrição que alguns pacotes acrescentam, estava tomando o lugar dela em "Sair para" e em "Após o IGR, abrir".
+- Um nome comprido demais para a lista é cortado com "..." em vez de passar da caixa.
 
-**Instalação:** extraia o `SD2Cloud-v1.3.1.zip` na raiz do microSD do sd2psx e abra o SD2Cloud pela aba Apps do OPL. Consulte o LEIA-ME.txt para mais detalhes.
+Obrigado ao nuno6573 pelo relato.
+
+**Instalação:** extraia o `SD2Cloud-v1.3.2.zip` na raiz do microSD do sd2psx e abra o SD2Cloud pela aba Apps do OPL. Consulte o LEIA-ME.txt para mais detalhes.

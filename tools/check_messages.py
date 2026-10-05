@@ -106,11 +106,12 @@ PLACE = {
     "T_SET_UPDATES": ("text", 270, 1), "T_SET_ACCOUNT": ("text", 270, 1), "T_SET_ABOUT": ("text", 270, 1),
     "T_MENU_UPDATE": ("text", 440, 1), "T_PENDING_N": ("text", 200, 1), "T_NONE_PENDING": ("text", 200, 1), "T_UPDATE_AVAILABLE": ("text", 200, 1),
     "T_HELPER_NOT_INSTALLED": ("text", 200, 1), "T_ACCOUNT_OFF": ("text", 200, 1),
-    "T_SYNC_NOW": ("text", 330, 1), "T_EXIT_TO": ("text", 330, 1), "T_ALL_SYNCED": ("text", DIALOG, 1), "T_AUTO_ASK": ("text", WIDE, 3), "T_AUTO_WHERE": ("small", WIDE, 2),
+    "T_SYNC_NOW": ("text", 320, 1), "T_EXIT_TO": ("text", 330, 1), "T_ALL_SYNCED": ("text", DIALOG, 1), "T_AUTO_ASK": ("text", WIDE, 3), "T_AUTO_WHERE": ("small", WIDE, 2),
     "T_AUTO_OPL": ("text", WIDE, 1), "T_ABOUT_CREDITS": ("small", WIDE, 3), "T_ABOUT_LICENSES": ("small", WIDE, 1), "T_AUTO_NOTE": ("small", WIDE, 1), "T_AUTO_DONE": ("text", WIDE, 1), "T_CONNECT_HINT": ("small", DIALOG, 2),
-    # the box with a list (a card's options, the exit menu): title and items centered in 380 px
-    "T_RESTORE_BACKUP": ("text", 330, 1), "T_COPY_DEVICE": ("text", 330, 1), "T_HELPER_REINSTALL": ("text", 330, 1), "T_HELPER_UNINSTALL": ("text", 330, 1),
-    "T_UPDATE": ("text", 330, 1),
+    # the box with a list (a card's options, the exit menu): title and items centered in 380 px; an item wider than
+    # 320 px is cut with "..." (main.c choose)
+    "T_RESTORE_BACKUP": ("text", 320, 1), "T_COPY_DEVICE": ("text", 320, 1), "T_HELPER_REINSTALL": ("text", 320, 1), "T_HELPER_UNINSTALL": ("text", 320, 1),
+    "T_UPDATE": ("text", 320, 1),
     # "Copy to" / "Move to": the title over the destination card, and what goes under it
     "T_COPY_TO": ("text", 200, 1), "T_MOVE_TO": ("text", 200, 1), "T_NO_ROOM": ("small", 200, 1),
     # a save's page: the column on the right, centered on x = 452

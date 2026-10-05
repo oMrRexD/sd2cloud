@@ -251,10 +251,12 @@ static int confirm(const char *title, const char *text, int yesText)
 
 /* ------------------------------------------------------------ leaving */
 
+/* a title.cfg is read the way OPL reads it: "title" and "boot" exactly, in lowercase. The same file may also have a
+ * "Title", the description some packages add for OPL's info page */
 static void on_title_cfg(const char *s, const char *k, const char *v, void *u)
 {
     (void)s;
-    if (!strcasecmp(k, "boot"))
+    if (!strcmp(k, "boot"))
         snprintf((char *)u, 64, "%s", v);
 }
 
@@ -1521,15 +1523,18 @@ static icon_t *newest_icon(const card_t *c)
 
 #define PICK_MAX 128
 #define PICK_ROWS 6
+#define PICK_W 380   /* the box; an item gets 60 less than that, clear of the arrows on its right */
 static struct {
     char title[100];
-    const char *items[PICK_MAX];
+    char items[PICK_MAX][100];
     int n, cursor, top;
 } pick;
 
+static void fit(int font, char *s, size_t size, int maxw);
+
 static void scene_pick(float t)
 {
-    int rows = pick.n < PICK_ROWS ? pick.n : PICK_ROWS, w = 380, h = 56 + rows * 32 + 24, x = (W - w) / 2,
+    int rows = pick.n < PICK_ROWS ? pick.n : PICK_ROWS, w = PICK_W, h = 56 + rows * 32 + 24, x = (W - w) / 2,
         y = LOOK_TOP + (LOOK_BOTTOM - LOOK_TOP - h) / 2, i;
     look_space();
     look_frame();
@@ -1556,8 +1561,10 @@ static int choose(const char *title, const char *const *items, int n, int start)
         n = PICK_MAX;
     ui_lock();
     snprintf(pick.title, sizeof(pick.title), "%s", title);
-    for (i = 0; i < n; i++)
-        pick.items[i] = items[i];
+    for (i = 0; i < n; i++) {   /* a program's name can be any length: one that doesn't fit the box is cut */
+        snprintf(pick.items[i], sizeof(pick.items[0]), "%s", items[i]);
+        fit(FONT_TEXT, pick.items[i], sizeof(pick.items[0]), PICK_W - 60);
+    }
     pick.n = n;
     pick.cursor = start >= 0 && start < n ? start : 0;
     pick.top = pick.cursor >= PICK_ROWS ? pick.cursor - PICK_ROWS + 1 : 0;
@@ -1939,8 +1946,6 @@ static void save_to_cloud(card_t *c, save_view_t *v)
         message_wait(0, NULL, COLOR_ERROR, t);
     }
 }
-
-static void fit(int font, char *s, size_t size, int maxw);
 
 /* what the page shows: the save, where it is, its size and what can be done with it */
 static void save_page(save_view_t *v, const char *where, long long bytes, const int *options, int n)
@@ -2656,9 +2661,9 @@ static void on_app_cfg(const char *s, const char *k, const char *v, void *u)
 {
     app_t *a = u;
     (void)s;
-    if (!strcasecmp(k, "title"))
+    if (!strcmp(k, "title"))   /* not "Title": see on_title_cfg */
         snprintf(a->title, sizeof(a->title), "%s", v);
-    else if (!strcasecmp(k, "boot"))
+    else if (!strcmp(k, "boot"))
         snprintf(a->path, sizeof(a->path), "%s", v);
 }
 
