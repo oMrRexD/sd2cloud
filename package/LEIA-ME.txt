@@ -75,13 +75,18 @@ arquivos .psu (veja ARQUIVOS).
 - TRIÂNGULO abre as opções do cartão selecionado: "Sincronizar agora", "Restaurar backup" (veja
   RESTAURAÇÃO) e "Copiar para dispositivo": o cartão inteiro vai, como arquivo, para uma pasta do microSD ou de
   um pendrive USB. Escolha o dispositivo, vá até a pasta e pressione TRIÂNGULO; o SD2Cloud pergunta se grava um
-  .mcd (sd2psx) ou um .ps2 (PCSX2), e depois lê o arquivo de volta e compara.
+  .mcd (sd2psx) ou um .ps2 (PCSX2), e depois lê o arquivo de volta e compara. A última, "Inserir no sd2psx",
+  faz o sd2psx assumir esse cartão, como os botões dele fariam. O sd2psx só vai para um BootCard com o
+  Autoboot ativado nas configurações dele, e para o cartão de um jogo só com o Game ID; uma pasta com nome
+  personalizado só pode ser escolhida no próprio sd2psx. Na lista, um cartão pequeno marca o que está em uso
+  no sd2psx.
 - START abre as configurações (veja CONFIGURAÇÕES).
 - X em um item de dados salvos abre a página do item, com as opções Copiar e Mover (para outro cartão do
   microSD, escolhido nas mesmas abas da tela principal; o espaço livre do cartão de destino é exibido e um
   cartão sem espaço suficiente não pode ser escolhido), Eliminar e Enviar ao Drive (apenas esse item, em
-  formato .psu, na pasta "Saves" ao lado dos backups do cartão). Não é possível alterar o cartão que está
-  em uso no sd2psx: selecione outro cartão no sd2psx antes.
+  formato .psu, na pasta "Saves" ao lado dos backups do cartão). Para alterar o cartão que está em uso no
+  sd2psx, o SD2Cloud pergunta antes, troca o sd2psx para outro cartão, faz a alteração e volta; só para uma
+  pasta com nome personalizado é preciso trocar o cartão no próprio sd2psx antes.
 Toda operação que envia, grava ou elimina dados pede confirmação antes de começar. Durante uma
 sincronização, o botão O permite cancelar o envio; os cartões já enviados permanecem no Drive.
 
@@ -101,7 +106,8 @@ ser abertos.
   mesmo nome só é substituído depois da sua confirmação.
   O mesmo pode ser feito pela página de um item: Copiar também lista a aba Arquivos entre os destinos; escolha
   o dispositivo, vá até a pasta e pressione TRIÂNGULO.
-O cartão que está em uso no sd2psx não pode receber uma importação: selecione outro cartão no sd2psx antes.
+Importar para o cartão que está em uso no sd2psx funciona como qualquer outra alteração nele: o SD2Cloud
+pergunta, troca o sd2psx para outro cartão e volta.
 Nomes com letras acentuadas podem aparecer abreviados, ou não abrir (limitação do driver de FAT do SDK do
 PS2): prefira nomes simples para as pastas usadas aqui.
 

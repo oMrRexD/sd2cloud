@@ -94,11 +94,11 @@ static int mc_write_file(const char *path, const unsigned char *d, int n)
     return 0;
 }
 
-/* loads mcman/mcserv and checks there is a formatted PS2 card in that slot (0 = slot 1). 0 = ready */
-static int memcard_ready(int port)
+/* loads mcman/mcserv, once. 0 = they are there */
+static int memcard_start(void)
 {
     static int started;
-    int r, type = 0, freeKb = 0, format = 0;
+    int r;
     if (!started) {
         /* ps2_drivers only loads mcman and mcserv (returns 1); mcInit is up to us */
         r = init_memcard_driver(false);
@@ -109,10 +109,30 @@ static int memcard_ready(int port)
         }
         started = 1;
     }
+    return 0;
+}
+
+/* checks there is a formatted PS2 card in that slot (0 = slot 1). 0 = ready */
+static int memcard_ready(int port)
+{
+    int r, type = 0, freeKb = 0, format = 0;
+    if (memcard_start() != 0)
+        return -1;
     mcGetInfo(port, 0, &type, &freeKb, &format);
     r = mc_wait();
     log_msg("helper: getinfo %d (type %d, %d KB free, formatted %d)", r, type, freeKb, format);
     return (type == 2 && format) ? 0 : -1;   /* 2 = PS2 card */
+}
+
+/* what mcman has to say of the card in that slot since the last time it was asked: 0 = it is the same card; anything
+ * else = it was changed for another, or there is none to use right now (the sd2psx, while it changes cards) */
+int mc_card_state(int port)
+{
+    int type = 0, freeKb = 0, format = 0;
+    if (memcard_start() != 0)
+        return -100;
+    mcGetInfo(port, 0, &type, &freeKb, &format);
+    return mc_wait();
 }
 
 /* is the helper on the memory card in use the same as the one in the app's folder? (after SD2Cloud is updated, the

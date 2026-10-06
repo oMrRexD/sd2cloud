@@ -51,7 +51,8 @@ def fill(s, id_):
         s = s.replace("%s", LONG_SAVE, 1).replace("%s", LONG_CARD)
     if "%s" in s:
         if id_ in ("T_HIST_TITLE", "T_RESTORE_TITLE", "T_RESTORE_IN_USE", "T_RESTORING", "T_CARD_IN_USE", "T_DONE_COPY",
-                   "T_DONE_MOVE", "T_DELETE_TEXT", "T_ERR_EXISTS", "T_ERR_FULL", "T_ERR_MC_CHECK", "T_DONE_IMPORT"):
+                   "T_DONE_MOVE", "T_DELETE_TEXT", "T_ERR_EXISTS", "T_ERR_FULL", "T_ERR_MC_CHECK", "T_DONE_IMPORT",
+                   "T_SWITCH_ASK", "T_INSERT_DONE", "T_INSERT_FAILED", "T_SWITCH_BACK_FAILED"):
             s = s.replace("%s", LONG_CARD)
         elif id_ in ("T_CARD_LAST", "T_RESTORE_FROM"):
             s = s.replace("%s", LONG_DATE)
@@ -111,7 +112,13 @@ PLACE = {
     # the box with a list (a card's options, the exit menu): title and items centered in 380 px; an item wider than
     # 320 px is cut with "..." (main.c choose)
     "T_RESTORE_BACKUP": ("text", 320, 1), "T_COPY_DEVICE": ("text", 320, 1), "T_HELPER_REINSTALL": ("text", 320, 1), "T_HELPER_UNINSTALL": ("text", 320, 1),
-    "T_UPDATE": ("text", 320, 1),
+    "T_UPDATE": ("text", 320, 1), "T_INSERT": ("text", 320, 1),
+    # moving the sd2psx to another card (a wide box, to say it all in three lines); what a card that it wasn't moved
+    # to needs, under that
+    "T_SWITCH_ASK": ("text", WIDE, 3), "T_SWITCHING": ("text", DIALOG, 1),
+    "T_INSERT_DONE": ("text", DIALOG, 1), "T_INSERT_FAILED": ("text", DIALOG, 2),
+    "T_INSERT_NEEDS_BOOT": ("small", DIALOG, 2), "T_INSERT_NEEDS_GAMEID": ("small", DIALOG, 2),
+    "T_INSERT_BOOT_ASK": ("text", DIALOG, 2),
     # "Copy to" / "Move to": the title over the destination card, and what goes under it
     "T_COPY_TO": ("text", 200, 1), "T_MOVE_TO": ("text", 200, 1), "T_NO_ROOM": ("small", 200, 1),
     # a save's page: the column on the right, centered on x = 452
@@ -143,6 +150,7 @@ LEGENDS = [
     (("T_BACK", "T_LOGOUT_YES"), False, False), (("T_BACK", "T_HELPER_UNINSTALL"), False, False), (("T_LATER", "T_AUTO_ON"), False, False), (("T_FINISH",), False, False), (("T_LATER", "T_CONNECT"), False, False), (("T_LATER", "T_NEVER_ASK", "T_CONNECT"), False, False),
     (("T_MENU_EXIT", "T_OPEN", "T_SETTINGS"), True, True), (("T_BACK", "T_OPEN", "T_EXPORT_SAVE"), False, False), (("T_BACK", "T_OPEN", "T_EXPORT"), False, False),
     (("T_BACK", "T_EXPORT"), False, False), (("T_BACK", "T_REPLACE"), False, False), (("T_BACK", "T_IMPORT_YES"), False, False),
+    (("T_BACK", "T_CONTINUE"), False, False), (("T_BACK", "T_INSERT_YES"), False, False),
 ]
 
 

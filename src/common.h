@@ -43,6 +43,15 @@ int device_of(const char *path);
 /* the card the sd2psx is emulating right now: its number (0 = BootCard, a game card or a named folder) and channel.
  * -1 = couldn't ask; -2 = not on an MMCE device (testing on PCSX2) */
 int mmce_active_card(int *channel);
+/* Tell the sd2psx to emulate another card, as its own buttons do: it writes what it holds of the current one to the
+ * microSD, closes it and opens the other, a moment later. Each one only asks (0 = the sd2psx took the request):
+ * whether the card changed has to be seen in the slot afterwards. A numbered card (its first channel), or with boot
+ * the BootCard, which the sd2psx only goes to with Autoboot on, in the channel it keeps for it; another channel of
+ * the card it is on; the card of a game, by its ID, which it only goes to with Game ID on */
+int mmce_set_card(int boot, int number);
+int mmce_set_channel(int channel);
+int mmce_set_gameid(const char *id);
+int mmce_busy(void);                        /* 1 = the sd2psx is reading the card it just opened, 0 = no, -1 = no answer */
 /* a USB drive (mass0:), for the file browser: loads its drivers the first time, then waits up to ms for the drive.
  * 0 = it's there */
 int usb_open(int ms);
@@ -297,6 +306,7 @@ int restore_card(card_t *c, const drive_file_t *f, int (*progress)(int phase, lo
 enum { HELPER_NO_FILE, HELPER_NOT_INSTALLED, HELPER_DIFFERENT, HELPER_SAME };
 int helper_status(void);                    /* the helper in mc0:/BOOT compared with the one in the app's folder */
 int mc_root_signature(int port, char hex[65]);   /* mcfs_root_signature of the card in that slot, through mcman */
+int mc_card_state(int port);                     /* 0 = the card in that slot is the one it was when last asked */
 #define HELPER_TARGET "/BOOT/SD2CLOUD-IGR.ELF"
 int helper_present(void);                   /* the helper's ELF is in the app's folder, and it can be installed */
 int helper_install(void);                   /* copies it to mc0: 0 = ok, -2 = the ELF is missing, -1 = couldn't write,

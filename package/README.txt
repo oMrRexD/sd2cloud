@@ -70,13 +70,17 @@ microSD and a USB drive for .psu files (see FILES).
 - TRIANGLE opens the selected card's options: "Sync now", "Restore a backup" (see RESTORING) and "Copy to a
   device": the whole card goes, as a file, to a folder of the microSD or of a USB drive. Pick the device, go to
   the folder and press TRIANGLE; SD2Cloud asks whether to write a .mcd (sd2psx) or a .ps2 (PCSX2), then reads the
-  file back and compares it.
+  file back and compares it. The last one, "Insert into sd2psx", makes the sd2psx take that card, as its own
+  buttons would. The sd2psx takes a BootCard only with Autoboot turned on in its settings, and a game's card
+  only with Game ID; a folder with a name of its own can only be picked on the sd2psx itself. On the list, a
+  small card marks the one the sd2psx is using.
 - START opens the settings (see SETTINGS).
 - X on a saved data item opens its page, with Copy and Move (to another card on the microSD, chosen from the
   same tabs as the main screen; the destination's free space is shown, and a card without enough space cannot
   be selected), Delete and Upload to Drive (that item only, in .psu format, in a "Saves" folder next to the
-  card's backups). The card currently in use by the sd2psx cannot be modified: switch to another card on the
-  sd2psx first.
+  card's backups). To change the card the sd2psx is using, SD2Cloud asks first, then switches the sd2psx to
+  another card, makes the change and switches back; only for a folder with a name of its own the card has to
+  be switched on the sd2psx beforehand.
 Every operation that uploads, writes or deletes data asks for confirmation first. During a sync, the O
 button cancels the upload; cards already uploaded remain on Drive.
 
@@ -94,7 +98,8 @@ and file is listed, but only .psu files can be opened.
   with the same name is only replaced after you confirm.
   The same can be done from an item's page: Copy also lists the Files tab among the destinations; pick the
   device, go to the folder and press TRIANGLE.
-The card currently in use by the sd2psx cannot receive an import: switch to another card on the sd2psx first.
+Importing into the card the sd2psx is using works as any other change to it: SD2Cloud asks, switches the
+sd2psx to another card and back.
 Names with accented letters may be shown abbreviated, or not open at all (a limit of the FAT driver of the
 PS2 SDK): prefer plain names for the folders you use here.
 

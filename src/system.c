@@ -617,23 +617,68 @@ int network_up(void)
 
 /* ------------------------------------------------------------ sd2psx (MMCE commands, mmceman's devctl) */
 
+#define MMCE_CMD_GET_STATUS  0x2
 #define MMCE_CMD_GET_CARD    0x3
+#define MMCE_CMD_SET_CARD    0x4
 #define MMCE_CMD_GET_CHANNEL 0x5
+#define MMCE_CMD_SET_CHANNEL 0x6
+#define MMCE_CMD_SET_GAMEID  0x8
 
-int mmce_active_card(int *channel)
+/* -2 = not on an MMCE device */
+static int mmce_devctl(int cmd, void *arg, unsigned int len)
 {
     char dev[8];
-    int card, ch;
     if (strncmp(sdRoot, "mmce", 4) != 0)
         return -2;
     snprintf(dev, sizeof(dev), "%.6s", sdRoot);   /* "mmce0:" */
-    card = fileXioDevctl(dev, MMCE_CMD_GET_CARD, NULL, 0, NULL, 0);
-    ch = fileXioDevctl(dev, MMCE_CMD_GET_CHANNEL, NULL, 0, NULL, 0);
+    return fileXioDevctl(dev, cmd, arg, len, NULL, 0);
+}
+
+int mmce_active_card(int *channel)
+{
+    int card, ch;
+    if (strncmp(sdRoot, "mmce", 4) != 0)
+        return -2;
+    card = mmce_devctl(MMCE_CMD_GET_CARD, NULL, 0);
+    ch = mmce_devctl(MMCE_CMD_GET_CHANNEL, NULL, 0);
     log_msg("sd2psx: card %d, channel %d", card, ch);
     if (card < 0 || ch < 0)
         return -1;
     *channel = ch;
     return card;
+}
+
+/* mmceman takes the kind of card (1 = the BootCard), how to pick it (0 = by number) and the number in one word */
+int mmce_set_card(int boot, int number)
+{
+    u32 arg = ((u32)(boot ? 1 : 0) << 24) | (number & 0xFFFF);
+    int r = mmce_devctl(MMCE_CMD_SET_CARD, &arg, sizeof(arg));
+    log_msg("sd2psx: asked for %s %d (%d)", boot ? "the BootCard" : "card", number, r);
+    return r < 0 ? -1 : 0;
+}
+
+int mmce_set_channel(int channel)
+{
+    u32 arg = channel & 0xFFFF;
+    int r = mmce_devctl(MMCE_CMD_SET_CHANNEL, &arg, sizeof(arg));
+    log_msg("sd2psx: asked for channel %d (%d)", channel, r);
+    return r < 0 ? -1 : 0;
+}
+
+int mmce_set_gameid(const char *id)
+{
+    char t[64];
+    int r;
+    snprintf(t, sizeof(t), "%s", id);
+    r = mmce_devctl(MMCE_CMD_SET_GAMEID, t, strlen(t) + 1);
+    log_msg("sd2psx: asked for the card of %s (%d)", t, r);
+    return r < 0 ? -1 : 0;
+}
+
+int mmce_busy(void)
+{
+    int r = mmce_devctl(MMCE_CMD_GET_STATUS, NULL, 0);
+    return r < 0 ? -1 : (r & 1);
 }
 
 /* ------------------------------------------------------------ a USB drive, for the file browser */

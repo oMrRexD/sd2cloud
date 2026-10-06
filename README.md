@@ -41,6 +41,8 @@ PicoMemcard+/Zero). No PC is required.
 - Copies, moves and deletes saved data between the cards on the microSD (the destination's free space is shown),
   and uploads a single item to Google Drive as a `.psu` file.
 - Organizes the cards in tabs: numbered cards, game (Game ID) cards and boot cards.
+- Marks the card the sd2psx is using and can make it take another one (in the card's options). To change the
+  card in use, it asks, switches the sd2psx to another card and switches back.
 - Copies a whole card, as a `.mcd` or a `.ps2` file, to a folder of the microSD or of a USB drive (in the card's
   options).
 - Imports and exports `.psu` files: the **Files** tab browses the folders of the microSD and of a USB drive (FAT32
@@ -89,7 +91,7 @@ The [README.txt](package/README.txt) included in the release explains every scre
 
 | Screen | Buttons |
 |---|---|
-| Main screen | Up/Down: card · Left/Right or L1/R1: tab · X: open the card · TRIANGLE: card options (sync now, restore a backup, copy to a device) · START: settings · O: exit |
+| Main screen | Up/Down: card · Left/Right or L1/R1: tab · X: open the card · TRIANGLE: card options (sync now, restore a backup, copy to a device, insert into the sd2psx) · START: settings · O: exit |
 | Inside a card | X: open a save · SQUARE: sync this card · O: back |
 | A save's page | Copy · Move · Delete · Upload to Drive |
 | Files tab | X: open the device, a folder or a `.psu` file (then **Import to card**) · TRIANGLE: export a save of a card to the folder shown (also reached from **Copy** on a save's page, whose destinations include this tab) · Left/Right: a page up or down · O: back |

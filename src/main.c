@@ -51,6 +51,7 @@ static int backupCancelled;        /* the user confirmed cancelling the backup *
 static int restoring;              /* the backup running is the one before a restore (cancelling it doesn't leave) */
 static const card_t *singleCard;   /* the card of run_backup's mode 3 */
 static icon_t *sd2psxIcon;         /* the SD2PSX memory card, for the cards shared by many games */
+static int activeCard = -1;        /* the card the sd2psx is emulating (index in cards[]); -1 = none here, or not known */
 
 /* ------------------------------------------------------------ small things */
 
@@ -1136,6 +1137,13 @@ static void tabs_draw(const tabs_t *g, int dots)
     }
     rowsOf = g;
     list_rows(g->n, g->cursor, g->top, tabs_text, dots ? tabs_dot : NULL);
+    if (g->tab != TAB_FILES)   /* the card the sd2psx is using: before it, the big card's own glass, small */
+        for (k = g->top; k < g->n && k < g->top + ROWS; k++)
+            if (g->idx[k] == activeCard) {
+                float y = ROW_Y0 + (k - g->top) * ROW_H + ui_line_height(FONT_TEXT) / 2.0f + 1;
+                ui_image(IMG_GLOW, LIST_X - 6, y - 15, 30, 30, COLOR_ACCENT, 0x48);
+                ui_image(IMG_CARD, LIST_X + 1, y - 10, 17, 20, 0xFFFFFF, 0x80);
+            }
 }
 
 /* -------- restore */
@@ -1195,6 +1203,269 @@ static int card_in_use(const card_t *c, int active, int channel)
         return active == 0 ? 1 : -1;   /* couldn't compare: on a special card, assume the worst */
     log_msg("restore: root of the card in the slot %.16s, of %s %.16s", seen, c->id, file);
     return strcmp(seen, file) == 0;
+}
+
+/* -------- the card in the sd2psx: which one it is, and telling the sd2psx to take another.
+ *
+ * The sd2psx changes cards by itself, a moment after it is asked, and says nothing of when it is done: it only gives
+ * its card's number and channel, which change as soon as it is asked. So a change is only taken as made when the PS2
+ * itself sees it in the slot: mcman notices the card was changed, the sd2psx gives the number and channel asked for
+ * and is no longer reading the card, and the root folder in the slot is the one inside that card's .mcd */
+
+/* Which card that is (activeCard). A numbered card is found by its number. The BootCard, a game's card and a named folder all come as number 0: the
+ * root folder the PS2 sees in the slot is compared with each candidate's, the boot cards first (the likeliest when
+ * SD2Cloud was opened from OPL), since reading a card's root takes a moment */
+static void find_active(void)
+{
+    static const int order[3] = {TYPE_BOOT, TYPE_GAMEID, TYPE_NAMED};
+    char seen[65], file[65];
+    int channel = 0, active = mmce_active_card(&channel), i, pass, found = -1;
+    if (active >= 1) {
+        for (i = 0; i < nCards && found < 0; i++)
+            if (cards[i].type == TYPE_NORMAL && atoi(cards[i].folder + 4) == active && cards[i].channel == channel)
+                found = i;
+    } else if (active == 0 && mc_root_signature(sdRoot[4] - '0', seen) == 0) {
+        for (pass = 0; pass < 3 && found < 0; pass++)
+            for (i = 0; i < nCards && found < 0; i++)
+                if (cards[i].type == order[pass] && cards[i].channel == channel && mcfs_root_signature(cards[i].path, file) == 0 &&
+                    !strcmp(seen, file))
+                    found = i;
+    }
+#ifdef DEBUG_BUILD
+    {   /* PCSX2 has no sd2psx: active.txt in the data folder names the card to show as the one in it */
+        buffer_t b = {0};
+        char c[260];
+        snprintf(c, sizeof(c), "%sactive.txt", dataDir);
+        if (active == -2 && file_read(c, &b) == 0 && b.len) {
+            trim((char *)b.data);
+            for (i = 0; i < nCards; i++)
+                if (!strcasecmp(cards[i].id, (char *)b.data))
+                    found = i;
+        }
+        buf_free(&b);
+    }
+#endif
+    ui_lock();
+    activeCard = found;
+    ui_unlock();
+    log_msg("sd2psx: the card in it is %s", found >= 0 ? cards[found].id : "none of the cards here, or unknown");
+}
+
+/* can the sd2psx be told to take this card? Not a folder with a name of its own: it has no way to be asked for one.
+ * The BootCard and a game's card it only takes with Autoboot or Game ID on in its settings, which shows by trying */
+static int can_insert(const card_t *c) { return !strncmp(sdRoot, "mmce", 4) && c->type != TYPE_NAMED; }
+
+/* from here on, a change of card that mcman notices in the slot is the one about to be asked for */
+static void slot_settle(void)
+{
+    int i;
+    for (i = 0; i < 6 && mc_card_state(sdRoot[4] - '0') != 0; i++)
+        sleep_ms(200);
+}
+
+/* Waits for a card to be in the slot (see above). c = that card; NULL = a BootCard, whichever channel the sd2psx
+ * keeps for it. Returns the card's index in cards[], or -1 when the time is up; with no change seen in the slot a
+ * few seconds after asking, the sd2psx isn't going to make one */
+static int wait_for_card(const card_t *c, int ms)
+{
+    char seen[65], file[65];
+    int port = sdRoot[4] - '0', changed = 0, channel, active, i;
+    u64 start = now_ms(), end = start + ms;
+    while (now_ms() < end && (changed || now_ms() < start + 6000)) {
+        sleep_ms(300);
+        if (mc_card_state(port) != 0) {
+            changed = 1;
+            continue;
+        }
+        if (!changed || mmce_busy() != 0)
+            continue;
+        channel = 0;
+        active = mmce_active_card(&channel);
+        if (active < 0 || (c && (active != (c->type == TYPE_NORMAL ? atoi(c->folder + 4) : 0) || channel != c->channel)))
+            continue;
+        if (mc_root_signature(port, seen) != 0)
+            continue;
+        for (i = 0; i < nCards; i++) {
+            const card_t *k = &cards[i];
+            if (c ? k != c : (active != 0 || k->type != TYPE_BOOT || k->channel != channel))
+                continue;
+            if (mcfs_root_signature(k->path, file) == 0 && !strcmp(seen, file)) {
+                log_msg("sd2psx: %s is in the slot", k->id);
+                return i;
+            }
+        }
+    }
+    log_msg("sd2psx: %s didn't show in the slot (a change was %sseen)", c ? c->id : "the BootCard", changed ? "" : "not ");
+    return -1;
+}
+
+/* another channel of the card the sd2psx is on. It may be in the middle of changing cards and not answer: asked again
+ * for a while. 0 = it took the request */
+static int ask_channel(int channel)
+{
+    int i;
+    for (i = 0; i < 40; i++) {
+        if (mmce_set_channel(channel) == 0)
+            return 0;
+        sleep_ms(300);
+    }
+    return -1;
+}
+
+/* the first channel of a card's folder, when it is one of the cards here */
+static const card_t *first_channel(const card_t *c)
+{
+    int i;
+    for (i = 0; i < nCards; i++)
+        if (cards[i].type == c->type && cards[i].channel == 1 && !strcmp(cards[i].folder, c->folder))
+            return &cards[i];
+    return NULL;
+}
+
+/* Tells the sd2psx to take that card and waits for it to be in the slot. 0 = it is. The marker of the card in use
+ * follows whatever the sd2psx ended on.
+ * The sd2psx is asked for a card (which comes in a channel of its choosing: the first one, or for the BootCard the
+ * one it keeps for it) and, apart from that, for a channel of the card it is on. So: a card of the folder it is on
+ * already, only the channel (asked for its own card's number again, it would say the first channel without changing
+ * to it); else the card, and the channel only once that card is in the slot (a sd2psx with Autoboot off never goes
+ * to the BootCard: the channel would be taken of whatever card it is on). The card's first channel has to be one
+ * of the cards here, as the sd2psx creates a card it is asked for and doesn't find */
+static int insert_card(const card_t *c)
+{
+    int number = c->type == TYPE_NORMAL ? atoi(c->folder + 4) : 0, channel = 0, active, now = -1, r = -1;
+    const card_t *first;
+    if (!can_insert(c))
+        return -1;
+    active = mmce_active_card(&channel);
+    find_active();
+    if (activeCard >= 0 && &cards[activeCard] == c)
+        return 0;
+    slot_settle();
+    log_msg("sd2psx: asking for %s", c->id);
+    if (c->type == TYPE_NORMAL ? active == number : activeCard >= 0 && cards[activeCard].type == c->type &&
+                                                    !strcmp(cards[activeCard].folder, c->folder))
+        now = activeCard >= 0 ? activeCard : nCards;   /* on that folder already (nCards: on a channel that isn't here) */
+    else if (c->type == TYPE_BOOT) {
+        if (mmce_set_card(1, 0) == 0)
+            now = wait_for_card(NULL, 25000);
+    } else if ((first = first_channel(c)) != NULL) {
+        if ((c->type == TYPE_NORMAL ? mmce_set_card(0, number) : mmce_set_gameid(c->folder)) == 0)
+            now = wait_for_card(first, 25000);
+    }
+    if (now >= 0 && now < nCards && &cards[now] == c)
+        r = 0;
+    else if (now >= 0) {
+        slot_settle();
+        if (ask_channel(c->channel) == 0 && wait_for_card(c, 25000) >= 0)
+            r = 0;
+    }
+    find_active();
+    return r;
+}
+
+/* -------- changing a card the sd2psx is using. The sd2psx keeps that card in its own memory and writes it back by
+ * itself, so its .mcd is never changed under it: the sd2psx is moved to another card first (which makes it write
+ * this one and close it), the change is made, and it is moved back. The user is told before any of it. */
+
+static const card_t *movedOff;   /* the card the sd2psx was moved off of, to go back to */
+
+/* Moves the sd2psx off a card: to the BootCard when it goes to it (nothing in its settings changes with that), else
+ * to the lowest numbered card that is no part of what is being done. 0 = it is on another card now */
+static int leave_card(const card_t *c, const card_t *other)
+{
+    const card_t *best = NULL;
+    int i, now = -1;
+    if (c->type != TYPE_BOOT && !(other && other->type == TYPE_BOOT)) {
+        slot_settle();
+        if (mmce_set_card(1, 0) == 0)
+            now = wait_for_card(NULL, 25000);
+        find_active();
+        if (now >= 0)
+            return 0;
+    }
+    for (i = 0; i < nCards; i++)
+        if (cards[i].type == TYPE_NORMAL && cards[i].channel == 1 && &cards[i] != c && &cards[i] != other &&
+            (!best || atoi(cards[i].folder + 4) < atoi(best->folder + 4)))
+            best = &cards[i];
+    return best ? insert_card(best) : -1;
+}
+
+/* 0 = the card's .mcd can be changed now: the sd2psx isn't using it, or was moved off it (card_back when done).
+ * 1 = it can't, and the user was told why, or was asked and didn't want the sd2psx moved. other = the other card
+ * of what is being done, if there is one */
+static int card_free(const card_t *c, const card_t *other)
+{
+    char t[400];
+    int channel = 0, active = mmce_active_card(&channel), r = card_in_use(c, active, channel);
+    if (r == 0)
+        return 0;
+    if (r < 0 || !can_insert(c)) {   /* which card it has isn't known, or it's one it can't be told to come back to */
+        snprintf(t, sizeof(t), T(r > 0 ? T_CARD_IN_USE : T_RESTORE_UNKNOWN), c->base);
+        message_wait(0, NULL, COLOR_WARN, t);
+        return 1;
+    }
+    snprintf(t, sizeof(t), T(T_SWITCH_ASK), c->base);
+    dlg_new(0, NULL);
+    dlg_line(FONT_TEXT, COLOR_TEXT, 0, t);
+    dlg_buttons(BUTTON_CIRCLE, T_BACK, BUTTON_CROSS, T_CONTINUE);
+    next.wide = 1;
+    dlg_show();
+    if (!(wait_button(PAD_CROSS | PAD_CIRCLE, 0) & PAD_CROSS)) {
+        sound_play(SND_BACK);
+        return 1;
+    }
+    sound_play(SND_CONFIRM);
+    message(0, NULL, COLOR_TEXT, T(T_SWITCHING));
+    r = leave_card(c, other);
+    channel = 0;
+    active = mmce_active_card(&channel);
+    if (r != 0 || card_in_use(c, active, channel) != 0) {   /* not moved, or not for sure: nothing is changed */
+        log_msg("sd2psx: couldn't be moved off %s", c->id);
+        insert_card(c);
+        message_wait(0, NULL, COLOR_WARN, T(T_SWITCH_FAILED));
+        return 1;
+    }
+    movedOff = c;
+    return 0;
+}
+
+/* moves the sd2psx back to the card it was moved off of (nothing to do when it wasn't) */
+static void card_back(void)
+{
+    char t[300];
+    const card_t *c = movedOff;
+    if (!c)
+        return;
+    movedOff = NULL;
+    message(0, NULL, COLOR_TEXT, T(T_SWITCHING));
+    if (insert_card(c) != 0) {
+        snprintf(t, sizeof(t), T(T_SWITCH_BACK_FAILED), c->base);
+        message_wait(0, NULL, COLOR_WARN, t);
+    }
+}
+
+/* a card's "Insert into sd2psx": the sd2psx takes that card, as if picked with its own buttons */
+static void insert_option(const card_t *c)
+{
+    char t[300];
+    /* the sd2psx starts from the BootCard it used last */
+    if (c->type == TYPE_BOOT && !confirm(c->base, T(T_INSERT_BOOT_ASK), T_INSERT_YES))
+        return;
+    message(0, NULL, COLOR_TEXT, T(T_SWITCHING));
+    if (insert_card(c) == 0) {
+        snprintf(t, sizeof(t), T(T_INSERT_DONE), c->base);
+        message_wait(0, NULL, COLOR_OK, t);
+        return;
+    }
+    snprintf(t, sizeof(t), T(T_INSERT_FAILED), c->base);
+    dlg_new(0, NULL);
+    dlg_line(FONT_TEXT, COLOR_WARN, 8, t);
+    if (c->type != TYPE_NORMAL)   /* what the sd2psx needs for that kind of card */
+        dlg_line(FONT_SMALL, COLOR_DIM, 0, T(c->type == TYPE_BOOT ? T_INSERT_NEEDS_BOOT : T_INSERT_NEEDS_GAMEID));
+    dlg_buttons(BUTTON_CROSS, T_BACK, 0, 0);
+    dlg_show();
+    wait_button(PAD_CROSS | PAD_CIRCLE, 0);
+    sound_play(SND_BACK);
 }
 
 /* confirm, back up the current card if it changed, and restore. 1 = the card was restored */
@@ -1650,19 +1921,6 @@ static void scene_save(float t)
     }
 }
 
-/* the sd2psx keeps the card it's using in its own memory and writes it back by itself: never change that card's
- * .mcd. 1 = it's in use (or that couldn't be told), and the user was told */
-static int card_busy(const card_t *c)
-{
-    char t[300];
-    int channel = 0, active = mmce_active_card(&channel), r = card_in_use(c, active, channel);
-    if (r == 0)
-        return 0;
-    snprintf(t, sizeof(t), T(r > 0 ? T_CARD_IN_USE : T_RESTORE_UNKNOWN), c->base);
-    message_wait(0, NULL, COLOR_WARN, t);
-    return 1;
-}
-
 static void op_result(int r, int okText, const card_t *other)
 {
     char t[300];
@@ -1842,8 +2100,10 @@ static int save_transfer(card_t *c, save_view_t *v, int move)
         if (!confirm(t, NULL, move ? T_MOVE : T_COPY))
             return 0;
     }
-    if (card_busy(to) || (move && card_busy(c)))
+    if (card_free(to, c) || (move && card_free(c, to))) {
+        card_back();
         return 0;
+    }
     message(0, NULL, COLOR_TEXT, T(move ? T_WORKING_MOVE : T_WORKING_COPY));
     r = mcfs_copy_save(c->path, v->s.folder, to->path);
     if (r == MCFS_OK && move)
@@ -1852,6 +2112,7 @@ static int save_transfer(card_t *c, save_view_t *v, int move)
     cards_recheck(to);
     if (move)
         cards_recheck(c);
+    card_back();
     op_result(r, move ? T_DONE_MOVE : T_DONE_COPY, to);
     return r == MCFS_OK && move;
 }
@@ -1861,8 +2122,6 @@ static int save_delete(card_t *c, save_view_t *v)
 {
     char name[100], t[300];
     int r;
-    if (card_busy(c))
-        return 0;
     save_name(v, name, sizeof(name));
     snprintf(t, sizeof(t), T(T_DELETE_ASK), name);
     dlg_new(COLOR_WARN, t);
@@ -1875,10 +2134,13 @@ static int save_delete(card_t *c, save_view_t *v)
         return 0;
     }
     sound_play(SND_CONFIRM);
+    if (card_free(c, NULL))
+        return 0;
     message(0, NULL, COLOR_TEXT, T(T_WORKING_DELETE));
     r = mcfs_delete_save(c->path, v->s.folder);
     log_msg("delete %s from %s: %d", v->s.folder, c->id, r);
     cards_recheck(c);
+    card_back();
     op_result(r, T_DONE_DELETE, NULL);
     return r == MCFS_OK;
 }
@@ -2138,17 +2400,21 @@ static void card_screen(card_t *c) { card_grid(c, 0); }
 
 static void card_options(card_t *c)
 {
-    static const char *items[3], *devices[FDEVS];
+    static const char *items[4], *devices[FDEVS];
     int k = 0, d;
     for (;;) {   /* circle in what comes next comes back here; circle here goes back to the main screen */
         items[0] = T(T_SYNC_NOW);
         items[1] = T(T_RESTORE_BACKUP);
         items[2] = T(T_COPY_DEVICE);
-        if ((k = choose(c->base, items, 3, k)) < 0)
+        items[3] = T(T_INSERT);   /* only a card the sd2psx can be told to take, and isn't on already */
+        if ((k = choose(c->base, items, can_insert(c) && c != (activeCard >= 0 ? &cards[activeCard] : NULL) ? 4 : 3, k)) < 0)
             return;
         if (k == 0) {
             if (sync_card(c))
                 return;   /* synced: back to the main screen, where its new status shows */
+        } else if (k == 3) {
+            insert_option(c);
+            return;   /* back to the main screen, where the card in the sd2psx is marked */
         } else if (k == 2) {   /* the whole card, as a file, to a folder of the microSD or of a USB drive */
             for (d = 0; d < FDEVS; d++)
                 devices[d] = T(deviceText[d]);
@@ -2385,12 +2651,13 @@ static void psu_screen(const char *file)
             continue;
         save_name(&v, name, sizeof(name));
         snprintf(t, sizeof(t), T(T_CONFIRM_IMPORT), name, to->base);
-        if (!confirm(t, NULL, T_IMPORT_YES) || card_busy(to))
+        if (!confirm(t, NULL, T_IMPORT_YES) || card_free(to, NULL))
             continue;
         message(0, NULL, COLOR_TEXT, T(T_WORKING_IMPORT));
         r = mcfs_import_psu(path, to->path);
         log_msg("import %s into %s: %d", path, to->id, r);
         cards_recheck(to);
+        card_back();
         op_result(r, T_DONE_IMPORT, to);
     }
     ui_scene(scene_frame);   /* off the screen before the icon goes */
@@ -3420,6 +3687,7 @@ static void manual(void)
         debug_preview(debug_digit());
 #endif
     helperState = helper_status();
+    find_active();
 #ifdef DEBUG_BUILD
     {   /* checks the in-use detection on PCSX2: the root signature of the card in slot 1 against each .mcd's */
         char seen[65], file[65];
