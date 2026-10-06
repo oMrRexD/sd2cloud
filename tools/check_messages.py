@@ -151,6 +151,7 @@ LEGENDS = [
     (("T_MENU_EXIT", "T_OPEN", "T_SETTINGS"), True, True), (("T_BACK", "T_OPEN", "T_EXPORT_SAVE"), False, False), (("T_BACK", "T_OPEN", "T_EXPORT"), False, False),
     (("T_BACK", "T_EXPORT"), False, False), (("T_BACK", "T_REPLACE"), False, False), (("T_BACK", "T_IMPORT_YES"), False, False),
     (("T_BACK", "T_CONTINUE"), False, False), (("T_BACK", "T_INSERT_YES"), False, False),
+    (("T_BACK", "T_OPEN", "T_OPTIONS"), False, False),
 ]
 
 

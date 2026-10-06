@@ -21,7 +21,8 @@ Gerenciador de cartões de memória
 - Exibe os dados salvos de cada cartão como o navegador do PS2, com os ícones 3D animados.
 - Copia, move e elimina dados salvos entre os cartões do microSD, e envia um item avulso ao Google Drive como
   arquivo .psu.
-- Organiza os cartões em abas: cartões numerados, cartões de jogos (Game ID) e cartões de boot.
+- Organiza os cartões em abas: cartões numerados, cartões de jogos (Game ID), em pastas com o nome de cada
+  jogo, e cartões de boot.
 - Importa arquivos .psu para qualquer cartão e exporta qualquer item de um cartão como arquivo .psu, a partir
   do microSD ou de um pendrive USB e para eles (veja ARQUIVOS).
 
@@ -65,7 +66,8 @@ ou nunca sincronizado). O cartão selecionado aparece à direita, com a data do 
 direcionais para cima e para baixo para escolher um cartão. O botão O fecha o aplicativo: escolha para onde
 ir em seguida (os programas da pasta APPS ou o browser do PS2); a última escolha fica guardada.
 Os cartões são separados em abas, exibidas acima da lista: Cartões (os numerados, Card1, Card2..., e as
-pastas com nome personalizado), Jogos (os cartões de Game ID, um por jogo) e Boot (o BootCard). Use os
+pastas com nome personalizado), Jogos (os cartões de Game ID, em pastas com o nome de cada jogo:
+X abre uma pasta, O volta) e Boot (o BootCard). Use os
 direcionais para a esquerda e para a direita, ou L1 e R1, para trocar de aba. Abas sem cartões não são
 exibidas. A última aba, Arquivos, não tem cartões: ela percorre o microSD e um pendrive USB em busca de
 arquivos .psu (veja ARQUIVOS).

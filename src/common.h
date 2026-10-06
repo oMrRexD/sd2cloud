@@ -181,6 +181,7 @@ typedef struct {
     char id[96];           /* folder/base: the key in the config and in the state */
     char path[200];        /* the .mcd */
     char name[48];         /* channel name from the CardX.ini, if any */
+    char game[64];         /* a game card's game, as the sd2psx names it ("" = not a game card, or not in the list) */
     int type, channel;
     long long size;
     /* computed */

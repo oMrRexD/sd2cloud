@@ -19,7 +19,8 @@ Memory card manager
 - Shows the saved data of each card the way the PS2 browser does, with animated 3D icons.
 - Copies, moves and deletes saved data between the cards on the microSD, and uploads a single item to Google
   Drive as a .psu file.
-- Organizes the cards in tabs: numbered cards, game (Game ID) cards and boot cards.
+- Organizes the cards in tabs: numbered cards, game (Game ID) cards, in folders named after each game, and
+  boot cards.
 - Imports .psu files into any card and exports any item of a card as a .psu file, from and to the microSD or
   a USB drive (see FILES).
 
@@ -62,7 +63,8 @@ never synced). The selected card is shown on the right with the date of its last
 select a card. The O button exits the application: choose where to go next (the programs in the APPS folder or
 the PS2 browser); the last choice is remembered.
 The cards are grouped into tabs shown above the list: Cards (the numbered cards, Card1, Card2..., and folders
-with custom names), Games (Game ID cards, one per game) and Boot (the BootCard). Press Left and Right, or L1
+with custom names), Games (Game ID cards, in folders named after each game: X opens a
+folder, O goes back) and Boot (the BootCard). Press Left and Right, or L1
 and R1, to switch tabs. Tabs without cards are not shown. The last tab, Files, has no cards: it browses the
 microSD and a USB drive for .psu files (see FILES).
 - X opens the card: its saved data, displayed as in the PS2 browser, the newest first. On that screen, SQUARE

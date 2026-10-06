@@ -40,7 +40,8 @@ PicoMemcard+/Zero). No PC is required.
 - Shows the saved data of each card the way the PS2 browser does, with animated 3D icons.
 - Copies, moves and deletes saved data between the cards on the microSD (the destination's free space is shown),
   and uploads a single item to Google Drive as a `.psu` file.
-- Organizes the cards in tabs: numbered cards, game (Game ID) cards and boot cards.
+- Organizes the cards in tabs: numbered cards, game (Game ID) cards, in folders named after each game, and boot
+  cards.
 - Marks the card the sd2psx is using and can make it take another one (in the card's options). To change the
   card in use, it asks, switches the sd2psx to another card and switches back.
 - Copies a whole card, as a `.zip` with the `.mcd` or the `.ps2` inside, to a folder of the microSD or of a USB

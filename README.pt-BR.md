@@ -43,7 +43,8 @@ Gen2, PicoMemcard+/Zero), sem necessidade de um PC.
 - Exibe os dados salvos de cada cartão como o navegador do PS2, com os ícones 3D animados.
 - Copia, move e elimina dados salvos entre os cartões do microSD (o espaço livre do destino é exibido), e envia
   um item avulso ao Google Drive como arquivo `.psu`.
-- Organiza os cartões em abas: cartões numerados, cartões de jogos (Game ID) e cartões de boot.
+- Organiza os cartões em abas: cartões numerados, cartões de jogos (Game ID), em pastas com o nome de cada jogo,
+  e cartões de boot.
 - Marca o cartão que está em uso no sd2psx e pode fazê-lo assumir outro (nas opções do cartão). Para alterar o
   cartão em uso, ele pergunta, troca o sd2psx para outro cartão e volta.
 - Copia um cartão inteiro, como um `.zip` com o `.mcd` ou o `.ps2` dentro, para uma pasta do microSD ou de um

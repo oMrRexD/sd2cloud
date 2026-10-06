@@ -110,6 +110,31 @@ static int compare(const void *a, const void *b)
     return d ? d : x->channel - y->channel;
 }
 
+/* The game of each game card. The sd2psx names a game's folder by its ID and shows the game's name on its own
+ * screen, from a list in its firmware; the same list is embedded here (assets/gamenames.txt, one "ID<TAB>name" per
+ * line: tools/make_gamenames.py). A folder that isn't an ID in it (one mapped in Game2Folder.ini) keeps no name */
+extern unsigned char asset_gamenames_txt[];
+extern unsigned int size_asset_gamenames_txt;
+
+static void game_names(void)
+{
+    const char *p = (const char *)asset_gamenames_txt, *end = p + size_asset_gamenames_txt, *tab, *nl;
+    int i, any = 0;
+    for (i = 0; i < nCards; i++)
+        any |= cards[i].type == TYPE_GAMEID;
+    for (; any && p < end && (tab = memchr(p, '\t', end - p)) != NULL; p = nl + 1) {
+        if (!(nl = memchr(tab, '\n', end - tab)))
+            nl = end;
+        for (i = 0; i < nCards; i++) {
+            card_t *c = &cards[i];
+            if (c->type != TYPE_GAMEID || strlen(c->folder) != (size_t)(tab - p) || strncasecmp(c->folder, p, tab - p))
+                continue;
+            snprintf(c->game, sizeof(c->game), "%.*s", (int)(nl - tab - 1), tab + 1);
+            utf8_fix(c->game, sizeof(c->game));
+        }
+    }
+}
+
 int cards_scan(void)
 {
     static char folders[MAX_NAMES][64];
@@ -184,6 +209,7 @@ int cards_scan(void)
         c->included = cfg.list_mode ? list_has(cfg.include, c->id) : ((cfg.types & c->type) && !list_has(cfg.exclude, c->id));
         c->status = ST_NEW;
     }
+    game_names();
     log_msg("%d card(s) on the microSD", nCards);
     return nCards;
 }

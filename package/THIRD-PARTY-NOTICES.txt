@@ -26,3 +26,6 @@ It includes or links the following third-party software:
 - ps2_drivers - Copyright Francisco Javier Trujillo Mata and contributors. GNU Library General Public License
     version 2 (https://github.com/fjtrujy/ps2_drivers).
 - Mozilla CA certificate bundle (cacert.pem from https://curl.se/ca/cacert.pem) - Mozilla Public License 2.0.
+- The list of PS2 game names by ID (gamename.csv of HDL Batch Installer,
+    https://github.com/israpps/HDL-Batch-installer) - Copyright Matias Israelson and contributors. GNU General
+    Public License version 3, the license of SD2Cloud itself (see LICENSE.txt).

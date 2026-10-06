@@ -28,7 +28,9 @@ HEADERS = $(addprefix src/, common.h messages.h messages.def ui.h font.h image.h
 # by tools/make_sounds.py)
 IMAGES = space glow buttons card minicard
 SOUNDS = startup exit move confirm back
-ASSET_OBJS = $(addprefix asset_, $(addsuffix _png.o, $(IMAGES)) $(addsuffix _adp.o, $(SOUNDS))) asset_font_ttf.o
+# and the games' names by their ID (assets/gamenames.txt, made by tools/make_gamenames.py)
+ASSET_OBJS = $(addprefix asset_, $(addsuffix _png.o, $(IMAGES)) $(addsuffix _adp.o, $(SOUNDS))) asset_font_ttf.o \
+             asset_gamenames_txt.o
 # the IOP modules embedded in the program: mmceman (the sd2psx), and the drivers of the other devices a program can be
 # opened from after SD2Cloud (loaded only for that, see run_elf)
 EMBEDDED_IRX = mmceman mcman mcserv usbd usbmass_bd bdm bdmfs_fatfs mx4sio_bd ata_bd ps2dev9 ps2atad ps2hdd ps2fs
@@ -82,6 +84,10 @@ $(OBJ_DIR)/asset_%_png.c: assets/%.png
 $(OBJ_DIR)/asset_%_adp.c: assets/sounds/%.adp
 	@mkdir -p $(OBJ_DIR)
 	bin2c $< $@ asset_$*_adp
+
+$(OBJ_DIR)/asset_gamenames_txt.c: assets/gamenames.txt
+	@mkdir -p $(OBJ_DIR)
+	bin2c $< $@ asset_gamenames_txt
 
 $(OBJ_DIR)/asset_font_ttf.c: third_party/varelaround/VarelaRound-Regular.ttf
 	@mkdir -p $(OBJ_DIR)
