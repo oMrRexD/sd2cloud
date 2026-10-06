@@ -291,6 +291,13 @@ static unsigned int free_clusters(mc_t *m)
     return k;
 }
 
+/* the newest first, as the PS2 browser shows them; two of the same moment, by name */
+static int newer_first(const void *a, const void *b)
+{
+    const mcfs_save_t *x = a, *y = b;
+    return x->when < y->when ? 1 : x->when > y->when ? -1 : strcmp(x->folder, y->folder);
+}
+
 int mcfs_list_saves(const char *path, mcfs_save_t *list, int max, long long *freeBytes)
 {
     list_ctx_t x = {list, 0, max};
@@ -299,6 +306,8 @@ int mcfs_list_saves(const char *path, mcfs_save_t *list, int max, long long *fre
         return -1;
     if (walk_root(&mc, rootdir, on_save_dir, &x) == 0) {
         r = x.n;
+        if (list)
+            qsort(list, x.n, sizeof(list[0]), newer_first);
         if (freeBytes)
             *freeBytes = (long long)free_clusters(&mc) * mc.csz;
     }
@@ -379,12 +388,6 @@ int mcfs_save_icon(const char *path, const mcfs_save_t *s, buffer_t *iconsys, bu
         buf_free(ico);
     }
     return r;
-}
-
-static int newer_first(const void *a, const void *b)
-{
-    unsigned long long x = ((const mcfs_save_t *)a)->when, y = ((const mcfs_save_t *)b)->when;
-    return x < y ? 1 : x > y ? -1 : 0;
 }
 
 int mcfs_newest_save_icon(const char *path, char folder[33], buffer_t *iconsys, buffer_t *ico)

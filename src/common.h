@@ -203,8 +203,8 @@ void mcfs_sign_records(unsigned char (*rec)[ROOT_REC], int n, char hex[65]);
 /* the newest save of the card that has an icon (by modification time, not the B?DATA-SYSTEM folders): its folder and
  * the contents of its icon.sys and of the 3D icon that icon.sys names. 0 = ok */
 int mcfs_newest_save_icon(const char *path, char folder[33], buffer_t *iconsys, buffer_t *ico);
-/* the saves of a card (its folders, not the B?DATA-SYSTEM ones) in the root folder's order, and its free space
- * (-1 = unknown). Returns how many, or -1 */
+/* the saves of a card (its folders, not the B?DATA-SYSTEM ones), the newest first as in the PS2 browser, and its
+ * free space (-1 = unknown). Returns how many, or -1 */
 #define MCFS_MAX_SAVES 256
 typedef struct {
     char folder[33];

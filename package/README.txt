@@ -65,8 +65,8 @@ The cards are grouped into tabs shown above the list: Cards (the numbered cards,
 with custom names), Games (Game ID cards, one per game) and Boot (the BootCard). Press Left and Right, or L1
 and R1, to switch tabs. Tabs without cards are not shown. The last tab, Files, has no cards: it browses the
 microSD and a USB drive for .psu files (see FILES).
-- X opens the card: its saved data, displayed as in the PS2 browser. On that screen, SQUARE syncs the card;
-  if it is already synced, SD2Cloud says so and lets you sync it again.
+- X opens the card: its saved data, displayed as in the PS2 browser, the newest first. On that screen, SQUARE
+  syncs the card; if it is already synced, SD2Cloud says so and lets you sync it again.
 - TRIANGLE opens the selected card's options: "Sync now", "Restore a backup" (see RESTORING) and "Copy to a
   device": the whole card goes, as a file, to a folder of the microSD or of a USB drive. Pick the device, go to
   the folder and press TRIANGLE; SD2Cloud asks whether to write a .mcd (sd2psx) or a .ps2 (PCSX2), then reads the

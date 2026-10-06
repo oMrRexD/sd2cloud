@@ -69,8 +69,9 @@ pastas com nome personalizado), Jogos (os cartões de Game ID, um por jogo) e Bo
 direcionais para a esquerda e para a direita, ou L1 e R1, para trocar de aba. Abas sem cartões não são
 exibidas. A última aba, Arquivos, não tem cartões: ela percorre o microSD e um pendrive USB em busca de
 arquivos .psu (veja ARQUIVOS).
-- X abre o cartão: os dados salvos, exibidos como no navegador do PS2. Nessa tela, QUADRADO sincroniza
-  o cartão; se ele já estiver sincronizado, o SD2Cloud avisa e permite sincronizar novamente.
+- X abre o cartão: os dados salvos, exibidos como no navegador do PS2, do mais novo ao mais antigo. Nessa
+  tela, QUADRADO sincroniza o cartão; se ele já estiver sincronizado, o SD2Cloud avisa e permite sincronizar
+  novamente.
 - TRIÂNGULO abre as opções do cartão selecionado: "Sincronizar agora", "Restaurar backup" (veja
   RESTAURAÇÃO) e "Copiar para dispositivo": o cartão inteiro vai, como arquivo, para uma pasta do microSD ou de
   um pendrive USB. Escolha o dispositivo, vá até a pasta e pressione TRIÂNGULO; o SD2Cloud pergunta se grava um
