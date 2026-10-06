@@ -60,7 +60,7 @@ MAIN SCREEN
 The memory cards are listed on the left with a status indicator (green = synced; yellow = not synced or
 never synced). The selected card is shown on the right with the date of its last backup. Press Up and Down to
 select a card. The O button exits the application: choose where to go next (the programs in the APPS folder or
-the PS2 menu); the last choice is remembered.
+the PS2 browser); the last choice is remembered.
 The cards are grouped into tabs shown above the list: Cards (the numbered cards, Card1, Card2..., and folders
 with custom names), Games (Game ID cards, one per game) and Boot (the BootCard). Press Left and Right, or L1
 and R1, to switch tabs. Tabs without cards are not shown. The last tab, Files, has no cards: it browses the
@@ -106,7 +106,7 @@ SETTINGS (START)
 - IGR helper: installs the helper on the memory card in use (see AUTOMATIC SYNC). Once it is installed,
   the same option reinstalls it (or updates it) or uninstalls it.
 - After IGR, open: the program started after the IGR sync. The choices are Automatic (the OPL found on the
-  microSD), the programs in the APPS folder and the PS2 menu.
+  microSD), the programs in the APPS folder and the PS2 browser.
 - Language and Backups per card (3, 5, 10, 20, 50 or all).
 - Backup format: .mcd (the sd2psx's own) or .ps2 (the format PCSX2 uses: take the file out of the backup's zip
   and put it in PCSX2's memory card folder). Either one can be restored, whatever is set.
@@ -141,7 +141,7 @@ The program opened after IGR is chosen in Settings (START), from the programs in
 microSD. If your OPL is on another device, enter its path in sd2cloud.ini, in the [igr] section, starting
 with the device: mc?:/ (memory card), mass:/ (USB), mx4sio:/, ata:/ (internal HDD, exFAT) or
 hdd0:PARTITION:pfs:/ (internal HDD, APA), for example hdd0:__common:pfs:/APPS/OPL/OPNPS2LD.ELF. SD2Cloud loads only the drivers
-of that device, when returning. If the file is not found, it opens the PS2 menu. The "name" line, under
+of that device, when returning. If the file is not found, it opens the PS2 browser. The "name" line, under
 "return", gives that program the name shown on screen.
 
 FILE LOCATIONS

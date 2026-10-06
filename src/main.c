@@ -3272,7 +3272,7 @@ static void exit_menu(void)
         items[n] = given_name(apps[i].path) ? given_name(apps[i].path) : apps[i].title;
         target_for_ini(apps[i].path, values[n++], sizeof(values[0]));
     }
-    items[n] = T(T_RET_OSD);
+    items[n] = T(T_EXIT_BROWSER);
     snprintf(values[n++], sizeof(values[0]), "osd");
     n = add_custom(cfg.manual_return, items, values, n);
     if (strcasecmp(cfg.manual_return, "auto") != 0 || find_opl(q, sizeof(q)) != 0)

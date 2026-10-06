@@ -63,7 +63,7 @@ TELA PRINCIPAL
 Os cartões ficam à esquerda, com um indicador de estado (verde = sincronizado; amarelo = não sincronizado
 ou nunca sincronizado). O cartão selecionado aparece à direita, com a data do último backup. Use os
 direcionais para cima e para baixo para escolher um cartão. O botão O fecha o aplicativo: escolha para onde
-ir em seguida (os programas da pasta APPS ou o menu do PS2); a última escolha fica guardada.
+ir em seguida (os programas da pasta APPS ou o browser do PS2); a última escolha fica guardada.
 Os cartões são separados em abas, exibidas acima da lista: Cartões (os numerados, Card1, Card2..., e as
 pastas com nome personalizado), Jogos (os cartões de Game ID, um por jogo) e Boot (o BootCard). Use os
 direcionais para a esquerda e para a direita, ou L1 e R1, para trocar de aba. Abas sem cartões não são
@@ -114,7 +114,7 @@ CONFIGURAÇÕES (START)
 - Assistente de IGR: instala o assistente no cartão de memória em uso (veja SINCRONIZAÇÃO AUTOMÁTICA).
   Depois de instalado, a mesma opção permite reinstalar (ou atualizar) e desinstalar o assistente.
 - Após o IGR, abrir: o programa iniciado depois da sincronização pelo IGR. As opções são Automático (o OPL
-  encontrado no microSD), os programas da pasta APPS e o menu do PS2.
+  encontrado no microSD), os programas da pasta APPS e o browser do PS2.
 - Idioma e Backups por cartão (3, 5, 10, 20, 50 ou todos).
 - Formato do backup: .mcd (o do próprio sd2psx) ou .ps2 (o formato usado pelo PCSX2: tire o arquivo do zip do
   backup e coloque na pasta de cartões de memória do PCSX2). Os dois podem ser restaurados, seja qual for a
@@ -152,7 +152,7 @@ microSD. Se o seu OPL fica em outro dispositivo, informe o caminho no sd2cloud.i
 começando pelo dispositivo: mc?:/ (cartão de memória), mass:/ (USB), mx4sio:/, ata:/ (HD interno exFAT) ou
 hdd0:PARTIÇÃO:pfs:/ (HD interno APA), por exemplo hdd0:__common:pfs:/APPS/OPL/OPNPS2LD.ELF. O SD2Cloud
 carrega somente os drivers desse dispositivo, no momento do retorno. Se o arquivo não for encontrado, ele
-abre o menu do PS2. A linha "name", abaixo de "return", dá a esse programa o nome exibido na tela.
+abre o browser do PS2. A linha "name", abaixo de "return", dá a esse programa o nome exibido na tela.
 
 LOCAL DOS ARQUIVOS
 - APPS/SD2Cloud/   o aplicativo (atualizado pelo próprio SD2Cloud; veja ATUALIZAÇÃO).
