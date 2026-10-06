@@ -164,17 +164,20 @@ static int read_texture(icon_t *ic, const unsigned char *d, size_t n, size_t off
     if (off + 4 > n || off + 4 + le32u(d + off) > n)
         return -1;
     end = off + 4 + le32u(d + off);
+    /* its size, then 16-bit codes. With the top bit set, (0x10000 - code) values follow as they are, however many
+     * (a busy picture has runs of thousands); a 0 comes alone, as some games' tools write between two repeats; any
+     * other code is how many times the next value repeats */
     for (off += 4; off + 2 <= end;) {
         unsigned int code = le16u(d + off), k;
         off += 2;
-        if ((code & 0xFF00) == 0xFF00) {   /* (0x10000 - code) values as they are */
+        if (code & 0x8000) {
             k = (0x10000 - code) * 2;
             if (off + k > end || t + k > size)
                 return -1;
             memcpy((unsigned char *)ic->tex + t, d + off, k);
             off += k;
             t += k;
-        } else {   /* the next value, code times */
+        } else if (code) {
             if (off + 2 > end || t + code * 2 > size)
                 return -1;
             for (k = 0; k < code; k++, t += 2)
