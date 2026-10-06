@@ -155,7 +155,7 @@ static int read_texture(icon_t *ic, const unsigned char *d, size_t n, size_t off
         memset(ic->tex, 0xFF, sizeof(ic->tex));
         return 0;
     }
-    if (type == 7) {
+    if (!(type & 8)) {   /* not compressed (types 6 and 7) */
         if (off + size > n)
             return -1;
         memcpy(ic->tex, d + off, size);
