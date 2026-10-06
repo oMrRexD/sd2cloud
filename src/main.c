@@ -1209,8 +1209,10 @@ static int card_in_use(const card_t *c, int active, int channel)
  *
  * The sd2psx changes cards by itself, a moment after it is asked, and says nothing of when it is done: it only gives
  * its card's number and channel, which change as soon as it is asked. So a change is only taken as made when the PS2
- * itself sees it in the slot: mcman notices the card was changed, the sd2psx gives the number and channel asked for
- * and is no longer reading the card, and the root folder in the slot is the one inside that card's .mcd */
+ * itself sees it in the slot: mcman notices the card was changed, the sd2psx gives the number and channel asked for,
+ * and the root folder in the slot is the one inside that card's .mcd. (Whether the sd2psx is still reading the card
+ * into its memory doesn't matter, and isn't waited for: an 8 MB card takes it a long while, and it answers for the
+ * card meanwhile) */
 
 /* Which card that is (activeCard). A numbered card is found by its number. The BootCard, a game's card and a named folder all come as number 0: the
  * root folder the PS2 sees in the slot is compared with each candidate's, the boot cards first (the likeliest when
@@ -1277,7 +1279,7 @@ static int wait_for_card(const card_t *c, int ms)
             changed = 1;
             continue;
         }
-        if (!changed || mmce_busy() != 0)
+        if (!changed)
             continue;
         channel = 0;
         active = mmce_active_card(&channel);
@@ -1369,25 +1371,50 @@ static int insert_card(const card_t *c)
 
 static const card_t *movedOff;   /* the card the sd2psx was moved off of, to go back to */
 
-/* Moves the sd2psx off a card: to the BootCard when it goes to it (nothing in its settings changes with that), else
- * to the lowest numbered card that is no part of what is being done. 0 = it is on another card now */
-static int leave_card(const card_t *c, const card_t *other)
+/* Waits for the card in the slot to be another one than it was: mcman has noticed a change of card, a card is there
+ * again and its root folder isn't the one from before. Which card it is doesn't matter here, only that the one from
+ * before was let go of. 0 = it is another card */
+static int wait_for_change(const char *before, int ms)
 {
-    const card_t *best = NULL;
-    int i, now = -1;
-    if (c->type != TYPE_BOOT && !(other && other->type == TYPE_BOOT)) {
-        slot_settle();
-        if (mmce_set_card(1, 0) == 0)
-            now = wait_for_card(NULL, 25000);
-        find_active();
-        if (now >= 0)
+    char seen[65];
+    int port = sdRoot[4] - '0', changed = 0;
+    u64 start = now_ms(), end = start + ms;
+    while (now_ms() < end && (changed || now_ms() < start + 6000)) {
+        sleep_ms(300);
+        if (mc_card_state(port) != 0)
+            changed = 1;
+        else if (changed && mc_root_signature(port, seen) == 0 && strcmp(seen, before) != 0)
             return 0;
     }
-    for (i = 0; i < nCards; i++)
-        if (cards[i].type == TYPE_NORMAL && cards[i].channel == 1 && &cards[i] != c && &cards[i] != other &&
-            (!best || atoi(cards[i].folder + 4) < atoi(best->folder + 4)))
-            best = &cards[i];
-    return best ? insert_card(best) : -1;
+    log_msg("sd2psx: the card in the slot is still the same (a change was %sseen)", changed ? "" : "not ");
+    return -1;
+}
+
+/* Moves the sd2psx off a card: to the BootCard when it goes to it (nothing in its settings changes with that), else
+ * to a numbered card that is no part of what is being done, the lowest first. 0 = it is on another card now */
+static int leave_card(const card_t *c, const card_t *other)
+{
+    char before[65];
+    int i, k, n = 0, order[MAX_CARDS];
+    if (c->type != TYPE_BOOT && !(other && other->type == TYPE_BOOT) && mc_root_signature(sdRoot[4] - '0', before) == 0) {
+        slot_settle();
+        i = mmce_set_card(1, 0) == 0 ? wait_for_change(before, 40000) : -1;
+        find_active();
+        if (i == 0)
+            return 0;
+    }
+    for (i = 0; i < nCards; i++)   /* the numbered cards, by number and channel */
+        if (cards[i].type == TYPE_NORMAL && &cards[i] != c && &cards[i] != other) {
+            for (k = n++; k > 0 && (atoi(cards[order[k - 1]].folder + 4) > atoi(cards[i].folder + 4) ||
+                                    (atoi(cards[order[k - 1]].folder + 4) == atoi(cards[i].folder + 4) &&
+                                     cards[order[k - 1]].channel > cards[i].channel)); k--)
+                order[k] = order[k - 1];
+            order[k] = i;
+        }
+    for (k = 0; k < n && k < 2; k++)   /* (one that fails takes its time: when two do, the others would too) */
+        if (insert_card(&cards[order[k]]) == 0)
+            return 0;
+    return -1;
 }
 
 /* 0 = the card's .mcd can be changed now: the sd2psx isn't using it, or was moved off it (card_back when done).

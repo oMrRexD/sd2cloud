@@ -617,7 +617,6 @@ int network_up(void)
 
 /* ------------------------------------------------------------ sd2psx (MMCE commands, mmceman's devctl) */
 
-#define MMCE_CMD_GET_STATUS  0x2
 #define MMCE_CMD_GET_CARD    0x3
 #define MMCE_CMD_SET_CARD    0x4
 #define MMCE_CMD_GET_CHANNEL 0x5
@@ -673,12 +672,6 @@ int mmce_set_gameid(const char *id)
     r = mmce_devctl(MMCE_CMD_SET_GAMEID, t, strlen(t) + 1);
     log_msg("sd2psx: asked for the card of %s (%d)", t, r);
     return r < 0 ? -1 : 0;
-}
-
-int mmce_busy(void)
-{
-    int r = mmce_devctl(MMCE_CMD_GET_STATUS, NULL, 0);
-    return r < 0 ? -1 : (r & 1);
 }
 
 /* ------------------------------------------------------------ a USB drive, for the file browser */

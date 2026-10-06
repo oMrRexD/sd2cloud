@@ -51,7 +51,6 @@ int mmce_active_card(int *channel);
 int mmce_set_card(int boot, int number);
 int mmce_set_channel(int channel);
 int mmce_set_gameid(const char *id);
-int mmce_busy(void);                        /* 1 = the sd2psx is reading the card it just opened, 0 = no, -1 = no answer */
 /* a USB drive (mass0:), for the file browser: loads its drivers the first time, then waits up to ms for the drive.
  * 0 = it's there */
 int usb_open(int ms);
