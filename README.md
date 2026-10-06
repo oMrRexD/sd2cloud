@@ -43,8 +43,8 @@ PicoMemcard+/Zero). No PC is required.
 - Organizes the cards in tabs: numbered cards, game (Game ID) cards and boot cards.
 - Marks the card the sd2psx is using and can make it take another one (in the card's options). To change the
   card in use, it asks, switches the sd2psx to another card and switches back.
-- Copies a whole card, as a `.mcd` or a `.ps2` file, to a folder of the microSD or of a USB drive (in the card's
-  options).
+- Copies a whole card, as a `.zip` with the `.mcd` or the `.ps2` inside, to a folder of the microSD or of a USB
+  drive (in the card's options).
 - Imports and exports `.psu` files: the **Files** tab browses the folders of the microSD and of a USB drive (FAT32
   or exFAT), installs a `.psu` into any card and saves any item of a card as a `.psu`. What is written is read back
   and compared.

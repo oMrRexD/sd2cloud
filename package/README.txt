@@ -69,9 +69,10 @@ microSD and a USB drive for .psu files (see FILES).
   syncs the card; if it is already synced, SD2Cloud says so and lets you sync it again.
 - TRIANGLE opens the selected card's options: "Sync now", "Restore a backup" (see RESTORING) and "Copy to a
   device": the whole card goes, as a file, to a folder of the microSD or of a USB drive. Pick the device, go to
-  the folder and press TRIANGLE; SD2Cloud asks whether to write a .mcd (sd2psx) or a .ps2 (PCSX2), then reads the
-  file back and compares it. The last one, "Insert into sd2psx", makes the sd2psx take that card, as its own
-  buttons would. The sd2psx takes a BootCard only with Autoboot turned on in its settings, and a game's card
+  the folder and press TRIANGLE; SD2Cloud asks whether the card goes as a .mcd (sd2psx) or a .ps2 (PCSX2) and
+  writes it inside a .zip, as the backups on Drive are (a card is mostly empty space, and its .zip takes a
+  fraction of the time to write); then it reads the .zip back and compares it. The last one, "Insert into
+  sd2psx", makes the sd2psx take that card, as its own buttons would. The sd2psx takes a BootCard only with Autoboot turned on in its settings, and a game's card
   only with Game ID; a folder with a name of its own can only be picked on the sd2psx itself. On the list, a
   small card marks the one the sd2psx is using.
 - START opens the settings (see SETTINGS).

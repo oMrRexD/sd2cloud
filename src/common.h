@@ -253,8 +253,8 @@ typedef struct {
     int (*progress)(long long read, long long total);    /* after each block read (may be NULL); != 0 stops */
 } stream_t;
 int stream_zip(const card_t *c, const datetime_t *t, stream_t *s, chunk_cb cb, void *u);
-/* the card's file copied to dest (a folder of the microSD or of a USB drive), as .mcd or as .ps2, read back and
- * compared. 0 = ok */
+/* the card's file copied to dest (in a folder of the microSD or of a USB drive) inside a .zip, as .mcd or as .ps2;
+ * the .zip is read back and compared. 0 = ok */
 int card_export(const card_t *c, const char *dest, int ps2, int (*progress)(long long done, long long total));
 
 /* ------------------------------------------------------------ google.c */

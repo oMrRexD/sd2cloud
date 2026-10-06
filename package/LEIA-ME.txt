@@ -74,9 +74,10 @@ arquivos .psu (veja ARQUIVOS).
   novamente.
 - TRIÂNGULO abre as opções do cartão selecionado: "Sincronizar agora", "Restaurar backup" (veja
   RESTAURAÇÃO) e "Copiar para dispositivo": o cartão inteiro vai, como arquivo, para uma pasta do microSD ou de
-  um pendrive USB. Escolha o dispositivo, vá até a pasta e pressione TRIÂNGULO; o SD2Cloud pergunta se grava um
-  .mcd (sd2psx) ou um .ps2 (PCSX2), e depois lê o arquivo de volta e compara. A última, "Inserir no sd2psx",
-  faz o sd2psx assumir esse cartão, como os botões dele fariam. O sd2psx só vai para um BootCard com o
+  um pendrive USB. Escolha o dispositivo, vá até a pasta e pressione TRIÂNGULO; o SD2Cloud pergunta se o cartão
+  vai como .mcd (sd2psx) ou .ps2 (PCSX2) e o grava dentro de um .zip, como os backups do Drive (um cartão é
+  quase todo espaço vazio, e o .zip leva uma fração do tempo para gravar); depois lê o .zip de volta e
+  compara. A última, "Inserir no sd2psx", faz o sd2psx assumir esse cartão, como os botões dele fariam. O sd2psx só vai para um BootCard com o
   Autoboot ativado nas configurações dele, e para o cartão de um jogo só com o Game ID; uma pasta com nome
   personalizado só pode ser escolhida no próprio sd2psx. Na lista, um cartão pequeno marca o que está em uso
   no sd2psx.

@@ -46,8 +46,8 @@ Gen2, PicoMemcard+/Zero), sem necessidade de um PC.
 - Organiza os cartões em abas: cartões numerados, cartões de jogos (Game ID) e cartões de boot.
 - Marca o cartão que está em uso no sd2psx e pode fazê-lo assumir outro (nas opções do cartão). Para alterar o
   cartão em uso, ele pergunta, troca o sd2psx para outro cartão e volta.
-- Copia um cartão inteiro, como arquivo `.mcd` ou `.ps2`, para uma pasta do microSD ou de um pendrive USB (nas
-  opções do cartão).
+- Copia um cartão inteiro, como um `.zip` com o `.mcd` ou o `.ps2` dentro, para uma pasta do microSD ou de um
+  pendrive USB (nas opções do cartão).
 - Importa e exporta arquivos `.psu`: a aba **Arquivos** navega pelas pastas do microSD e de um pendrive USB (FAT32
   ou exFAT), instala um `.psu` em qualquer cartão e grava qualquer item de um cartão como `.psu`. O que é gravado
   é lido de volta e comparado.

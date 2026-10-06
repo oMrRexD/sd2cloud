@@ -2739,8 +2739,8 @@ static int card_export_progress(long long done, long long total)
     return 0;
 }
 
-/* a whole card as a file in the folder shown: .mcd or .ps2 (asked, starting on the format the backups use), read
- * back and compared. 1 = written */
+/* a whole card as a .zip in the folder shown, with the card inside as a .mcd or a .ps2 (asked, starting on the
+ * format the backups use), read back and compared. 1 = written */
 static int export_card(card_t *c)
 {
     static const char *const formats[2] = {".mcd (sd2psx)", ".ps2 (PCSX2)"};
@@ -2748,7 +2748,7 @@ static int export_card(card_t *c)
     int ps2, r;
     if ((ps2 = choose(c->base, formats, 2, cfg.ps2)) < 0)
         return 0;
-    snprintf(file, sizeof(file), "%s.%s", c->base, ps2 ? "ps2" : "mcd");
+    snprintf(file, sizeof(file), "%s.zip", c->base);
     snprintf(path, sizeof(path), "%s%s", fb.dir, file);
     snprintf(t, sizeof(t), T(T_CONFIRM_EXPORT), c->base);
     snprintf(f, sizeof(f), T(T_EXPORT_FILE), file);
