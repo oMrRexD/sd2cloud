@@ -41,7 +41,7 @@ static int list_dir(const char *path)
 }
 
 /* SLUS-21065, SCES-50490, SLPM-12345... */
-static int is_game_id(const char *p)
+int is_game_id(const char *p)
 {
     int i;
     if (strlen(p) != 10 || p[4] != '-')
@@ -135,6 +135,113 @@ static void game_names(void)
     }
 }
 
+int game_title(const char *id, char *out, size_t size)
+{
+    const char *p = (const char *)asset_gamenames_txt, *end = p + size_asset_gamenames_txt, *tab, *nl;
+    size_t n = strlen(id);
+    for (; p < end && (tab = memchr(p, '\t', end - p)) != NULL; p = nl + 1) {
+        if (!(nl = memchr(tab, '\n', end - tab)))
+            nl = end;
+        if ((size_t)(tab - p) == n && !strncasecmp(id, p, n)) {
+            snprintf(out, size, "%.*s", (int)(nl - tab - 1), tab + 1);
+            utf8_fix(out, size);
+            return 1;
+        }
+    }
+    out[0] = 0;
+    return 0;
+}
+
+/* Game2Folder.ini: [PS2], "ID = folder" */
+typedef struct {
+    const char *id;
+    char *out;
+    size_t size;
+} folder_of_t;
+static void on_folder_of(const char *s, const char *k, const char *v, void *u)
+{
+    folder_of_t *f = u;
+    if (!strcmp(s, "PS2") && !strcmp(k, f->id) && *v)
+        snprintf(f->out, f->size, "%s", v);
+}
+
+void game_folder(const char *id, char *out, size_t size)
+{
+    folder_of_t f = {id, out, size};
+    char path[64];
+    snprintf(out, size, "%s", id);
+    snprintf(path, sizeof(path), "%s.sd2psx/Game2Folder.ini", sdRoot);
+    ini_read(path, on_folder_of, &f);
+}
+
+static void on_max_channels(const char *s, const char *k, const char *v, void *u)
+{
+    if (!strcmp(s, "Settings") && !strcmp(k, "MaxChannels") && atoi(v) > 0 && atoi(v) <= 255)
+        *(int *)u = atoi(v);
+}
+
+int max_channels(const char *folder)
+{
+    char path[260];
+    int n = 8;
+    snprintf(path, sizeof(path), "%sMemoryCards/PS2/%s/%s.ini", sdRoot, folder, strcasecmp(folder, "BOOT") ? folder : "BootCard");
+    ini_read(path, on_max_channels, &n);
+    return n;
+}
+
+/* a file of a folder of cards, as the next of cards[] when it is the .mcd of one of that folder's channels (1) */
+static int add_file(const char *base, const char *folder, const char *file)
+{
+    int boot = !strcasecmp(folder, "BOOT"), channel;
+    const char *prefix = boot ? "BootCard" : folder, *dash;
+    size_t len = strlen(file);
+    card_t *c;
+    if (nCards == MAX_CARDS || len < 5 || strcasecmp(file + len - 4, ".mcd") != 0)
+        return 0;
+    if (boot && !strcasecmp(file, "BootCard.mcd"))
+        channel = 1;   /* old layout, a single channel */
+    else {
+        dash = file + strlen(prefix);
+        if (strncasecmp(file, prefix, strlen(prefix)) != 0 || *dash != '-' || !isdigit((unsigned char)dash[1]))
+            return 0;
+        channel = atoi(dash + 1);
+    }
+    c = &cards[nCards++];
+    memset(c, 0, sizeof(*c));
+    snprintf(c->folder, sizeof(c->folder), "%s", folder);
+    snprintf(c->base, sizeof(c->base), "%.*s", (int)(len - 4), file);
+    snprintf(c->id, sizeof(c->id), "%s/%.*s", folder, (int)(len - 4), file);
+    snprintf(c->path, sizeof(c->path), "%s/%s/%s", base, folder, file);
+    c->channel = channel;
+    c->type = boot ? TYPE_BOOT : is_cardn(folder) ? TYPE_NORMAL
+              : (is_game_id(folder) || list_has(mapped, folder)) ? TYPE_GAMEID : TYPE_NAMED;
+    return 1;
+}
+
+/* the size of each card from first on (one file open at a time) and their channel names, from their folder's .ini */
+static void fill_cards(const char *base, const char *folder, int first)
+{
+    range_t r = {first, nCards};
+    char path[260];
+    int j;
+    for (j = first; j < nCards; j++) {
+        int fd = open(cards[j].path, O_RDONLY);
+        if (fd >= 0) {
+            cards[j].size = lseek(fd, 0, SEEK_END);
+            close(fd);
+        }
+    }
+    snprintf(path, sizeof(path), "%s/%s/%s.ini", base, folder, strcasecmp(folder, "BOOT") ? folder : "BootCard");
+    if (nCards > first)
+        ini_read(path, on_channel, &r);
+}
+
+static void set_included(card_t *c)
+{
+    c->included = cfg.list_mode ? list_has(cfg.include, c->id) : ((cfg.types & c->type) && !list_has(cfg.exclude, c->id));
+    c->status = ST_NEW;
+}
+
 int cards_scan(void)
 {
     static char folders[MAX_NAMES][64];
@@ -153,65 +260,40 @@ int cards_scan(void)
     memcpy(folders, names, sizeof(names[0]) * nFolders);
 
     for (i = 0; i < nFolders && nCards < MAX_CARDS; i++) {
-        const char *folder = folders[i];
-        int boot = !strcasecmp(folder, "BOOT"), n, first = nCards;
-        range_t r;
-        snprintf(path, sizeof(path), "%s/%s", base, folder);
+        int n, first = nCards;
+        snprintf(path, sizeof(path), "%s/%s", base, folders[i]);
         if ((n = list_dir(path)) <= 0)
             continue;   /* a loose file or an empty folder */
-        for (j = 0; j < n && nCards < MAX_CARDS; j++) {
-            const char *file = names[j], *dash;
-            size_t len = strlen(file);
-            char prefix[64];
-            card_t *c;
-            int channel;
-            if (len < 5 || strcasecmp(file + len - 4, ".mcd") != 0)
-                continue;
-            snprintf(prefix, sizeof(prefix), "%s", boot ? "BootCard" : folder);
-            if (boot && !strcasecmp(file, "BootCard.mcd"))
-                channel = 1;   /* old layout, a single channel */
-            else {
-                dash = file + strlen(prefix);
-                if (strncasecmp(file, prefix, strlen(prefix)) != 0 || *dash != '-' || !isdigit((unsigned char)dash[1]))
-                    continue;
-                channel = atoi(dash + 1);
-            }
-            c = &cards[nCards];
-            memset(c, 0, sizeof(*c));
-            snprintf(c->folder, sizeof(c->folder), "%s", folder);
-            snprintf(c->base, sizeof(c->base), "%.*s", (int)(len - 4), file);
-            snprintf(c->id, sizeof(c->id), "%s/%.*s", folder, (int)(len - 4), file);
-            snprintf(c->path, sizeof(c->path), "%s/%s/%s", base, folder, file);
-            c->channel = channel;
-            c->type = boot ? TYPE_BOOT : is_cardn(folder) ? TYPE_NORMAL
-                      : (is_game_id(folder) || list_has(mapped, folder)) ? TYPE_GAMEID : TYPE_NAMED;
-            nCards++;
-        }
-        /* the size of each one (one file open at a time) and the channel names */
-        for (j = first; j < nCards; j++) {
-            int fd = open(cards[j].path, O_RDONLY);
-            if (fd >= 0) {
-                cards[j].size = lseek(fd, 0, SEEK_END);
-                close(fd);
-            }
-        }
-        r.first = first;
-        r.end = nCards;
-        snprintf(path, sizeof(path), "%s/%s/%s.ini", base, folder, boot ? "BootCard" : folder);
-        if (nCards > first)
-            ini_read(path, on_channel, &r);
+        for (j = 0; j < n; j++)
+            add_file(base, folders[i], names[j]);
+        fill_cards(base, folders[i], first);
     }
     if (nCards == MAX_CARDS)
         log_msg("more memory cards than SD2Cloud handles (%d): the rest are left out", MAX_CARDS);
     qsort(cards, nCards, sizeof(cards[0]), compare);
-    for (i = 0; i < nCards; i++) {
-        card_t *c = &cards[i];
-        c->included = cfg.list_mode ? list_has(cfg.include, c->id) : ((cfg.types & c->type) && !list_has(cfg.exclude, c->id));
-        c->status = ST_NEW;
-    }
+    for (i = 0; i < nCards; i++)
+        set_included(&cards[i]);
     game_names();
     log_msg("%d card(s) on the microSD", nCards);
     return nCards;
+}
+
+card_t *cards_add(const char *folder, const char *file)
+{
+    char base[96], id[96];
+    int i;
+    snprintf(base, sizeof(base), "%sMemoryCards/PS2", sdRoot);
+    if (!add_file(base, folder, file))
+        return NULL;
+    fill_cards(base, folder, nCards - 1);
+    set_included(&cards[nCards - 1]);
+    snprintf(id, sizeof(id), "%s", cards[nCards - 1].id);
+    qsort(cards, nCards, sizeof(cards[0]), compare);
+    game_names();
+    for (i = 0; i < nCards && strcmp(cards[i].id, id); i++)
+        ;
+    log_msg("%s joined the cards: %d on the microSD", id, nCards);
+    return i < nCards ? &cards[i] : NULL;
 }
 
 /* fingerprint of one card and its status against the last backup; migrated = an old fingerprint was adopted */

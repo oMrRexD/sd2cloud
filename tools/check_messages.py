@@ -52,7 +52,8 @@ def fill(s, id_):
     if "%s" in s:
         if id_ in ("T_HIST_TITLE", "T_RESTORE_TITLE", "T_RESTORE_IN_USE", "T_RESTORING", "T_CARD_IN_USE", "T_DONE_COPY",
                    "T_DONE_MOVE", "T_DELETE_TEXT", "T_ERR_EXISTS", "T_ERR_FULL", "T_ERR_MC_CHECK", "T_DONE_IMPORT",
-                   "T_SWITCH_ASK", "T_INSERT_DONE", "T_INSERT_FAILED", "T_SWITCH_BACK_FAILED"):
+                   "T_SWITCH_ASK", "T_INSERT_DONE", "T_INSERT_FAILED", "T_SWITCH_BACK_FAILED", "T_INSTALL_REPLACE_ASK",
+                   "T_INSTALLING"):
             s = s.replace("%s", LONG_CARD)
         elif id_ in ("T_CARD_LAST", "T_RESTORE_FROM"):
             s = s.replace("%s", LONG_DATE)
@@ -132,12 +133,20 @@ PLACE = {
     "T_DEV_SD": ("text", 172, 1), "T_DEV_USB": ("text", 172, 1), "T_FILES_HINT": ("small", 212, 5),
     "T_DIR_ERROR": ("text", 500, 1), "T_DIR_EMPTY": ("text", 500, 1),
     # a .psu file's page and the card pickers over it; the questions and answers of importing and exporting
-    "T_IMPORT": ("browser", 304, 1), "T_IMPORT_TO": ("text", 200, 1), "T_EXPORT_FROM": ("text", 200, 1),
+    "T_IMPORT": ("browser", 304, 1), "T_IMPORT_TO": ("text", 200, 1),
     "T_CONFIRM_IMPORT": ("text", DIALOG, 3), "T_CONFIRM_EXPORT": ("text", DIALOG, 3), "T_EXPORT_FILE": ("text", DIALOG, 2),
     "T_DONE_IMPORT": ("text", DIALOG, 1), "T_DONE_EXPORT": ("text", DIALOG, 2), "T_LOADING": ("text", DIALOG, 1),
     "T_USB_SEARCHING": ("text", DIALOG, 1), "T_WORKING_IMPORT": ("text", DIALOG, 1), "T_WORKING_EXPORT": ("text", DIALOG, 1),
     "T_DELETE_ASK": ("text", DIALOG, 3), "T_CONFIRM_COPY": ("text", DIALOG, 3),
     "T_CONFIRM_MOVE": ("text", DIALOG, 3), "T_CONFIRM_CLOUD": ("text", DIALOG, 3), "T_CLOUD_DONE": ("text", DIALOG, 1), "T_DONE_DELETE": ("text", DIALOG, 1),
+    # installing a card file: "New card" at the top of each list of cards and the title over the big card; the
+    # questions (a wide box) and the bar's box; the list of games the file may be of
+    "T_NEW_CARD": ("text", 172, 1), "T_INSTALL_TO": ("text", 200, 1), "T_INSTALL_NEW_ASK": ("text", WIDE, 1),
+    "T_INSTALL_REPLACE_ASK": ("text", WIDE, 1), "T_INSTALL_REPLACE_TEXT": ("text", WIDE, 2),
+    "T_INSTALL_BOOT_WARN": ("text", WIDE, 2), "T_INSTALL_NO_GAME": ("text", DIALOG, 4),
+    "T_INSTALL_WHICH_GAME": ("text", 320, 1), "T_INSTALLING": ("text", DIALOG, 1), "T_INSTALL_OK": ("text", DIALOG, 1),
+    "T_INSTALL_FAILED": ("text", DIALOG, 1), "T_INSTALL_CANCEL_TITLE": ("text", DIALOG, 1),
+    "T_INSTALL_CANCEL_TEXT": ("text", DIALOG, 1), "T_KEEP_ALL": ("text", 200, 1),
 }
 PARAGRAPH = ("text", DIALOG, 3)     # error messages and the rest: up to 3 lines in a box
 
@@ -149,11 +158,11 @@ LEGENDS = [
     (("T_CANCEL_NO", "T_CANCEL_YES"), False, False), (("T_LATER", "T_YES"), False, False),
     (("T_BACK", "T_HELPER_INSTALL"), False, False), (("T_CANCEL",), False, False), (("T_BACK", "T_SYNC"), False, False),
     (("T_BACK", "T_LOGOUT_YES"), False, False), (("T_BACK", "T_HELPER_UNINSTALL"), False, False), (("T_LATER", "T_AUTO_ON"), False, False), (("T_FINISH",), False, False), (("T_LATER", "T_CONNECT"), False, False), (("T_LATER", "T_NEVER_ASK", "T_CONNECT"), False, False),
-    (("T_MENU_EXIT", "T_OPEN", "T_SETTINGS"), True, True), (("T_BACK", "T_OPEN", "T_EXPORT_SAVE"), False, False), (("T_BACK", "T_OPEN", "T_EXPORT"), False, False),
+    (("T_MENU_EXIT", "T_OPEN", "T_SETTINGS"), True, True), (("T_BACK", "T_OPEN", "T_INSTALL_SAVE"), False, False), (("T_BACK", "T_OPEN", "T_EXPORT"), False, False),
     (("T_BACK", "T_EXPORT"), False, False), (("T_BACK", "T_REPLACE"), False, False), (("T_BACK", "T_IMPORT_YES"), False, False),
     (("T_BACK", "T_CONTINUE"), False, False), (("T_BACK", "T_INSERT_YES"), False, False),
-    (("T_BACK", "T_OPEN", "T_OPTIONS"), False, False),
-    (("T_BACK", "T_REPLACE", "T_KEEP_BOTH"), False, False),
+    (("T_BACK", "T_OPEN", "T_OPTIONS"), False, False), (("T_BACK", "T_OPEN", "T_INSTALL"), False, False),
+    (("T_BACK", "T_REPLACE", "T_KEEP_BOTH"), False, False), (("T_BACK", "T_INSTALL_YES"), False, False),
 ]
 
 

@@ -23,6 +23,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <strings.h>
+#include <ctype.h>
 #include <unistd.h>
 #include <dirent.h>
 #include <kernel.h>
@@ -1032,6 +1033,8 @@ typedef struct {
     int open, openTop;        /* the folder that is open (-1 = none: the list is of folders) and the list's top then */
     float moved;              /* when a folder was last opened or closed (ui_clock): the list slides for a moment */
     int way;                  /* which way: 1 = into a folder, -1 = out of it */
+    int add;                  /* 1 = every list of cards starts with a row that isn't one, "New card" (its idx is -1):
+                                 a card file is being installed, as a new card or over one of these */
 } tabs_t;
 
 static void fit(int font, char *s, size_t size, int maxw);
@@ -1069,6 +1072,8 @@ static void tabs_games(tabs_t *g)
     if (g->open >= g->folders)
         g->open = -1;
     g->n = 0;
+    if (g->add)
+        g->idx[g->n++] = -1;
     if (g->open < 0)
         for (i = 0; i < g->folders; i++)
             g->idx[g->n++] = g->games[g->first[i]];
@@ -1080,7 +1085,7 @@ static void tabs_games(tabs_t *g)
 /* X on a folder: its cards take the list's place */
 static void tabs_open(tabs_t *g)
 {
-    g->open = g->cursor;
+    g->open = g->cursor - g->add;
     g->openTop = g->top;
     g->cursor = g->top = 0;
     tabs_games(g);
@@ -1091,7 +1096,7 @@ static void tabs_open(tabs_t *g)
 /* circle inside a folder: back to the folders, on the one that was open. slide = 0: at once (the group is left) */
 static void tabs_close(tabs_t *g, int slide)
 {
-    g->cursor = g->open;
+    g->cursor = g->open + g->add;
     g->top = g->openTop;
     g->open = -1;
     tabs_games(g);
@@ -1110,7 +1115,12 @@ static void tabs_show(tabs_t *g, int tab)
     g->keep[g->tab][0] = g->cursor;
     g->keep[g->tab][1] = g->top;
     memset(g->count, 0, sizeof(g->count));
-    for (i = g->n = 0; i < nCards; i++) {
+    g->n = 0;
+    if (g->add) {   /* a group that has no card yet is offered too: one can be added to it */
+        g->count[TAB_CARDS] = g->count[TAB_GAMES] = g->count[TAB_BOOT] = 1;
+        g->idx[g->n++] = -1;
+    }
+    for (i = 0; i < nCards; i++) {
         if (&cards[i] == g->skip)
             continue;
         g->count[tab_of(&cards[i])]++;
@@ -1156,7 +1166,10 @@ static int tabs_next(const tabs_t *g, int dir)
 }
 
 /* the selected card, or the first card of the selected folder (NULL = the group has none, or it's the Files group) */
-static card_t *tabs_card(const tabs_t *g) { return g->n && g->tab != TAB_FILES ? &cards[g->idx[g->cursor]] : NULL; }
+static card_t *tabs_card(const tabs_t *g)
+{
+    return g->n && g->tab != TAB_FILES && g->idx[g->cursor] >= 0 ? &cards[g->idx[g->cursor]] : NULL;
+}
 
 /* puts the cursor on a card of the group shown: in the Games group, on its folder */
 static void tabs_find(tabs_t *g, int card)
@@ -1169,14 +1182,14 @@ static void tabs_find(tabs_t *g, int card)
         for (k = 0; k < g->folders; k++)
             for (i = g->first[k]; i < g->first[k + 1]; i++)
                 if (g->games[i] == card)
-                    g->cursor = k;
+                    g->cursor = k + g->add;
     scroll_to(g->cursor, &g->top);
 }
 
 /* X on a folder opens it, circle inside one closes it (with the sound). 1 = the press was one of those */
 static int tabs_folder_nav(tabs_t *g, u32 b)
 {
-    if ((b & (PAD_CROSS | PAD_TRIANGLE)) && tabs_on_folders(g) && g->n) {
+    if ((b & (PAD_CROSS | PAD_TRIANGLE)) && tabs_on_folders(g) && g->n && g->idx[g->cursor] >= 0) {
         sound_play(SND_CONFIRM);
         ui_lock();
         tabs_open(g);
@@ -1224,10 +1237,14 @@ static const tabs_t *rowsOf;   /* the groups list_rows is drawing (its callbacks
 static const char *tabs_text(int i, char *buf)
 {
     (void)buf;
-    return rowsOf->tab == TAB_FILES ? T(deviceText[i]) : tabs_on_folders(rowsOf) ? rowsOf->label[i] : cards[rowsOf->idx[i]].base;
+    if (rowsOf->tab == TAB_FILES)
+        return T(deviceText[i]);
+    if (rowsOf->idx[i] < 0)
+        return T(T_NEW_CARD);
+    return tabs_on_folders(rowsOf) ? rowsOf->label[i - rowsOf->add] : cards[rowsOf->idx[i]].base;
 }
 
-static u32 tabs_dot(int i) { return status_color(&cards[rowsOf->idx[i]]); }
+static u32 tabs_dot(int i) { return rowsOf->idx[i] < 0 ? COLOR_DIM : status_color(&cards[rowsOf->idx[i]]); }
 
 /* the groups over the list (the one shown bright, in a soft light; the others dim; a small arrow on each side that
  * has another group) and the shown group's cards. dots = each card's status light */
@@ -1273,11 +1290,14 @@ static void tabs_draw(const tabs_t *g, int dots)
         list_rows(g->n, g->cursor, g->top, tabs_text, folders ? NULL : dots ? tabs_dot : NULL);
         for (k = g->top; g->tab != TAB_FILES && k < g->n && k < g->top + ROWS; k++) {
             float x = LIST_X + rowsDx, y = ROW_Y0 + (k - g->top) * ROW_H + ui_line_height(FONT_TEXT) / 2.0f + 1;
-            int here = g->idx[k] == activeCard;
-            if (folders) {   /* a small folder, as the Files group has them */
+            int here = g->idx[k] >= 0 && g->idx[k] == activeCard;
+            if (g->idx[k] < 0) {   /* "New card": a plus where a folder has its picture */
+                ui_rect(x + 4, y - 1, 12, 2, COLOR_ACCENT, 0x70);
+                ui_rect(x + 9, y - 6, 2, 12, COLOR_ACCENT, 0x70);
+            } else if (folders) {   /* a small folder, as the Files group has them */
                 ui_rect(x + 2, y - 8, 7, 3, 0xD9B95C, 0x58);
                 ui_rect(x + 2, y - 6, 16, 12, 0xD9B95C, 0x58);
-                for (i = g->first[k]; i < g->first[k + 1]; i++)
+                for (i = g->first[k - g->add]; i < g->first[k - g->add + 1]; i++)
                     here |= g->games[i] == activeCard;
                 x -= 22;   /* the mark of the card in use goes before the folder */
             }
@@ -1289,7 +1309,7 @@ static void tabs_draw(const tabs_t *g, int dots)
         if (g->tab == TAB_GAMES && g->open >= 0) {   /* over a folder's cards, small: which folder this is */
             ui_rect(LIST_X + 24, LIST_Y + 22, 6, 2, 0xD9B95C, 0x48);
             ui_rect(LIST_X + 24, LIST_Y + 24, 13, 10, 0xD9B95C, 0x48);
-            ui_text_fit(FONT_SMALL, LIST_X + 44, LIST_Y + 21, FOLDER_W - 20, 0x8E98AA, game_of(&cards[g->idx[0]]));
+            ui_text_fit(FONT_SMALL, LIST_X + 44, LIST_Y + 21, FOLDER_W - 20, 0x8E98AA, game_of(&cards[g->idx[g->add]]));
         }
         rowsDx = 0;
         rowsWide = 0;
@@ -1301,19 +1321,25 @@ static void tabs_draw(const tabs_t *g, int dots)
 /* -------- restore */
 
 static const card_t *restoreCard;
+/* a card file is being installed, not a backup from Drive restored: 1 = it is read first, 2 = it is in memory already,
+ * and writing it is all there is to wait for */
+static int restoreFile;
 static u64 lastRestoreDraw;
 static int lastRestorePhase;
 
 /* one screen and one bar for the whole restore, so the bar never goes back: downloading 30%, checking the download
- * 10%, writing 40%, reading it back 20%. The two steps the user cares about are the only ones named */
+ * 10%, writing 40%, reading it back 20% (a card that is in memory already: writing 65%, reading it back 35%). The two
+ * steps the user cares about are the only ones named */
 static int restore_progress(int phase, long long done, long long total)
 {
     static const int start[] = {0, 300, 400, 800}, span[] = {300, 100, 400, 200};
+    static const int startMem[] = {0, 0, 0, 650}, spanMem[] = {0, 0, 650, 350};
     char t[200];
     if (phase < RESTORE_WRITE) {   /* once it starts writing over the card there's no cancelling */
         watch_cancel();
         if (cancelLatched) {
-            if (confirm_cancel(T_RESTORE_CANCEL_TITLE, T_RESTORE_CANCEL_TEXT))
+            if (confirm_cancel(restoreFile ? T_INSTALL_CANCEL_TITLE : T_RESTORE_CANCEL_TITLE,
+                               restoreFile ? T_INSTALL_CANCEL_TEXT : T_RESTORE_CANCEL_TEXT))
                 return 1;
             lastRestoreDraw = 0;
         }
@@ -1324,10 +1350,14 @@ static int restore_progress(int phase, long long done, long long total)
     lastRestoreDraw = now_ms();
     if (done > total)
         done = total;
-    snprintf(t, sizeof(t), T(T_RESTORING), restoreCard->base);
+    snprintf(t, sizeof(t), T(restoreFile ? T_INSTALLING : T_RESTORING), restoreCard->base);
     dlg_new(COLOR_TITLE, t);
-    dlg_line(FONT_TEXT, COLOR_DIM, 0, T(phase < RESTORE_WRITE ? T_RESTORE_STEP_DOWNLOAD : T_RESTORE_STEP_WRITE));
-    dlg_bar(start[phase] + (total ? (int)(span[phase] * done / total) : 0), NULL);
+    dlg_line(FONT_TEXT, COLOR_DIM, 0,
+             T(phase >= RESTORE_WRITE ? T_RESTORE_STEP_WRITE : restoreFile ? T_LOADING : T_RESTORE_STEP_DOWNLOAD));
+    if (restoreFile == 2)
+        dlg_bar(startMem[phase] + (total ? (int)(spanMem[phase] * done / total) : 0), NULL);
+    else
+        dlg_bar(start[phase] + (total ? (int)(span[phase] * done / total) : 0), NULL);
     if (phase < RESTORE_WRITE)
         dlg_buttons(BUTTON_CIRCLE, T_CANCEL, 0, 0);
     dlg_show();
@@ -1833,8 +1863,13 @@ static struct {
     int n, cursor, top;    /* top = the first row on screen */
     long long freeBytes;
     u64 since;             /* when the cursor last moved (the selected icon starts turning from the front) */
-    int pick;              /* a save is being picked to export: X takes it instead of opening its page */
 } brw;
+
+/* the card of a file being looked into (card_file_screen): shown as any other, but it isn't one of cards[], it is only
+ * read, and what can be done with it is to copy its saves and to install it on the microSD */
+static card_t fileCard;
+static card_file_t cardFile;       /* that file */
+static char cardFileName[256];     /* and its name, which may tell which game the card is of */
 
 static void grid_cell(int i, float height, float *cx, float *cy)
 {
@@ -1893,11 +1928,9 @@ static void scene_browser(float t)
         look_arrow(W / 2.0f, 92, 0, 0x3A5AE0);
     if (last < brw.n)
         look_arrow(W / 2.0f, 340, 1, 0x3A5AE0);
-    if (brw.pick) {
-        legend_t l[2] = {{BUTTON_CIRCLE, T(T_BACK)}, {BUTTON_CROSS, T(T_EXPORT)}};
-        look_legend(l, 2, 0);
-    } else {
-        legend_t l[3] = {{BUTTON_CIRCLE, T(T_BACK)}, {BUTTON_CROSS, T(T_OPEN)}, {BUTTON_SQUARE, T(T_SYNC)}};
+    {
+        legend_t l[3] = {{BUTTON_CIRCLE, T(T_BACK)}, {BUTTON_CROSS, T(T_OPEN)},
+                         {BUTTON_SQUARE, T(brw.card == &fileCard ? T_INSTALL : T_SYNC)}};
         look_legend(l, 3, 0);
     }
 }
@@ -2131,6 +2164,7 @@ static struct {
     long long freeBytes[MAX_CARDS];   /* each card's free space, once read (-2 = not yet, -1 = unknown) */
     icon_t *icon;                     /* the selected game card's icon, once read */
     int iconCard;                     /* which card that icon is of (-1 = none) */
+    char newName[56];                 /* on "New card": the card it would make ("" = not known before asking) */
 } dst;
 
 /* "Copy" also offers the Files group: a device picked there (destDevice) is browsed for the folder the save goes to,
@@ -2142,6 +2176,8 @@ static struct {
 } fbGive;
 static card_t *fbCard;   /* a whole card is being copied to a device: triangle in files_screen writes it there */
 static void files_screen(int dev);
+static int install_card(void);
+static void menu_refresh(void);
 
 static void scene_dest(float t)
 {
@@ -2156,8 +2192,13 @@ static void scene_dest(float t)
         look_legend(l, 2, 0);
     }
     look_title(CARD_CX, 82, dst.title, 1);
-    if (!(c = tabs_card(&dst.g)))
+    if (!(c = tabs_card(&dst.g))) {
+        if (dst.g.add && dst.g.tab != TAB_FILES) {   /* "New card": the card to be, and its name when it is known */
+            look_card(CARD_X, CARD_Y, "+", NULL);
+            ui_text_center(FONT_TEXT, CARD_CX, CARD_Y + LOOK_CARD_H + 2, COLOR_ITEM_ON, dst.newName);
+        }
         return;
+    }
     draw_card_picture(c, dst.iconCard == dst.g.idx[dst.g.cursor] ? dst.icon : NULL, ui_clock());
     if (tabs_on_folders(&dst.g))   /* a folder: nothing of one card to say yet */
         return;
@@ -2253,6 +2294,274 @@ static card_t *choose_dest(const card_t *from, int title, long long need)
     return c;
 }
 
+/* -------- installing a card file (□ in its saves): it becomes a card of the microSD. The cards come in their groups,
+ * as when a save's destination is picked, each list starting with "New card": X on that makes a new card of the group
+ * (the lowest numbered card there is none of; the next channel of the BootCard; the next channel of a game's folder,
+ * the one that is open or the one of the game the file is of), X on a card puts the file in its place */
+
+#define MAX_FILE_GAMES 16
+static char fileGames[MAX_FILE_GAMES][12];   /* the games (IDs) the file may be a card of */
+static int nFileGames;
+static char fileGameFolder[48];              /* with a single one: the folder the sd2psx keeps its cards in */
+
+/* Which game a card file is of, the way the sd2psx would know: the ID its name starts with (the sd2psx and the
+ * MemCard PRO2 both name a game's card after it, SLUS-21065-1; OPL names a game's virtual card after the game's
+ * program, SLUS_210.65_0), then the IDs its saves are named after (BASLUS-21065...), the newest save first */
+static void file_games(void)
+{
+    static mcfs_save_t list[MCFS_MAX_SAVES];
+    char id[12];
+    int n, i, k, len = 10;
+    nFileGames = 0;
+    snprintf(id, sizeof(id), "%.11s", cardFileName);
+    for (i = 0; id[i]; i++)
+        id[i] = toupper((unsigned char)id[i]);
+    if (i == 11 && id[4] == '_' && id[8] == '.') {   /* SLUS_210.65 is SLUS-21065 */
+        id[4] = '-';
+        id[8] = id[9];
+        id[9] = id[10];
+        len = 11;
+    }
+    id[10] = 0;
+    if (is_game_id(id) && !isalnum((unsigned char)cardFileName[len]))
+        strcpy(fileGames[nFileGames++], id);
+    n = cardFile.zip && !cardFile.image ? 0 : mcfs_list_saves(MCFS_IMAGE, list, MCFS_MAX_SAVES, NULL);
+    for (i = 0; i < n && nFileGames < MAX_FILE_GAMES; i++) {
+        const char *s = list[i].folder;
+        if (strlen(s) < 12 || s[0] != 'B' || !isupper((unsigned char)s[1]))
+            continue;
+        snprintf(id, sizeof(id), "%.10s", s + 2);
+        for (k = 0; k < nFileGames && strcmp(fileGames[k], id); k++)
+            ;
+        if (is_game_id(id) && k == nFileGames)
+            strcpy(fileGames[nFileGames++], id);
+    }
+    fileGameFolder[0] = 0;
+    if (nFileGames == 1)
+        game_folder(fileGames[0], fileGameFolder, sizeof(fileGameFolder));
+    log_msg("install: %s may be of %d game(s)%s%s", cardFileName, nFileGames, nFileGames ? ", first " : "", nFileGames ? fileGames[0] : "");
+}
+
+/* the game the new card is of: asked when the file tells of more than one. 0 = none can be told (said so), or circle */
+static int pick_game(char id[12])
+{
+    static char text[MAX_FILE_GAMES][100];
+    static const char *items[MAX_FILE_GAMES];
+    char title[64];
+    int i, k = 0;
+    if (!nFileGames) {
+        message_wait(0, NULL, COLOR_WARN, T(T_INSTALL_NO_GAME));
+        return 0;
+    }
+    for (i = 0; i < nFileGames; i++) {
+        game_title(fileGames[i], title, sizeof(title));
+        snprintf(text[i], sizeof(text[i]), "%s%s%s", fileGames[i], title[0] ? "  " : "", title);
+        items[i] = text[i];
+    }
+    if (nFileGames > 1 && (k = choose(T(T_INSTALL_WHICH_GAME), items, nFileGames, 0)) < 0)
+        return 0;
+    strcpy(id, fileGames[k]);
+    return 1;
+}
+
+/* The card a new one would be in a group: the lowest numbered card there is none of yet, on its first channel; or the
+ * lowest channel that is free in a folder that has max of them (the BootCard's, or a game's: gameFolder).
+ * 0 = that folder has them all */
+static int new_card(int tab, const char *gameFolder, int max, char folder[48], char base[56])
+{
+    int i, n;
+    if (tab == TAB_CARDS) {
+        for (n = 1;; n++) {
+            snprintf(folder, 48, "Card%d", n);
+            for (i = 0; i < nCards && strcasecmp(cards[i].folder, folder); i++)
+                ;
+            if (i == nCards)
+                break;
+        }
+        snprintf(base, 56, "Card%d-1", n);
+        return 1;
+    }
+    snprintf(folder, 48, "%s", tab == TAB_BOOT ? "BOOT" : gameFolder);
+    for (n = 1; n <= max; n++) {
+        for (i = 0; i < nCards && (strcasecmp(cards[i].folder, folder) || cards[i].channel != n); i++)
+            ;
+        if (i == nCards) {
+            snprintf(base, 56, "%.44s-%d", tab == TAB_BOOT ? "BootCard" : folder, n);
+            return 1;
+        }
+    }
+    return 0;
+}
+
+/* the game folder a new card of the list shown goes to: the one that is open, or the one of the file's game ("" =
+ * that is asked first) */
+static const char *dest_game_folder(void)
+{
+    return dst.g.tab == TAB_GAMES && dst.g.open >= 0 ? cards[dst.g.idx[1]].folder : fileGameFolder;
+}
+
+/* with the cursor on "New card": the card it would make, for the big card on the right (with ui_lock held) */
+static void dest_new_name(void)
+{
+    char folder[48];
+    const char *game = dest_game_folder();
+    dst.newName[0] = 0;
+    if (dst.g.n && dst.g.idx[dst.g.cursor] < 0 && (dst.g.tab != TAB_GAMES || game[0]) && !new_card(dst.g.tab, game, 8, folder, dst.newName))
+        dst.newName[0] = 0;
+}
+
+/* 0 = circle. Else *to = the card picked, to be replaced, or NULL: a new card of the group *tab (of a game: in
+ * gameFolder, "" when the game has to be asked). again = back from a question that was answered with circle: the
+ * cards are where they were left (the group, the folder that was open, the cursor) */
+static int install_dest(card_t **to, int *tab, char gameFolder[48], int again)
+{
+    int i, r = 0;
+    ui_lock();
+    if (!again) {
+        tabs_init(&dst.g, NULL, 0);
+        dst.g.add = 1;
+        tabs_show(&dst.g, TAB_CARDS);
+        for (i = 0; i < MAX_CARDS; i++)
+            dst.freeBytes[i] = -2;
+    }
+    dst.title = T(T_INSTALL_TO);
+    dst.need = 0;
+    dst.icon = NULL;
+    dst.iconCard = -1;
+    dest_new_name();
+    ui_unlock();
+    ui_scene(scene_dest);
+    for (;;) {
+        u32 keys = PAD_UP | PAD_DOWN | TAB_KEYS | PAD_CROSS | PAD_CIRCLE, b = wait_nav_ms(keys, 250);
+        if (!b) {
+            dest_info();
+            b = wait_nav(keys);
+        }
+        if (tabs_nav(&dst.g, b) || tabs_folder_nav(&dst.g, b)) {
+            ui_lock();
+            dest_new_name();
+            ui_unlock();
+            continue;
+        }
+        if (b & PAD_CIRCLE) {
+            sound_play(SND_BACK);
+            break;
+        }
+        if ((b & PAD_CROSS) && dst.g.n) {
+            sound_play(SND_CONFIRM);
+            *to = tabs_card(&dst.g);
+            *tab = dst.g.tab;
+            snprintf(gameFolder, 48, "%s", dest_game_folder());
+            r = 1;
+            break;
+        }
+    }
+    ui_scene(scene_frame);   /* off the screen before the icon goes */
+    ui_lock();
+    icon_free(dst.icon);
+    dst.icon = NULL;
+    dst.iconCard = -1;
+    ui_unlock();
+    return r;
+}
+
+/* 1 = the file is a card of the microSD now */
+static int install_card(void)
+{
+    char folder[48], base[56], gameFolder[48], id[12], title[64], t[300], active[96];
+    card_t fresh, *to;
+    int tab, r, max, again = 0;
+    file_games();
+    for (;;) {
+        if (!install_dest(&to, &tab, gameFolder, again))
+            return 0;
+        again = 1;
+        title[0] = 0;
+        if (to) {
+            snprintf(t, sizeof(t), T(T_INSTALL_REPLACE_ASK), to->base);
+            dlg_new(COLOR_TITLE, t);
+            dlg_line(FONT_TEXT, COLOR_TEXT, 8, T(T_INSTALL_REPLACE_TEXT));
+            if (to->type == TYPE_BOOT)   /* what the console starts from may be on it */
+                dlg_line(FONT_TEXT, COLOR_WARN, 0, T(T_INSTALL_BOOT_WARN));
+            dlg_buttons(BUTTON_CIRCLE, T_BACK, BUTTON_CROSS, T_REPLACE);
+        } else {
+            if (tab == TAB_GAMES) {
+                id[0] = 0;
+                if (!gameFolder[0]) {
+                    if (!pick_game(id))
+                        continue;
+                    game_folder(id, gameFolder, sizeof(gameFolder));
+                }
+                /* the game, under the card's name: the folder is its ID, unless Game2Folder.ini gave it another */
+                if (!game_title(gameFolder, title, sizeof(title)) && id[0])
+                    game_title(id, title, sizeof(title));
+            }
+            max = tab == TAB_CARDS ? 0 : max_channels(tab == TAB_BOOT ? "BOOT" : gameFolder);
+            if (!new_card(tab, gameFolder, max, folder, base)) {
+                snprintf(t, sizeof(t), T(T_INSTALL_NO_CHANNEL), max);
+                message_wait(0, NULL, COLOR_WARN, t);
+                continue;
+            }
+            dlg_new(COLOR_TITLE, T(T_INSTALL_NEW_ASK));
+            dlg_line(FONT_TEXT, COLOR_ACCENT, title[0] ? 2 : 0, base);
+            dlg_line(FONT_SMALL, COLOR_DIM, 0, title);
+            dlg_buttons(BUTTON_CIRCLE, T_BACK, BUTTON_CROSS, T_INSTALL_YES);
+        }
+        next.wide = 1;
+        dlg_show();
+        if (wait_button(PAD_CROSS | PAD_CIRCLE, 0) & PAD_CROSS)
+            break;
+        sound_play(SND_BACK);   /* back to the cards */
+    }
+    sound_play(SND_CONFIRM);
+    if (!to) {   /* a card to be: its folder first */
+        memset(&fresh, 0, sizeof(fresh));
+        snprintf(fresh.folder, sizeof(fresh.folder), "%s", folder);
+        snprintf(fresh.base, sizeof(fresh.base), "%s", base);
+        snprintf(fresh.id, sizeof(fresh.id), "%s/%s", folder, base);
+        snprintf(fresh.path, sizeof(fresh.path), "%sMemoryCards/PS2/%s/", sdRoot, folder);
+        ensure_dir(fresh.path);
+        snprintf(fresh.path, sizeof(fresh.path), "%sMemoryCards/PS2/%s/%s.mcd", sdRoot, folder, base);
+    } else if (card_free(to, NULL))
+        return 0;
+    restoreCard = to ? to : &fresh;
+    restoreFile = cardFile.image ? 2 : 1;
+    lastRestoreDraw = 0;
+    lastRestorePhase = -1;
+    cancelLatched = 0;
+    r = card_file_install(&cardFile, to ? to : &fresh, restore_progress);
+    restoreFile = 0;
+    log_msg("install %s as %s: %d", cardFileName, to ? to->id : fresh.id, r);
+    if (to) {
+        cards_recheck(to);
+        card_back();
+    } else if (r != 0) {
+        unlink(fresh.path);   /* a card that isn't whole is no card; nor is its folder to stay, if it was made for it */
+        snprintf(t, sizeof(t), "%sMemoryCards/PS2/%s", sdRoot, folder);
+        rmdir(t);
+    } else {
+        /* it joins the cards, which move over for it: the one the sd2psx is on and the main screen's are found again */
+        snprintf(active, sizeof(active), "%s", activeCard >= 0 ? cards[activeCard].id : "");
+        snprintf(t, sizeof(t), "%s.mcd", base);
+        if ((to = cards_add(folder, t)) != NULL)
+            cards_recheck(to);
+        for (activeCard = nCards - 1; activeCard >= 0 && strcmp(cards[activeCard].id, active); activeCard--)
+            ;
+        menu_refresh();
+    }
+    if (r == -2)
+        return 0;   /* cancelled before writing: nothing changed */
+    dlg_new(r == 0 ? COLOR_OK : COLOR_ERROR, T(r == 0 ? T_INSTALL_OK : T_INSTALL_FAILED));
+    dlg_line(FONT_TEXT, COLOR_ACCENT, 4, to ? to->base : base);
+    if (r != 0)
+        dlg_line(FONT_TEXT, COLOR_TEXT, 0, googleError);
+    dlg_buttons(BUTTON_CROSS, T_BACK, 0, 0);
+    dlg_show();
+    sound_play(r == 0 ? SND_EXIT : SND_BACK);
+    wait_button(PAD_CROSS | PAD_CIRCLE, 0);
+    return r == 0;
+}
+
 /* copy or move the save to another card. 1 = the card it was on changed (moved) */
 static int save_transfer(card_t *c, save_view_t *v, int move)
 {
@@ -2263,8 +2572,14 @@ static int save_transfer(card_t *c, save_view_t *v, int move)
         message_wait(0, NULL, COLOR_WARN, T(T_NO_OTHER_CARDS));
         return 0;
     }
+    if (!nCards) {   /* a save of a card file, with no card on the microSD to copy it to */
+        message_wait(0, NULL, COLOR_WARN, T(T_NO_CARDS_SD));
+        return 0;
+    }
     mcfs_save_info(c->path, v->s.folder, &bytes, &files);
-    destFiles = !move;   /* a copy can also go to a folder of the microSD or of a USB drive, as a .psu */
+    /* a copy can also go to a folder of the microSD or of a USB drive, as a .psu (not from a card file: the folders
+     * are already being browsed, on the screen underneath) */
+    destFiles = !move && c != &fileCard;
     if (!(to = choose_dest(c, move ? T_MOVE_TO : T_COPY_TO, bytes))) {
         if (destDevice >= 0) {
             fbGive.c = c;
@@ -2443,7 +2758,10 @@ static int save_screen(card_t *c, int i)
     long long bytes = 0;
     int files = 0, k;
     mcfs_save_info(c->path, v->s.folder, &bytes, &files);
-    save_page(v, c->base, bytes, saveOptions, 4);
+    if (c == &fileCard)
+        save_page(v, c->base, bytes, saveOptions, 1);   /* a card file is only read: a save can be copied out of it */
+    else
+        save_page(v, c->base, bytes, saveOptions, 4);
     while ((k = save_page_choice()) != 0) {
         switch (k) {
         case T_COPY:
@@ -2517,18 +2835,15 @@ static void browser_load(card_t *c, int cursor)
     log_msg("%s: %d saves, %lld bytes free", c->id, n, freeBytes);
 }
 
-/* a card's saves. With pick, to choose one of them: returns the save picked (the screen stays loaded, for its name
- * and icon: browser_close when done with it) or -1; without it, always -1 */
-static int card_grid(card_t *c, int pick)
+static void card_screen(card_t *c)
 {
     brw.n = 0;
-    brw.pick = pick;
     browser_load(c, 0);
     ui_scene(scene_browser);
     for (;;) {
         /* reads the icons one by one while nobody presses anything */
         int pending = 1, n = brw.n;
-        u32 b, keys = PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT | PAD_CROSS | PAD_CIRCLE | (pick ? 0 : PAD_SQUARE);
+        u32 b, keys = PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT | PAD_CROSS | PAD_CIRCLE | PAD_SQUARE;
         while (pending && !(b = wait_nav_ms(keys, 0)))
             pending = load_next_icon();
         if (!pending)
@@ -2536,7 +2851,7 @@ static int card_grid(card_t *c, int pick)
         if (b & PAD_CIRCLE) {
             sound_play(SND_BACK);
             browser_close();
-            return -1;
+            return;
         }
         if (b & (PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT)) {
             int k = brw.cursor;
@@ -2562,20 +2877,19 @@ static int card_grid(card_t *c, int pick)
             }
         } else if ((b & PAD_CROSS) && n) {
             sound_play(SND_CONFIRM);
-            if (pick)
-                return brw.cursor;
             if (save_screen(c, brw.cursor))
                 browser_load(c, brw.cursor);
             ui_scene(scene_browser);
         } else if (b & PAD_SQUARE) {
             sound_play(SND_CONFIRM);
-            sync_card(c);
+            if (c == &fileCard)
+                install_card();
+            else
+                sync_card(c);
             ui_scene(scene_browser);
         }
     }
 }
-
-static void card_screen(card_t *c) { card_grid(c, 0); }
 
 /* -------- △ on a card: what can be done with it as a whole */
 
@@ -2615,8 +2929,10 @@ static void card_options(card_t *c)
     }
 }
 
-/* -------- the Files group: a device's folders and files. X on a .psu file opens the save it holds, to import it into
- * a card; triangle exports a save of a card, as a .psu file, into the folder shown */
+/* -------- the Files group: a device's folders and files. X on a .psu file opens the save it holds, and square
+ * installs it in a card right away; X on a card file opens the card it holds, and square installs it on the microSD.
+ * The same screen picks the folder a save or a whole card is copied to ("Copy" on a save's page, "Copy to a device"
+ * in a card's options): triangle then writes it into the folder shown */
 
 #define FB_MAX     512    /* entries of a folder (the ones past it are left out) */
 #define FB_ROWS    9
@@ -2641,6 +2957,36 @@ static int is_psu(const char *name)
 {
     size_t n = strlen(name);
     return n > 4 && !strcasecmp(name + n - 4, ".psu");
+}
+
+/* a whole card: a .mcd, a MemCard PRO2's .mc2, a .ps2, one of OPL's virtual memory cards (a .bin: so much else is
+ * called that, that only a file of a size a card has counts), or the .zip "Copy to a device" writes with a card
+ * inside (what the file really is gets checked when it's opened) */
+static int is_card_file(const char *name, long long size)
+{
+    size_t n = strlen(name);
+    const char *e = n > 4 ? name + n - 4 : "";
+    if (!strcasecmp(e, ".bin")) {
+        if ((size & (size - 1)) && size % 528 == 0)   /* with the ECC bytes: 528 for each 512 */
+            size = size / 528 * 512;
+        return size >= 512 * 1024 && !(size & (size - 1));
+    }
+    return !strcasecmp(e, ".mcd") || !strcasecmp(e, ".mc2") || !strcasecmp(e, ".ps2") || !strcasecmp(e, ".zip");
+}
+
+/* What X does with an entry of the folder shown: FB_ENTER a folder, FB_PSU or FB_CARD show what the file holds, 0 =
+ * nothing (a file of no use here; or one that isn't opened while a save or a card is on its way to this folder: a
+ * save's own page is waiting underneath) */
+enum { FB_ENTER = 1, FB_PSU, FB_CARD };
+static int fb_opens(const dir_entry_t *e)
+{
+    if (e->dir)
+        return FB_ENTER;
+    if (is_psu(e->name) && !fbGive.c)
+        return FB_PSU;
+    if (is_card_file(e->name, e->size) && !fbGive.c && !fbCard)
+        return FB_CARD;
+    return 0;
 }
 
 /* with ui_lock held: they measure with the fonts */
@@ -2745,7 +3091,7 @@ static void scene_files(float t)
     look_title(FB_X, 82, fb.title, 0);
     for (i = fb.top, y = FB_Y0; i < fb.n && i < fb.top + FB_ROWS; i++, y += FB_ROW) {
         const dir_entry_t *e = &fb.list[i];
-        int usable = e->dir || is_psu(e->name);
+        int usable = e->dir || is_psu(e->name) || is_card_file(e->name, e->size);
         float my = y + lh / 2.0f + 1;
         if (e->dir) {   /* a small folder */
             ui_rect(FB_X, my - 8, 7, 3, 0xD9B95C, 0x58);
@@ -2783,69 +3129,172 @@ static void scene_files(float t)
         ui_text_right(FONT_SMALL, FB_RIGHT, FB_Y0 + FB_ROWS * FB_ROW + 2, 0x8E98AA, s);
     }
     {
-        legend_t l[3] = {{BUTTON_CIRCLE, T(T_BACK)}, {BUTTON_CROSS, T(T_OPEN)}, {BUTTON_TRIANGLE, T(fbCard ? T_EXPORT : T_EXPORT_SAVE)}};
-        look_legend(l, 3, 0);
+        /* only what can be done with the selected entry is offered */
+        legend_t l[3] = {{BUTTON_CIRCLE, T(T_BACK)}};
+        const dir_entry_t *e = fb.n ? &fb.list[fb.cursor] : NULL;
+        int n = 1;
+        if (e && fb_opens(e))
+            l[n].button = BUTTON_CROSS, l[n++].text = T(T_OPEN);
+        if (fbCard || fbGive.c)   /* a card or a save is on its way to the folder shown */
+            l[n].button = BUTTON_TRIANGLE, l[n++].text = T(T_EXPORT);
+        else if (e && !e->dir && is_psu(e->name))   /* what the selected file is good for */
+            l[n].button = BUTTON_SQUARE, l[n++].text = T(T_INSTALL_SAVE);
+        else if (e && !e->dir && is_card_file(e->name, e->size))
+            l[n].button = BUTTON_SQUARE, l[n++].text = T(T_INSTALL);
+        look_legend(l, n, 0);
     }
 }
 
-/* X on a .psu file: the page of the save it holds, from where it can be imported into a card */
-static void psu_screen(const char *file)
-{
-    static save_view_t v;
-    char path[660], name[160], t[300];
+/* the save a .psu file of the folder shown holds, as the saves' screens show one (its icon and the name in it, when
+ * it has them). 1 = it is one (psu_close when done with it); else it is said that it isn't */
+static struct {
+    save_view_t v;
     mcfs_psu_t info;
+    char path[660];
+} psu;
+
+static int psu_open(const char *file)
+{
     buffer_t iconsys = {0}, ico = {0};
     icon_t *ic;
-    card_t *to;
     int r;
-    snprintf(path, sizeof(path), "%s%s", fb.dir, file);
+    snprintf(psu.path, sizeof(psu.path), "%s%s", fb.dir, file);
     message(0, NULL, COLOR_TEXT, T(T_LOADING));
-    r = mcfs_psu_info(path, &info, &iconsys, &ico);
-    log_msg("files: %s: %d (%s, %lld bytes in %d files)", path, r, info.folder, info.bytes, info.files);
+    r = mcfs_psu_info(psu.path, &psu.info, &iconsys, &ico);
+    log_msg("files: %s: %d (%s, %lld bytes in %d files)", psu.path, r, psu.info.folder, psu.info.bytes, psu.info.files);
     if (r != MCFS_OK) {
         message_wait(0, NULL, COLOR_ERROR, T(T_ERR_PSU));
-        return;
+        return 0;
     }
     ic = iconsys.len ? icon_load(&iconsys, &ico) : NULL;
     buf_free(&iconsys);
     buf_free(&ico);
     ui_lock();
-    memset(&v, 0, sizeof(v));
-    snprintf(v.s.folder, sizeof(v.s.folder), "%s", info.folder);
-    v.s.when = info.when;
-    v.icon = ic;
-    v.tried = 1;
+    memset(&psu.v, 0, sizeof(psu.v));
+    snprintf(psu.v.s.folder, sizeof(psu.v.s.folder), "%s", psu.info.folder);
+    psu.v.s.when = psu.info.when;
+    psu.v.icon = ic;
+    psu.v.tried = 1;
     if (ic) {
-        snprintf(v.line1, sizeof(v.line1), "%s", ic->line1);
-        snprintf(v.line2, sizeof(v.line2), "%s", ic->line2);
+        snprintf(psu.v.line1, sizeof(psu.v.line1), "%s", ic->line1);
+        snprintf(psu.v.line2, sizeof(psu.v.line2), "%s", ic->line2);
     }
     ui_unlock();
-    snprintf(name, sizeof(name), "%s", file);
-    utf8_fix(name, sizeof(name));
-    save_page(&v, name, info.bytes, psuOptions, 1);
-    while (save_page_choice()) {
-        if (!nCards) {
-            message_wait(0, NULL, COLOR_WARN, T(T_NO_CARDS_SD));
-            continue;
-        }
-        if (!(to = choose_dest(NULL, T_IMPORT_TO, info.bytes)))
-            continue;
-        save_name(&v, name, sizeof(name));
-        snprintf(t, sizeof(t), T(T_CONFIRM_IMPORT), name, to->base);
-        if (!confirm(t, NULL, T_IMPORT_YES) || card_free(to, NULL))
-            continue;
-        message(0, NULL, COLOR_TEXT, T(T_WORKING_IMPORT));
-        r = mcfs_import_psu(path, to->path);
-        log_msg("import %s into %s: %d", path, to->id, r);
-        cards_recheck(to);
-        card_back();
-        op_result(r, T_DONE_IMPORT, to);
-    }
+    return 1;
+}
+
+static void psu_close(void)
+{
     ui_scene(scene_frame);   /* off the screen before the icon goes */
     ui_lock();
-    icon_free(ic);
-    v.icon = NULL;
+    icon_free(psu.v.icon);
+    psu.v.icon = NULL;
     ui_unlock();
+}
+
+/* that save into a card, which is picked next; asked before it is written */
+static void psu_import(void)
+{
+    char name[160], t[300];
+    card_t *to;
+    int r;
+    if (!nCards) {
+        message_wait(0, NULL, COLOR_WARN, T(T_NO_CARDS_SD));
+        return;
+    }
+    if (!(to = choose_dest(NULL, T_IMPORT_TO, psu.info.bytes)))
+        return;
+    save_name(&psu.v, name, sizeof(name));
+    snprintf(t, sizeof(t), T(T_CONFIRM_IMPORT), name, to->base);
+    if (!confirm(t, NULL, T_IMPORT_YES) || card_free(to, NULL))
+        return;
+    message(0, NULL, COLOR_TEXT, T(T_WORKING_IMPORT));
+    r = mcfs_import_psu(psu.path, to->path);
+    log_msg("import %s into %s: %d", psu.path, to->id, r);
+    cards_recheck(to);
+    card_back();
+    op_result(r, T_DONE_IMPORT, to);
+}
+
+/* X on a .psu file: the page of the save it holds, from where it can be imported into a card. install = square on
+ * it: straight to the card it goes into */
+static void psu_screen(const char *file, int install)
+{
+    char name[260];
+    if (!psu_open(file))
+        return;
+    if (install)
+        psu_import();
+    else {
+        snprintf(name, sizeof(name), "%s", file);
+        utf8_fix(name, sizeof(name));
+        save_page(&psu.v, name, psu.info.bytes, psuOptions, 1);
+        while (save_page_choice())
+            psu_import();
+    }
+    psu_close();
+}
+
+/* a .zip's card on its way to memory: the bar of the box on screen; circle gives up */
+static int open_progress(int phase, long long done, long long total)
+{
+    (void)phase;
+    watch_cancel();
+    if (cancelLatched)
+        return 1;
+    ui_lock();
+    dlg.permille = total ? (int)(done * 1000 / total) : 0;
+    ui_unlock();
+    return 0;
+}
+
+/* X on a card file: the card it holds, shown as the cards of the microSD are. Its saves can be copied to those, and □
+ * installs it as one of them (install_card). A .zip's card that doesn't fit in memory can't be shown: installing it
+ * is offered right away. install = square on the file itself: installed without being shown first */
+static void card_file_screen(const char *file, int install)
+{
+    char path[660];
+    size_t n = strlen(file);
+    int r;
+    snprintf(path, sizeof(path), "%s%s", fb.dir, file);
+    dlg_new(0, NULL);
+    dlg_line(FONT_TEXT, COLOR_TEXT, 0, T(T_LOADING));
+    if (n > 4 && !strcasecmp(file + n - 4, ".zip")) {
+        dlg_bar(0, NULL);
+        dlg_buttons(BUTTON_CIRCLE, T_CANCEL, 0, 0);
+    }
+    dlg_show();
+    cancelLatched = 0;
+    r = card_file_open(&cardFile, path, open_progress);
+    if (r == -2) {
+        sound_play(SND_BACK);
+        return;
+    }
+    if (r != 0) {
+        message_wait(0, NULL, COLOR_ERROR, T(T_ERR_CARD_FILE));
+        return;
+    }
+#ifdef DEBUG_BUILD
+    debug_log_memory("a card file is open");   /* a .zip's card is in memory now */
+#endif
+    snprintf(cardFileName, sizeof(cardFileName), "%s", file);
+    ui_lock();
+    memset(&fileCard, 0, sizeof(fileCard));
+    snprintf(fileCard.base, sizeof(fileCard.base), "%.*s", (int)(n - 4), file);
+    utf8_fix(fileCard.base, sizeof(fileCard.base));
+    fit(FONT_BROWSER, fileCard.base, sizeof(fileCard.base), 250);   /* a save's name goes on its right */
+    snprintf(fileCard.id, sizeof(fileCard.id), "file/%.80s", file);
+    snprintf(fileCard.path, sizeof(fileCard.path), "%s", MCFS_IMAGE);
+    fileCard.size = cardFile.size;
+    fileCard.type = TYPE_NORMAL;
+    ui_unlock();
+    if (install)
+        install_card();
+    else if (!cardFile.zip || cardFile.image)
+        card_screen(&fileCard);
+    else if (confirm(T(T_FILE_TOO_BIG), NULL, T_INSTALL_YES))
+        install_card();
+    card_file_close(&cardFile);
 }
 
 /* A file of that name is already in the folder shown. 0 = circle; 1 = it is replaced; 2 = both stay: file becomes
@@ -2960,24 +3409,6 @@ static int export_card(card_t *c)
     return r == 0;
 }
 
-/* triangle: which card, then which of its saves */
-static void export_here(void)
-{
-    char file[48];
-    card_t *c;
-    int i, ok;
-    if (!nCards) {
-        message_wait(0, NULL, COLOR_WARN, T(T_NO_CARDS_SD));
-        return;
-    }
-    if (!(c = choose_dest(NULL, T_EXPORT_FROM, 0)) || (i = card_grid(c, 1)) < 0)
-        return;
-    ok = export_save(c, &brw.saves[i], file);
-    browser_close();
-    if (ok)
-        fb_load(file);   /* the folder again, on the new file */
-}
-
 static void files_screen(int dev)
 {
     if (dev == FDEV_USB) {
@@ -2996,7 +3427,7 @@ static void files_screen(int dev)
     for (;;) {
         u32 b;
         ui_scene(scene_files);
-        b = wait_nav(PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT | PAD_CROSS | PAD_CIRCLE | PAD_TRIANGLE);
+        b = wait_nav(PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT | PAD_CROSS | PAD_CIRCLE | PAD_TRIANGLE | PAD_SQUARE);
         if (b & (PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT)) {   /* left and right: a screenful at a time */
             int k = fb.cursor;
             if (!fb.n)
@@ -3025,26 +3456,34 @@ static void files_screen(int dev)
             char name[256];
             if (!fb.n)
                 continue;
+            int k = fb_opens(&fb.list[fb.cursor]);
             snprintf(name, sizeof(name), "%s", fb.list[fb.cursor].name);
-            if (fb.list[fb.cursor].dir) {
-                sound_play(SND_CONFIRM);
+            sound_play(k ? SND_CONFIRM : SND_BACK);
+            if (k == FB_ENTER)
                 fb_enter(name);
-            } else if (is_psu(name) && !fbGive.c) {   /* not while a save's own page is waiting underneath */
+            else if (k == FB_PSU)
+                psu_screen(name, 0);
+            else if (k == FB_CARD)
+                card_file_screen(name, 0);
+        } else if ((b & PAD_SQUARE) && fb.n && !fb.list[fb.cursor].dir && !fbGive.c && !fbCard) {
+            char name[256];   /* the file itself, without opening it first */
+            snprintf(name, sizeof(name), "%s", fb.list[fb.cursor].name);
+            if (is_psu(name)) {
                 sound_play(SND_CONFIRM);
-                psu_screen(name);
-            } else
-                sound_play(SND_BACK);
-        } else if ((b & PAD_TRIANGLE) && !fb.error) {
+                psu_screen(name, 1);
+            } else if (is_card_file(name, fb.list[fb.cursor].size)) {
+                sound_play(SND_CONFIRM);
+                card_file_screen(name, 1);
+            }
+        } else if ((b & PAD_TRIANGLE) && !fb.error && fbCard) {   /* from a card's options: the whole card goes into this folder */
             sound_play(SND_CONFIRM);
-            if (fbCard) {   /* came from a card's options: the whole card goes into this folder */
-                if (export_card(fbCard))
-                    return;
-            } else if (fbGive.c) {   /* came from a save's "Copy": that save goes into this folder, and back to its page */
-                char file[48];
-                if (export_save(fbGive.c, fbGive.v, file))
-                    return;
-            } else
-                export_here();
+            if (export_card(fbCard))
+                return;
+        } else if ((b & PAD_TRIANGLE) && !fb.error && fbGive.c) {   /* from a save's "Copy": it goes into this folder */
+            char file[48];
+            sound_play(SND_CONFIRM);
+            if (export_save(fbGive.c, fbGive.v, file))
+                return;   /* back to the save's page */
         }
     }
 }
@@ -3056,6 +3495,17 @@ static struct {
     icon_t *icon;             /* the 3D icon of the selected game card, once read */
     int iconCard;             /* which card that icon is of (index in cards[], -1 = none) */
 } menu = {.iconCard = -1};
+
+/* a card joined cards[] and the others moved over: the main screen's list is made again */
+static void menu_refresh(void)
+{
+    ui_lock();
+    icon_free(menu.icon);
+    menu.icon = NULL;
+    menu.iconCard = -1;
+    tabs_show(&menu.g, menu.g.tab);
+    ui_unlock();
+}
 
 static void scene_menu(float t)
 {

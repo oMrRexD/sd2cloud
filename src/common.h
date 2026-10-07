@@ -197,6 +197,14 @@ enum { ST_NEW, ST_CHANGED, ST_UP_TO_DATE, ST_NO_BACKUP, ST_ERROR };
 extern card_t cards[MAX_CARDS];
 extern int nCards;
 int cards_scan(void);                       /* lists the .mcd files on the microSD; returns how many (-1 = no SD) */
+/* a card just written to the microSD (the name of its folder and of its file) joins the list, in its place: the other
+ * cards keep what is known of them, but may have moved in cards[]. Returns it, or NULL */
+card_t *cards_add(const char *folder, const char *file);
+int is_game_id(const char *p);              /* SLUS-21065: the way a game's ID names its folder */
+int game_title(const char *id, char *out, size_t size);   /* the game of that ID in the sd2psx's list. 1 = it's there */
+/* where the sd2psx keeps a game's cards: the folder Game2Folder.ini gives that ID, or one named after the ID */
+void game_folder(const char *id, char *out, size_t size);
+int max_channels(const char *folder);       /* how many channels a folder of cards has (its .ini's MaxChannels, or 8) */
 /* fingerprint of each included card's index; progress(i, n) before each card */
 void cards_check(void (*progress)(int i, int n, const card_t *c));
 void cards_recheck(card_t *c);              /* one card again (after a save was copied in or out) */
@@ -242,6 +250,13 @@ typedef struct {
 } mcfs_psu_t;
 int mcfs_psu_info(const char *psu, mcfs_psu_t *info, buffer_t *iconsys, buffer_t *ico);
 int mcfs_import_psu(const char *psu, const char *to);
+/* A card that isn't a .mcd of the microSD: a file of a folder (a .mcd, a MemCard PRO2's .mc2, or a .ps2, which has
+ * the ECC bytes after each page), or a card held in memory (mem != NULL, len bytes; file is not used then). The
+ * functions that only read a card take MCFS_IMAGE as its path from then on; it is never written to */
+#define MCFS_IMAGE "image:"
+void mcfs_image(const char *file, const unsigned char *mem, size_t len);
+/* what a card's first 340 bytes (its superblock) say: its size as a .mcd and its pages'. 0 = not a PS2 memory card */
+long long mcfs_card_size(const unsigned char *sb, int *page);
 
 /* ------------------------------------------------------------ stream.c */
 /* reads the .mcd and hands out the .zip in CHUNK pieces (a multiple of 256 KB; the last one smaller) */
@@ -301,6 +316,23 @@ enum { RESTORE_DOWNLOAD, RESTORE_CHECK, RESTORE_WRITE, RESTORE_VERIFY };
  * progress(phase, done, total) != 0 cancels (only before RESTORE_WRITE).
  * 0 = restored; -2 = cancelled (the card didn't change); -1 = error (googleError says why) */
 int restore_card(card_t *c, const drive_file_t *f, int (*progress)(int phase, long long done, long long total));
+/* A card in a file of a folder of the microSD or of a USB drive: a .mcd, a MemCard PRO2's .mc2, a .ps2, or the .zip
+ * "Copy to a device" writes with one of those inside */
+typedef struct {
+    char path[700];
+    int zip, ecc;              /* it is a .zip; the card in the file has the ECC bytes of a .ps2 */
+    long long size;            /* of the card, as a .mcd */
+    unsigned char *image;      /* the card in memory, once it was read whole (a .zip's: when it is opened) */
+    char sha[65];              /* its SHA-256, then */
+} card_file_t;
+/* Checks that the file is a PS2 memory card and tells mcfs of it: MCFS_IMAGE is this card until it is closed. A .zip's
+ * card is inflated to memory (RESTORE_DOWNLOAD; progress != 0 cancels); when it doesn't fit there, image stays NULL
+ * and the card can't be looked into, only installed. 0 = ok, -2 = cancelled, -1 = error (googleError says why) */
+int card_file_open(card_file_t *f, const char *path, int (*progress)(int phase, long long done, long long total));
+void card_file_close(card_file_t *f);
+/* writes it as the .mcd of a card of the microSD (to->path; the caller makes sure the sd2psx isn't using it), read
+ * whole before and read back after. The same phases and answers as restore_card */
+int card_file_install(card_file_t *f, card_t *to, int (*progress)(int phase, long long done, long long total));
 
 /* ------------------------------------------------------------ helper.c */
 enum { HELPER_NO_FILE, HELPER_NOT_INSTALLED, HELPER_DIFFERENT, HELPER_SAME };

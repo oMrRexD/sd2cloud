@@ -25,6 +25,9 @@ Gerenciador de cartões de memória
   jogo, e cartões de boot.
 - Importa arquivos .psu para qualquer cartão e exporta qualquer item de um cartão como arquivo .psu, a partir
   do microSD ou de um pendrive USB e para eles (veja ARQUIVOS).
+- Abre arquivos de cartão de memória do microSD ou de um pendrive USB (.mcd, o .mc2 do MemCard PRO2, o .ps2
+  do PCSX2, os cartões virtuais do OPL (.bin) ou o .zip gravado pelo próprio SD2Cloud) e os instala como
+  cartões do sd2psx (veja ARQUIVOS).
 
 REQUISITOS
 - Dispositivo da família sd2psx com o firmware sd2psXtd (suporte a MMCE).
@@ -70,7 +73,7 @@ pastas com nome personalizado), Jogos (os cartões de Game ID, em pastas com o n
 X abre uma pasta, O volta) e Boot (o BootCard). Use os
 direcionais para a esquerda e para a direita, ou L1 e R1, para trocar de aba. Abas sem cartões não são
 exibidas. A última aba, Arquivos, não tem cartões: ela percorre o microSD e um pendrive USB em busca de
-arquivos .psu (veja ARQUIVOS).
+arquivos .psu e de arquivos de cartão de memória (veja ARQUIVOS).
 - X abre o cartão: os dados salvos, exibidos como no navegador do PS2, do mais novo ao mais antigo. Nessa
   tela, QUADRADO sincroniza o cartão; se ele já estiver sincronizado, o SD2Cloud avisa e permite sincronizar
   novamente.
@@ -79,7 +82,8 @@ arquivos .psu (veja ARQUIVOS).
   um pendrive USB. Escolha o dispositivo, vá até a pasta e pressione TRIÂNGULO; o SD2Cloud pergunta se o cartão
   vai como .mcd (sd2psx) ou .ps2 (PCSX2) e o grava dentro de um .zip, como os backups do Drive (um cartão é
   quase todo espaço vazio, e o .zip leva uma fração do tempo para gravar); depois lê o .zip de volta e
-  compara. A última, "Inserir no sd2psx", faz o sd2psx assumir esse cartão, como os botões dele fariam. O sd2psx só vai para um BootCard com o
+  compara. A última, "Inserir no sd2psx", faz o sd2psx assumir esse cartão, como os botões dele fariam. O
+  sd2psx só vai para um BootCard com o
   Autoboot ativado nas configurações dele, e para o cartão de um jogo só com o Game ID; uma pasta com nome
   personalizado só pode ser escolhida no próprio sd2psx. Na lista, um cartão pequeno marca o que está em uso
   no sd2psx.
@@ -96,22 +100,35 @@ sincronização, o botão O permite cancelar o envio; os cartões já enviados p
 ARQUIVOS
 A última aba da tela principal, Arquivos, lista os dispositivos cujas pastas podem ser percorridas: o microSD
 do sd2psx e um pendrive USB (FAT32 ou exFAT). Os drivers de USB só são carregados quando o pendrive é aberto.
-X abre o dispositivo, uma pasta ou um arquivo .psu; O volta uma pasta; os direcionais para a esquerda e para
-a direita avançam uma página por vez. Todas as pastas e arquivos são listados, mas só os arquivos .psu podem
-ser abertos.
+X abre o dispositivo, uma pasta, um arquivo .psu ou um arquivo de cartão de memória; O volta uma pasta; os
+direcionais para a esquerda e para a direita avançam uma página por vez. Todas as pastas e arquivos são
+listados, mas só esses arquivos podem ser abertos: os botões na parte de baixo da tela são os que fazem algo
+com o item selecionado.
 - Importar: X em um arquivo .psu abre a página dos dados salvos que ele contém (nome, ícone, data e tamanho).
   "Importar para cartão" pede então o cartão, escolhido nas mesmas abas da tela principal. O arquivo é
   verificado por inteiro antes de o cartão ser alterado, e o que é gravado é lido de volta e comparado. Um
   cartão que já tem dados com o mesmo nome, ou sem espaço suficiente, fica como está: elimine ou mova esse
-  item antes.
-- Exportar: na pasta onde o arquivo deve ficar, TRIÂNGULO pede o cartão e depois o item. O arquivo recebe o
-  nome da pasta do item (BASLUS-21065SAVE.psu, por exemplo), é lido de volta e comparado. Quando já existe
-  um arquivo com esse nome, o SD2Cloud pergunta: X substitui, QUADRADO mantém os dois (o novo recebe um
-  número: BASLUS-21065SAVE (2).psu).
-  O mesmo pode ser feito pela página de um item: Copiar também lista a aba Arquivos entre os destinos; escolha
-  o dispositivo, vá até a pasta e pressione TRIÂNGULO.
-Importar para o cartão que está em uso no sd2psx funciona como qualquer outra alteração nele: o SD2Cloud
-pergunta, troca o sd2psx para outro cartão e volta.
+  item antes. QUADRADO no arquivo, na lista, vai direto para a escolha do cartão, sem abrir a página.
+- Exportar: na página de um item (X nele, dentro de um cartão), Copiar também lista a aba Arquivos entre os
+  destinos; escolha o dispositivo, vá até a pasta onde o arquivo deve ficar e pressione TRIÂNGULO. O arquivo
+  recebe o nome da pasta do item (BASLUS-21065SAVE.psu, por exemplo), é lido de volta e comparado. Quando já
+  existe um arquivo com esse nome, o SD2Cloud pergunta: X substitui, QUADRADO mantém os dois (o novo recebe
+  um número: BASLUS-21065SAVE (2).psu).
+- Arquivos de cartão de memória: X em um .mcd, um .mc2 (MemCard PRO2), um .ps2 (PCSX2), um .bin (um cartão
+  virtual do OPL, VMC) ou um .zip gravado pelo "Copiar para dispositivo" abre o cartão que ele contém,
+  exibido como os cartões do microSD. O arquivo é apenas lido. X em um item abre a página dele, de onde ele
+  pode ser copiado para um cartão do microSD.
+- Instalar um arquivo de cartão: QUADRADO, no arquivo na lista ou na tela do cartão dele, pergunta para onde
+  o cartão vai, nas mesmas abas da tela principal. "Novo cartão", no topo de cada lista, cria um cartão novo:
+  o menor número livre em Cartões, o próximo canal do BootCard em Boot e, em Jogos, o próximo canal da pasta
+  do jogo, que é criada quando o jogo ainda não tem nenhuma. O jogo é identificado pelo nome do arquivo
+  (SLUS-21065-1.mcd, ou SLUS_210.65_0.bin, como o OPL os nomeia) ou pelos dados salvos de dentro; quando há
+  mais de um, o SD2Cloud pergunta qual. Dentro da pasta de um jogo, "Novo cartão" adiciona um canal a esse
+  jogo. X em um cartão existente o substitui pelo cartão do arquivo, depois da sua confirmação. O arquivo é
+  lido por inteiro antes de qualquer gravação, e o cartão é lido de volta depois. Um .zip cujo cartão não
+  cabe na memória do PS2 (mais de 16 MB) não pode ser aberto, mas pode ser instalado.
+Alterar o cartão que está em uso no sd2psx, importando para ele ou substituindo-o, funciona como qualquer
+outra alteração nele: o SD2Cloud pergunta, troca o sd2psx para outro cartão e volta.
 Nomes com letras acentuadas podem aparecer abreviados, ou não abrir (limitação do driver de FAT do SDK do
 PS2): prefira nomes simples para as pastas usadas aqui.
 

@@ -49,6 +49,9 @@ Gen2, PicoMemcard+/Zero), sem necessidade de um PC.
   cartão em uso, ele pergunta, troca o sd2psx para outro cartão e volta.
 - Copia um cartão inteiro, como um `.zip` com o `.mcd` ou o `.ps2` dentro, para uma pasta do microSD ou de um
   pendrive USB (nas opções do cartão).
+- Abre arquivos de cartão de memória na aba **Arquivos** (`.mcd`, o `.mc2` do MemCard PRO2, o `.ps2` do PCSX2, os
+  cartões virtuais do OPL (`.bin`) ou esse `.zip`), copia dados salvos de dentro deles e os instala no microSD: como um cartão novo (numerado, de um
+  jogo ou mais um canal do BootCard) ou no lugar de um existente.
 - Importa e exporta arquivos `.psu`: a aba **Arquivos** navega pelas pastas do microSD e de um pendrive USB (FAT32
   ou exFAT), instala um `.psu` em qualquer cartão e grava qualquer item de um cartão como `.psu`. O que é gravado
   é lido de volta e comparado.
@@ -98,7 +101,7 @@ O [LEIA-ME.txt](package/LEIA-ME.txt) incluído na release explica cada tela em d
 | Tela principal | Cima/Baixo: cartão · Esquerda/Direita ou L1/R1: aba · X: abrir o cartão · TRIÂNGULO: opções do cartão (sincronizar agora, restaurar backup, copiar para dispositivo, inserir no sd2psx) · START: configurações · O: sair |
 | Dentro de um cartão | X: abrir um item · QUADRADO: sincronizar este cartão · O: voltar |
 | Página de um item | Copiar · Mover · Eliminar · Enviar ao Drive |
-| Aba Arquivos | X: abrir o dispositivo, uma pasta ou um arquivo `.psu` (e então **Importar para cartão**) · TRIÂNGULO: exportar um item de um cartão para a pasta exibida (também pelo **Copiar** da página de um item, cujos destinos incluem esta aba) · Esquerda/Direita: uma página acima ou abaixo · O: voltar |
+| Aba Arquivos | X: abrir o dispositivo, uma pasta, um arquivo `.psu` ou um arquivo de cartão de memória · QUADRADO: instalar o `.psu` selecionado em um cartão, ou o arquivo de cartão selecionado no microSD · Esquerda/Direita: uma página acima ou abaixo · O: voltar. Para exportar um item, use o **Copiar** da página dele: os destinos incluem esta aba, e TRIÂNGULO grava o `.psu` na pasta exibida |
 | Durante um envio | O: cancelar |
 
 ## Sincronização automática após o jogo (IGR)

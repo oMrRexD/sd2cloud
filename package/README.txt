@@ -23,6 +23,9 @@ Memory card manager
   boot cards.
 - Imports .psu files into any card and exports any item of a card as a .psu file, from and to the microSD or
   a USB drive (see FILES).
+- Opens memory card files from the microSD or a USB drive (.mcd, a MemCard PRO2's .mc2, PCSX2's .ps2, OPL's
+  virtual memory cards (.bin), or the .zip SD2Cloud itself writes) and installs them as cards of the sd2psx
+  (see FILES).
 
 REQUIREMENTS
 - An sd2psx-family device with the sd2psXtd firmware (MMCE support).
@@ -66,7 +69,7 @@ The cards are grouped into tabs shown above the list: Cards (the numbered cards,
 with custom names), Games (Game ID cards, in folders named after each game: X opens a
 folder, O goes back) and Boot (the BootCard). Press Left and Right, or L1
 and R1, to switch tabs. Tabs without cards are not shown. The last tab, Files, has no cards: it browses the
-microSD and a USB drive for .psu files (see FILES).
+microSD and a USB drive for .psu files and memory card files (see FILES).
 - X opens the card: its saved data, displayed as in the PS2 browser, the newest first. On that screen, SQUARE
   syncs the card; if it is already synced, SD2Cloud says so and lets you sync it again.
 - TRIANGLE opens the selected card's options: "Sync now", "Restore a backup" (see RESTORING) and "Copy to a
@@ -74,7 +77,8 @@ microSD and a USB drive for .psu files (see FILES).
   the folder and press TRIANGLE; SD2Cloud asks whether the card goes as a .mcd (sd2psx) or a .ps2 (PCSX2) and
   writes it inside a .zip, as the backups on Drive are (a card is mostly empty space, and its .zip takes a
   fraction of the time to write); then it reads the .zip back and compares it. The last one, "Insert into
-  sd2psx", makes the sd2psx take that card, as its own buttons would. The sd2psx takes a BootCard only with Autoboot turned on in its settings, and a game's card
+  sd2psx", makes the sd2psx take that card, as its own buttons would. The sd2psx takes a BootCard only with
+  Autoboot turned on in its settings, and a game's card
   only with Game ID; a folder with a name of its own can only be picked on the sd2psx itself. On the list, a
   small card marks the one the sd2psx is using.
 - START opens the settings (see SETTINGS).
@@ -90,20 +94,34 @@ button cancels the upload; cards already uploaded remain on Drive.
 FILES
 The last tab of the main screen, Files, lists the devices whose folders can be browsed: the sd2psx microSD
 and a USB drive (FAT32 or exFAT). The USB drivers are loaded only when the USB drive is opened. X opens the
-device, a folder or a .psu file; O goes back one folder; Left and Right move a page at a time. Every folder
-and file is listed, but only .psu files can be opened.
+device, a folder, a .psu file or a memory card file; O goes back one folder; Left and Right move a page at a
+time. Every folder and file is listed, but only those files can be opened: the buttons at the bottom of the
+screen are the ones that do something with the selected entry.
 - Importing: X on a .psu file opens the page of the saved data it holds (name, icon, date and size). "Import
   to card" then asks for the card, chosen from the same tabs as the main screen. The file is checked whole
   before the card is touched, and what is written is read back and compared. A card that already has data
   with the same name, or without enough space, is left as it is: delete or move that item first.
-- Exporting: in the folder where the file should go, TRIANGLE asks for the card and then for the item. The
-  file gets the item's folder name (BASLUS-21065SAVE.psu, for example), is read back and compared. When a
-  file with that name is already there, SD2Cloud asks: X replaces it, SQUARE keeps both (the new one gets a
-  number: BASLUS-21065SAVE (2).psu).
-  The same can be done from an item's page: Copy also lists the Files tab among the destinations; pick the
-  device, go to the folder and press TRIANGLE.
-Importing into the card the sd2psx is using works as any other change to it: SD2Cloud asks, switches the
-sd2psx to another card and back.
+  SQUARE on the file, in the list, goes straight to the card, without opening the page.
+- Exporting: on an item's page (X on it, in a card), Copy also lists the Files tab among the destinations;
+  pick the device, go to the folder where the file should go and press TRIANGLE. The file gets the item's
+  folder name (BASLUS-21065SAVE.psu, for example), is read back and compared. When a file with that name is
+  already there, SD2Cloud asks: X replaces it, SQUARE keeps both (the new one gets a number:
+  BASLUS-21065SAVE (2).psu).
+- Memory card files: X on a .mcd, a .mc2 (MemCard PRO2), a .ps2 (PCSX2), a .bin (one of OPL's virtual memory
+  cards, VMC) or a .zip written by "Copy to a device" opens the card it holds, shown as the cards of the
+  microSD are. The file is only read. X on an item opens its page, from where it can be copied to a card of
+  the microSD.
+- Installing a memory card file: SQUARE, on the file in the list or on the screen of its card, asks where the
+  card goes, in the same tabs as the main screen. "New card", at the top of each list, makes a new card: the
+  lowest free number in Cards, the next channel of the BootCard in Boot and, in Games, the next channel of
+  the game's folder, which is created when the game has none. The game is told by the file's name
+  (SLUS-21065-1.mcd, or SLUS_210.65_0.bin as OPL names them) or by the saved data inside; when there is more
+  than one, SD2Cloud asks which. Inside a game's folder, "New card" adds a channel to that game. X on an
+  existing card replaces it with the file's card, after you confirm. The file is read whole before anything
+  is written, and the card is read back afterwards. A .zip whose card doesn't fit in the PS2's memory (more
+  than 16 MB) can't be opened, but can be installed.
+Changing the card the sd2psx is using, by importing into it or by replacing it, works as any other change
+to it: SD2Cloud asks, switches the sd2psx to another card and back.
 Names with accented letters may be shown abbreviated, or not open at all (a limit of the FAT driver of the
 PS2 SDK): prefer plain names for the folders you use here.
 

@@ -46,6 +46,9 @@ PicoMemcard+/Zero). No PC is required.
   card in use, it asks, switches the sd2psx to another card and switches back.
 - Copies a whole card, as a `.zip` with the `.mcd` or the `.ps2` inside, to a folder of the microSD or of a USB
   drive (in the card's options).
+- Opens memory card files in the **Files** tab (`.mcd`, a MemCard PRO2's `.mc2`, PCSX2's `.ps2`, OPL's virtual
+  memory cards (`.bin`), or that `.zip`), copies saved data out of them and installs them on the microSD: as a new card (numbered, of a game, or one more
+  channel of the BootCard) or in place of an existing one.
 - Imports and exports `.psu` files: the **Files** tab browses the folders of the microSD and of a USB drive (FAT32
   or exFAT), installs a `.psu` into any card and saves any item of a card as a `.psu`. What is written is read back
   and compared.
@@ -95,7 +98,7 @@ The [README.txt](package/README.txt) included in the release explains every scre
 | Main screen | Up/Down: card · Left/Right or L1/R1: tab · X: open the card · TRIANGLE: card options (sync now, restore a backup, copy to a device, insert into the sd2psx) · START: settings · O: exit |
 | Inside a card | X: open a save · SQUARE: sync this card · O: back |
 | A save's page | Copy · Move · Delete · Upload to Drive |
-| Files tab | X: open the device, a folder or a `.psu` file (then **Import to card**) · TRIANGLE: export a save of a card to the folder shown (also reached from **Copy** on a save's page, whose destinations include this tab) · Left/Right: a page up or down · O: back |
+| Files tab | X: open the device, a folder, a `.psu` file or a memory card file · SQUARE: install the selected `.psu` in a card, or the selected memory card file on the microSD · Left/Right: a page up or down · O: back. To export a save, use **Copy** on its page: the destinations include this tab, and TRIANGLE writes the `.psu` into the folder shown |
 | During an upload | O: cancel |
 
 ## Automatic sync after a game (IGR)

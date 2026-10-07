@@ -40,12 +40,55 @@ typedef struct {
     int next;
     long long bytesRead;
     unsigned int allocEnd, rootdir;   /* end of the allocatable area; the root folder's first cluster */
+    unsigned int page, spare;         /* a page's size; the bytes of ECC after each page in the file (a .ps2: 16) */
+    const unsigned char *mem;         /* the card is in memory, not in a file (fd = -1) */
+    size_t memLen;
 } mc_t;
 
 static mc_t mc;   /* the card being read or changed: one at a time (the sd2psx can't take more anyway) */
 
+/* done with it (a card in memory has no file to close) */
+static void mc_close(void)
+{
+    if (mc.fd >= 0)
+        close(mc.fd);
+    mc.fd = -1;
+}
+
+/* the card MCFS_IMAGE stands for (mcfs_image) */
+static char imageFile[700];
+static const unsigned char *imageMem;
+static size_t imageLen;
+
+void mcfs_image(const char *file, const unsigned char *mem, size_t len)
+{
+    snprintf(imageFile, sizeof(imageFile), "%s", file ? file : "");
+    imageMem = mem;
+    imageLen = mem ? len : 0;
+}
+
 static unsigned int le32(const unsigned char *p) { return p[0] | (p[1] << 8) | (p[2] << 16) | ((unsigned int)p[3] << 24); }
 static unsigned int le16(const unsigned char *p) { return p[0] | (p[1] << 8); }
+
+/* the bytes of "physical" cluster n: from memory, or from the file, where a .ps2 has its ECC after each page */
+static int read_cluster(mc_t *m, unsigned int n, unsigned char *out)
+{
+    unsigned char raw[MAX_CLUSTER + MAX_CLUSTER / 32];
+    unsigned int pages = m->csz / m->page, stride = m->page + m->spare, p;
+    if (m->mem) {
+        if ((unsigned long long)(n + 1) * m->csz > m->memLen)
+            return -1;
+        memcpy(out, m->mem + (size_t)n * m->csz, m->csz);
+        return 0;
+    }
+    if (!m->spare)
+        return lseek(m->fd, (long)n * m->csz, SEEK_SET) < 0 || read(m->fd, out, m->csz) != (int)m->csz ? -1 : 0;
+    if (lseek(m->fd, (long)n * pages * stride, SEEK_SET) < 0 || read(m->fd, raw, pages * stride) != (int)(pages * stride))
+        return -1;
+    for (p = 0; p < pages; p++)
+        memcpy(out + p * m->page, raw + p * stride, m->page);
+    return 0;
+}
 
 /* "physical" cluster n (counting from the start of the card). NULL = read error */
 static const unsigned char *cluster(mc_t *m, unsigned int n)
@@ -56,7 +99,7 @@ static const unsigned char *cluster(mc_t *m, unsigned int n)
             return m->cache[i].d;
     i = m->next;
     m->next = (m->next + 1) % CACHE;
-    if (lseek(m->fd, (long)n * m->csz, SEEK_SET) < 0 || read(m->fd, m->cache[i].d, m->csz) != (int)m->csz) {
+    if (read_cluster(m, n, m->cache[i].d) != 0) {
         m->cache[i].valid = 0;
         return NULL;
     }
@@ -156,36 +199,71 @@ static int on_root_entry(mc_t *m, const unsigned char *e, void *u)
     return 0;
 }
 
-/* opens the card and reads the superblock. Returns the root's first cluster, or -1 (the file is closed then) */
+/* opens the card and reads the superblock. Returns the root's first cluster, or -1 (the file is closed then).
+ * MCFS_IMAGE is the card mcfs_image told of, which is only read: a file anywhere, with or without the ECC bytes a
+ * .ps2 has (told by its size), or a card in memory */
 static int mc_open_mode(mc_t *m, const char *path, int flags)
 {
     unsigned char sb[340];
     unsigned int i;
+    int image = !strcmp(path, MCFS_IMAGE);
     memset(m, 0, sizeof(*m));
-    m->fd = open(path, flags);
-    if (m->fd < 0)
+    m->fd = -1;
+    if (image && flags != O_RDONLY)
         return -1;
-    if (read(m->fd, sb, sizeof(sb)) != (int)sizeof(sb) || memcmp(sb, MAGIC, sizeof(MAGIC) - 1) != 0)
+    if (image && imageMem) {
+        if (imageLen < sizeof(sb))
+            return -1;
+        memcpy(sb, imageMem, sizeof(sb));
+        m->mem = imageMem;
+        m->memLen = imageLen;
+    } else {
+        m->fd = open(image ? imageFile : path, flags);
+        if (m->fd < 0)
+            return -1;
+        if (read(m->fd, sb, sizeof(sb)) != (int)sizeof(sb))
+            goto bad;
+    }
+    if (memcmp(sb, MAGIC, sizeof(MAGIC) - 1) != 0)
         goto bad;
-    m->csz = le16(sb + 40) * le16(sb + 42);   /* page size * pages per cluster */
+    m->page = le16(sb + 40);
+    m->csz = m->page * le16(sb + 42);   /* page size * pages per cluster */
     m->clusters = le32(sb + 48);
     m->alloc = le32(sb + 52);
     m->allocEnd = le32(sb + 56);
     m->rootdir = le32(sb + 60);
     for (i = 0; i < 32; i++)
         m->ifc[i] = le32(sb + 80 + i * 4);
-    if (m->csz < 512 || m->csz > MAX_CLUSTER || m->csz % 512)
+    if (m->page < 512 || m->csz < 512 || m->csz > MAX_CLUSTER || m->csz % 512)
         goto bad;
     if (m->allocEnd > m->clusters)   /* never past the card: the loops over the FAT stop there */
         m->allocEnd = m->clusters;
+    if (image && m->fd >= 0) {
+        long long size = lseek(m->fd, 0, SEEK_END), pages = (long long)m->clusters * le16(sb + 42);
+        if (size == pages * (m->page + m->page / 32))
+            m->spare = m->page / 32;
+        else if (size != pages * m->page)
+            goto bad;   /* not the size the card says it has, either way */
+    }
     return (int)le32(sb + 60);
 bad:
-    close(m->fd);
+    if (m->fd >= 0)
+        close(m->fd);
     m->fd = -1;
     return -1;
 }
 
 static int mc_open(mc_t *m, const char *path) { return mc_open_mode(m, path, O_RDONLY); }
+
+long long mcfs_card_size(const unsigned char *sb, int *page)
+{
+    unsigned int p = le16(sb + 40), csz = p * le16(sb + 42);
+    if (memcmp(sb, MAGIC, sizeof(MAGIC) - 1) != 0 || p < 512 || csz < 512 || csz > MAX_CLUSTER || csz % 512 || !le32(sb + 48))
+        return 0;
+    if (page)
+        *page = p;
+    return (long long)le32(sb + 48) * csz;
+}
 
 /* walks the root folder (its "." entry says how many entries it has) */
 static int walk_root(mc_t *m, unsigned int rootdir, int (*cb)(mc_t *m, const unsigned char *e, void *u), void *u)
@@ -244,7 +322,7 @@ int mcfs_root_signature(const char *path, char hex[65])
         mcfs_sign_records(rec, x.n, hex);
         r = 0;
     }
-    close(mc.fd);
+    mc_close();
     return r;
 }
 
@@ -311,7 +389,7 @@ int mcfs_list_saves(const char *path, mcfs_save_t *list, int max, long long *fre
         if (freeBytes)
             *freeBytes = (long long)free_clusters(&mc) * mc.csz;
     }
-    close(mc.fd);
+    mc_close();
     return r;
 }
 
@@ -382,7 +460,7 @@ int mcfs_save_icon(const char *path, const mcfs_save_t *s, buffer_t *iconsys, bu
     if (mc_open(&mc, path) < 0)
         return -1;
     r = read_icon(&mc, s, iconsys, ico);
-    close(mc.fd);
+    mc_close();
     if (r != 0) {
         buf_free(iconsys);
         buf_free(ico);
@@ -406,7 +484,7 @@ int mcfs_newest_save_icon(const char *path, char folder[33], buffer_t *iconsys, 
                 r = 0;
             }
     }
-    close(mc.fd);
+    mc_close();
     if (r != 0) {
         buf_free(iconsys);
         buf_free(ico);
@@ -434,7 +512,7 @@ int mcfs_fingerprint(const char *path, char hex[65], int *saves)
         r = 0;
     }
     wc_Sha256Free(&sha);
-    close(mc.fd);
+    mc_close();
     return r;
 }
 
@@ -658,7 +736,7 @@ int mcfs_save_info(const char *path, const char *folder, long long *bytes, int *
     if (mc_open(&mc, path) < 0)
         return MCFS_ERR_IO;
     r = read_entries(&mc, folder, &srcSave);   /* the sizes are in the entries: the files themselves aren't read */
-    close(mc.fd);
+    mc_close();
     for (i = 2; r == MCFS_OK && i < srcSave.n; i++)
         *bytes += le32(srcSave.ent[i] + 4), (*files)++;
     return r;
@@ -737,7 +815,7 @@ static int write_save(const char *to)
     }
     r = MCFS_OK;
 out:
-    close(mc.fd);
+    mc_close();
     if (r == MCFS_OK) {   /* read the copy back and compare it with the original */
         if (mc_open(&mc, to) < 0 || read_save(&mc, folder, &checkSave) != MCFS_OK || checkSave.n != srcSave.n)
             r = MCFS_ERR_CHECK;
@@ -746,7 +824,7 @@ out:
                 (srcSave.data[i].len && memcmp(checkSave.data[i].data, srcSave.data[i].data, srcSave.data[i].len)))
                 r = MCFS_ERR_CHECK;
         if (mc.fd >= 0)
-            close(mc.fd);
+            mc_close();
         save_free(&checkSave);
     }
     return r;
@@ -759,7 +837,7 @@ int mcfs_copy_save(const char *from, const char *folder, const char *to)
     if (mc_open(&mc, from) < 0)
         return MCFS_ERR_IO;
     r = read_save(&mc, folder, &srcSave);
-    close(mc.fd);
+    mc_close();
     /* a folder inside the save (the PS2 never makes one) would be copied as an entry pointing nowhere */
     for (i = 2; r == MCFS_OK && i < srcSave.n; i++)
         if (le16(srcSave.ent[i]) & DF_DIRECTORY)
@@ -798,7 +876,7 @@ int mcfs_delete_save(const char *path, const char *folder)
     free_chain(&mc, le32(f.ent + 16));
     r = MCFS_OK;
 out:
-    close(mc.fd);
+    mc_close();
     return r;
 }
 
@@ -813,7 +891,7 @@ int mcfs_export_psu(const char *path, const char *folder, buffer_t *out)
     if (mc_open(&mc, path) < 0)
         return MCFS_ERR_IO;
     r = read_save(&mc, folder, &srcSave);
-    close(mc.fd);
+    mc_close();
     for (i = -1; r == MCFS_OK && i < srcSave.n; i++) {
         unsigned int len;
         memcpy(e, i < 0 ? srcSave.root : srcSave.ent[i], ENT);
