@@ -416,6 +416,32 @@ static int on_find(mc_t *m, const unsigned char *e, void *u)
     return 0;
 }
 
+/* How a save's way into a card is going (mcfs_copy_save, mcfs_import_psu): the bytes of each phase, told every few KB */
+static mcfs_step_cb onStep;
+static long long stepDone, stepTotal, stepTold;
+static int stepPhase, stepStop;
+
+static void step_phase(int phase, long long total)
+{
+    stepPhase = phase;
+    stepDone = stepTold = 0;
+    stepTotal = total;
+}
+
+/* n more bytes read, written or read back. 1 = it was asked to give up (which is only heard before the reading back) */
+static int step(size_t n)
+{
+    if (!onStep)
+        return 0;
+    stepDone += n;
+    if (!stepStop && (stepDone - stepTold >= 8192 || stepDone >= stepTotal)) {
+        stepTold = stepDone;
+        if (onStep(stepPhase, stepDone, stepTotal) && stepPhase != MCFS_STEP_CHECK)
+            stepStop = 1;
+    }
+    return stepStop;
+}
+
 /* the length bytes of a file, following its FAT chain from cluster c */
 static int read_chain(mc_t *m, unsigned int c, unsigned int length, buffer_t *out)
 {
@@ -427,7 +453,7 @@ static int read_chain(mc_t *m, unsigned int c, unsigned int length, buffer_t *ou
     for (left = length; left;) {
         const unsigned char *d = cluster(m, c + m->alloc);
         unsigned int k = left < m->csz ? left : m->csz, e;
-        if (!d || buf_append(out, d, k))
+        if (!d || buf_append(out, d, k) || step(k))
             return -1;
         if (!(left -= k))
             break;
@@ -601,6 +627,8 @@ static int write_chain(mc_t *m, unsigned int *cursor, const unsigned char *d, si
         else if (set_fat(m, prev, FAT_ALLOC | c) != 0)
             return -1;
         prev = c;
+        if (step(k))
+            return -1;
     }
     return 0;
 }
@@ -732,6 +760,12 @@ static int read_entries(mc_t *m, const char *folder, save_raw_t *s)
 static int read_save(mc_t *m, const char *folder, save_raw_t *s)
 {
     int i, r = read_entries(m, folder, s);
+    if (r == MCFS_OK && onStep) {   /* how much there is to read, in the phase the caller is in */
+        long long bytes = 0;
+        for (i = 2; i < s->n; i++)
+            bytes += le32(s->ent[i] + 4);
+        step_phase(stepPhase, bytes);
+    }
     for (i = 2; r == MCFS_OK && i < s->n; i++)
         if (!(le16(s->ent[i]) & DF_DIRECTORY) && le32(s->ent[i] + 4) &&
             read_chain(m, le32(s->ent[i] + 16), le32(s->ent[i] + 4), &s->data[i]) != 0)
@@ -760,8 +794,9 @@ static int write_save(const char *to)
     static unsigned char dir[MAX_ENTRIES][ENT];
     char folder[33];
     root_find_t f;
-    unsigned int cursor = 0, need, perCl, slot, first, dirFirst = FAT_END, i;
-    int r = MCFS_ERR_IO;
+    unsigned int cursor = 0, need, perCl, slot, first = FAT_END, dirFirst = FAT_END, i, k, written = 2;
+    long long bytes = 0;
+    int r = MCFS_ERR_IO, known = 0;
     snprintf(folder, sizeof(folder), "%.32s", (const char *)srcSave.root + 64);
     if (mc_open_mode(&mc, to, O_RDWR) < 0)
         return MCFS_ERR_IO;
@@ -774,8 +809,10 @@ static int write_save(const char *to)
     /* room: the folder's entries, each file, and one more cluster when the root has to grow */
     perCl = mc.csz / ENT;
     need = (srcSave.n + perCl - 1) / perCl;
-    for (i = 2; i < (unsigned int)srcSave.n; i++)
+    for (i = 2; i < (unsigned int)srcSave.n; i++) {
         need += (le32(srcSave.ent[i] + 4) + mc.csz - 1) / mc.csz;
+        bytes += le32(srcSave.ent[i] + 4);
+    }
     slot = f.freeSlot != FAT_END ? f.freeSlot : f.count;
     if (slot == f.count && f.count % perCl == 0)
         need++;
@@ -784,6 +821,7 @@ static int write_save(const char *to)
         goto out;
     }
     /* the files */
+    step_phase(MCFS_STEP_WRITE, bytes);
     memcpy(dir, srcSave.ent, ENT * srcSave.n);
     for (i = 2; i < (unsigned int)srcSave.n; i++) {
         if (le16(dir[i]) & DF_DIRECTORY)
@@ -792,6 +830,8 @@ static int write_save(const char *to)
             goto out;
         put32(dir[i] + 16, first);
         put32(dir[i] + 20, 0);
+        first = FAT_END;
+        written = i + 1;
     }
     /* the folder's own entries: "." knows where the folder is in the root */
     put32(dir[0] + 4, 0);
@@ -815,6 +855,7 @@ static int write_save(const char *to)
     put32(dir[0] + 20, 0);
     if (put_entry(&mc, mc.rootdir, slot, dir[0]) != 0)
         goto out;
+    known = 1;
     if (slot == f.count) {   /* the root has one more entry: its "." says how many */
         const unsigned char *rc = cluster(&mc, mc.rootdir + mc.alloc);
         static unsigned char dot[ENT];
@@ -827,8 +868,20 @@ static int write_save(const char *to)
     }
     r = MCFS_OK;
 out:
+    if (r != MCFS_OK && !known) {
+        /* given up, or it failed, before the card knew the save: what was written of it gives its room back (the
+         * files that were written whole, the one under way, the folder's entries) */
+        for (k = 2; k < written; k++)
+            if (!(le16(dir[k]) & DF_DIRECTORY))
+                free_chain(&mc, le32(dir[k] + 16));
+        free_chain(&mc, first);
+        free_chain(&mc, dirFirst);
+        if (stepStop)
+            r = MCFS_ERR_CANCELLED;
+    }
     mc_close();
     if (r == MCFS_OK) {   /* read the copy back and compare it with the original */
+        stepPhase = MCFS_STEP_CHECK;
         if (mc_open(&mc, to) < 0 || read_save(&mc, folder, &checkSave) != MCFS_OK || checkSave.n != srcSave.n)
             r = MCFS_ERR_CHECK;
         for (i = 2; r == MCFS_OK && i < (unsigned int)srcSave.n; i++)
@@ -842,14 +895,19 @@ out:
     return r;
 }
 
-int mcfs_copy_save(const char *from, const char *folder, const char *to)
+int mcfs_copy_save(const char *from, const char *folder, const char *to, mcfs_step_cb progress)
 {
     int r, i;
     /* the save, from its card */
     if (mc_open(&mc, from) < 0)
         return MCFS_ERR_IO;
+    onStep = progress;
+    stepStop = 0;
+    step_phase(MCFS_STEP_READ, 0);
     r = read_save(&mc, folder, &srcSave);
     mc_close();
+    if (stepStop)
+        r = MCFS_ERR_CANCELLED;
     /* a folder inside the save (the PS2 never makes one) would be copied as an entry pointing nowhere */
     for (i = 2; r == MCFS_OK && i < srcSave.n; i++)
         if (le16(srcSave.ent[i]) & DF_DIRECTORY)
@@ -857,6 +915,7 @@ int mcfs_copy_save(const char *from, const char *folder, const char *to)
     if (r == MCFS_OK)
         r = write_save(to);
     save_free(&srcSave);
+    onStep = NULL;
     return r;
 }
 
@@ -954,6 +1013,7 @@ static int read_psu(const char *path, save_raw_t *s)
         return MCFS_ERR_IO;
     size = lseek(fd, 0, SEEK_END);
     lseek(fd, 0, SEEK_SET);
+    step_phase(MCFS_STEP_READ, size);
     if (size < 3 * ENT || read(fd, s->root, ENT) != ENT)
         goto out;
     n = (int)le32(s->root + 4);
@@ -996,6 +1056,10 @@ static int read_psu(const char *path, save_raw_t *s)
                 if (got <= 0)
                     goto out;
                 done += got;
+                if (step(got)) {
+                    r = MCFS_ERR_CANCELLED;
+                    goto out;
+                }
             }
             s->data[i].len = len;
         }
@@ -1047,11 +1111,15 @@ int mcfs_psu_info(const char *psu, mcfs_psu_t *info, buffer_t *iconsys, buffer_t
     return r;
 }
 
-int mcfs_import_psu(const char *psu, const char *to)
+int mcfs_import_psu(const char *psu, const char *to, mcfs_step_cb progress)
 {
-    int r = read_psu(psu, &srcSave);
+    int r;
+    onStep = progress;
+    stepStop = 0;
+    r = read_psu(psu, &srcSave);
     if (r == MCFS_OK)
         r = write_save(to);
     save_free(&srcSave);
+    onStep = NULL;
     return r;
 }

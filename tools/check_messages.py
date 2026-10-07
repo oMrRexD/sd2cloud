@@ -88,7 +88,8 @@ PLACE = {
     "T_ST_ERROR": ("text", 200, 1), "T_ST_SKIPPED": ("text", 200, 1), "T_CARD_LAST": ("small", 244, 1),
     "T_HIST_SAME": ("small", 136, 1), "T_HIST_TITLE": ("small", 244, 1),
     # the backup screen (the column on the right of the icon)
-    "T_BACKING_UP": ("text", 296, 1), "T_UPLOADING": ("small", 120, 1),
+    "T_BACKING_UP": ("text", 296, 1), "T_UPLOADING": ("small", 120, 1), "T_CANCELLING": ("text", 296, 1),
+    "T_WORK_CANCEL_TITLE": ("text", DIALOG, 1),
     # the saves screen
     "T_FREE_KB": ("text", 300, 1), "T_CARD_EMPTY": ("browser", 540, 1),
     # inside the dialogs

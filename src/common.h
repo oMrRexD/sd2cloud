@@ -261,9 +261,14 @@ int mcfs_save_icon(const char *path, const mcfs_save_t *save, buffer_t *iconsys,
  * compared), delete a save, export a save as a .psu, import one from a .psu file (also read back and compared).
  * 0 = ok, else MCFS_ERR_* (BAD = the file isn't a .psu this can use) */
 enum { MCFS_OK = 0, MCFS_ERR_IO = -1, MCFS_ERR_EXISTS = -2, MCFS_ERR_FULL = -3, MCFS_ERR_NOT_FOUND = -4, MCFS_ERR_CHECK = -5,
-       MCFS_ERR_BAD = -6 };
+       MCFS_ERR_BAD = -6, MCFS_ERR_CANCELLED = -7 };
+/* How a save's way into a card is going: it is read, written, and read back, and each of those tells its bytes as they
+ * go by. Answering != 0 while it is read or written gives up: what was written of it gives its room back and the card
+ * is left without the save (MCFS_ERR_CANCELLED). Once it is being read back there is nothing to give up */
+enum { MCFS_STEP_READ, MCFS_STEP_WRITE, MCFS_STEP_CHECK };
+typedef int (*mcfs_step_cb)(int phase, long long done, long long total);
 int mcfs_save_info(const char *path, const char *folder, long long *bytes, int *files);
-int mcfs_copy_save(const char *from, const char *folder, const char *to);
+int mcfs_copy_save(const char *from, const char *folder, const char *to, mcfs_step_cb progress);
 int mcfs_delete_save(const char *path, const char *folder);
 int mcfs_export_psu(const char *path, const char *folder, buffer_t *out);
 /* what a .psu file holds: the save's folder, when it was last saved, its files' sizes added up, and its icon (the
@@ -275,7 +280,7 @@ typedef struct {
     int files;
 } mcfs_psu_t;
 int mcfs_psu_info(const char *psu, mcfs_psu_t *info, buffer_t *iconsys, buffer_t *ico);
-int mcfs_import_psu(const char *psu, const char *to);
+int mcfs_import_psu(const char *psu, const char *to, mcfs_step_cb progress);
 /* A card that isn't a .mcd of the microSD: a file of a folder (a .mcd, a MemCard PRO2's .mc2, or a .ps2, which has
  * the ECC bytes after each page), or a card held in memory (mem != NULL, len bytes; file is not used then). The
  * functions that only read a card take MCFS_IMAGE as its path from then on; it is never written to */

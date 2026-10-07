@@ -578,6 +578,10 @@ static u64 iconStart;
 static icon_t *saveIcon;
 static char saveTitle[100];
 static volatile long long shownDone, shownTotal;
+/* a save on its way into a card (save_into): the same screen, saying that instead of the upload; workFixed = what
+ * is being done can't be given up any more, so the legend doesn't offer to */
+static const char *workText;
+static int workFixed;
 
 static void load_card_icon(const card_t *c)
 {
@@ -622,14 +626,14 @@ static void scene_upload(float t)
         y += ui_line_height(FONT_SMALL) + 4;
     }
     y += 18;
-    ui_text_fit(FONT_TEXT, x, y, w, COLOR_TEXT, T(T_BACKING_UP));
+    ui_text_fit(FONT_TEXT, x, y, w, COLOR_TEXT, workText ? workText : T(T_BACKING_UP));
     y += ui_line_height(FONT_TEXT) + 12;
     look_bar(x, y, w, total ? (int)(done * 1000 / total) : 0);
     if (totalN > 1) {
         snprintf(s, sizeof(s), T(T_UPLOADING), currentN, totalN);
         ui_text_right(FONT_SMALL, x + w, y + 12, COLOR_DIM, s);
     }
-    {
+    if (!workFixed) {
         legend_t l = {BUTTON_CIRCLE, T(T_CANCEL)};
         look_legend(&l, 1, 0);
     }
@@ -2646,6 +2650,77 @@ static int install_card(void)
     return r == 0;
 }
 
+/* -------- a save on its way into a card (imported from a .psu, copied or moved from another card or from a card
+ * file): the screen of an upload, with the save's icon turning (the blue cube when it has none), its name, the card
+ * it goes to and a bar for the whole of it: reading it 15%, writing it 65%, reading it back 20%. Circle gives up,
+ * while there is something to give up: the card is then left as it was */
+
+static void save_into(const card_t *to, const save_view_t *v, int text)
+{
+    char name[100];
+    save_name(v, name, sizeof(name));
+    ui_lock();
+    current = to;
+    saveIcon = v->icon ? v->icon : cubeIcon;
+    snprintf(saveTitle, sizeof(saveTitle), "%s", name);
+    workText = T(text);
+    workFixed = 0;
+    iconStart = now_ms();
+    currentN = totalN = 1;
+    ui_unlock();
+    cancelLatched = 0;
+    upload_screen(0, 1);
+}
+
+static int save_progress(int phase, long long done, long long total)
+{
+    static const int start[] = {0, 150, 800}, span[] = {150, 650, 200};
+#ifdef DEBUG_BUILD
+    if (phase == MCFS_STEP_WRITE && total && done * 2 >= total && debug_take('k'))
+        cancelLatched = 1;   /* (script: circle halfway through the writing) */
+#endif
+    if (phase != MCFS_STEP_CHECK) {
+        watch_cancel();
+        if (cancelLatched && confirm_cancel(T_WORK_CANCEL_TITLE, T_RESTORE_CANCEL_TEXT)) {
+            ui_lock();   /* what was written is undone before this returns, which takes a moment */
+            workText = T(T_CANCELLING);
+            workFixed = 1;
+            ui_unlock();
+            ui_scene(scene_upload);
+            return 1;
+        }
+    }
+    ui_lock();
+    workFixed = phase == MCFS_STEP_CHECK;
+    ui_unlock();
+    if (done > total)
+        done = total;
+    upload_screen(start[phase] + (total ? span[phase] * done / total : 0), 1000);
+#ifdef DEBUG_BUILD
+    if (phase == MCFS_STEP_WRITE && total && done * 2 >= total)
+        debug_capture_if('W');
+#endif
+    return 0;
+}
+
+/* nothing more to give up (a save that was moved is still to be deleted from where it was) */
+static void save_into_fixed(void)
+{
+    ui_lock();
+    workFixed = 1;
+    ui_unlock();
+}
+
+static void save_into_done(void)
+{
+    ui_scene(scene_frame);   /* off the screen before the icon is let go of */
+    ui_lock();
+    saveIcon = NULL;
+    workText = NULL;
+    workFixed = 0;
+    ui_unlock();
+}
+
 /* copy or move the save to another card. 1 = the card it was on changed (moved) */
 static int save_transfer(card_t *c, save_view_t *v, int move)
 {
@@ -2684,10 +2759,13 @@ static int save_transfer(card_t *c, save_view_t *v, int move)
         card_back();
         return 0;
     }
-    message(0, NULL, COLOR_TEXT, T(move ? T_WORKING_MOVE : T_WORKING_COPY));
-    r = mcfs_copy_save(c->path, v->s.folder, to->path);
-    if (r == MCFS_OK && move)
+    save_into(to, v, move ? T_WORKING_MOVE : T_WORKING_COPY);
+    r = mcfs_copy_save(c->path, v->s.folder, to->path, save_progress);
+    if (r == MCFS_OK && move) {
+        save_into_fixed();
         r = mcfs_delete_save(c->path, v->s.folder);
+    }
+    save_into_done();
     log_msg("%s %s from %s to %s: %d", move ? "move" : "copy", v->s.folder, c->id, to->id, r);
     if (r == MCFS_OK)
         transferDest = to;
@@ -2695,6 +2773,8 @@ static int save_transfer(card_t *c, save_view_t *v, int move)
     if (move)
         cards_recheck(c);
     card_back();
+    if (r == MCFS_ERR_CANCELLED)
+        return 0;   /* given up, and said so already: back to the save's page */
     op_result(r, move ? T_DONE_MOVE : T_DONE_COPY, to);
     return r == MCFS_OK && move;
 }
@@ -3401,12 +3481,14 @@ static void psu_import(void)
     snprintf(t, sizeof(t), T(T_CONFIRM_IMPORT), name, to->base);
     if (!confirm(t, NULL, T_IMPORT_YES) || card_free(to, NULL))
         return;
-    message(0, NULL, COLOR_TEXT, T(T_WORKING_IMPORT));
-    r = mcfs_import_psu(psu.path, to->path);
+    save_into(to, &psu.v, T_WORKING_IMPORT);
+    r = mcfs_import_psu(psu.path, to->path, save_progress);
+    save_into_done();
     log_msg("import %s into %s: %d", psu.path, to->id, r);
     cards_recheck(to);
     card_back();
-    op_result(r, T_DONE_IMPORT, to);
+    if (r != MCFS_ERR_CANCELLED)
+        op_result(r, T_DONE_IMPORT, to);
 }
 
 /* X on a .psu file: the page of the save it holds, from where it can be imported into a card. install = square on

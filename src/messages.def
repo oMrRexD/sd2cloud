@@ -271,6 +271,8 @@ X(T_INSTALL_CANCEL_TEXT, "Nothing has been written to the microSD.", "Nada foi g
 X(T_KEEP_BOTH, "Keep both", "Manter os dois")
 X(T_CONFIRM_IMPORT, "Import \"%s\" to %s?", "Deseja importar \"%s\" para %s?")
 X(T_WORKING_IMPORT, "Importing...", "Importando...")
+X(T_WORK_CANCEL_TITLE, "Cancel?", "Deseja cancelar?")
+X(T_CANCELLING, "Cancelling...", "Cancelando...")
 X(T_DONE_IMPORT, "Imported to %s.", "Importado para %s.")
 X(T_ERR_PSU, "This file is not a valid .psu save file.", "Este arquivo não é um .psu válido.")
 X(T_NO_CARDS_SD, "No memory cards were found on the microSD.", "Nenhum cartão de memória foi encontrado no microSD.")
