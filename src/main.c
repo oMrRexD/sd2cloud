@@ -66,6 +66,15 @@ static void format_size(long long bytes, char *out, size_t size)
         snprintf(out, size, "%lld.%lld MB", bytes / (1024 * 1024), (bytes % (1024 * 1024)) * 10 / (1024 * 1024));
 }
 
+/* the file a card's backup or copy holds: the device's own (the sd2psx's .mcd), or the card with its ECC bytes, which
+ * PCSX2 opens */
+static const char *format_name(int ps2)
+{
+    static char own[32];
+    snprintf(own, sizeof(own), "%s (%s)", dev->ext, dev->brief);
+    return ps2 ? ".ps2 (PCSX2)" : own;
+}
+
 /* a date for the screen: 02/10/2026 21:10 in Portuguese, 2026-10-02 21:10 in English */
 static void format_when(int year, int month, int day, int hour, int minute, char *out, size_t size)
 {
@@ -932,11 +941,14 @@ static void first_run(void)
 #define CARD_Y     100
 #define CARD_CX    (CARD_X + LOOK_CARD_W / 2)
 
+/* a numbered card's number: what comes after "Card" (or what the device calls them) in its folder's name */
+static int card_number(const card_t *c) { return atoi(c->folder + strlen(dev->numbered)); }
+
 static void card_label(const card_t *c, char *number, char *label)
 {
     number[0] = label[0] = 0;
-    if (c->type == TYPE_NORMAL && !strncmp(c->folder, "Card", 4))
-        snprintf(number, 8, "%s", c->folder + 4);
+    if (c->type == TYPE_NORMAL && !strncmp(c->folder, dev->numbered, strlen(dev->numbered)))
+        snprintf(number, 8, "%s", c->folder + strlen(dev->numbered));
     else
         snprintf(label, 48, "%s", c->folder);
 }
@@ -1117,7 +1129,8 @@ static void tabs_show(tabs_t *g, int tab)
     memset(g->count, 0, sizeof(g->count));
     g->n = 0;
     if (g->add) {   /* a group that has no card yet is offered too: one can be added to it */
-        g->count[TAB_CARDS] = g->count[TAB_GAMES] = g->count[TAB_BOOT] = 1;
+        g->count[TAB_CARDS] = g->count[TAB_GAMES] = 1;
+        g->count[TAB_BOOT] = dev->sd2psx;
         g->idx[g->n++] = -1;
     }
     for (i = 0; i < nCards; i++) {
@@ -1377,8 +1390,13 @@ static int card_in_use(const card_t *c, int active, int channel)
     char seen[65], file[65];
     if (active == -2)
         return 0;   /* not on an MMCE device (testing on PCSX2) */
+    if (!dev->sd2psx) {   /* a device that isn't asked which card it is on: only what the PS2 sees in the slot tells */
+        if (mc_root_signature(sdRoot[4] - '0', seen) != 0 || mcfs_root_signature(c->path, file) != 0)
+            return -1;
+        return strcmp(seen, file) == 0;
+    }
     if (active >= 1)
-        return c->type == TYPE_NORMAL && atoi(c->folder + 4) == active && c->channel == channel;
+        return c->type == TYPE_NORMAL && card_number(c) == active && c->channel == channel;
     if (active == 0 && (c->type == TYPE_NORMAL || c->channel != channel))
         return 0;
     if (mc_root_signature(sdRoot[4] - '0', seen) != 0 || mcfs_root_signature(c->path, file) != 0)
@@ -1399,14 +1417,26 @@ static int card_in_use(const card_t *c, int active, int channel)
 /* Which card that is (activeCard). A numbered card is found by its number. The BootCard, a game's card and a named folder all come as number 0: the
  * root folder the PS2 sees in the slot is compared with each candidate's, the boot cards first (the likeliest when
  * SD2Cloud was opened from OPL), since reading a card's root takes a moment */
+/* the card the device says it is on. Only the sd2psx is asked: what the numbers mean to another device isn't known,
+ * and there the slot tells (-1) */
+static int active_card(int *channel)
+{
+    return dev->sd2psx || strncmp(sdRoot, "mmce", 4) != 0 ? mmce_active_card(channel) : -1;
+}
+
 static void find_active(void)
 {
     static const int order[3] = {TYPE_BOOT, TYPE_GAMEID, TYPE_NAMED};
     char seen[65], file[65];
-    int channel = 0, active = mmce_active_card(&channel), i, pass, found = -1;
-    if (active >= 1) {
+    int channel = 0, active = active_card(&channel), i, pass, found = -1;
+    if (!dev->sd2psx) {   /* against each card's root folder as it was read when the cards were checked */
+        if (active == -1 && mc_root_signature(sdRoot[4] - '0', seen) == 0)
+            for (i = 0; i < nCards && found < 0; i++)
+                if (cards[i].rootSig[0] && !strcmp(seen, cards[i].rootSig))
+                    found = i;
+    } else if (active >= 1) {
         for (i = 0; i < nCards && found < 0; i++)
-            if (cards[i].type == TYPE_NORMAL && atoi(cards[i].folder + 4) == active && cards[i].channel == channel)
+            if (cards[i].type == TYPE_NORMAL && card_number(&cards[i]) == active && cards[i].channel == channel)
                 found = i;
     } else if (active == 0 && mc_root_signature(sdRoot[4] - '0', seen) == 0) {
         for (pass = 0; pass < 3 && found < 0; pass++)
@@ -1432,12 +1462,12 @@ static void find_active(void)
     ui_lock();
     activeCard = found;
     ui_unlock();
-    log_msg("sd2psx: the card in it is %s", found >= 0 ? cards[found].id : "none of the cards here, or unknown");
+    log_msg("%s: the card in it is %s", dev->name, found >= 0 ? cards[found].id : "none of the cards here, or unknown");
 }
 
 /* can the sd2psx be told to take this card? Not a folder with a name of its own: it has no way to be asked for one.
  * The BootCard and a game's card it only takes with Autoboot or Game ID on in its settings, which shows by trying */
-static int can_insert(const card_t *c) { return !strncmp(sdRoot, "mmce", 4) && c->type != TYPE_NAMED; }
+static int can_insert(const card_t *c) { return dev->sd2psx && !strncmp(sdRoot, "mmce", 4) && c->type != TYPE_NAMED; }
 
 /* from here on, a change of card that mcman notices in the slot is the one about to be asked for */
 static void slot_settle(void)
@@ -1465,7 +1495,7 @@ static int wait_for_card(const card_t *c, int ms)
             continue;
         channel = 0;
         active = mmce_active_card(&channel);
-        if (active < 0 || (c && (active != (c->type == TYPE_NORMAL ? atoi(c->folder + 4) : 0) || channel != c->channel)))
+        if (active < 0 || (c && (active != (c->type == TYPE_NORMAL ? card_number(c) : 0) || channel != c->channel)))
             continue;
         if (mc_root_signature(port, seen) != 0)
             continue;
@@ -1516,7 +1546,7 @@ static const card_t *first_channel(const card_t *c)
  * of the cards here, as the sd2psx creates a card it is asked for and doesn't find */
 static int insert_card(const card_t *c)
 {
-    int number = c->type == TYPE_NORMAL ? atoi(c->folder + 4) : 0, channel = 0, active, now = -1, r = -1;
+    int number = c->type == TYPE_NORMAL ? card_number(c) : 0, channel = 0, active, now = -1, r = -1;
     const card_t *first;
     if (!can_insert(c))
         return -1;
@@ -1587,8 +1617,8 @@ static int leave_card(const card_t *c, const card_t *other)
     }
     for (i = 0; i < nCards; i++)   /* the numbered cards, by number and channel */
         if (cards[i].type == TYPE_NORMAL && &cards[i] != c && &cards[i] != other) {
-            for (k = n++; k > 0 && (atoi(cards[order[k - 1]].folder + 4) > atoi(cards[i].folder + 4) ||
-                                    (atoi(cards[order[k - 1]].folder + 4) == atoi(cards[i].folder + 4) &&
+            for (k = n++; k > 0 && (card_number(&cards[order[k - 1]]) > card_number(&cards[i]) ||
+                                    (card_number(&cards[order[k - 1]]) == card_number(&cards[i]) &&
                                      cards[order[k - 1]].channel > cards[i].channel)); k--)
                 order[k] = order[k - 1];
             order[k] = i;
@@ -1605,7 +1635,7 @@ static int leave_card(const card_t *c, const card_t *other)
 static int card_free(const card_t *c, const card_t *other)
 {
     char t[400];
-    int channel = 0, active = mmce_active_card(&channel), r = card_in_use(c, active, channel);
+    int channel = 0, active = active_card(&channel), r = card_in_use(c, active, channel);
     if (r == 0)
         return 0;
     if (r < 0 || !can_insert(c)) {   /* which card it has isn't known, or it's one it can't be told to come back to */
@@ -1684,7 +1714,7 @@ static int restore_flow(card_t *c, const drive_file_t *f)
     int active, channel = 0, inUse, unsure, r;
     backup_when(c, f, when, sizeof(when));
     for (;;) {
-        active = mmce_active_card(&channel);
+        active = active_card(&channel);
         inUse = card_in_use(c, active, channel);
         unsure = inUse < 0;
         if (unsure)
@@ -2372,13 +2402,13 @@ static int new_card(int tab, const char *gameFolder, int max, char folder[48], c
     int i, n;
     if (tab == TAB_CARDS) {
         for (n = 1;; n++) {
-            snprintf(folder, 48, "Card%d", n);
+            snprintf(folder, 48, "%s%d", dev->numbered, n);
             for (i = 0; i < nCards && strcasecmp(cards[i].folder, folder); i++)
                 ;
             if (i == nCards)
                 break;
         }
-        snprintf(base, 56, "Card%d-1", n);
+        snprintf(base, 56, "%s%d-1", dev->numbered, n);
         return 1;
     }
     snprintf(folder, 48, "%s", tab == TAB_BOOT ? "BOOT" : gameFolder);
@@ -2519,9 +2549,9 @@ static int install_card(void)
         snprintf(fresh.folder, sizeof(fresh.folder), "%s", folder);
         snprintf(fresh.base, sizeof(fresh.base), "%s", base);
         snprintf(fresh.id, sizeof(fresh.id), "%s/%s", folder, base);
-        snprintf(fresh.path, sizeof(fresh.path), "%sMemoryCards/PS2/%s/", sdRoot, folder);
+        snprintf(fresh.path, sizeof(fresh.path), "%s%s/%s/", sdRoot, dev->cards, folder);
         ensure_dir(fresh.path);
-        snprintf(fresh.path, sizeof(fresh.path), "%sMemoryCards/PS2/%s/%s.mcd", sdRoot, folder, base);
+        snprintf(fresh.path, sizeof(fresh.path), "%s%s/%s/%s%s", sdRoot, dev->cards, folder, base, dev->ext);
     } else if (card_free(to, NULL))
         return 0;
     restoreCard = to ? to : &fresh;
@@ -2537,12 +2567,12 @@ static int install_card(void)
         card_back();
     } else if (r != 0) {
         unlink(fresh.path);   /* a card that isn't whole is no card; nor is its folder to stay, if it was made for it */
-        snprintf(t, sizeof(t), "%sMemoryCards/PS2/%s", sdRoot, folder);
+        snprintf(t, sizeof(t), "%s%s/%s", sdRoot, dev->cards, folder);
         rmdir(t);
     } else {
         /* it joins the cards, which move over for it: the one the sd2psx is on and the main screen's are found again */
         snprintf(active, sizeof(active), "%s", activeCard >= 0 ? cards[activeCard].id : "");
-        snprintf(t, sizeof(t), "%s.mcd", base);
+        snprintf(t, sizeof(t), "%s%s", base, dev->ext);
         if ((to = cards_add(folder, t)) != NULL)
             cards_recheck(to);
         for (activeCard = nCards - 1; activeCard >= 0 && strcmp(cards[activeCard].id, active); activeCard--)
@@ -3379,9 +3409,11 @@ static int card_export_progress(long long done, long long total)
  * format the backups use), read back and compared. 1 = written */
 static int export_card(card_t *c)
 {
-    static const char *const formats[2] = {".mcd (sd2psx)", ".ps2 (PCSX2)"};
+    const char *formats[2];
     char file[72], path[480], t[300], f[100];
     int ps2, r;
+    formats[0] = format_name(0);
+    formats[1] = format_name(1);
     if ((ps2 = choose(c->base, formats, 2, cfg.ps2)) < 0)
         return 0;
     snprintf(file, sizeof(file), "%s.zip", c->base);
@@ -3577,8 +3609,6 @@ static void helper_install_now(int doneTitle);
  * the language, how many backups to keep, the update check, the Google account, about. Each change goes to
  * sd2cloud.ini at once */
 
-/* the file a card's backup holds: the sd2psx's own .mcd, or the card with its ECC bytes, which PCSX2 opens */
-static const char *const formatNames[2] = {".mcd (sd2psx)", ".ps2 (PCSX2)"};
 
 enum { SET_SYNC_ALL, SET_AUTO_SYNC, SET_HELPER, SET_IGR_RETURN, SET_LANGUAGE, SET_KEEP, SET_FORMAT, SET_UPDATES,
        SET_ACCOUNT, SET_ABOUT, SET_MAX };
@@ -3781,7 +3811,7 @@ static void build_settings(void)
                                                                                     : T(T_AUTO));
     snprintf(v, sizeof(v), "%d", cfg.keep);
     set_item(&i, SET_KEEP, T(T_SET_KEEP), cfg.keep ? v : T(T_KEEP_ALL));
-    set_item(&i, SET_FORMAT, T(T_SET_FORMAT), formatNames[cfg.ps2]);
+    set_item(&i, SET_FORMAT, T(T_SET_FORMAT), format_name(cfg.ps2));
     if (updateAvailable)
         snprintf(v, sizeof(v), T(T_UPDATE_AVAILABLE), update_tag());
     set_item(&i, SET_UPDATES, T(T_SET_UPDATES), updateAvailable ? v : "");
@@ -4150,8 +4180,8 @@ static void pick_format(void)
 {
     static const char *items[2];
     int k;
-    items[0] = formatNames[0];
-    items[1] = formatNames[1];
+    items[0] = format_name(0);
+    items[1] = format_name(1);
     if ((k = choose(T(T_SET_FORMAT), items, 2, cfg.ps2)) < 0 || k == cfg.ps2)
         return;
     cfg.ps2 = k;
@@ -4370,7 +4400,8 @@ static void manual(void)
         if (mc_root_signature(0, seen) == 0)
             for (i = 0; i < nCards; i++)
                 if (mcfs_root_signature(cards[i].path, file) == 0)
-                    log_msg("root signature: slot 1 %.16s, %s %.16s%s", seen, cards[i].id, file, strcmp(seen, file) ? "" : "  <- same card");
+                    log_msg("root signature: slot 1 %.16s, %s %.16s%s%s", seen, cards[i].id, file, strcmp(seen, file) ? "" : "  <- same card",
+                            cards[i].rootSig[0] && strcmp(cards[i].rootSig, file) ? "  (NOT the one read with its index)" : "");
     }
 #endif
     if (!google_has_access() && !cfg.no_ask_connect && ask_connect()) {
@@ -4506,6 +4537,8 @@ int main(int argc, char *argv[])
         run_target(c);
     }
     i18n_select(cfg.language);
+    if (!dev->sd2psx)
+        i18n_device(dev->name);
     /* first run: create the sd2cloud.ini with every option explained, in the screen's language */
     if (!configExists)
         config_write_template();

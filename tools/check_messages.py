@@ -4,7 +4,10 @@ Measures like the app: the same font (Varela Round) at the same sizes, plus what
 letter (font.c: the advance grows by the "bold" amount). Where each text goes and how wide that place is follows
 src/main.c and src/look.c (a 640 px screen; the frame's lines go from x = 36 to 604).
 
-usage: python tools/check_messages.py        (exits with an error if a text doesn't fit its place)
+usage: python tools/check_messages.py [--device NAME]     (exits with an error if a text doesn't fit its place)
+
+The texts name the sd2psx; on another device the app puts that device's name in its place (i18n_device).
+--device "MemCard PRO2" checks them as they are shown there.
 """
 import pathlib
 import re
@@ -149,6 +152,11 @@ PLACE = {
     "T_INSTALL_CANCEL_TEXT": ("text", DIALOG, 1), "T_KEEP_ALL": ("text", 200, 1),
 }
 PARAGRAPH = ("text", DIALOG, 3)     # error messages and the rest: up to 3 lines in a box
+# what only an sd2psx is ever told (being moved to another card, its boot cards): not
+# checked with another device's name
+ONLY_SD2PSX = {"T_SWITCHING", "T_INSERT", "T_INSERT_DONE", "T_INSERT_FAILED", "T_INSERT_NEEDS_BOOT", "T_INSERT_NEEDS_GAMEID",
+               "T_INSERT_BOOT_ASK", "T_SWITCH_ASK", "T_SWITCH_FAILED", "T_SWITCH_BACK_FAILED",
+               "T_INSTALL_BOOT_WARN"}
 
 # the button legends at the bottom: (texts, the last one apart at the right edge). They go from the right edge
 # (x = 596) toward the left and must not pass x = 40
@@ -178,6 +186,10 @@ def main():
     txt = (ROOT / "src" / "messages.def").read_text(encoding="utf-8")
     items = re.findall(r'^X\((\w+),\s*"((?:[^"\\]|\\.)*)",\s*"((?:[^"\\]|\\.)*)"\)', txt, re.M)
     texts = {id_: (en.replace('\\"', '"'), pt.replace('\\"', '"')) for id_, en, pt in items}
+    if "--device" in sys.argv:
+        name = sys.argv[sys.argv.index("--device") + 1]
+        texts = {id_: (en.replace("sd2psx", name), pt.replace("sd2psx", name)) for id_, (en, pt) in texts.items()
+                 if id_ not in ONLY_SD2PSX}
     bad = 0
     for id_, (en, pt) in texts.items():
         font, width, max_lines = PLACE.get(id_, PARAGRAPH)

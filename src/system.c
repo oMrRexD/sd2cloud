@@ -617,6 +617,7 @@ int network_up(void)
 
 /* ------------------------------------------------------------ sd2psx (MMCE commands, mmceman's devctl) */
 
+#define MMCE_CMD_PING        0x1
 #define MMCE_CMD_GET_CARD    0x3
 #define MMCE_CMD_SET_CARD    0x4
 #define MMCE_CMD_GET_CHANNEL 0x5
@@ -672,6 +673,38 @@ int mmce_set_gameid(const char *id)
     r = mmce_devctl(MMCE_CMD_SET_GAMEID, t, strlen(t) + 1);
     log_msg("sd2psx: asked for the card of %s (%d)", t, r);
     return r < 0 ? -1 : 0;
+}
+
+/* The device. The sd2psx's firmware also runs on the PSxMemCard and on the PicoMemcards; 8BitMods' MemCard PRO2 has
+ * its own, which keeps the PS2 cards in /PS2/<folder>/<folder>-<channel>.mc2 (raw, as a .mcd is), the ones that aren't
+ * a game's in MemoryCard1, MemoryCard2... (its wiki, and what its users' tools go by). SD2Cloud was not tried on one:
+ * what depends on how it behaves (which card it is on, telling it to take another) is left out for it, and the card
+ * in use is told by the root folder the PS2 sees in the slot */
+static const device_t devSd2psx = {"sd2psx", "sd2psx", "MemoryCards/PS2", ".mcd", "Card", 1};
+static const device_t devMcp2 = {"MemCard PRO2", "PRO2", "PS2", ".mc2", "MemoryCard", 0};
+const device_t *dev = &devSd2psx;
+
+/* which one answers in the microSD's slot: the ping gives the protocol's version, the product (1 = SD2PSX, 2 = MemCard
+ * PRO2, 3 and 4 = the PicoMemcards) and its revision. One that doesn't answer is a MemCard PRO2 when its firmware's
+ * file is on the microSD */
+static void find_device(void)
+{
+    char c[64];
+    int r = mmce_devctl(MMCE_CMD_PING, NULL, 0), product = r >= 0 ? (r >> 8) & 0xFF : 0;
+#ifdef DEBUG_BUILD
+    {   /* PCSX2 has no device: product.txt in the data folder says which one to be */
+        buffer_t b = {0};
+        snprintf(c, sizeof(c), "%sproduct.txt", dataDir);
+        if (file_read(c, &b) == 0 && b.len)
+            product = atoi((char *)b.data);
+        buf_free(&b);
+    }
+#endif
+    snprintf(c, sizeof(c), "%smcp2.bin", sdRoot);
+    if (product == 2 || (r < 0 && r != -2 && file_exists(c)))
+        dev = &devMcp2;
+    log_msg("device: %s (ping %d: protocol %d, product %d, revision %d)", dev->name, r, r >= 0 ? (r >> 16) & 0xFF : 0, product,
+            r >= 0 ? r & 0xFF : 0);
 }
 
 /* ------------------------------------------------------------ a USB drive, for the file browser */
@@ -758,6 +791,9 @@ static void find_sd(const char *a0)
             ;
         if (i == 2)
             for (i = 0; i < 2 && !has_dir(options[i], "MemoryCards/PS2"); i++)
+                ;
+        if (i == 2)   /* where a MemCard PRO2 keeps them */
+            for (i = 0; i < 2 && !has_dir(options[i], "PS2"); i++)
                 ;
         strcpy(sdRoot, options[i < 2 ? i : 0]);
     }
@@ -860,6 +896,7 @@ void system_init(int argc, char *argv[])
     if (strncmp(a0, "host:", 5) == 0)
         logFd = open("host:log.txt", O_WRONLY | O_CREAT | O_TRUNC, 0666);
     find_sd(a0);
+    find_device();
     config_read();
     if (strncmp(appPath, "mmce", 4) != 0 && strncmp(appPath, "host:", 5) != 0)
         hand_over(argc, argv);

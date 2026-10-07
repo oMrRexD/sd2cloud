@@ -51,6 +51,17 @@ int mmce_active_card(int *channel);
 int mmce_set_card(int boot, int number);
 int mmce_set_channel(int channel);
 int mmce_set_gameid(const char *id);
+/* The MMCE device the microSD is in. They all take the same commands, but each keeps the PS2 cards its own way */
+typedef struct {
+    const char *name;       /* what it is called on screen */
+    const char *brief;      /* the same where there is little room (next to a format's name) */
+    const char *cards;      /* the folder of its PS2 cards, from the root of the microSD */
+    const char *ext;        /* what a card's file ends with */
+    const char *numbered;   /* what the folders of its numbered cards start with: Card1, MemoryCard1 */
+    int sd2psx;             /* it runs the sd2psx's firmware: boot cards in BOOT, an .ini in each folder (the channels'
+                               names, how many there are), Game2Folder.ini, and it can be told which card to take */
+} device_t;
+extern const device_t *dev;
 /* a USB drive (mass0:), for the file browser: loads its drivers the first time, then waits up to ms for the drive.
  * 0 = it's there */
 int usb_open(int ms);
@@ -111,6 +122,8 @@ int js_each(const char *txt, size_t n, const char *key, void (*cb)(const char *o
 #include "messages.h"
 void i18n_select(const char *language);    /* "auto", "en" or "pt" */
 const char *T(int id);
+/* the texts name the sd2psx: on another device, they name that one instead (once, before the first screen) */
+void i18n_device(const char *name);
 int i18n_is_pt(void);                       /* is the screen in Portuguese? */
 
 /* ------------------------------------------------------------ config.c (sd2cloud.ini) */
@@ -182,6 +195,8 @@ typedef struct {
     char path[200];        /* the .mcd */
     char name[48];         /* channel name from the CardX.ini, if any */
     char game[64];         /* a game card's game, as the sd2psx names it ("" = not a game card, or not in the list) */
+    char rootSig[65];      /* its root folder's signature, from when its index was read: kept only for a device whose
+                              card in use is found by it ("" = not read) */
     int type, channel;
     long long size;
     /* computed */
@@ -212,6 +227,8 @@ void cards_recheck(card_t *c);              /* one card again (after a save was 
 /* ------------------------------------------------------------ mcfs.c */
 /* fingerprint of the card's file system index (root and folder entries). 0 = ok */
 int mcfs_fingerprint(const char *path, char hex[65], int *saves);
+/* the same, and from the same reading the signature of its root folder (mcfs_root_signature's) */
+int mcfs_fingerprint_root(const char *path, char hex[65], int *saves, char rootSig[65]);
 /* signature of the root folder only (name + modification time of each entry, in any order): the same one
  * helper.c computes from the memory card the PS2 sees, to tell whether a .mcd is the card the sd2psx is emulating */
 #define ROOT_REC 40

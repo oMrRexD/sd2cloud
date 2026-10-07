@@ -160,7 +160,7 @@ int stream_zip(const card_t *c, const datetime_t *t, stream_t *s, chunk_cb cb, v
     o.cb = cb;
     o.u = u;
     s->read = s->sent = 0;
-    snprintf(name, sizeof(name), "%s.%s", c->base, ps2 ? "ps2" : "mcd");
+    snprintf(name, sizeof(name), "%s%s", c->base, ps2 ? ".ps2" : dev->ext);
     ecc_tables();
     if (!(o.buf = malloc(CHUNK)))
         return -1;
@@ -309,7 +309,7 @@ int card_export(const card_t *c, const char *dest, int ps2, int (*progress)(long
     local_time(&t);
     dosTime = (t.hour << 11) | (t.minute << 5) | (t.second / 2);
     dosDate = ((t.year - 1980) << 9) | (t.month << 5) | t.day;
-    snprintf(name, sizeof(name), "%s.%s", c->base, ps2 ? "ps2" : "mcd");
+    snprintf(name, sizeof(name), "%s%s", c->base, ps2 ? ".ps2" : dev->ext);
     memset(&s, 0, sizeof(s));
     memset(&o, 0, sizeof(o));
     memset(&z, 0, sizeof(z));

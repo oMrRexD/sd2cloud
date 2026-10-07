@@ -148,10 +148,13 @@ static int walk_dir(mc_t *m, unsigned int c0, unsigned int n, int (*cb)(mc_t *m,
     return 0;
 }
 
+struct root_ctx;
 typedef struct {
     wc_Sha256 *sha;
     int saves;
+    struct root_ctx *root;   /* the root folder's records are gathered too, for its signature (NULL = not) */
 } ctx_t;
+static int on_root_sig(mc_t *m, const unsigned char *e, void *u);
 
 static int is_live(const unsigned char *e)
 {
@@ -189,6 +192,8 @@ static int on_root_entry(mc_t *m, const unsigned char *e, void *u)
     const char *name = (const char *)e + 64;
     if (!is_live(e))
         return 0;
+    if (x->root)
+        on_root_sig(m, e, x->root);
     if ((le16(e) & DF_DIRECTORY) && is_system_dir(name))
         return 0;   /* system data: not part of the fingerprint */
     hash_entry(x->sha, e);
@@ -292,10 +297,11 @@ void mcfs_sign_records(unsigned char (*rec)[ROOT_REC], int n, char hex[65])
 }
 
 #define MAX_ROOT 512
-typedef struct {
+typedef struct root_ctx {
     unsigned char (*rec)[ROOT_REC];
     int n;
 } root_ctx_t;
+static unsigned char rootRec[MAX_ROOT][ROOT_REC];
 
 /* a record: the name (32 bytes, zero padded) and the modification time without its reserved byte (7 bytes) */
 static int on_root_sig(mc_t *m, const unsigned char *e, void *u)
@@ -313,13 +319,12 @@ static int on_root_sig(mc_t *m, const unsigned char *e, void *u)
 
 int mcfs_root_signature(const char *path, char hex[65])
 {
-    static unsigned char rec[MAX_ROOT][ROOT_REC];
-    root_ctx_t x = {rec, 0};
+    root_ctx_t x = {rootRec, 0};
     int rootdir = mc_open(&mc, path), r = -1;
     if (rootdir < 0)
         return -1;
     if (walk_root(&mc, rootdir, on_root_sig, &x) == 0) {
-        mcfs_sign_records(rec, x.n, hex);
+        mcfs_sign_records(rootRec, x.n, hex);
         r = 0;
     }
     mc_close();
@@ -494,12 +499,17 @@ int mcfs_newest_save_icon(const char *path, char folder[33], buffer_t *iconsys, 
 
 /* ------------------------------------------------------------ fingerprint */
 
-int mcfs_fingerprint(const char *path, char hex[65], int *saves)
+int mcfs_fingerprint(const char *path, char hex[65], int *saves) { return mcfs_fingerprint_root(path, hex, saves, NULL); }
+
+int mcfs_fingerprint_root(const char *path, char hex[65], int *saves, char rootSig[65])
 {
     unsigned char h[WC_SHA256_DIGEST_SIZE];
     wc_Sha256 sha;
-    ctx_t x = {&sha, 0};
+    root_ctx_t root = {rootRec, 0};
+    ctx_t x = {&sha, 0, rootSig ? &root : NULL};
     int rootdir = mc_open(&mc, path), r = -1, i;
+    if (rootSig)
+        rootSig[0] = 0;
     if (rootdir < 0)
         return -1;
     wc_InitSha256(&sha);
@@ -509,6 +519,8 @@ int mcfs_fingerprint(const char *path, char hex[65], int *saves)
             sprintf(hex + i * 2, "%02x", h[i]);
         if (saves)
             *saves = x.saves;
+        if (rootSig)
+            mcfs_sign_records(rootRec, root.n, rootSig);
         r = 0;
     }
     wc_Sha256Free(&sha);

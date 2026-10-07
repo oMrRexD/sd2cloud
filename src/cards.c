@@ -4,6 +4,8 @@
  *   MemoryCards/PS2/BOOT/BootCard-<channel>.mcd          (or BootCard.mcd, the old layout)
  * Each channel's name may be in <folder>/<folder>.ini (BootCard.ini in BOOT), section [ChannelName].
  * The folders mapped in .sd2psx/Game2Folder.ini count as game cards.
+ * A MemCard PRO2 keeps them the same way under other names (dev, in system.c): PS2/<folder>/<folder>-<channel>.mc2,
+ * folder = MemoryCardN or a game ID, with none of the sd2psx's .ini files and no folder of boot cards.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -57,9 +59,10 @@ int is_game_id(const char *p)
 
 static int is_cardn(const char *p)
 {
-    if (strncasecmp(p, "Card", 4) != 0 || !p[4])
+    size_t n = strlen(dev->numbered);
+    if (strncasecmp(p, dev->numbered, n) != 0 || !p[n])
         return 0;
-    for (p += 4; *p; p++)
+    for (p += n; *p; p++)
         if (!isdigit((unsigned char)*p))
             return 0;
     return 1;
@@ -102,7 +105,7 @@ static int compare(const void *a, const void *b)
     if (d)
         return d;
     if (x->type == TYPE_NORMAL) {   /* Card2 before Card10 */
-        d = atoi(x->folder + 4) - atoi(y->folder + 4);
+        d = atoi(x->folder + strlen(dev->numbered)) - atoi(y->folder + strlen(dev->numbered));
         if (d)
             return d;
     }
@@ -171,7 +174,8 @@ void game_folder(const char *id, char *out, size_t size)
     char path[64];
     snprintf(out, size, "%s", id);
     snprintf(path, sizeof(path), "%s.sd2psx/Game2Folder.ini", sdRoot);
-    ini_read(path, on_folder_of, &f);
+    if (dev->sd2psx)
+        ini_read(path, on_folder_of, &f);
 }
 
 static void on_max_channels(const char *s, const char *k, const char *v, void *u)
@@ -180,23 +184,30 @@ static void on_max_channels(const char *s, const char *k, const char *v, void *u
         *(int *)u = atoi(v);
 }
 
+/* a folder's .ini, which the sd2psx reads: BootCard.ini for its boot cards, else named after the folder */
+static void folder_ini(const char *folder, char *out, size_t size)
+{
+    snprintf(out, size, "%s%s/%s/%s.ini", sdRoot, dev->cards, folder, strcasecmp(folder, "BOOT") ? folder : "BootCard");
+}
+
 int max_channels(const char *folder)
 {
     char path[260];
     int n = 8;
-    snprintf(path, sizeof(path), "%sMemoryCards/PS2/%s/%s.ini", sdRoot, folder, strcasecmp(folder, "BOOT") ? folder : "BootCard");
-    ini_read(path, on_max_channels, &n);
+    folder_ini(folder, path, sizeof(path));
+    if (dev->sd2psx)
+        ini_read(path, on_max_channels, &n);
     return n;
 }
 
 /* a file of a folder of cards, as the next of cards[] when it is the .mcd of one of that folder's channels (1) */
 static int add_file(const char *base, const char *folder, const char *file)
 {
-    int boot = !strcasecmp(folder, "BOOT"), channel;
+    int boot = dev->sd2psx && !strcasecmp(folder, "BOOT"), channel;
     const char *prefix = boot ? "BootCard" : folder, *dash;
     size_t len = strlen(file);
     card_t *c;
-    if (nCards == MAX_CARDS || len < 5 || strcasecmp(file + len - 4, ".mcd") != 0)
+    if (nCards == MAX_CARDS || len < 5 || strcasecmp(file + len - 4, dev->ext) != 0)
         return 0;
     if (boot && !strcasecmp(file, "BootCard.mcd"))
         channel = 1;   /* old layout, a single channel */
@@ -232,7 +243,7 @@ static void fill_cards(const char *base, const char *folder, int first)
         }
     }
     snprintf(path, sizeof(path), "%s/%s/%s.ini", base, folder, strcasecmp(folder, "BOOT") ? folder : "BootCard");
-    if (nCards > first)
+    if (nCards > first && dev->sd2psx)
         ini_read(path, on_channel, &r);
 }
 
@@ -251,9 +262,10 @@ int cards_scan(void)
     nCards = 0;
     mapped[0] = 0;
     snprintf(path, sizeof(path), "%s.sd2psx/Game2Folder.ini", sdRoot);
-    ini_read(path, on_game2folder, NULL);
+    if (dev->sd2psx)
+        ini_read(path, on_game2folder, NULL);
 
-    snprintf(base, sizeof(base), "%sMemoryCards/PS2", sdRoot);
+    snprintf(base, sizeof(base), "%s%s", sdRoot, dev->cards);
     nFolders = list_dir(base);
     if (nFolders < 0)
         return -1;
@@ -282,7 +294,7 @@ card_t *cards_add(const char *folder, const char *file)
 {
     char base[96], id[96];
     int i;
-    snprintf(base, sizeof(base), "%sMemoryCards/PS2", sdRoot);
+    snprintf(base, sizeof(base), "%s%s", sdRoot, dev->cards);
     if (!add_file(base, folder, file))
         return NULL;
     fill_cards(base, folder, nCards - 1);
@@ -301,7 +313,8 @@ static void check_one(card_t *c, int *migrated)
 {
     card_state_t *e;
     int saves = 0;
-    if (mcfs_fingerprint(c->path, c->fingerprint, &saves) != 0) {
+    /* (the root folder's signature comes from the same reading, for a device whose card in use is found by it) */
+    if (mcfs_fingerprint_root(c->path, c->fingerprint, &saves, dev->sd2psx ? NULL : c->rootSig) != 0) {
         c->status = ST_ERROR;
         log_msg("%s: couldn't read the index", c->id);
         return;

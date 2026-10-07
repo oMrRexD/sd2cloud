@@ -668,9 +668,9 @@ int google_upload(const card_t *c, const char *folder, const char *name, const d
     json_escape(c->name[0] ? c->name : c->base, dj, sizeof(dj));
     snprintf(body, sizeof(body),
              "{\"name\":\"%s\",\"mimeType\":\"application/zip\",\"parents\":[\"%s\"],"
-             "\"description\":\"%s (sd2psx, MemoryCards/PS2/%s.mcd) - " APP_NAME " " APP_VERSION "\","
+             "\"description\":\"%s (%s, %s/%s%s) - " APP_NAME " " APP_VERSION "\","
              "\"appProperties\":{\"sd2cloud\":\"1\",\"card\":\"%s\"}}",
-             nj, folder, dj, cj, cj);
+             nj, folder, dj, dev->name, dev->cards, cj, dev->ext, cj);
     h = api("POST", URL_UPLOAD "?uploadType=resumable&fields=id,size,sha256Checksum,md5Checksum", body, &up->r);
     if (h != 200 || !up->r.location[0]) {
         reason(&up->r, m, sizeof(m));

@@ -8,7 +8,8 @@
 
 SD2Cloud runs on the PS2 itself and works with the memory cards stored on the microSD of sd2psx-family devices
 running the [sd2psXtd](https://github.com/sd2psXtd/firmware) firmware (sd2psx, PSXMemCard, PSXMemCard Gen2,
-PicoMemcard+/Zero). No PC is required.
+PicoMemcard+/Zero). No PC is required. A MemCard PRO2 is recognized too, experimentally: SD2Cloud has not been tried
+on one yet.
 
 [Português](README.pt-BR.md)
 
@@ -64,7 +65,8 @@ PicoMemcard+/Zero). No PC is required.
 
 ## Requirements
 
-- An sd2psx-family device with the sd2psXtd firmware (MMCE support).
+- An sd2psx-family device with the sd2psXtd firmware (MMCE support). On a MemCard PRO2 (experimental), SD2Cloud reads
+  and writes its `.mc2` cards in `/PS2`, but never switches cards: pick another one on the device itself first.
 - A way to start SD2Cloud: the Apps tab of OPL, wLaunchELF or any other launcher that can run an ELF. An OPL with
   MMCE support is recommended, such as [RiptOPL](https://github.com/NathanNeurotic/Open-PS2-Loader). Without it, OPL does not list the apps on the sd2psx
   microSD and has no **IGR Bootcard Slot(s)** option: with Game ID cards, the sd2psx stays on the game's card when
