@@ -738,6 +738,7 @@ static const device_t devSd2psx = {"sd2psx", "sd2psx", "MemoryCards/PS2", ".mcd"
 static const device_t devMcp2 = {"MemCard PRO2", "PRO2", "PS2", ".mc2", "MemoryCard", 0};
 const device_t *dev = &devSd2psx;
 int cardTold = 1;
+int devicePings;
 
 /* which one answers in the microSD's slot: the ping gives the protocol's version, the product (1 = SD2PSX, 2 = MemCard
  * PRO2, 3 and 4 = the PicoMemcards) and its revision. One that doesn't answer is a MemCard PRO2 when its firmware's
@@ -759,6 +760,7 @@ static void find_device(void)
     if (product == 2 || (r < 0 && r != -2 && file_exists(c)))
         dev = &devMcp2;
     cardTold = dev->sd2psx;
+    devicePings = r >= 0;
 #ifdef DEBUG_BUILD
     snprintf(c, sizeof(c), "%sby-slot.txt", dataDir);   /* to try on an sd2psx what a device that isn't one gets */
     if (file_exists(c))

@@ -4739,7 +4739,8 @@ static void device_lost(void) __attribute__((noreturn));
 static void device_watch(void)
 {
     int i;
-    if (watchOff || strncmp(sdRoot, "mmce", 4) != 0 || now_ms() < watchNext)
+    /* (a device that never answered the ping, as a MemCard PRO2 may not, would look taken out all the time) */
+    if (watchOff || !devicePings || strncmp(sdRoot, "mmce", 4) != 0 || now_ms() < watchNext)
         return;
     watchNext = now_ms() + 2000;
     for (i = 0; i < 3; i++) {   /* three times in a row: it may only be busy (changing cards) */

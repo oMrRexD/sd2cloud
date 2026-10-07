@@ -47,6 +47,7 @@ int device_of(const char *path);
  * -1 = couldn't ask; -2 = not on an MMCE device (testing on PCSX2) */
 int mmce_active_card(int *channel);
 int mmce_ping(void);                        /* does the device answer? < 0 = no (taken out of the console) */
+extern int devicePings;                     /* it answered when it was looked for: one that never does can't be watched */
 /* the device is back after being taken out: which one it is and the settings on its microSD, read again */
 void system_reload(void);
 /* Tell the sd2psx to emulate another card, as its own buttons do: it writes what it holds of the current one to the
