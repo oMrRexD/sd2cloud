@@ -1,15 +1,18 @@
-# SD2Cloud v1.4
+# SD2Cloud v1.5
 
 **Manage and back up your sd2psx memory cards, right on your PS2.**
 
-### What's new in 1.4
-- The card the sd2psx is using is marked on the list, and a card's options (TRIANGLE) have a new item, "Insert into sd2psx", which makes the sd2psx take that card. It takes a BootCard only with Autoboot turned on in its settings, and a game's card only with Game ID.
-- A card in use by the sd2psx can now be changed (copying, moving, deleting, importing): SD2Cloud asks, switches the sd2psx to another card, makes the change and switches back.
-- Games tab: the cards come in folders named after each game, as the sd2psx names it. X opens a folder, O goes back.
-- The saved data of a card is listed newest first, as in the PS2 browser.
-- Copy to a device now writes the card inside a `.zip`, which takes less time than the whole file. To put such a copy back on the microSD, extract it on a PC for now.
-- Save icons that did not show (some compressed and some plain textures) now do.
-- Exit to offers "Return to Browser" (it was "PS2 menu").
+### What's new in 1.5
+- **Memory card files.** The Files tab opens `.mcd`, a MemCard PRO2's `.mc2`, `.ps2`, OPL's virtual memory cards (`.bin`) and the `.zip` that "Copy to a device" writes. The card inside is shown like any other, its saved data can be copied to your cards, and SQUARE installs it on the microSD: as a new card (numbered, a game's, or one more BootCard channel) or in place of an existing one. A folder that already has all its channels can get one more.
+- **All saves.** The Games tab starts with a screen that shows the saved data of every game card together.
+- **Faster, and with a progress screen.** Importing a `.psu`, and copying or moving saved data between cards, now shows the save's icon, a progress bar and a way to cancel (the card is left as it was). It is also about four times faster: a 1.6 MB save that took close to 30 seconds on an sd2psx now takes 6. Deleting, exporting and reading icons got faster too.
+- **Start other programs.** X on an ELF in the Files tab runs it, and "Exit to" has a new "Run an ELF..." item. Saved data that is an application (a folder with a `title.cfg`, as the Save Application System keeps them) gets "Start application": SD2Cloud switches the sd2psx to that card and starts it.
+- **The sd2psx taken out.** If the device is removed while SD2Cloud is open (to change its microSD, for example), SD2Cloud says so and, once it is back, reads everything again from the microSD that is in it.
+- **Automatic sync.** Fixed the "Unable to obtain an IP address from the router" failures after a game. A sync that fails now leaves a note in `SD2Cloud/sync-error.txt`.
+- **MemCard PRO2 (experimental).** The device is recognized (its `.mc2` cards, in `/PS2`), and switching cards from the app is offered as a preview. SD2Cloud has not been tried on one yet.
+- **Files tab.** SQUARE on a `.psu` installs it without opening it first; when a file of the same name is already there, SQUARE keeps both.
+- Saved data without an icon shows the PS2 browser's blue cube; a game's folder is marked with a small arrow.
+- **New download: `APP_SD2CLOUD.psu`**, SD2Cloud as a Save Application System (SAS) package: the `APP_SD2CLOUD` folder, with its own 3D icon for the PS2 browser.
 
 To update, use Settings > Check for updates, or copy the new files over the old ones.
 
@@ -40,19 +43,20 @@ SD2Cloud runs on the PS2 itself and works with the memory cards on the microSD o
 - Interface inspired by the PlayStation BB Navigator, with sound effects.
 - English and Portuguese.
 
-**Installation:** extract `SD2Cloud-v1.4.zip` to the root of the sd2psx microSD and open SD2Cloud from the OPL Apps tab. See README.txt for details.
+**Installation:** extract `SD2Cloud-v1.5.zip` to the root of the sd2psx microSD and open SD2Cloud from the OPL Apps tab. See README.txt for details.
 
 ---
 
 **Gerencie e proteja os cartões de memória do seu sd2psx, direto no PS2.**
 
-**Novidades da 1.4**
-- O cartão em uso no sd2psx aparece marcado na lista, e as opções de um cartão (TRIÂNGULO) ganharam "Inserir no sd2psx", que faz o sd2psx assumir esse cartão.
-- Agora é possível alterar o cartão em uso no sd2psx: o SD2Cloud pergunta, troca o sd2psx para outro cartão, faz a alteração e volta.
-- Aba Jogos: os cartões ficam em pastas com o nome de cada jogo.
-- Os dados salvos de um cartão aparecem do mais novo ao mais antigo, como no browser do PS2.
-- "Copiar para dispositivo" grava o cartão dentro de um `.zip`, o que leva menos tempo. Para devolver essa cópia ao microSD, por enquanto é preciso extrair o `.zip` no PC.
-- Ícones de saves que não apareciam agora aparecem.
-- "Sair para" oferece "Voltar ao Browser".
+**Novidades da 1.5**
+- Arquivos de cartão: a aba Arquivos abre `.mcd`, `.mc2`, `.ps2`, os cartões virtuais do OPL (`.bin`) e o `.zip` do "Copiar para dispositivo"; dá para copiar os dados salvos de dentro e instalar o cartão no microSD (QUADRADO).
+- "Todos os saves": uma tela que junta os dados salvos de todos os cartões de jogo.
+- Importar, copiar e mover dados salvos: tela com ícone, barra de progresso e cancelar, e cerca de 4 vezes mais rápido (1,6 MB: de quase 30 s para 6 s).
+- Iniciar outros programas: X sobre um ELF na aba Arquivos, "Executar um ELF..." no "Sair para" e "Iniciar aplicativo" nos apps guardados em cartões (formato SAS).
+- sd2psx removido com o app aberto: o SD2Cloud avisa e, quando ele volta, lê tudo de novo do microSD.
+- Sincronização automática: corrigida a falha "Não foi possível obter um endereço IP"; uma falha deixa um registro em `SD2Cloud/sync-error.txt`.
+- MemCard PRO2 reconhecido (experimental), com a troca de cartão pelo app em preview.
+- Novo download: `APP_SD2CLOUD.psu`, o SD2Cloud como pacote SAS, com ícone 3D próprio.
 
-**Instalação:** extraia o `SD2Cloud-v1.4.zip` na raiz do microSD do sd2psx e abra o SD2Cloud pela aba Apps do OPL. Consulte o LEIA-ME.txt para mais detalhes.
+**Instalação:** extraia o `SD2Cloud-v1.5.zip` na raiz do microSD do sd2psx e abra o SD2Cloud pela aba Apps do OPL. Consulte o LEIA-ME.txt para mais detalhes.
