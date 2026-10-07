@@ -1,7 +1,8 @@
 name: Build
 
 # Every push and pull request is built, to check that the project compiles. A tag (v1.0, v1.1...) also publishes the
-# release: the zip, the two ELFs attached loose (SD2Cloud's own updater downloads those), SHA256SUMS.txt and the notes.
+# release: the zip, the two ELFs attached loose (SD2Cloud's own updater downloads those), the Save Application System
+# package (APP_SD2CLOUD.psu), SHA256SUMS.txt and the notes.
 
 on:
   push:
@@ -66,6 +67,7 @@ jobs:
             dist/SD2Cloud-v*.zip
             dist/SD2CLOUD.ELF
             dist/SD2CLOUD-IGR.ELF
+            dist/APP_SD2CLOUD.psu
             dist/SHA256SUMS.txt
             dist/RELEASE-NOTES.md
 
@@ -87,4 +89,4 @@ jobs:
         run: |
           gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --verify-tag \
             --title "SD2Cloud ${GITHUB_REF_NAME#v}" --notes-file dist/RELEASE-NOTES.md \
-            dist/SD2Cloud-v*.zip dist/SD2CLOUD.ELF dist/SD2CLOUD-IGR.ELF dist/SHA256SUMS.txt
+            dist/SD2Cloud-v*.zip dist/SD2CLOUD.ELF dist/SD2CLOUD-IGR.ELF dist/APP_SD2CLOUD.psu dist/SHA256SUMS.txt

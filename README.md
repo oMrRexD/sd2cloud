@@ -92,6 +92,11 @@ If your OPL does not list the apps on the sd2psx microSD (a build without MMCE s
 `APPS/SD2Cloud` folder to the `APPS` folder of your USB drive or MX4SIO card and open SD2Cloud from there. It hands
 over to the copy on the microSD, where the settings, the IGR helper and the updates are kept.
 
+**Save Application System (SAS).** Each release also has `APP_SD2CLOUD.psu`: the same program as a single
+`APP_SD2CLOUD` folder, with its own 3D icon for the PS2 browser. In the `APPS` folder of the microSD
+(`APPS/APP_SD2CLOUD`) it works exactly as described here. On a memory card, among the saved data, it works as a
+copy on another device does: it opens and hands over to the SD2Cloud on the microSD when there is one.
+
 The [README.txt](package/README.txt) included in the release explains every screen in detail.
 
 ## Controls

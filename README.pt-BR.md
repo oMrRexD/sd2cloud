@@ -97,6 +97,11 @@ Se o seu OPL não lista os apps do microSD do sd2psx (versão sem suporte a MMCE
 `APPS/SD2Cloud` para a pasta `APPS` do pendrive USB ou do cartão do MX4SIO e abra o SD2Cloud por lá. Ele passa a
 vez para a cópia do microSD, onde ficam as configurações, o assistente de IGR e as atualizações.
 
+**Save Application System (SAS).** Cada release traz também o `APP_SD2CLOUD.psu`: o mesmo programa em uma única
+pasta `APP_SD2CLOUD`, com ícone 3D próprio para o browser do PS2. Na pasta `APPS` do microSD
+(`APPS/APP_SD2CLOUD`) ele funciona exatamente como descrito aqui. Em um cartão de memória, junto dos dados
+salvos, funciona como uma cópia em outro dispositivo: abre e passa a vez para o SD2Cloud do microSD, quando há um.
+
 O [LEIA-ME.txt](package/LEIA-ME.txt) incluído na release explica cada tela em detalhes.
 
 ## Controles

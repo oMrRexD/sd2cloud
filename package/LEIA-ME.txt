@@ -53,6 +53,10 @@ INSTALAÇÃO
    Se o seu OPL não lista os apps do microSD do sd2psx (versão sem suporte a MMCE), copie também a pasta
    APPS/SD2Cloud para a pasta APPS do pendrive USB ou do cartão do MX4SIO e abra o SD2Cloud por lá. Ele
    passa a vez para a cópia do microSD, onde ficam as configurações, o assistente de IGR e as atualizações.
+   Save Application System (SAS): cada release traz também o APP_SD2CLOUD.psu, o mesmo programa em uma
+   única pasta APP_SD2CLOUD, com ícone 3D próprio para o browser do PS2. Na pasta APPS do microSD
+   (APPS/APP_SD2CLOUD) ele funciona exatamente como descrito aqui. Em um cartão de memória, junto dos
+   dados salvos, funciona como uma cópia em outro dispositivo.
 3. Sem uma conta do Google conectada, o SD2Cloud pergunta se você deseja conectá-la agora. Escolhendo
    "Agora não", ele abre direto na tela principal ("Não perguntar mais", no TRIÂNGULO, faz o mesmo e a pergunta não volta:
    ask_connect = no no sd2cloud.ini); a conta pode ser conectada depois, em Configurações
