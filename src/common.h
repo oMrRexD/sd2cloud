@@ -35,6 +35,8 @@ void local_time(datetime_t *t);
 void card_time_local(int year, int month, int day, int hour, int minute, int second, datetime_t *t);
 void log_raw(const char *d, size_t n);
 void log_msg(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
+/* a sync started by IGR failed: what the log said of that run goes to <data>sync-error.txt (the last failure only) */
+void log_save_sync_error(void);
 int network_up(void);                       /* 0 = ok, else the id of the message to show */
 void run_elf(const char *path) __attribute__((noreturn));   /* falls back to the OSD if it can't */
 /* where a program to open is: the sd2psx (or PCSX2's host:), a memory card, USB, MX4SIO, the HDD exFAT or APA */

@@ -194,8 +194,10 @@ LOCAL DOS ARQUIVOS
 - APPS/SD2Cloud/   o aplicativo (atualizado pelo próprio SD2Cloud; veja ATUALIZAÇÃO).
 - SD2Cloud/        na raiz do microSD: sd2cloud.ini (as configurações; se for apagado, o SD2Cloud o
                    recria), sd2cloud.example.ini (o que cada configuração significa; o SD2Cloud nunca
-                   lê este arquivo), state.ini (o registro do que já foi enviado) e token.dat (o acesso à sua
-                   conta do Google; não compartilhe este arquivo).
+                   lê este arquivo), sync-error.txt (o que aconteceu na última sincronização automática
+                   que falhou, se houve: vale mandar junto ao relatar um problema), state.ini (o registro
+                   do que já foi enviado) e token.dat (o acesso à sua conta do Google; não compartilhe este
+                   arquivo).
 - Google Drive:    "PS2 Memory Card Backups/<pasta do cartão>/<cartão> AAAA-MM-DD HHhMM.zip".
                    São mantidos 10 backups por cartão por padrão; o mais antigo só é removido depois que
                    o novo backup é verificado.

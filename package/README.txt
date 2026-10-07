@@ -184,6 +184,8 @@ FILE LOCATIONS
 - APPS/SD2Cloud/   the application (updated by SD2Cloud itself; see UPDATING).
 - SD2Cloud/        on the microSD root: sd2cloud.ini (the settings; if deleted, SD2Cloud recreates it),
                    sd2cloud.example.ini (what each setting means; SD2Cloud never reads it),
+                   sync-error.txt (what happened in the last automatic sync that failed, if any: worth
+                   sending along when reporting a problem),
                    state.ini (a record of what has been uploaded) and token.dat (access to your Google
                    account; do not share this file).
 - Google Drive:    "PS2 Memory Card Backups/<card folder>/<card> YYYY-MM-DD HHhMM.zip".

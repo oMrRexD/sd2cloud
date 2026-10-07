@@ -4673,6 +4673,12 @@ static void igr(void)
     if (backupCancelled)
         leave(cfg.igr_return);
     if (failed) {
+        datetime_t d;
+        local_time(&d);
+        for (i = 0; i < nResults; i++)
+            log_msg("result: %s", results[i].text);
+        log_msg("automatic sync failed, %04d-%02d-%02d %02d:%02d", d.year, d.month, d.day, d.hour, d.minute);
+        log_save_sync_error();   /* nobody was watching: what happened is kept, to tell why later */
         if (cfg.igr_summary > 0)
             summary_screen(cfg.igr_summary);
         leave(cfg.igr_return);

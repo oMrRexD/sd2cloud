@@ -92,13 +92,16 @@ static buffer_t logRam;         /* on the console the log goes to the card only 
 
 static int logSema = -1;          /* the log is written from more than one thread */
 
-/* is anyone keeping the log? On the console only the debug build does: the release doesn't even format the lines */
+/* is anyone keeping the log? On the console only the debug build does: the release doesn't even format the lines,
+ * except in a sync started by IGR, which nobody is watching: what log_msg says of that run is kept in memory, and goes
+ * to a file if the sync fails (log_save_sync_error) */
+static buffer_t syncLog;
 static int log_kept(void)
 {
 #ifdef DEBUG_BUILD
     return 1;
 #else
-    return logFd >= 0;
+    return logFd >= 0 || igrMode;
 #endif
 }
 
@@ -129,6 +132,24 @@ void log_msg(const char *fmt, ...)
     va_end(ap);
     log_raw(t, strlen(t));
     log_raw("\r\n", 2);
+    if (igrMode) {   /* (only these lines: never what a transfer prints through log_raw) */
+        if (logSema >= 0)
+            WaitSema(logSema);
+        if (syncLog.len < 32 * 1024) {
+            buf_append(&syncLog, t, strlen(t));
+            buf_append(&syncLog, "\r\n", 2);
+        }
+        if (logSema >= 0)
+            SignalSema(logSema);
+    }
+}
+
+void log_save_sync_error(void)
+{
+    char c[64];
+    snprintf(c, sizeof(c), "%ssync-error.txt", dataDir);
+    if (syncLog.len)
+        file_write(c, syncLog.data, syncLog.len);
 }
 
 /* ------------------------------------------------------------ time and controller */
@@ -377,7 +398,15 @@ void card_time_local(int year, int month, int day, int hour, int minute, int sec
 
 /* The drivers and the IP stack start once: starting lwIP a second time hangs the PS2 (that's what happened when the
  * first try failed for lack of a cable and a backup tried again). Every later call only waits for the cable and the
- * router again. A plugged cable has its link in 1-3 s, so 5 s without it = no cable; the router gets its own time. */
+ * router again. A plugged cable has its link in 1-3 s, so 5 s without it = no cable; the router gets its own time.
+ *
+ * The address: lwIP asks the router for one as soon as it starts, before the cable's link is up, and by itself only
+ * asks again after 2, 4, 8... seconds. A request that goes out while the link (or the router's port) isn't ready is
+ * lost, and one lost at the wrong moment left the next one past the time SD2Cloud waited: "no address from the
+ * router", now and then, with nothing wrong with the router. So the request is made again as soon as the link is
+ * up, and again every few seconds until the address comes */
+#define NET_DHCP_MS   30000
+#define NET_DHCP_AGAIN 3000   /* without an offer from the router for this long, it is asked again */
 static int netStarted;
 #ifdef DEBUG_BUILD
 int debugNoLinkOnce;   /* script "N": the first try finds no cable (PCSX2 can't unplug one) */
@@ -588,13 +617,29 @@ int network_up(void)
 #endif
         return T_NET_ERR_LINK;
     }
-#ifdef DEBUG_BUILD
     log_msg("network: link up after %d ms", (int)(now_ms() - t0));
-#endif
     if (!dhcp_bound()) {
-        if (!fresh)
-            start_dhcp(1);
-        if (wait_for(dhcp_bound, igrMode ? 12000 : 20000) != 0) {
+        u64 end = now_ms() + NET_DHCP_MS, last = 0;
+        int asked = 0, state = -1;
+        while (!dhcp_bound() && now_ms() < end) {
+            t_ip_info info;
+            int s = ps2ip_getconfig("sm0", &info) < 0 ? -1 : (int)info.dhcp_status;
+            if (s != state) {   /* (each step of the way, with its time: what tells a slow router from a lost request) */
+                log_msg("network: DHCP state %d after %d ms", s, (int)(now_ms() - t0));
+                state = s;
+            }
+            /* asked again only while nothing has come from the router: once it has offered an address, lwIP is
+             * busy accepting and checking it, and asking again would throw that away */
+            if ((s == DHCP_STATE_SELECTING || s == DHCP_STATE_INIT || s == DHCP_STATE_OFF || s == DHCP_STATE_BACKING_OFF || s < 0) &&
+                now_ms() - last >= NET_DHCP_AGAIN) {
+                start_dhcp(1);
+                last = now_ms();
+                asked++;
+            }
+            sleep_ms(200);
+        }
+        log_msg("network: the router was asked for an address %d time(s), %d ms after the start", asked, (int)(now_ms() - t0));
+        if (!dhcp_bound()) {
             log_msg("network: link up, but no address from the router");
 #ifdef DEBUG_BUILD
             debugNoDhcpOnce = 0;
