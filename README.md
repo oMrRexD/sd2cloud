@@ -60,6 +60,9 @@ on one yet.
 - Settings on the console (START), saved to `sd2cloud.ini`, which can also be edited on a PC.
 - Returns to OPL on the microSD, a memory card, USB, MX4SIO or the internal HDD (exFAT or APA), loading only the
   drivers of that device.
+- Starts other programs: any ELF picked in the folders of the microSD or of a USB drive (X on it in **Files**, or
+  "Run an ELF..." when leaving), and an application kept on a memory card the Save Application System's way ("Start
+  application" on its page; the sd2psx is switched to that card for it).
 - Updates itself from this repository's releases, verified against GitHub's SHA-256.
 - Interface inspired by the PlayStation BB Navigator.
 - English and Portuguese.

@@ -1705,6 +1705,21 @@ static void card_back(void)
     }
 }
 
+/* the device didn't take that card: said, with what the sd2psx needs for that kind of card */
+static void insert_failed(const card_t *c)
+{
+    char t[300];
+    snprintf(t, sizeof(t), T(T_INSERT_FAILED), c->base);
+    dlg_new(0, NULL);
+    dlg_line(FONT_TEXT, COLOR_WARN, 8, t);
+    if (c->type == TYPE_BOOT || c->type == TYPE_GAMEID)
+        dlg_line(FONT_SMALL, COLOR_DIM, 0, T(c->type == TYPE_BOOT ? T_INSERT_NEEDS_BOOT : T_INSERT_NEEDS_GAMEID));
+    dlg_buttons(BUTTON_CROSS, T_BACK, 0, 0);
+    dlg_show();
+    wait_button(PAD_CROSS | PAD_CIRCLE, 0);
+    sound_play(SND_BACK);
+}
+
 /* a card's "Insert into sd2psx": the sd2psx takes that card, as if picked with its own buttons */
 static void insert_option(const card_t *c)
 {
@@ -1718,15 +1733,26 @@ static void insert_option(const card_t *c)
         message_wait(0, NULL, COLOR_OK, t);
         return;
     }
-    snprintf(t, sizeof(t), T(T_INSERT_FAILED), c->base);
-    dlg_new(0, NULL);
-    dlg_line(FONT_TEXT, COLOR_WARN, 8, t);
-    if (c->type != TYPE_NORMAL)   /* what the sd2psx needs for that kind of card */
-        dlg_line(FONT_SMALL, COLOR_DIM, 0, T(c->type == TYPE_BOOT ? T_INSERT_NEEDS_BOOT : T_INSERT_NEEDS_GAMEID));
-    dlg_buttons(BUTTON_CROSS, T_BACK, 0, 0);
-    dlg_show();
-    wait_button(PAD_CROSS | PAD_CIRCLE, 0);
-    sound_play(SND_BACK);
+    insert_failed(c);
+}
+
+/* "Start application", on a save that is a program: it runs from the memory card slot, in its own folder, as when it
+ * is started from the PS2 browser. The device has to be on that card for it: it is told to take it when it isn't */
+static void start_app(card_t *c, const char *folder, const char *boot)
+{
+    char path[160];
+    find_active();
+    if (!(activeCard >= 0 && &cards[activeCard] == c)) {
+        if (can_insert(c))
+            message(0, NULL, COLOR_TEXT, T(T_SWITCHING));
+        if (insert_card(c) != 0) {
+            insert_failed(c);
+            return;
+        }
+    }
+    snprintf(path, sizeof(path), "mc%c:/%s/%s", strncmp(sdRoot, "mmce", 4) ? '0' : sdRoot[4], folder, boot);
+    log_msg("starting %s of %s", path, c->id);
+    leave(path);
 }
 
 /* confirm, back up the current card if it changed, and restore. 1 = the card was restored */
@@ -2144,6 +2170,7 @@ static int choose(const char *title, const char *const *items, int n, int start)
  * file's name where the card's would be */
 
 static const int saveOptions[] = {T_COPY, T_MOVE, T_DELETE, T_TO_CLOUD};
+static const int appOptions[] = {T_START_APP, T_COPY, T_MOVE, T_DELETE, T_TO_CLOUD};   /* a save that is a program */
 static const int psuOptions[] = {T_IMPORT};
 static struct {
     save_view_t *v;
@@ -2184,7 +2211,7 @@ static void scene_save(float t)
     y += 6;
     text_center_shadow(FONT_TEXT, cx, y, 0xE4E4E8, sp.date);
     text_center_shadow(FONT_TEXT, cx, y + 23, 0xE4E4E8, sp.size);
-    for (i = 0, y = 232; i < sp.nOptions; i++, y += 31) {
+    for (i = 0, y = 232; i < sp.nOptions; i++, y += sp.nOptions > 4 ? 28 : 31) {
         const char *s = T(sp.options[i]);
         float x = (int)(cx - ui_measure(FONT_BROWSER, s) / 2);
         if (i == sp.cursor)
@@ -2241,6 +2268,7 @@ static struct {
 } fbGive;
 static card_t *fbCard;   /* a whole card is being copied to a device: triangle in files_screen writes it there */
 static void files_screen(int dev);
+static void target_for_ini(const char *path, char *out, size_t size);
 static int install_card(void);
 static void menu_refresh(void);
 
@@ -2921,15 +2949,21 @@ static int save_page_choice(void)
 static int save_screen(card_t *c, int i)
 {
     save_view_t *v = &brw.saves[i];
+    char boot[40];
     long long bytes = 0;
     int files = 0, k;
     mcfs_save_info(c->path, v->s.folder, &bytes, &files);
     if (c == &fileCard)
         save_page(v, c->base, bytes, saveOptions, 1);   /* a card file is only read: a save can be copied out of it */
+    else if (mcfs_save_app(c->path, &v->s, boot, sizeof(boot)))
+        save_page(v, c->base, bytes, appOptions, 5);
     else
         save_page(v, c->base, bytes, saveOptions, 4);
     while ((k = save_page_choice()) != 0) {
         switch (k) {
+        case T_START_APP:
+            start_app(c, v->s.folder, boot);
+            break;
         case T_COPY:
             save_transfer(c, v, 0);
             break;
@@ -3247,14 +3281,25 @@ static int is_card_file(const char *name, long long size)
     return !strcasecmp(e, ".mcd") || !strcasecmp(e, ".mc2") || !strcasecmp(e, ".ps2") || !strcasecmp(e, ".zip");
 }
 
-/* What X does with an entry of the folder shown: FB_ENTER a folder, FB_PSU or FB_CARD show what the file holds, 0 =
+/* What X does with an entry of the folder shown: FB_ENTER a folder, FB_PSU or FB_CARD show what the file holds, FB_ELF
+ * runs it (SD2Cloud leaves), 0 =
  * nothing (a file of no use here; or one that isn't opened while a save or a card is on its way to this folder: a
  * save's own page is waiting underneath) */
-enum { FB_ENTER = 1, FB_PSU, FB_CARD };
+enum { FB_ENTER = 1, FB_PSU, FB_CARD, FB_ELF };
+static int fbExit;   /* the folders were opened from "Exit to": the program run from them is the choice kept for next time */
+
+static int is_elf(const char *name)
+{
+    size_t n = strlen(name);
+    return n > 4 && !strcasecmp(name + n - 4, ".elf");
+}
+
 static int fb_opens(const dir_entry_t *e)
 {
     if (e->dir)
         return FB_ENTER;
+    if (is_elf(e->name) && !fbGive.c && !fbCard)
+        return FB_ELF;
     if (is_psu(e->name) && !fbGive.c)
         return FB_PSU;
     if (is_card_file(e->name, e->size) && !fbGive.c && !fbCard)
@@ -3364,12 +3409,15 @@ static void scene_files(float t)
     look_title(FB_X, 82, fb.title, 0);
     for (i = fb.top, y = FB_Y0; i < fb.n && i < fb.top + FB_ROWS; i++, y += FB_ROW) {
         const dir_entry_t *e = &fb.list[i];
-        int usable = e->dir || is_psu(e->name) || is_card_file(e->name, e->size);
+        int elf = !e->dir && is_elf(e->name);
+        int usable = e->dir || elf || is_psu(e->name) || is_card_file(e->name, e->size);
         float my = y + lh / 2.0f + 1;
         if (e->dir) {   /* a small folder */
             ui_rect(FB_X, my - 8, 7, 3, 0xD9B95C, 0x58);
             ui_rect(FB_X, my - 6, 16, 12, 0xD9B95C, 0x58);
-        } else if (usable)
+        } else if (elf)   /* a program: a small page, lit */
+            ui_rect(FB_X + 3, my - 7, 10, 13, 0x8FB4E8, 0x60);
+        else if (usable)
             ui_image(IMG_MINICARD, FB_X + 2, my - 8, 13, 15, 0xFFFFFF, 0x80);
         else
             ui_rect(FB_X + 3, my - 7, 10, 13, FB_DIM, 0x38);
@@ -3407,7 +3455,7 @@ static void scene_files(float t)
         const dir_entry_t *e = fb.n ? &fb.list[fb.cursor] : NULL;
         int n = 1;
         if (e && fb_opens(e))
-            l[n].button = BUTTON_CROSS, l[n++].text = T(T_OPEN);
+            l[n].button = BUTTON_CROSS, l[n++].text = T(fb_opens(&fb.list[fb.cursor]) == FB_ELF ? T_RUN : T_OPEN);
         if (fbCard || fbGive.c)   /* a card or a save is on its way to the folder shown */
             l[n].button = BUTTON_TRIANGLE, l[n++].text = T(T_EXPORT);
         else if (e && !e->dir && is_psu(e->name))   /* what the selected file is good for */
@@ -3742,6 +3790,19 @@ static void files_screen(int dev)
                 psu_screen(name, 0);
             else if (k == FB_CARD)
                 card_file_screen(name, 0);
+            else if (k == FB_ELF) {   /* SD2Cloud leaves, as for a program picked in "Exit to" */
+                char path[660], target[200];
+                snprintf(path, sizeof(path), "%s%s", fb.dir, name);
+                if (strlen(path) < sizeof(target)) {
+                    target_for_ini(path, target, sizeof(target));
+                    if (fbExit && strcasecmp(target, cfg.manual_return) != 0) {
+                        if (cfg.manual_name[0])
+                            config_set("manual", "name", "");
+                        config_set("manual", "return", target);
+                    }
+                    leave(target);
+                }
+            }
         } else if ((b & PAD_SQUARE) && fb.n && !fb.list[fb.cursor].dir && !fbGive.c && !fbCard) {
             char name[256];   /* the file itself, without opening it first */
             snprintf(name, sizeof(name), "%s", fb.list[fb.cursor].name);
@@ -4491,8 +4552,8 @@ static void about_screen(void)
  * (sd2cloud.ini [manual] return; "auto" = the OPL SD2Cloud would pick), and the choice is kept for next time */
 static void exit_menu(void)
 {
-    static const char *items[MAX_APPS + 2];
-    static char values[MAX_APPS + 2][200];
+    static const char *items[MAX_APPS + 3], *devices[FDEVS];
+    static char values[MAX_APPS + 3][200];
     char q[260], w[260];
     int n = 0, i, k, start = 0;
     if (!appsListed)
@@ -4501,6 +4562,8 @@ static void exit_menu(void)
         items[n] = given_name(apps[i].path) ? given_name(apps[i].path) : apps[i].title;
         target_for_ini(apps[i].path, values[n++], sizeof(values[0]));
     }
+    items[n] = T(T_EXIT_FILES);   /* any ELF, picked in the folders of the microSD or of a USB drive */
+    snprintf(values[n++], sizeof(values[0]), "files");
     items[n] = T(T_EXIT_BROWSER);
     snprintf(values[n++], sizeof(values[0]), "osd");
     n = add_custom(cfg.manual_return, items, values, n);
@@ -4513,6 +4576,16 @@ static void exit_menu(void)
     }
     if ((k = choose(T(T_EXIT_TO), items, n, start)) < 0)
         return;
+    if (!strcmp(values[k], "files")) {
+        for (i = 0; i < FDEVS; i++)
+            devices[i] = T(deviceText[i]);
+        if ((i = choose(T(T_EXIT_FILES), devices, FDEVS, 0)) >= 0) {
+            fbExit = 1;
+            files_screen(i);   /* only comes back when nothing was run */
+            fbExit = 0;
+        }
+        return;
+    }
     if (strcasecmp(values[k], cfg.manual_return) != 0) {
         if (cfg.manual_name[0])   /* the name was the other program's */
             config_set("manual", "name", "");

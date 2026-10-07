@@ -64,6 +64,9 @@ SD2Cloud ainda não foi testado em um.
 - Configurações no próprio console (START), gravadas no `sd2cloud.ini`, que também pode ser editado no PC.
 - Retorna ao OPL no microSD, num cartão de memória, no USB, no MX4SIO ou no HD interno (exFAT ou APA), carregando
   somente os drivers desse dispositivo.
+- Inicia outros programas: qualquer ELF escolhido nas pastas do microSD ou de um pendrive USB (X sobre ele em
+  **Arquivos**, ou "Executar um ELF..." ao sair) e um aplicativo guardado em um cartão de memória no formato do Save
+  Application System ("Iniciar aplicativo" na página dele; o sd2psx é trocado para esse cartão).
 - Atualiza-se pelas releases deste repositório, com verificação pelo SHA-256 publicado no GitHub.
 - Visual inspirado no PlayStation BB Navigator.
 - Em português e em inglês.

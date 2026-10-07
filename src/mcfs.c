@@ -539,6 +539,48 @@ static int read_icon(mc_t *m, const mcfs_save_t *s, buffer_t *iconsys, buffer_t 
     return read_file(m, s, icoName, ico);
 }
 
+typedef struct {
+    const char *name;
+    char *real;
+    size_t size;
+} find_name_t;
+
+/* the file of that name whatever its letters' case, as a title.cfg may write it: its name as the folder has it */
+static int on_find_name(mc_t *m, const unsigned char *e, void *u)
+{
+    find_name_t *f = u;
+    (void)m;
+    if (!f->real[0] && is_live(e) && !(le16(e) & DF_DIRECTORY) && le32(e + 4) && !strncasecmp((const char *)e + 64, f->name, 32))
+        snprintf(f->real, f->size, "%.32s", (const char *)e + 64);
+    return 0;
+}
+
+int mcfs_save_app(const char *path, const mcfs_save_t *s, char *boot, size_t size)
+{
+    buffer_t cfg = {0};
+    char name[64] = "", *line, *end;
+    find_name_t f = {name, boot, size};
+    boot[0] = 0;
+    if (mc_open(&mc, path) < 0)
+        return 0;
+    if (read_file(&mc, s, "title.cfg", &cfg) == 0 && cfg.len < 16 * 1024) {
+        for (line = (char *)cfg.data; line && *line && !name[0]; line = end ? end + 1 : NULL) {
+            end = strchr(line, '\n');
+            if (!strncmp(line, "boot=", 5)) {   /* as OPL reads it: "boot", in lowercase, at the start of a line */
+                size_t n = strcspn(line + 5, "\r\n");
+                while (n && line[5 + n - 1] == ' ')
+                    n--;
+                snprintf(name, sizeof(name), "%.*s", (int)(n < sizeof(name) - 1 ? n : sizeof(name) - 1), line + 5);
+            }
+        }
+        if (name[0])
+            walk_dir(&mc, s->cluster, s->count, on_find_name, &f);
+    }
+    mc_close();
+    buf_free(&cfg);
+    return boot[0] != 0;
+}
+
 int mcfs_save_icon(const char *path, const mcfs_save_t *s, buffer_t *iconsys, buffer_t *ico)
 {
     int r;

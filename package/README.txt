@@ -26,6 +26,10 @@ Memory card manager
 - Opens memory card files from the microSD or a USB drive (.mcd, a MemCard PRO2's .mc2, PCSX2's .ps2, OPL's
   virtual memory cards (.bin), or the .zip SD2Cloud itself writes) and installs them as cards of the sd2psx
   (see FILES).
+- Starts other programs: X on an ELF in the folders of the microSD or of a USB drive runs it (also from "Run
+  an ELF..." in the list shown when leaving), and an application kept on a memory card with a title.cfg (the
+  Save Application System's way) gets "Start application" on its page: the sd2psx is switched to that card
+  and the program runs from the memory card slot.
 
 REQUIREMENTS
 - An sd2psx-family device with the sd2psXtd firmware (MMCE support).

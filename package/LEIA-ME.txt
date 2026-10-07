@@ -28,6 +28,10 @@ Gerenciador de cartões de memória
 - Abre arquivos de cartão de memória do microSD ou de um pendrive USB (.mcd, o .mc2 do MemCard PRO2, o .ps2
   do PCSX2, os cartões virtuais do OPL (.bin) ou o .zip gravado pelo próprio SD2Cloud) e os instala como
   cartões do sd2psx (veja ARQUIVOS).
+- Inicia outros programas: X sobre um ELF nas pastas do microSD ou de um pendrive USB executa esse programa
+  (também por "Executar um ELF...", na lista exibida ao sair), e um aplicativo guardado em um cartão de
+  memória com title.cfg (o formato do Save Application System) ganha "Iniciar aplicativo" na página dele: o
+  sd2psx é trocado para esse cartão e o programa roda a partir do slot de memory card.
 
 REQUISITOS
 - Dispositivo da família sd2psx com o firmware sd2psXtd (suporte a MMCE).

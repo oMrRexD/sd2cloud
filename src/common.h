@@ -257,6 +257,9 @@ typedef struct {
 int mcfs_list_saves(const char *path, mcfs_save_t *list, int max, long long *freeBytes);
 /* the icon.sys and the 3D icon of a save from that list. 0 = ok */
 int mcfs_save_icon(const char *path, const mcfs_save_t *save, buffer_t *iconsys, buffer_t *ico);
+/* Is that save a program to start, the way the Save Application System keeps one: a title.cfg whose "boot" line names
+ * a file of the same folder? 1 = yes, and boot is that file's name as the folder has it */
+int mcfs_save_app(const char *path, const mcfs_save_t *save, char *boot, size_t size);
 /* changing a card (a .mcd that the sd2psx is NOT using right now): copy a save to another card (read back and
  * compared), delete a save, export a save as a .psu, import one from a .psu file (also read back and compared).
  * 0 = ok, else MCFS_ERR_* (BAD = the file isn't a .psu this can use) */

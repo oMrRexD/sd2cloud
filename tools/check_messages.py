@@ -129,6 +129,7 @@ PLACE = {
     "T_COPY_TO": ("text", 200, 1), "T_MOVE_TO": ("text", 200, 1), "T_NO_ROOM": ("small", 200, 1),
     # a save's page: the column on the right, centered on x = 452
     "T_COPY": ("browser", 304, 1), "T_MOVE": ("browser", 304, 1), "T_DELETE": ("browser", 304, 1),
+    "T_START_APP": ("browser", 304, 1), "T_EXIT_FILES": ("text", 320, 1),
     "T_TO_CLOUD": ("browser", 304, 1), "T_SAVE_KB": ("text", 304, 1),
     # the tabs over the list of cards (FONT_SMALL, the four side by side, centered on the 208 px list)
     "T_TAB_CARDS": ("small", 70, 1), "T_TAB_GAMES": ("small", 60, 1), "T_TAB_BOOT": ("small", 50, 1),
@@ -175,6 +176,7 @@ LEGENDS = [
     (("T_BACK", "T_CONTINUE"), False, False), (("T_BACK", "T_INSERT_YES"), False, False),
     (("T_BACK", "T_OPEN", "T_OPTIONS"), False, False), (("T_BACK", "T_OPEN", "T_INSTALL"), False, False),
     (("T_BACK", "T_REPLACE", "T_KEEP_BOTH"), False, False), (("T_BACK", "T_OPEN"), False, False), (("T_BACK", "T_INSTALL_YES"), False, False),
+    (("T_BACK", "T_RUN"), False, False),
 ]
 
 
