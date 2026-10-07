@@ -115,7 +115,8 @@ SETTINGS (START)
   the same option reinstalls it (or updates it) or uninstalls it.
 - After IGR, open: the program started after the IGR sync. The choices are Automatic (the OPL found on the
   microSD), the programs in the APPS folder and the PS2 browser.
-- Language and Backups per card (3, 5, 10, 20, 50 or all).
+- Language and Backups kept per card (3, 5, 10, 20, 50 or no limit): how many backups of each card stay on
+  Drive; past that, the oldest is removed.
 - Backup format: .mcd (the sd2psx's own) or .ps2 (the format PCSX2 uses: take the file out of the backup's zip
   and put it in PCSX2's memory card folder). Either one can be restored, whatever is set.
 - Check for updates: looks for a new version right away and, if there is one, offers to update.
