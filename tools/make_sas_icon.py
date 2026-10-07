@@ -37,12 +37,23 @@ def quad(p, n, uv):
         verts.append((p[i], n, uv[i]))
 
 
+def tri(p, n, uv):
+    """three corners (any order around), their normal and texture corners: one triangle, counterclockwise from outside"""
+    a, b, c = p
+    cross = ((b[1] - a[1]) * (c[2] - a[2]) - (b[2] - a[2]) * (c[1] - a[1]), (b[2] - a[2]) * (c[0] - a[0]) - (b[0] - a[0]) * (c[2] - a[2]),
+             (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]))
+    if not isinstance(uv[0], tuple):
+        uv = [uv] * 3
+    for i in ((0, 1, 2) if sum(x * y for x, y in zip(cross, n)) > 0 else (0, 2, 1)):
+        verts.append((p[i], n, uv[i]))
+
+
 def slab(shape, z0, z1, color, face=None):
     """a flat shape in x and y standing out of the face from z0 to z1: its front and its rim"""
     cx, cy = sum(p[0] for p in shape) / len(shape), sum(p[1] for p in shape) / len(shape)
     for i, (xa, ya) in enumerate(shape):
         xb, yb = shape[(i + 1) % len(shape)]
-        quad([(cx, cy, z1), (xa, ya, z1), (xb, yb, z1), (xb, yb, z1)], (0, 0, 1), face or color)
+        tri([(cx, cy, z1), (xa, ya, z1), (xb, yb, z1)], (0, 0, 1), face or color)
         nx, ny = yb - ya, xa - xb
         l = math.hypot(nx, ny) or 1
         nx, ny = nx / l, ny / l
@@ -101,8 +112,8 @@ def plate(shape, z0, z1, color, box):
     c = (0.0, (min(ys) + max(ys)) / 2)
     for i, p in enumerate(shape):
         q = shape[(i + 1) % len(shape)]
-        quad([(c[0], c[1], z1), (p[0], p[1], z1), (q[0], q[1], z1), (q[0], q[1], z1)], (0, 0, 1), [uv(c), uv(p), uv(q), uv(q)])
-        quad([(c[0], c[1], z0), (p[0], p[1], z0), (q[0], q[1], z0), (q[0], q[1], z0)], (0, 0, -1), color)
+        tri([(c[0], c[1], z1), (p[0], p[1], z1), (q[0], q[1], z1)], (0, 0, 1), [uv(c), uv(p), uv(q)])
+        tri([(c[0], c[1], z0), (p[0], p[1], z0), (q[0], q[1], z0)], (0, 0, -1), color)
         nx, ny = q[1] - p[1], p[0] - q[0]
         l = math.hypot(nx, ny) or 1
         nx, ny = nx / l, ny / l
