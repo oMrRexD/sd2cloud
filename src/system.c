@@ -291,6 +291,8 @@ static u32 script_next_button(u32 mask)
 }
 #endif
 
+void (*idleHook)(void);
+
 u32 wait_button(u32 mask, int seconds)
 {
     u64 end = now_ms() + (u64)seconds * 1000, release = now_ms() + 2000;
@@ -309,6 +311,8 @@ u32 wait_button(u32 mask, int seconds)
             return b;
         if (seconds > 0 && now_ms() >= end)
             return 0;
+        if (idleHook)
+            idleHook();
         sleep_ms(20);
     }
 }
@@ -349,6 +353,8 @@ u32 wait_nav_ms(u32 mask, int ms)
         held = b;
         if (ms >= 0 && t >= end)
             return 0;
+        if (idleHook)
+            idleHook();
         sleep_ms(16);
     }
 }
@@ -679,6 +685,8 @@ static int mmce_devctl(int cmd, void *arg, unsigned int len)
     return fileXioDevctl(dev, cmd, arg, len, NULL, 0);
 }
 
+int mmce_ping(void) { return mmce_devctl(MMCE_CMD_PING, NULL, 0); }
+
 int mmce_active_card(int *channel)
 {
     int card, ch;
@@ -758,6 +766,12 @@ static void find_device(void)
 #endif
     log_msg("device: %s (ping %d: protocol %d, product %d, revision %d)", dev->name, r, r >= 0 ? (r >> 16) & 0xFF : 0, product,
             r >= 0 ? r & 0xFF : 0);
+}
+
+void system_reload(void)
+{
+    find_device();
+    config_read();
 }
 
 /* ------------------------------------------------------------ a USB drive, for the file browser */

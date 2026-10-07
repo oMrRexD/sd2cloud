@@ -27,6 +27,7 @@ u32 pad_buttons(void);                      /* buttons held right now (PAD_*) */
 u32 wait_button(u32 mask, int seconds);     /* 0 = timed out; seconds = 0 waits forever */
 u32 wait_nav(u32 mask);                     /* for lists: like wait_button, but the arrows repeat while held */
 u32 wait_nav_ms(u32 mask, int ms);          /* the same, giving up after ms (0 = no press) */
+extern void (*idleHook)(void);              /* called over and over while one of those waits (NULL = nothing to call) */
 typedef struct {
     int year, month, day, hour, minute, second;
 } datetime_t;
@@ -45,6 +46,9 @@ int device_of(const char *path);
 /* the card the sd2psx is emulating right now: its number (0 = BootCard, a game card or a named folder) and channel.
  * -1 = couldn't ask; -2 = not on an MMCE device (testing on PCSX2) */
 int mmce_active_card(int *channel);
+int mmce_ping(void);                        /* does the device answer? < 0 = no (taken out of the console) */
+/* the device is back after being taken out: which one it is and the settings on its microSD, read again */
+void system_reload(void);
 /* Tell the sd2psx to emulate another card, as its own buttons do: it writes what it holds of the current one to the
  * microSD, closes it and opens the other, a moment later. Each one only asks (0 = the sd2psx took the request):
  * whether the card changed has to be seen in the slot afterwards. A numbered card (its first channel), or with boot
@@ -311,6 +315,7 @@ int card_export(const card_t *c, const char *dest, int ps2, int (*progress)(long
 int google_init(void);
 int google_has_access(void);                /* there is a refresh token */
 void google_logout(int online);             /* revokes the access (online) and forgets it */
+void google_forget(void);                   /* the access in use was another account's (another microSD): asked for again */
 int google_refresh(void);                   /* 0 ok, -2 = must sign in again, -1 error */
 /* sign-in with a code: calls show(url, code) and waits; cancel() != 0 gives up. 0 = ok, -1 = given up, else the id
  * of the message that says why it failed */

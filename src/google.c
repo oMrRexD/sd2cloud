@@ -276,6 +276,8 @@ static long oauth(const char *url, char *fields, response_t *r)
 
 int google_has_access(void) { return refreshToken[0] != 0; }
 
+void google_forget(void) { accessToken[0] = 0; }
+
 /* forgets the access to Google: asks Google to revoke it (online = there is network) and clears token.dat. Without
  * network the access stays valid on Google's side until it is removed at myaccount.google.com/permissions */
 void google_logout(int online)

@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <setjmp.h>
 #include <string.h>
 #include <strings.h>
 #include <ctype.h>
@@ -54,6 +55,7 @@ static const card_t *singleCard;   /* the card of run_backup's mode 3 */
 static icon_t *sd2psxIcon;         /* the SD2PSX memory card, for the cards shared by many games */
 static icon_t *cubeIcon;           /* the blue cube of a save without an icon (or with one that can't be read) */
 static int activeCard = -1;        /* the card the sd2psx is emulating (index in cards[]); -1 = none here, or not known */
+static u64 watchNext;              /* when the device is next asked whether it is there (device_watch) */
 
 /* ------------------------------------------------------------ small things */
 
@@ -547,10 +549,13 @@ static void watch_cancel(void)
 #endif
 }
 
+static int watchOff;   /* the device isn't watched (device_watch): something is under way that can't be left halfway */
+
 /* 1 = yes, cancel */
 static int confirm_cancel(int title, int text)
 {
     int yes;
+    watchOff++;   /* (asked in the middle of what is being done) */
     sound_play(SND_BACK);
     dlg_new(COLOR_WARN, T(title));
     dlg_line(FONT_TEXT, COLOR_TEXT, 0, T(text));
@@ -561,6 +566,7 @@ static int confirm_cancel(int title, int text)
     cancelLatched = 0;
     circleDown = 1;   /* the circle of "keep going": it counts again only after being released */
     log_msg("cancel? %s", yes ? "yes" : "no, keep going");
+    watchOff--;
     return yes;
 }
 
@@ -1596,6 +1602,7 @@ static int insert_card(const card_t *c)
     if (!cardTold)
         mmce_active_card(&channel);   /* (for the log: what that device calls the card it ended on) */
     find_active();
+    watchNext = now_ms() + 10000;   /* it may still be busy with the change: not asked whether it is there for a while */
     return r;
 }
 
@@ -4707,6 +4714,93 @@ static int ask_connect(void)
     return 0;
 }
 
+/* -------- the device taken out of the console while SD2Cloud is open (to change its microSD, say). While a screen
+ * waits for the controller the device is asked, every couple of seconds, whether it is there. When it stops answering
+ * that is said on screen until it answers again; then everything that came from its microSD is read again from the
+ * start, as it may be another microSD: the settings, the account, the history and the cards. */
+
+static jmp_buf reloadPoint;   /* in main(), right before the main screen is set up */
+
+#ifdef DEBUG_BUILD
+static u64 debugGone;   /* script letter G: the device "doesn't answer" until then (PCSX2 has none to take out) */
+#endif
+
+static int device_answers(void)
+{
+#ifdef DEBUG_BUILD
+    if (debugGone)
+        return now_ms() >= debugGone;
+#endif
+    return mmce_ping() >= 0;
+}
+
+static void device_lost(void) __attribute__((noreturn));
+
+static void device_watch(void)
+{
+    int i;
+    if (watchOff || strncmp(sdRoot, "mmce", 4) != 0 || now_ms() < watchNext)
+        return;
+    watchNext = now_ms() + 2000;
+    for (i = 0; i < 3; i++) {   /* three times in a row: it may only be busy (changing cards) */
+        static int said;
+        int r = mmce_ping();
+        if (r >= 0) {
+            if (!said++)
+                log_msg("%s: watched while the screens wait (it answers %d)", dev->name, r);
+            return;
+        }
+        sleep_ms(500);
+    }
+    device_lost();
+}
+
+static void device_lost(void)
+{
+    DIR *d = NULL;
+    int i;
+    watchOff++;
+    log_msg("%s: it doesn't answer (taken out?)", dev->name);
+    sound_play(SND_BACK);
+    dlg_new(COLOR_WARN, T(T_DEVICE_GONE));
+    dlg_line(FONT_TEXT, COLOR_TEXT, 0, T(T_DEVICE_GONE_TEXT));
+    dlg_buttons(BUTTON_CIRCLE, T_EXIT_BROWSER, 0, 0);
+    dlg_show();
+    while (!device_answers()) {
+        if (pad_buttons() & PAD_CIRCLE)   /* without the microSD the PS2 browser is the only place left to go */
+            leave("osd");
+#ifdef DEBUG_BUILD
+        debug_capture_if('g');
+#endif
+        sleep_ms(400);
+    }
+#ifdef DEBUG_BUILD
+    debugGone = 0;
+#endif
+    log_msg("%s: it answers again", dev->name);
+    message(0, NULL, COLOR_TEXT, T(T_LOADING));
+    for (i = 0; i < 60 && !(d = opendir(sdRoot)); i++)   /* its microSD takes a moment */
+        sleep_ms(500);
+    if (d)
+        closedir(d);
+    log_msg("the microSD %s after %d ms", d ? "answers" : "still doesn't answer", i * 500);
+    /* what was open of the microSD that was there */
+    browser_close();
+    psu_close();
+    card_file_close(&cardFile);
+    message(0, NULL, COLOR_TEXT, T(T_LOADING));
+    fbCard = NULL;
+    fbGive.c = NULL;
+    fbExit = 0;
+    movedOff = NULL;
+    transferDest = NULL;
+    appsListed = 0;
+    activeCard = -1;
+    cancelLatched = 0;
+    watchOff = 0;
+    longjmp(reloadPoint, 1);
+}
+
 static void manual(void)
 {
     int n, r, i;
@@ -4780,6 +4874,12 @@ static void manual(void)
     for (;;) {
         u32 b, keys = PAD_UP | PAD_DOWN | TAB_KEYS | PAD_CROSS | PAD_CIRCLE | PAD_TRIANGLE | PAD_START;
         ui_scene(scene_menu);
+#ifdef DEBUG_BUILD
+        if (debug_take('G')) {
+            debugGone = now_ms() + 3000;
+            device_lost();
+        }
+#endif
         /* the selected card's icon is read when the cursor rests a moment */
         b = wait_nav_ms(keys, 250);
         if (!b) {
@@ -4912,6 +5012,17 @@ int main(int argc, char *argv[])
     google_set_poll(watch_cancel);
     if (igrMode)
         igr();
+    if (setjmp(reloadPoint)) {   /* the device was taken out and is back (device_watch): maybe with another microSD */
+        system_reload();
+        token_read();
+        google_forget();
+        state_read();
+        i18n_select(cfg.language);
+        if (!configExists)
+            config_write_template();
+        log_msg("read again: %s, %s", dev->name, google_has_access() ? "with a Google account" : "no Google account");
+    }
+    idleHook = device_watch;
     manual();
     return 0;
 }

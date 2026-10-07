@@ -176,7 +176,7 @@ LEGENDS = [
     (("T_BACK", "T_CONTINUE"), False, False), (("T_BACK", "T_INSERT_YES"), False, False),
     (("T_BACK", "T_OPEN", "T_OPTIONS"), False, False), (("T_BACK", "T_OPEN", "T_INSTALL"), False, False),
     (("T_BACK", "T_REPLACE", "T_KEEP_BOTH"), False, False), (("T_BACK", "T_OPEN"), False, False), (("T_BACK", "T_INSTALL_YES"), False, False),
-    (("T_BACK", "T_RUN"), False, False),
+    (("T_BACK", "T_RUN"), False, False), (("T_EXIT_BROWSER",), False, False),
 ]
 
 
