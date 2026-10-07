@@ -105,8 +105,9 @@ ser abertos.
   cartão que já tem dados com o mesmo nome, ou sem espaço suficiente, fica como está: elimine ou mova esse
   item antes.
 - Exportar: na pasta onde o arquivo deve ficar, TRIÂNGULO pede o cartão e depois o item. O arquivo recebe o
-  nome da pasta do item (BASLUS-21065SAVE.psu, por exemplo), é lido de volta e comparado. Um arquivo com o
-  mesmo nome só é substituído depois da sua confirmação.
+  nome da pasta do item (BASLUS-21065SAVE.psu, por exemplo), é lido de volta e comparado. Quando já existe
+  um arquivo com esse nome, o SD2Cloud pergunta: X substitui, QUADRADO mantém os dois (o novo recebe um
+  número: BASLUS-21065SAVE (2).psu).
   O mesmo pode ser feito pela página de um item: Copiar também lista a aba Arquivos entre os destinos; escolha
   o dispositivo, vá até a pasta e pressione TRIÂNGULO.
 Importar para o cartão que está em uso no sd2psx funciona como qualquer outra alteração nele: o SD2Cloud

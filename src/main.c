@@ -199,6 +199,13 @@ static void dlg_buttons(int b1, int t1, int b2, int t2)
         next.legend[next.nlegend].button = b2, next.legend[next.nlegend++].text = T(t2);
 }
 
+/* a third one, after those */
+static void dlg_button(int button, int text)
+{
+    if (next.nlegend < 3)
+        next.legend[next.nlegend].button = button, next.legend[next.nlegend++].text = T(text);
+}
+
 static void dlg_show(void)
 {
     ui_lock();
@@ -2841,14 +2848,47 @@ static void psu_screen(const char *file)
     ui_unlock();
 }
 
-/* a save of a card as a .psu file in the folder shown, read back and compared. 1 = written (file = its name) */
-static int export_save(card_t *c, save_view_t *v, char file[40])
+/* A file of that name is already in the folder shown. 0 = circle; 1 = it is replaced; 2 = both stay: file becomes
+ * "name (2).ext", or the first number after that which is free */
+static int ask_existing(char *file, size_t size)
+{
+    char t[300], path[480], stem[72], ext[8];
+    const char *dot = strrchr(file, '.');
+    u32 b;
+    int n;
+    snprintf(t, sizeof(t), T(T_EXPORT_REPLACE), file);
+    dlg_new(COLOR_TITLE, t);
+    dlg_buttons(BUTTON_CIRCLE, T_BACK, BUTTON_CROSS, T_REPLACE);
+    dlg_button(BUTTON_SQUARE, T_KEEP_BOTH);
+    dlg_show();
+    b = wait_button(PAD_CROSS | PAD_CIRCLE | PAD_SQUARE, 0);
+    if (!(b & (PAD_CROSS | PAD_SQUARE)) || (b & PAD_CIRCLE)) {
+        sound_play(SND_BACK);
+        return 0;
+    }
+    sound_play(SND_CONFIRM);
+    if (b & PAD_CROSS)
+        return 1;
+    snprintf(ext, sizeof(ext), "%s", dot ? dot : "");
+    snprintf(stem, sizeof(stem), "%.*s", dot ? (int)(dot - file) : (int)strlen(file), file);
+    for (n = 2; n < 100; n++) {
+        snprintf(file, size, "%s (%d)%s", stem, n, ext);
+        snprintf(path, sizeof(path), "%s%s", fb.dir, file);
+        if (!file_exists(path))
+            return 2;
+    }
+    return 0;
+}
+
+/* a save of a card as a .psu file in the folder shown, read back and compared. 1 = written (file = its name: the
+ * save's folder, with a number after it when one of that name is there and is kept) */
+static int export_save(card_t *c, save_view_t *v, char file[48])
 {
     char name[160], path[460], t[300];
     buffer_t psu = {0};
     int r, ok = 0;
     size_t i;
-    snprintf(file, 40, "%s.psu", v->s.folder);
+    snprintf(file, 48, "%s.psu", v->s.folder);
     for (i = 0; file[i]; i++)   /* what a file's name can't have on FAT */
         if ((unsigned char)file[i] < 0x20 || strchr("\\/:*?\"<>|", file[i]))
             file[i] = '_';
@@ -2859,9 +2899,9 @@ static int export_save(card_t *c, save_view_t *v, char file[40])
     if (!confirm(t, name, T_EXPORT))
         return 0;
     if (file_exists(path)) {
-        snprintf(t, sizeof(t), T(T_EXPORT_REPLACE), file);
-        if (!confirm(t, NULL, T_REPLACE))
+        if (!ask_existing(file, 48))
             return 0;
+        snprintf(path, sizeof(path), "%s%s", fb.dir, file);
     }
     message(0, NULL, COLOR_TEXT, T(T_WORKING_EXPORT));
     r = mcfs_export_psu(c->path, v->s.folder, &psu);
@@ -2891,7 +2931,7 @@ static int card_export_progress(long long done, long long total)
 static int export_card(card_t *c)
 {
     static const char *const formats[2] = {".mcd (sd2psx)", ".ps2 (PCSX2)"};
-    char file[64], path[470], t[300], f[100];
+    char file[72], path[480], t[300], f[100];
     int ps2, r;
     if ((ps2 = choose(c->base, formats, 2, cfg.ps2)) < 0)
         return 0;
@@ -2902,9 +2942,9 @@ static int export_card(card_t *c)
     if (!confirm(t, f, T_EXPORT))
         return 0;
     if (file_exists(path)) {
-        snprintf(t, sizeof(t), T(T_EXPORT_REPLACE), file);
-        if (!confirm(t, NULL, T_REPLACE))
+        if (!ask_existing(file, sizeof(file)))
             return 0;
+        snprintf(path, sizeof(path), "%s%s", fb.dir, file);
     }
     dlg_new(0, NULL);
     dlg_line(FONT_TEXT, COLOR_TEXT, 0, T(T_WORKING_EXPORT));
@@ -2923,7 +2963,7 @@ static int export_card(card_t *c)
 /* triangle: which card, then which of its saves */
 static void export_here(void)
 {
-    char file[40];
+    char file[48];
     card_t *c;
     int i, ok;
     if (!nCards) {
@@ -3000,7 +3040,7 @@ static void files_screen(int dev)
                 if (export_card(fbCard))
                     return;
             } else if (fbGive.c) {   /* came from a save's "Copy": that save goes into this folder, and back to its page */
-                char file[40];
+                char file[48];
                 if (export_save(fbGive.c, fbGive.v, file))
                     return;
             } else

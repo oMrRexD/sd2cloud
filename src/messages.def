@@ -244,6 +244,7 @@ X(T_ERR_EXPORT, "Unable to write the file.", "Não foi possível gravar o arquiv
 X(T_IMPORT, "Import to card", "Importar para cartão")
 X(T_IMPORT_YES, "Import", "Importar")
 X(T_IMPORT_TO, "Import to", "Importar para")
+X(T_KEEP_BOTH, "Keep both", "Manter os dois")
 X(T_CONFIRM_IMPORT, "Import \"%s\" to %s?", "Deseja importar \"%s\" para %s?")
 X(T_WORKING_IMPORT, "Importing...", "Importando...")
 X(T_DONE_IMPORT, "Imported to %s.", "Importação em %s concluída.")

@@ -97,8 +97,9 @@ and file is listed, but only .psu files can be opened.
   before the card is touched, and what is written is read back and compared. A card that already has data
   with the same name, or without enough space, is left as it is: delete or move that item first.
 - Exporting: in the folder where the file should go, TRIANGLE asks for the card and then for the item. The
-  file gets the item's folder name (BASLUS-21065SAVE.psu, for example), is read back and compared. A file
-  with the same name is only replaced after you confirm.
+  file gets the item's folder name (BASLUS-21065SAVE.psu, for example), is read back and compared. When a
+  file with that name is already there, SD2Cloud asks: X replaces it, SQUARE keeps both (the new one gets a
+  number: BASLUS-21065SAVE (2).psu).
   The same can be done from an item's page: Copy also lists the Files tab among the destinations; pick the
   device, go to the folder and press TRIANGLE.
 Importing into the card the sd2psx is using works as any other change to it: SD2Cloud asks, switches the
