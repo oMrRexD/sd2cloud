@@ -41,6 +41,7 @@ on one yet.
 - Shows the saved data of each card the way the PS2 browser does, with animated 3D icons.
 - Copies, moves and deletes saved data between the cards on the microSD (the destination's free space is shown),
   and uploads a single item to Google Drive as a `.psu` file.
+- Shows the saved data of every game card on one screen (**All saves**, in the Games tab), as if it were a single card.
 - Organizes the cards in tabs: numbered cards, game (Game ID) cards, in folders named after each game, and boot
   cards.
 - Marks the card the sd2psx is using and can make it take another one (in the card's options). To change the

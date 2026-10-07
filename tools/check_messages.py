@@ -132,6 +132,9 @@ PLACE = {
     # the tabs over the list of cards (FONT_SMALL, the four side by side, centered on the 208 px list)
     "T_TAB_CARDS": ("small", 70, 1), "T_TAB_GAMES": ("small", 60, 1), "T_TAB_BOOT": ("small", 50, 1),
     "T_TAB_FILES": ("small", 70, 1),
+    # "All saves", the first row of the Games group and the title over the big card; what goes under that card, and
+    # under the title of the screen it opens
+    "T_ALL_SAVES": ("text", 200, 1), "T_GAME_CARDS_N": ("text", 200, 1), "T_SAVES_COUNT": ("text", 300, 1),
     # the Files group: the devices in the list, what the group is for on the right, a folder that has nothing to show
     "T_DEV_SD": ("text", 172, 1), "T_DEV_USB": ("text", 172, 1), "T_FILES_HINT": ("small", 212, 5),
     "T_DIR_ERROR": ("text", 500, 1), "T_DIR_EMPTY": ("text", 500, 1),
@@ -171,7 +174,7 @@ LEGENDS = [
     (("T_BACK", "T_EXPORT"), False, False), (("T_BACK", "T_REPLACE"), False, False), (("T_BACK", "T_IMPORT_YES"), False, False),
     (("T_BACK", "T_CONTINUE"), False, False), (("T_BACK", "T_INSERT_YES"), False, False),
     (("T_BACK", "T_OPEN", "T_OPTIONS"), False, False), (("T_BACK", "T_OPEN", "T_INSTALL"), False, False),
-    (("T_BACK", "T_REPLACE", "T_KEEP_BOTH"), False, False), (("T_BACK", "T_INSTALL_YES"), False, False),
+    (("T_BACK", "T_REPLACE", "T_KEEP_BOTH"), False, False), (("T_BACK", "T_OPEN"), False, False), (("T_BACK", "T_INSTALL_YES"), False, False),
 ]
 
 

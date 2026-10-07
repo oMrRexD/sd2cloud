@@ -44,6 +44,8 @@ SD2Cloud ainda não foi testado em um.
 - Exibe os dados salvos de cada cartão como o navegador do PS2, com os ícones 3D animados.
 - Copia, move e elimina dados salvos entre os cartões do microSD (o espaço livre do destino é exibido), e envia
   um item avulso ao Google Drive como arquivo `.psu`.
+- Exibe os dados salvos de todos os cartões de jogo em uma só tela (**Todos os saves**, na aba Jogos), como se fossem
+  um único cartão.
 - Organiza os cartões em abas: cartões numerados, cartões de jogos (Game ID), em pastas com o nome de cada jogo,
   e cartões de boot.
 - Marca o cartão que está em uso no sd2psx e pode fazê-lo assumir outro (nas opções do cartão). Para alterar o

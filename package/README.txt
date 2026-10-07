@@ -84,6 +84,9 @@ microSD and a USB drive for .psu files and memory card files (see FILES).
   Autoboot turned on in its settings, and a game's card
   only with Game ID; a folder with a name of its own can only be picked on the sd2psx itself. On the list, a
   small card marks the one the sd2psx is using.
+- The Games tab starts with "All saves": the saved data of every game card on one screen, the newest first,
+  as if it were all on a single card. Each item still belongs to its own card, whose name is at the top of
+  the item's page, and what is done to an item is done to that card.
 - START opens the settings (see SETTINGS).
 - X on a saved data item opens its page, with Copy and Move (to another card on the microSD, chosen from the
   same tabs as the main screen; the destination's free space is shown, and a card without enough space cannot

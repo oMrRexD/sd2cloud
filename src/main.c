@@ -1048,6 +1048,8 @@ typedef struct {
     int way;                  /* which way: 1 = into a folder, -1 = out of it */
     int add;                  /* 1 = every list of cards starts with a row that isn't one, "New card" (its idx is -1):
                                  a card file is being installed, as a new card or over one of these */
+    int all;                  /* 1 = the folders of the Games group start with one, "All saves": every game card's
+                                 saves on one screen (the main screen, with more than one game card) */
 } tabs_t;
 
 static void fit(int font, char *s, size_t size, int maxw);
@@ -1062,6 +1064,9 @@ static const char *game_of(const card_t *c) { return c->game[0] ? c->game : c->f
 
 /* is the list one of folders right now? */
 static int tabs_on_folders(const tabs_t *g) { return g->tab == TAB_GAMES && g->open < 0; }
+
+/* how many rows that aren't a card or a folder the list shown starts with (idx -1): "New card", or "All saves" */
+static int tabs_lead(const tabs_t *g) { return g->add || (g->all && tabs_on_folders(g) && g->nGames > 1); }
 
 /* the Games group's list: its folders, or the cards of the one that is open (with ui_lock held) */
 static void tabs_games(tabs_t *g)
@@ -1085,7 +1090,7 @@ static void tabs_games(tabs_t *g)
     if (g->open >= g->folders)
         g->open = -1;
     g->n = 0;
-    if (g->add)
+    if (tabs_lead(g))
         g->idx[g->n++] = -1;
     if (g->open < 0)
         for (i = 0; i < g->folders; i++)
@@ -1098,7 +1103,7 @@ static void tabs_games(tabs_t *g)
 /* X on a folder: its cards take the list's place */
 static void tabs_open(tabs_t *g)
 {
-    g->open = g->cursor - g->add;
+    g->open = g->cursor - tabs_lead(g);
     g->openTop = g->top;
     g->cursor = g->top = 0;
     tabs_games(g);
@@ -1109,10 +1114,11 @@ static void tabs_open(tabs_t *g)
 /* circle inside a folder: back to the folders, on the one that was open. slide = 0: at once (the group is left) */
 static void tabs_close(tabs_t *g, int slide)
 {
-    g->cursor = g->open + g->add;
+    g->cursor = g->open;
     g->top = g->openTop;
     g->open = -1;
     tabs_games(g);
+    g->cursor += tabs_lead(g);
     if (slide) {
         g->moved = ui_clock();
         g->way = -1;
@@ -1196,7 +1202,7 @@ static void tabs_find(tabs_t *g, int card)
         for (k = 0; k < g->folders; k++)
             for (i = g->first[k]; i < g->first[k + 1]; i++)
                 if (g->games[i] == card)
-                    g->cursor = k + g->add;
+                    g->cursor = k + tabs_lead(g);
     scroll_to(g->cursor, &g->top);
 }
 
@@ -1254,8 +1260,8 @@ static const char *tabs_text(int i, char *buf)
     if (rowsOf->tab == TAB_FILES)
         return T(deviceText[i]);
     if (rowsOf->idx[i] < 0)
-        return T(T_NEW_CARD);
-    return tabs_on_folders(rowsOf) ? rowsOf->label[i - rowsOf->add] : cards[rowsOf->idx[i]].base;
+        return T(rowsOf->add ? T_NEW_CARD : T_ALL_SAVES);
+    return tabs_on_folders(rowsOf) ? rowsOf->label[i - tabs_lead(rowsOf)] : cards[rowsOf->idx[i]].base;
 }
 
 static u32 tabs_dot(int i) { return rowsOf->idx[i] < 0 ? COLOR_DIM : status_color(&cards[rowsOf->idx[i]]); }
@@ -1305,13 +1311,16 @@ static void tabs_draw(const tabs_t *g, int dots)
         for (k = g->top; g->tab != TAB_FILES && k < g->n && k < g->top + ROWS; k++) {
             float x = LIST_X + rowsDx, y = ROW_Y0 + (k - g->top) * ROW_H + ui_line_height(FONT_TEXT) / 2.0f + 1;
             int here = g->idx[k] >= 0 && g->idx[k] == activeCard;
-            if (g->idx[k] < 0) {   /* "New card": a plus where a folder has its picture */
+            if (g->idx[k] < 0 && g->add) {   /* "New card": a plus where a folder has its picture */
                 ui_rect(x + 4, y - 1, 12, 2, COLOR_ACCENT, 0x70);
                 ui_rect(x + 9, y - 6, 2, 12, COLOR_ACCENT, 0x70);
+            } else if (g->idx[k] < 0) {   /* "All saves": two small cards, one behind the other */
+                ui_image(IMG_MINICARD, x + 7, y - 11, 12, 14, 0xFFFFFF, 0x44);
+                ui_image(IMG_MINICARD, x + 1, y - 6, 13, 15, 0xFFFFFF, 0x80);
             } else if (folders) {   /* a small folder, as the Files group has them */
                 ui_rect(x + 2, y - 8, 7, 3, 0xD9B95C, 0x58);
                 ui_rect(x + 2, y - 6, 16, 12, 0xD9B95C, 0x58);
-                for (i = g->first[k - g->add]; i < g->first[k - g->add + 1]; i++)
+                for (i = g->first[k - tabs_lead(g)]; i < g->first[k - tabs_lead(g) + 1]; i++)
                     here |= g->games[i] == activeCard;
                 x -= 22;   /* the mark of the card in use goes before the folder */
             }
@@ -1881,15 +1890,17 @@ static void history_screen(card_t *c, icon_t *icon)
 
 #define GRID_COLS 5
 #define GRID_ROWS 4
+#define BRW_MAX   1024     /* the saves one screen holds: a card's, or every game card's */
 typedef struct {
     mcfs_save_t s;
+    card_t *card;          /* the card it is on */
     icon_t *icon;
     int tried;             /* the icon was read (or failed) */
     char line1[72], line2[72];
 } save_view_t;
 
 static struct {
-    card_t *card;
+    card_t *card;          /* whose saves these are (&allGames: every game card's) */
     save_view_t *saves;
     int n, cursor, top;    /* top = the first row on screen */
     long long freeBytes;
@@ -1900,6 +1911,11 @@ static struct {
  * read, and what can be done with it is to copy its saves and to install it on the microSD */
 static card_t fileCard;
 static card_file_t cardFile;       /* that file */
+/* stands for every game card at once on the saves' screen ("All saves" in the Games group): each save there knows the
+ * card it is on, and what is done to it is done to that card */
+static card_t allGames;
+/* the card a save was last copied or moved to (save_transfer): on that screen it shows there right away */
+static card_t *transferDest;
 static char cardFileName[256];     /* and its name, which may tell which game the card is of */
 
 static void grid_cell(int i, float height, float *cx, float *cy)
@@ -1937,7 +1953,10 @@ static void scene_browser(float t)
     /* the card at the top left, its free space below */
     ui_image(IMG_MINICARD, 62, 38, 24, 28, 0xFFFFFF, 0x80);
     ui_text_shadow(FONT_BROWSER, 98, 32, 0xF4F4F4, brw.card->base);
-    if (brw.freeBytes >= 0) {
+    if (brw.card == &allGames) {   /* no card's free space to tell: how many saves there are, all together */
+        snprintf(s, sizeof(s), T(T_SAVES_COUNT), brw.n);
+        ui_text_shadow(FONT_TEXT, 100, 60, 0xE6E6E6, s);
+    } else if (brw.freeBytes >= 0) {
         snprintf(s, sizeof(s), T(T_FREE_KB), (int)(brw.freeBytes / 1024));
         ui_text_shadow(FONT_TEXT, 100, 60, 0xE6E6E6, s);
     }
@@ -1965,7 +1984,7 @@ static void scene_browser(float t)
     {
         legend_t l[3] = {{BUTTON_CIRCLE, T(T_BACK)}, {BUTTON_CROSS, T(T_OPEN)},
                          {BUTTON_SQUARE, T(brw.card == &fileCard ? T_INSTALL : T_SYNC)}};
-        look_legend(l, 3, 0);
+        look_legend(l, brw.card == &allGames ? 2 : 3, 0);   /* (no one card to sync there) */
     }
 }
 
@@ -1982,7 +2001,7 @@ static int load_next_icon(void)
     {
         buffer_t iconsys = {0}, ico = {0};
         icon_t *ic = NULL;
-        if (mcfs_save_icon(brw.card->path, &brw.saves[i].s, &iconsys, &ico) == 0)
+        if (mcfs_save_icon(brw.saves[i].card->path, &brw.saves[i].s, &iconsys, &ico) == 0)
             ic = icon_load(&iconsys, &ico);
         buf_free(&iconsys);
         buf_free(&ico);
@@ -2662,6 +2681,8 @@ static int save_transfer(card_t *c, save_view_t *v, int move)
     if (r == MCFS_OK && move)
         r = mcfs_delete_save(c->path, v->s.folder);
     log_msg("%s %s from %s to %s: %d", move ? "move" : "copy", v->s.folder, c->id, to->id, r);
+    if (r == MCFS_OK)
+        transferDest = to;
     cards_recheck(to);
     if (move)
         cards_recheck(c);
@@ -2862,25 +2883,14 @@ static int sync_card(card_t *c)
 
 /* -------- one card's saves, the PS2 browser's way */
 
-static void browser_load(card_t *c, int cursor)
+static save_view_t *brwSaves;   /* BRW_MAX of them, for whichever screen of saves is open */
+static mcfs_save_t brwList[MCFS_MAX_SAVES];
+
+/* the screen's saves are these n from now on, with the cursor there (with ui_lock held) */
+static void browser_set(card_t *c, int n, int cursor, long long freeBytes)
 {
-    static save_view_t *saves;
-    static mcfs_save_t list[MCFS_MAX_SAVES];
-    long long freeBytes = -1;
-    int n, i;
-    if (!saves && !(saves = calloc(MCFS_MAX_SAVES, sizeof(save_view_t))))
-        return;
-    n = mcfs_list_saves(c->path, list, MCFS_MAX_SAVES, &freeBytes);
-    if (n < 0)
-        n = 0;
-    ui_lock();
-    for (i = 0; i < brw.n; i++)   /* a list read again (after a move or a delete): the old icons go */
-        icon_free(brw.saves ? brw.saves[i].icon : NULL);
-    memset(saves, 0, sizeof(save_view_t) * MCFS_MAX_SAVES);
-    for (i = 0; i < n; i++)
-        saves[i].s = list[i];
     brw.card = c;
-    brw.saves = saves;
+    brw.saves = brwSaves;
     brw.n = n;
     brw.cursor = cursor < n ? cursor : n > 0 ? n - 1 : 0;
     brw.top = 0;
@@ -2888,19 +2898,127 @@ static void browser_load(card_t *c, int cursor)
         brw.top++;
     brw.freeBytes = freeBytes;
     brw.since = now_ms();
+}
+
+/* the icons of the saves on screen go: the list is about to be read again (with ui_lock held) */
+static void browser_drop_icons(void)
+{
+    int i;
+    for (i = 0; i < brw.n; i++)
+        icon_free(brw.saves ? brw.saves[i].icon : NULL);
+    brw.n = 0;
+}
+
+static void browser_load(card_t *c, int cursor)
+{
+    long long freeBytes = -1;
+    int n, i;
+    if (!brwSaves && !(brwSaves = calloc(BRW_MAX, sizeof(save_view_t))))
+        return;
+    n = mcfs_list_saves(c->path, brwList, MCFS_MAX_SAVES, &freeBytes);
+    if (n < 0)
+        n = 0;
+    ui_lock();
+    browser_drop_icons();   /* a list read again (after a move or a delete): the old icons go */
+    memset(brwSaves, 0, sizeof(save_view_t) * n);
+    for (i = 0; i < n; i++) {
+        brwSaves[i].s = brwList[i];
+        brwSaves[i].card = c;
+    }
+    browser_set(c, n, cursor, freeBytes);
     ui_unlock();
     log_msg("%s: %d saves, %lld bytes free", c->id, n, freeBytes);
 }
 
+/* the newest first, whichever card each is on; two of the same moment, by name */
+static int newer_view(const void *a, const void *b)
+{
+    const save_view_t *x = a, *y = b;
+    return x->s.when < y->s.when ? 1 : x->s.when > y->s.when ? -1 : strcmp(x->s.folder, y->s.folder);
+}
+
+/* a card's saves onto the end of the n the screen has, for the screen of every game card's (with ui_lock held: the
+ * list is brwList, read before). Returns how many there are then */
+static int browser_append(card_t *c, int n, int count)
+{
+    int i;
+    for (i = 0; i < count && n < BRW_MAX; i++, n++) {
+        memset(&brwSaves[n], 0, sizeof(brwSaves[0]));
+        brwSaves[n].s = brwList[i];
+        brwSaves[n].card = c;
+    }
+    return n;
+}
+
+/* every game card's saves as those of one card. Each card's list is read in turn (a moment each on the sd2psx): a
+ * bar meanwhile */
+static void browser_load_all(void)
+{
+    int i, n = 0, count, k = 0, total = 0;
+    if (!brwSaves && !(brwSaves = calloc(BRW_MAX, sizeof(save_view_t))))
+        return;
+    for (i = 0; i < nCards; i++)
+        total += cards[i].type == TYPE_GAMEID;
+    dlg_new(0, NULL);
+    dlg_line(FONT_TEXT, COLOR_TEXT, 0, T(T_LOADING));
+    dlg_bar(0, NULL);
+    dlg_show();
+    ui_lock();
+    browser_drop_icons();
+    snprintf(allGames.base, sizeof(allGames.base), "%s", T(T_TAB_GAMES));
+    snprintf(allGames.id, sizeof(allGames.id), "every game card");
+    allGames.type = TYPE_GAMEID;
+    ui_unlock();
+    for (i = 0; i < nCards; i++) {
+        if (cards[i].type != TYPE_GAMEID)
+            continue;
+        count = mcfs_list_saves(cards[i].path, brwList, MCFS_MAX_SAVES, NULL);
+        n = browser_append(&cards[i], n, count < 0 ? 0 : count);   /* (nothing draws them yet: brw.n is 0) */
+        ui_lock();
+        dlg.permille = total ? ++k * 1000 / total : 1000;
+        ui_unlock();
+    }
+    qsort(brwSaves, n, sizeof(brwSaves[0]), newer_view);
+    ui_lock();
+    browser_set(&allGames, n, 0, -1);
+    ui_unlock();
+    log_msg("every game card: %d saves on %d cards", n, total);
+}
+
+/* on that screen, the saves of one card again (one was copied to it, moved or deleted): the others stay as they are,
+ * icons and all */
+static void browser_refresh(card_t *c)
+{
+    int count = mcfs_list_saves(c->path, brwList, MCFS_MAX_SAVES, NULL), i, k = 0;
+    ui_scene(scene_frame);   /* nothing of the list on screen while it changes */
+    ui_lock();
+    for (i = 0; i < brw.n; i++) {
+        if (brw.saves[i].card == c)
+            icon_free(brw.saves[i].icon);
+        else
+            brw.saves[k++] = brw.saves[i];
+    }
+    k = browser_append(c, k, count < 0 ? 0 : count);
+    qsort(brwSaves, k, sizeof(brwSaves[0]), newer_view);
+    browser_set(&allGames, k, brw.cursor, -1);
+    ui_unlock();
+    log_msg("every game card: %s read again, %d saves in all", c->id, k);
+}
+
+/* a card's saves. &allGames = every game card's, as if they were on one card */
 static void card_screen(card_t *c)
 {
+    int all = c == &allGames;
     brw.n = 0;
-    browser_load(c, 0);
+    if (all)
+        browser_load_all();
+    else
+        browser_load(c, 0);
     ui_scene(scene_browser);
     for (;;) {
         /* reads the icons one by one while nobody presses anything */
         int pending = 1, n = brw.n;
-        u32 b, keys = PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT | PAD_CROSS | PAD_CIRCLE | PAD_SQUARE;
+        u32 b, keys = PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT | PAD_CROSS | PAD_CIRCLE | (all ? 0 : PAD_SQUARE);
         while (pending && !(b = wait_nav_ms(keys, 0)))
             pending = load_next_icon();
         if (!pending)
@@ -2933,8 +3051,17 @@ static void card_screen(card_t *c)
                 sound_play(SND_MOVE);
             }
         } else if ((b & PAD_CROSS) && n) {
+            card_t *on = brw.saves[brw.cursor].card;
+            int changed;
             sound_play(SND_CONFIRM);
-            if (save_screen(c, brw.cursor))
+            transferDest = NULL;
+            changed = save_screen(on, brw.cursor);
+            if (all) {   /* only the cards that changed are read again */
+                if (changed)
+                    browser_refresh(on);
+                if (transferDest && transferDest->type == TYPE_GAMEID)
+                    browser_refresh(transferDest);
+            } else if (changed)
                 browser_load(c, brw.cursor);
             ui_scene(scene_browser);
         } else if (b & PAD_SQUARE) {
@@ -3587,7 +3714,18 @@ static void scene_menu(float t)
         int inside = menu.g.tab == TAB_GAMES && menu.g.open >= 0;
         legend_t l[4] = {{BUTTON_CIRCLE, T(inside ? T_BACK : T_MENU_EXIT)}, {BUTTON_CROSS, T(T_OPEN)},
                          {BUTTON_TRIANGLE, T(T_OPTIONS)}, {BUTTON_START, T(T_SETTINGS)}};
-        look_legend(l, inside ? 3 : 4, !inside);
+        if (menu.g.n && menu.g.idx[menu.g.cursor] < 0) {   /* "All saves": not a card, there are no options of one */
+            l[2] = l[3];
+            look_legend(l, 3, 1);
+        } else
+            look_legend(l, inside ? 3 : 4, !inside);
+    }
+    if (menu.g.n && menu.g.idx[menu.g.cursor] < 0) {   /* "All saves": the game cards, and how many they are */
+        snprintf(s, sizeof(s), T(T_GAME_CARDS_N), menu.g.nGames);
+        ui_text_center(FONT_TEXT, CARD_CX, 82, 0x7E8AA0, T(T_ALL_SAVES));
+        look_card(CARD_X, CARD_Y, NULL, T(T_TAB_GAMES));
+        ui_text_center(FONT_TEXT, CARD_CX, CARD_Y + LOOK_CARD_H + 2, COLOR_DIM, s);
+        return;
     }
     if (!(c = tabs_card(&menu.g))) {
         ui_paragraph(FONT_TEXT, LIST_X + 30, ROW_Y0, 150, COLOR_WARN, T(T_NO_CARDS));
@@ -4468,6 +4606,8 @@ static void manual(void)
         ;
     ui_lock();
     tabs_init(&menu.g, NULL, 1);
+    menu.g.all = 1;
+    tabs_show(&menu.g, menu.g.tab);
     if (i < nCards) {
         tabs_show(&menu.g, tab_of(&cards[i]));
         tabs_find(&menu.g, i);
@@ -4484,7 +4624,10 @@ static void manual(void)
         }
         if (tabs_nav(&menu.g, b) || tabs_folder_nav(&menu.g, b))
             continue;
-        if ((b & PAD_CROSS) && menu.g.tab == TAB_FILES) {
+        if ((b & PAD_CROSS) && menu.g.tab == TAB_GAMES && menu.g.n && menu.g.idx[menu.g.cursor] < 0) {
+            sound_play(SND_CONFIRM);
+            card_screen(&allGames);   /* "All saves" */
+        } else if ((b & PAD_CROSS) && menu.g.tab == TAB_FILES) {
             sound_play(SND_CONFIRM);
             files_screen(menu.g.cursor);
         } else if ((b & PAD_CROSS) && tabs_card(&menu.g)) {
@@ -4593,6 +4736,7 @@ int main(int argc, char *argv[])
     sound_play(SND_STARTUP);
     ui_lock();
     sd2psxIcon = icon_make_sd2psx();
+    cubeIcon = icon_make_cube();
     ui_unlock();
     state_read();
     google_set_poll(watch_cancel);
@@ -4601,4 +4745,3 @@ int main(int argc, char *argv[])
     manual();
     return 0;
 }
-    cubeIcon = icon_make_cube();
