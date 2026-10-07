@@ -71,8 +71,8 @@ SD2Cloud ainda não foi testado em um.
 ## Requisitos
 
 - Dispositivo da família sd2psx com o firmware sd2psXtd (suporte a MMCE). Em um MemCard PRO2 (experimental), o
-  SD2Cloud lê e grava os cartões `.mc2` dele em `/PS2`, mas nunca troca de cartão: selecione outro no próprio aparelho
-  antes.
+  SD2Cloud lê e grava os cartões `.mc2` dele em `/PS2`. A troca de cartão pelo app ("Inserir este cartão") é um
+  preview nele, e o SD2Cloud nunca troca sozinho: para alterar o cartão em uso, selecione outro antes.
 - Uma forma de abrir o SD2Cloud: a aba Apps do OPL, o wLaunchELF ou qualquer outro programa que abra um ELF.
   Recomenda-se um OPL com suporte a MMCE, como o [RiptOPL](https://github.com/NathanNeurotic/Open-PS2-Loader). Sem esse suporte, o OPL não lista os apps do
   microSD do sd2psx e não tem a opção **Slot(s) de Bootcard IGR**: com cartões de Game ID, o sd2psx continua no

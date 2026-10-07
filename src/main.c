@@ -1399,7 +1399,7 @@ static int card_in_use(const card_t *c, int active, int channel)
     char seen[65], file[65];
     if (active == -2)
         return 0;   /* not on an MMCE device (testing on PCSX2) */
-    if (!dev->sd2psx) {   /* a device that isn't asked which card it is on: only what the PS2 sees in the slot tells */
+    if (!cardTold) {   /* a device that isn't asked which card it is on: only what the PS2 sees in the slot tells */
         if (mc_root_signature(sdRoot[4] - '0', seen) != 0 || mcfs_root_signature(c->path, file) != 0)
             return -1;
         return strcmp(seen, file) == 0;
@@ -1430,7 +1430,7 @@ static int card_in_use(const card_t *c, int active, int channel)
  * and there the slot tells (-1) */
 static int active_card(int *channel)
 {
-    return dev->sd2psx || strncmp(sdRoot, "mmce", 4) != 0 ? mmce_active_card(channel) : -1;
+    return cardTold || strncmp(sdRoot, "mmce", 4) != 0 ? mmce_active_card(channel) : -1;
 }
 
 static void find_active(void)
@@ -1438,7 +1438,7 @@ static void find_active(void)
     static const int order[3] = {TYPE_BOOT, TYPE_GAMEID, TYPE_NAMED};
     char seen[65], file[65];
     int channel = 0, active = active_card(&channel), i, pass, found = -1;
-    if (!dev->sd2psx) {   /* against each card's root folder as it was read when the cards were checked */
+    if (!cardTold) {   /* against each card's root folder as it was read when the cards were checked */
         if (active == -1 && mc_root_signature(sdRoot[4] - '0', seen) == 0)
             for (i = 0; i < nCards && found < 0; i++)
                 if (cards[i].rootSig[0] && !strcmp(seen, cards[i].rootSig))
@@ -1474,9 +1474,14 @@ static void find_active(void)
     log_msg("%s: the card in it is %s", dev->name, found >= 0 ? cards[found].id : "none of the cards here, or unknown");
 }
 
-/* can the sd2psx be told to take this card? Not a folder with a name of its own: it has no way to be asked for one.
- * The BootCard and a game's card it only takes with Autoboot or Game ID on in its settings, which shows by trying */
-static int can_insert(const card_t *c) { return dev->sd2psx && !strncmp(sdRoot, "mmce", 4) && c->type != TYPE_NAMED; }
+/* can the device be told to take this card? Not a folder with a name of its own: it has no way to be asked for one.
+ * The BootCard and a game's card the sd2psx only takes with Autoboot or Game ID on in its settings, which shows by
+ * trying. On a device that isn't the sd2psx this is a preview: it takes the same requests, as far as is known */
+static int can_insert(const card_t *c) { return !strncmp(sdRoot, "mmce", 4) && c->type != TYPE_NAMED; }
+
+/* and can it be moved off that card and back, for the card to be changed? Only the sd2psx: there it is known that
+ * the card it left was written and closed by the time the next one shows in the slot */
+static int can_move(const card_t *c) { return dev->sd2psx && can_insert(c); }
 
 /* from here on, a change of card that mcman notices in the slot is the one about to be asked for */
 static void slot_settle(void)
@@ -1492,7 +1497,7 @@ static void slot_settle(void)
 static int wait_for_card(const card_t *c, int ms)
 {
     char seen[65], file[65];
-    int port = sdRoot[4] - '0', changed = 0, channel, active, i;
+    int port = sdRoot[4] - '0', changed = 0, channel = 0, active = 0, i;
     u64 start = now_ms(), end = start + ms;
     while (now_ms() < end && (changed || now_ms() < start + 6000)) {
         sleep_ms(300);
@@ -1502,10 +1507,12 @@ static int wait_for_card(const card_t *c, int ms)
         }
         if (!changed)
             continue;
-        channel = 0;
-        active = mmce_active_card(&channel);
-        if (active < 0 || (c && (active != (c->type == TYPE_NORMAL ? card_number(c) : 0) || channel != c->channel)))
-            continue;
+        if (cardTold || !c) {   /* (a device whose numbers aren't known: the root folder in the slot alone tells) */
+            channel = 0;
+            active = mmce_active_card(&channel);
+            if (active < 0 || (c && (active != (c->type == TYPE_NORMAL ? card_number(c) : 0) || channel != c->channel)))
+                continue;
+        }
         if (mc_root_signature(port, seen) != 0)
             continue;
         for (i = 0; i < nCards; i++) {
@@ -1565,8 +1572,8 @@ static int insert_card(const card_t *c)
         return 0;
     slot_settle();
     log_msg("sd2psx: asking for %s", c->id);
-    if (c->type == TYPE_NORMAL ? active == number : activeCard >= 0 && cards[activeCard].type == c->type &&
-                                                    !strcmp(cards[activeCard].folder, c->folder))
+    if (cardTold && c->type == TYPE_NORMAL ? active == number : activeCard >= 0 && cards[activeCard].type == c->type &&
+                                                                !strcmp(cards[activeCard].folder, c->folder))
         now = activeCard >= 0 ? activeCard : nCards;   /* on that folder already (nCards: on a channel that isn't here) */
     else if (c->type == TYPE_BOOT) {
         if (mmce_set_card(1, 0) == 0)
@@ -1582,6 +1589,8 @@ static int insert_card(const card_t *c)
         if (ask_channel(c->channel) == 0 && wait_for_card(c, 25000) >= 0)
             r = 0;
     }
+    if (!cardTold)
+        mmce_active_card(&channel);   /* (for the log: what that device calls the card it ended on) */
     find_active();
     return r;
 }
@@ -1647,7 +1656,7 @@ static int card_free(const card_t *c, const card_t *other)
     int channel = 0, active = active_card(&channel), r = card_in_use(c, active, channel);
     if (r == 0)
         return 0;
-    if (r < 0 || !can_insert(c)) {   /* which card it has isn't known, or it's one it can't be told to come back to */
+    if (r < 0 || !can_move(c)) {   /* which card it has isn't known, or it's one it can't be told to come back to */
         snprintf(t, sizeof(t), T(r > 0 ? T_CARD_IN_USE : T_RESTORE_UNKNOWN), c->base);
         message_wait(0, NULL, COLOR_WARN, t);
         return 1;
@@ -3084,7 +3093,8 @@ static void card_options(card_t *c)
         items[0] = T(T_SYNC_NOW);
         items[1] = T(T_RESTORE_BACKUP);
         items[2] = T(T_COPY_DEVICE);
-        items[3] = T(T_INSERT);   /* only a card the sd2psx can be told to take, and isn't on already */
+        /* only a card the device can be told to take, and isn't on already */
+        items[3] = T(dev->sd2psx ? T_INSERT : T_INSERT_PREVIEW);
         if ((k = choose(c->base, items, can_insert(c) && c != (activeCard >= 0 ? &cards[activeCard] : NULL) ? 4 : 3, k)) < 0)
             return;
         if (k == 0) {

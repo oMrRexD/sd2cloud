@@ -32,8 +32,8 @@ Gerenciador de cartões de memória
 REQUISITOS
 - Dispositivo da família sd2psx com o firmware sd2psXtd (suporte a MMCE).
   O MemCard PRO2 também é reconhecido (os cartões dele são os arquivos .mc2 da pasta PS2 do microSD), mas o
-  SD2Cloud ainda não foi testado em um: considere isso experimental. Nele, o SD2Cloud nunca troca de
-  cartão: para alterar o cartão em uso, selecione outro no próprio MemCard PRO2 antes.
+  SD2Cloud ainda não foi testado em um: considere isso experimental. Nele, "Inserir este cartão" é um
+  preview, e o SD2Cloud nunca troca de cartão sozinho: para alterar o cartão em uso, selecione outro antes.
 - Uma forma de abrir o SD2Cloud: a aba Apps do OPL, o wLaunchELF ou qualquer outro programa que abra um
   ELF. Recomenda-se um OPL com suporte a MMCE, como o RiptOPL (https://github.com/NathanNeurotic/Open-PS2-Loader).
   Sem esse suporte, o OPL não lista os apps do microSD do sd2psx e não tem a opção "Slot(s) de Bootcard

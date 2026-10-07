@@ -117,11 +117,11 @@ PLACE = {
     # the box with a list (a card's options, the exit menu): title and items centered in 380 px; an item wider than
     # 320 px is cut with "..." (main.c choose)
     "T_RESTORE_BACKUP": ("text", 320, 1), "T_COPY_DEVICE": ("text", 320, 1), "T_HELPER_REINSTALL": ("text", 320, 1), "T_HELPER_UNINSTALL": ("text", 320, 1),
-    "T_UPDATE": ("text", 320, 1), "T_INSERT": ("text", 320, 1),
+    "T_UPDATE": ("text", 320, 1), "T_INSERT": ("text", 320, 1), "T_INSERT_PREVIEW": ("text", 320, 1),
     # moving the sd2psx to another card (a wide box, to say it all in three lines); what a card that it wasn't moved
     # to needs, under that
     "T_SWITCH_ASK": ("text", WIDE, 3), "T_SWITCHING": ("text", DIALOG, 1),
-    "T_INSERT_DONE": ("text", DIALOG, 1), "T_INSERT_FAILED": ("text", DIALOG, 2),
+    "T_INSERT_DONE": ("text", DIALOG, 2), "T_INSERT_FAILED": ("text", DIALOG, 2),
     "T_INSERT_NEEDS_BOOT": ("small", DIALOG, 2), "T_INSERT_NEEDS_GAMEID": ("small", DIALOG, 2),
     "T_INSERT_BOOT_ASK": ("text", DIALOG, 2),
     # "Copy to" / "Move to": the title over the destination card, and what goes under it
@@ -158,9 +158,8 @@ PLACE = {
 PARAGRAPH = ("text", DIALOG, 3)     # error messages and the rest: up to 3 lines in a box
 # what only an sd2psx is ever told (being moved to another card, its boot cards, one more channel for a folder): not
 # checked with another device's name
-ONLY_SD2PSX = {"T_SWITCHING", "T_INSERT", "T_INSERT_DONE", "T_INSERT_FAILED", "T_INSERT_NEEDS_BOOT", "T_INSERT_NEEDS_GAMEID",
-               "T_INSERT_BOOT_ASK", "T_SWITCH_ASK", "T_SWITCH_FAILED", "T_SWITCH_BACK_FAILED", "T_INSTALL_RAISE_ASK",
-               "T_INSTALL_BOOT_WARN"}
+ONLY_SD2PSX = {"T_INSERT", "T_INSERT_NEEDS_BOOT", "T_INSERT_BOOT_ASK", "T_SWITCH_ASK", "T_SWITCH_FAILED",
+               "T_SWITCH_BACK_FAILED", "T_INSTALL_RAISE_ASK", "T_INSTALL_BOOT_WARN"}
 
 # the button legends at the bottom: (texts, the last one apart at the right edge). They go from the right edge
 # (x = 596) toward the left and must not pass x = 40

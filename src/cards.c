@@ -325,7 +325,7 @@ static void check_one(card_t *c, int *migrated)
     card_state_t *e;
     int saves = 0;
     /* (the root folder's signature comes from the same reading, for a device whose card in use is found by it) */
-    if (mcfs_fingerprint_root(c->path, c->fingerprint, &saves, dev->sd2psx ? NULL : c->rootSig) != 0) {
+    if (mcfs_fingerprint_root(c->path, c->fingerprint, &saves, cardTold ? NULL : c->rootSig) != 0) {
         c->status = ST_ERROR;
         log_msg("%s: couldn't read the index", c->id);
         return;

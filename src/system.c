@@ -723,11 +723,13 @@ int mmce_set_gameid(const char *id)
 /* The device. The sd2psx's firmware also runs on the PSxMemCard and on the PicoMemcards; 8BitMods' MemCard PRO2 has
  * its own, which keeps the PS2 cards in /PS2/<folder>/<folder>-<channel>.mc2 (raw, as a .mcd is), the ones that aren't
  * a game's in MemoryCard1, MemoryCard2... (its wiki, and what its users' tools go by). SD2Cloud was not tried on one:
- * what depends on how it behaves (which card it is on, telling it to take another) is left out for it, and the card
- * in use is told by the root folder the PS2 sees in the slot */
+ * what its card numbers mean isn't taken for granted, so the card in use is told by the root folder the PS2 sees in the
+ * slot; telling it to take another card is offered as a preview, checked the same way; and it is never moved off a
+ * card for that card to be changed */
 static const device_t devSd2psx = {"sd2psx", "sd2psx", "MemoryCards/PS2", ".mcd", "Card", 1};
 static const device_t devMcp2 = {"MemCard PRO2", "PRO2", "PS2", ".mc2", "MemoryCard", 0};
 const device_t *dev = &devSd2psx;
+int cardTold = 1;
 
 /* which one answers in the microSD's slot: the ping gives the protocol's version, the product (1 = SD2PSX, 2 = MemCard
  * PRO2, 3 and 4 = the PicoMemcards) and its revision. One that doesn't answer is a MemCard PRO2 when its firmware's
@@ -748,6 +750,12 @@ static void find_device(void)
     snprintf(c, sizeof(c), "%smcp2.bin", sdRoot);
     if (product == 2 || (r < 0 && r != -2 && file_exists(c)))
         dev = &devMcp2;
+    cardTold = dev->sd2psx;
+#ifdef DEBUG_BUILD
+    snprintf(c, sizeof(c), "%sby-slot.txt", dataDir);   /* to try on an sd2psx what a device that isn't one gets */
+    if (file_exists(c))
+        cardTold = 0;
+#endif
     log_msg("device: %s (ping %d: protocol %d, product %d, revision %d)", dev->name, r, r >= 0 ? (r >> 16) & 0xFF : 0, product,
             r >= 0 ? r & 0xFF : 0);
 }

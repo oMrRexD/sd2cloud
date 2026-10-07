@@ -61,9 +61,12 @@ typedef struct {
     const char *ext;        /* what a card's file ends with */
     const char *numbered;   /* what the folders of its numbered cards start with: Card1, MemoryCard1 */
     int sd2psx;             /* it runs the sd2psx's firmware: boot cards in BOOT, an .ini in each folder (the channels'
-                               names, how many there are), Game2Folder.ini, and it can be told which card to take */
+                               names, how many there are), Game2Folder.ini, and SD2Cloud moves it off a card to change it */
 } device_t;
 extern const device_t *dev;
+/* 1 = the number and channel the device gives for its card are known to mean what the sd2psx's do. Else (a device
+ * SD2Cloud was never tried on) the card in use is only told by the root folder the PS2 sees in the slot */
+extern int cardTold;
 /* a USB drive (mass0:), for the file browser: loads its drivers the first time, then waits up to ms for the drive.
  * 0 = it's there */
 int usb_open(int ms);
