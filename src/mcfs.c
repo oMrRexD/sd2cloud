@@ -22,6 +22,7 @@
 #define MAGIC         "Sony PS2 Memory Card Format "
 #define MAX_CLUSTER   2048     /* bytes */
 #define CACHE         32
+#define RUN           (32 * 1024)   /* clusters in a row are read and written together, up to this many bytes */
 #define DF_EXISTS     0x8000
 #define DF_DIRECTORY  0x0020
 #define FAT_ALLOC     0x80000000u   /* a FAT entry: the cluster is in use; the other bits are the next one of its chain */
@@ -43,16 +44,31 @@ typedef struct {
     unsigned int page, spare;         /* a page's size; the bytes of ECC after each page in the file (a .ps2: 16) */
     const unsigned char *mem;         /* the card is in memory, not in a file (fd = -1) */
     size_t memLen;
+    /* While a card is being changed, the clusters of its FAT that were needed stay here, by their place in the FAT,
+     * with what was changed in them (set_fat). They are written in one go when the change is whole (fat_flush), or
+     * forgotten (fat_drop): a cluster of the FAT written for every entry changed was most of the writing */
+    unsigned char **fatc;
+    unsigned char *fatDirty;
+    unsigned int nfat;
 } mc_t;
 
 static mc_t mc;   /* the card being read or changed: one at a time (the sd2psx can't take more anyway) */
+static unsigned int ioReads, ioWrites;   /* how many times the card's file was read and written, for the log */
 
 /* done with it (a card in memory has no file to close) */
 static void mc_close(void)
 {
+    unsigned int i;
     if (mc.fd >= 0)
         close(mc.fd);
     mc.fd = -1;
+    for (i = 0; mc.fatc && i < mc.nfat; i++)
+        free(mc.fatc[i]);
+    free(mc.fatc);
+    free(mc.fatDirty);
+    mc.fatc = NULL;
+    mc.fatDirty = NULL;
+    mc.nfat = 0;
 }
 
 /* the card MCFS_IMAGE stands for (mcfs_image) */
@@ -70,6 +86,20 @@ void mcfs_image(const char *file, const unsigned char *mem, size_t len)
 static unsigned int le32(const unsigned char *p) { return p[0] | (p[1] << 8) | (p[2] << 16) | ((unsigned int)p[3] << 24); }
 static unsigned int le16(const unsigned char *p) { return p[0] | (p[1] << 8); }
 
+/* n bytes from where the file is, however many reads it takes. 0 = all of them */
+static int read_all(int fd, unsigned char *out, unsigned int n)
+{
+    while (n) {
+        int got = read(fd, out, n);
+        if (got <= 0)
+            return -1;
+        out += got;
+        n -= got;
+    }
+    ioReads++;
+    return 0;
+}
+
 /* the bytes of "physical" cluster n: from memory, or from the file, where a .ps2 has its ECC after each page */
 static int read_cluster(mc_t *m, unsigned int n, unsigned char *out)
 {
@@ -82,8 +112,8 @@ static int read_cluster(mc_t *m, unsigned int n, unsigned char *out)
         return 0;
     }
     if (!m->spare)
-        return lseek(m->fd, (long)n * m->csz, SEEK_SET) < 0 || read(m->fd, out, m->csz) != (int)m->csz ? -1 : 0;
-    if (lseek(m->fd, (long)n * pages * stride, SEEK_SET) < 0 || read(m->fd, raw, pages * stride) != (int)(pages * stride))
+        return lseek(m->fd, (long)n * m->csz, SEEK_SET) < 0 || read_all(m->fd, out, m->csz) != 0 ? -1 : 0;
+    if (lseek(m->fd, (long)n * pages * stride, SEEK_SET) < 0 || read_all(m->fd, raw, pages * stride) != 0)
         return -1;
     for (p = 0; p < pages; p++)
         memcpy(out + p * m->page, raw + p * stride, m->page);
@@ -115,6 +145,8 @@ static unsigned int fat(mc_t *m, unsigned int n)
     unsigned int per = m->csz / 4, ind = n / per / per, i2 = (n / per) % per, i3 = n % per;
     const unsigned char *c;
     unsigned int icl;
+    if (m->fatc && n / per < m->nfat && m->fatc[n / per])   /* as it is being changed */
+        return le32(m->fatc[n / per] + i3 * 4);
     if (ind >= 32 || !(c = cluster(m, m->ifc[ind])))
         return 0xFFFFFFFF;
     icl = le32(c + i2 * 4);
@@ -442,7 +474,8 @@ static int step(size_t n)
     return stepStop;
 }
 
-/* the length bytes of a file, following its FAT chain from cluster c */
+/* the length bytes of a file, following its FAT chain from cluster c. The clusters it has in a row are read together,
+ * straight into the buffer (from a card's own file; a .ps2's ECC bytes, or a card in memory, go cluster by cluster) */
 static int read_chain(mc_t *m, unsigned int c, unsigned int length, buffer_t *out)
 {
     unsigned int left, steps = 0;
@@ -451,13 +484,34 @@ static int read_chain(mc_t *m, unsigned int c, unsigned int length, buffer_t *ou
     if (length && length < 0x7FFFFFFF && (out->data = malloc(length + 1)) != NULL)
         out->cap = length + 1;
     for (left = length; left;) {
-        const unsigned char *d = cluster(m, c + m->alloc);
-        unsigned int k = left < m->csz ? left : m->csz, e;
-        if (!d || buf_append(out, d, k) || step(k))
+        unsigned int run = 1, k, e;
+        while (run * m->csz < left && run < RUN / m->csz) {   /* how many in a row, from this one */
+            e = fat(m, c + run - 1);
+            if (e == FAT_END || !(e & FAT_ALLOC))
+                return -1;   /* the chain ends before the file does */
+            if ((e & ~FAT_ALLOC) != c + run)
+                break;
+            run++;
+        }
+        k = left < run * m->csz ? left : run * m->csz;
+        if (run > 1 && !m->mem && !m->spare && out->cap > out->len + k) {
+            if (lseek(m->fd, (long)(c + m->alloc) * m->csz, SEEK_SET) < 0 || read_all(m->fd, out->data + out->len, k) != 0)
+                return -1;
+            out->len += k;
+            out->data[out->len] = 0;
+            m->bytesRead += k;
+        } else {
+            const unsigned char *d = cluster(m, c + m->alloc);
+            run = 1;
+            k = left < m->csz ? left : m->csz;
+            if (!d || buf_append(out, d, k))
+                return -1;
+        }
+        if (step(k))
             return -1;
         if (!(left -= k))
             break;
-        e = fat(m, c);
+        e = fat(m, c + run - 1);   /* on to what follows the last one read */
         if (e == FAT_END || !(e & FAT_ALLOC) || ++steps > m->clusters)
             return -1;
         c = e & ~FAT_ALLOC;
@@ -568,30 +622,93 @@ int mcfs_fingerprint_root(const char *path, char hex[65], int *saves, char rootS
 
 static void put32(unsigned char *p, unsigned int v) { p[0] = v, p[1] = v >> 8, p[2] = v >> 16, p[3] = v >> 24; }
 
-static int put_cluster(mc_t *m, unsigned int n, const unsigned char *d)
+/* count clusters in a row, the first being "physical" cluster n, in one write */
+static int put_run(mc_t *m, unsigned int n, const unsigned char *d, unsigned int count)
 {
+    unsigned int left = count * m->csz, k;
+    const unsigned char *p = d;
     int i;
-    if (lseek(m->fd, (long)n * m->csz, SEEK_SET) < 0 || write(m->fd, d, m->csz) != (int)m->csz)
+    if (lseek(m->fd, (long)n * m->csz, SEEK_SET) < 0)
         return -1;
+    while (left) {
+        int put = write(m->fd, p, left);
+        if (put <= 0)
+            return -1;
+        p += put;
+        left -= put;
+    }
+    ioWrites++;
     for (i = 0; i < CACHE; i++)
-        if (m->cache[i].valid && m->cache[i].n == n)
-            memcpy(m->cache[i].d, d, m->csz);
+        if (m->cache[i].valid && (k = m->cache[i].n - n) < count)   /* (one before n comes out huge: unsigned) */
+            memcpy(m->cache[i].d, d + k * m->csz, m->csz);
     return 0;
 }
 
-static int set_fat(mc_t *m, unsigned int n, unsigned int v)
+static int put_cluster(mc_t *m, unsigned int n, const unsigned char *d) { return put_run(m, n, d, 1); }
+
+/* the cluster that holds FAT entry n (FAT_END = it can't be told) */
+static unsigned int fat_cluster(mc_t *m, unsigned int n)
 {
-    static unsigned char buf[MAX_CLUSTER];
-    unsigned int per = m->csz / 4, ind = n / per / per, i2 = (n / per) % per, icl;
+    unsigned int per = m->csz / 4, ind = n / per / per, i2 = (n / per) % per;
     const unsigned char *c;
     if (ind >= 32 || !(c = cluster(m, m->ifc[ind])))
+        return FAT_END;
+    return le32(c + i2 * 4);
+}
+
+/* changes FAT entry n in memory (see mc_t): nothing is written before fat_flush */
+static int set_fat(mc_t *m, unsigned int n, unsigned int v)
+{
+    unsigned int per = m->csz / 4, k = n / per, icl;
+    const unsigned char *c;
+    if (!m->fatc) {
+        m->nfat = (m->clusters + per - 1) / per;
+        m->fatc = calloc(m->nfat, sizeof(*m->fatc));
+        m->fatDirty = calloc(m->nfat, 1);
+        if (!m->fatc || !m->fatDirty) {
+            free(m->fatc);
+            free(m->fatDirty);
+            m->fatc = NULL;
+            m->fatDirty = NULL;
+            m->nfat = 0;
+            return -1;
+        }
+    }
+    if (k >= m->nfat)
         return -1;
-    icl = le32(c + i2 * 4);
-    if (!(c = cluster(m, icl)))
-        return -1;
-    memcpy(buf, c, m->csz);
-    put32(buf + (n % per) * 4, v);
-    return put_cluster(m, icl, buf);
+    if (!m->fatc[k]) {
+        if ((icl = fat_cluster(m, n)) == FAT_END || !(c = cluster(m, icl)) || !(m->fatc[k] = malloc(m->csz)))
+            return -1;
+        memcpy(m->fatc[k], c, m->csz);
+    }
+    put32(m->fatc[k] + (n % per) * 4, v);
+    m->fatDirty[k] = 1;
+    return 0;
+}
+
+/* writes the clusters of the FAT that were changed. 0 = they are all in the card */
+static int fat_flush(mc_t *m)
+{
+    unsigned int per = m->csz / 4, k, icl;
+    for (k = 0; m->fatc && k < m->nfat; k++)
+        if (m->fatDirty[k]) {
+            if ((icl = fat_cluster(m, k * per)) == FAT_END || put_cluster(m, icl, m->fatc[k]) != 0)
+                return -1;
+            m->fatDirty[k] = 0;
+        }
+    return 0;
+}
+
+/* forgets the changes to the FAT that weren't written: the card's own FAT stands */
+static void fat_drop(mc_t *m)
+{
+    unsigned int k;
+    for (k = 0; m->fatc && k < m->nfat; k++)
+        if (m->fatDirty[k]) {
+            free(m->fatc[k]);
+            m->fatc[k] = NULL;
+            m->fatDirty[k] = 0;
+        }
 }
 
 static unsigned int alloc_cluster(mc_t *m, unsigned int *cursor)
@@ -607,29 +724,37 @@ static unsigned int alloc_cluster(mc_t *m, unsigned int *cursor)
     return FAT_END;
 }
 
-/* data into a new chain of clusters; first = FAT_END when there's no data */
+/* data into a new chain of clusters; first = FAT_END when there's no data. The clusters it gets in a row are written
+ * together; the chain itself is only in the FAT kept in memory (set_fat) until the caller has it written */
 static int write_chain(mc_t *m, unsigned int *cursor, const unsigned char *d, size_t n, unsigned int *first)
 {
-    static unsigned char buf[MAX_CLUSTER];
-    unsigned int prev = FAT_END, c;
+    static unsigned char buf[RUN];
+    unsigned int prev = FAT_END, c, start = 0, count = 0, bytes = 0;
     size_t off;
     *first = FAT_END;
     for (off = 0; off < n; off += m->csz) {
         size_t k = n - off < m->csz ? n - off : m->csz;
         if ((c = alloc_cluster(m, cursor)) == FAT_END)
             return -1;
-        memset(buf, 0, m->csz);
-        memcpy(buf, d + off, k);
-        if (put_cluster(m, c + m->alloc, buf) != 0)
-            return -1;
+        if (count && (c != start + count || count == RUN / m->csz)) {   /* not next to the ones waiting, or no more room */
+            if (put_run(m, start + m->alloc, buf, count) != 0 || step(bytes))
+                return -1;
+            count = bytes = 0;
+        }
+        if (!count)
+            start = c;
+        memset(buf + count * m->csz, 0, m->csz);
+        memcpy(buf + count * m->csz, d + off, k);
+        count++;
+        bytes += k;
         if (prev == FAT_END)
             *first = c;
         else if (set_fat(m, prev, FAT_ALLOC | c) != 0)
             return -1;
         prev = c;
-        if (step(k))
-            return -1;
     }
+    if (count && (put_run(m, start + m->alloc, buf, count) != 0 || step(bytes)))
+        return -1;
     return 0;
 }
 
@@ -796,7 +921,7 @@ static int write_save(const char *to)
     root_find_t f;
     unsigned int cursor = 0, need, perCl, slot, first = FAT_END, dirFirst = FAT_END, i, k, written = 2;
     long long bytes = 0;
-    int r = MCFS_ERR_IO, known = 0;
+    int r = MCFS_ERR_IO, known = 0, flushed = 0;
     snprintf(folder, sizeof(folder), "%.32s", (const char *)srcSave.root + 64);
     if (mc_open_mode(&mc, to, O_RDWR) < 0)
         return MCFS_ERR_IO;
@@ -848,6 +973,10 @@ static int write_save(const char *to)
         if (last == FAT_END || c == FAT_END || put_cluster(&mc, c + mc.alloc, zero) != 0 || set_fat(&mc, last, FAT_ALLOC | c) != 0)
             goto out;
     }
+    /* the FAT, which was only changed in memory until here: the card has those clusters taken from now on */
+    flushed = 1;
+    if (fat_flush(&mc) != 0)
+        goto out;
     /* last of all, the entry in the root: until here the card doesn't know the save */
     memcpy(dir[0], srcSave.root, ENT);
     put32(dir[0] + 4, srcSave.n);
@@ -869,13 +998,18 @@ static int write_save(const char *to)
     r = MCFS_OK;
 out:
     if (r != MCFS_OK && !known) {
-        /* given up, or it failed, before the card knew the save: what was written of it gives its room back (the
-         * files that were written whole, the one under way, the folder's entries) */
-        for (k = 2; k < written; k++)
-            if (!(le16(dir[k]) & DF_DIRECTORY))
-                free_chain(&mc, le32(dir[k] + 16));
-        free_chain(&mc, first);
-        free_chain(&mc, dirFirst);
+        /* given up, or it failed, before the card knew the save. With the FAT still only in memory there is nothing
+         * to undo: the clusters that were written are free in the card's own FAT. Else what was written of the save
+         * gives its room back (the files written whole, the one under way, the folder's entries) */
+        if (flushed) {
+            for (k = 2; k < written; k++)
+                if (!(le16(dir[k]) & DF_DIRECTORY))
+                    free_chain(&mc, le32(dir[k] + 16));
+            free_chain(&mc, first);
+            free_chain(&mc, dirFirst);
+            fat_flush(&mc);
+        } else
+            fat_drop(&mc);
         if (stepStop)
             r = MCFS_ERR_CANCELLED;
     }
@@ -897,10 +1031,12 @@ out:
 
 int mcfs_copy_save(const char *from, const char *folder, const char *to, mcfs_step_cb progress)
 {
+    u64 start = now_ms();
     int r, i;
     /* the save, from its card */
     if (mc_open(&mc, from) < 0)
         return MCFS_ERR_IO;
+    ioReads = ioWrites = 0;
     onStep = progress;
     stepStop = 0;
     step_phase(MCFS_STEP_READ, 0);
@@ -916,6 +1052,7 @@ int mcfs_copy_save(const char *from, const char *folder, const char *to, mcfs_st
         r = write_save(to);
     save_free(&srcSave);
     onStep = NULL;
+    log_msg("mcfs: copy of %s: %d, %u reads and %u writes of the cards in %u ms", folder, r, ioReads, ioWrites, (unsigned)(now_ms() - start));
     return r;
 }
 
@@ -924,10 +1061,12 @@ int mcfs_delete_save(const char *path, const char *folder)
     static unsigned char ent[ENT];
     root_find_t f;
     gather_t g = {&srcSave, 0};
+    u64 start = now_ms();
     int r = MCFS_ERR_IO, i;
     srcSave.n = 0;
     if (mc_open_mode(&mc, path, O_RDWR) < 0)
         return MCFS_ERR_IO;
+    ioReads = ioWrites = 0;
     if (find_in_root(&mc, folder, &f) != 0)
         goto out;
     if (!f.found) {
@@ -945,9 +1084,11 @@ int mcfs_delete_save(const char *path, const char *folder)
         if (!(le16(srcSave.ent[i]) & DF_DIRECTORY))
             free_chain(&mc, le32(srcSave.ent[i] + 16));
     free_chain(&mc, le32(f.ent + 16));
-    r = MCFS_OK;
+    if (fat_flush(&mc) == 0)   /* the FAT with all of them free, in one go */
+        r = MCFS_OK;
 out:
     mc_close();
+    log_msg("mcfs: %s deleted: %d, %u reads and %u writes of the card in %u ms", folder, r, ioReads, ioWrites, (unsigned)(now_ms() - start));
     return r;
 }
 
@@ -1113,7 +1254,9 @@ int mcfs_psu_info(const char *psu, mcfs_psu_t *info, buffer_t *iconsys, buffer_t
 
 int mcfs_import_psu(const char *psu, const char *to, mcfs_step_cb progress)
 {
+    u64 start = now_ms();
     int r;
+    ioReads = ioWrites = 0;
     onStep = progress;
     stepStop = 0;
     r = read_psu(psu, &srcSave);
@@ -1121,5 +1264,6 @@ int mcfs_import_psu(const char *psu, const char *to, mcfs_step_cb progress)
         r = write_save(to);
     save_free(&srcSave);
     onStep = NULL;
+    log_msg("mcfs: import of %s: %d, %u reads and %u writes of the card in %u ms", psu, r, ioReads, ioWrites, (unsigned)(now_ms() - start));
     return r;
 }
