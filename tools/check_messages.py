@@ -147,15 +147,16 @@ PLACE = {
     "T_NEW_CARD": ("text", 172, 1), "T_INSTALL_TO": ("text", 200, 1), "T_INSTALL_NEW_ASK": ("text", WIDE, 1),
     "T_INSTALL_REPLACE_ASK": ("text", WIDE, 1), "T_INSTALL_REPLACE_TEXT": ("text", WIDE, 2),
     "T_INSTALL_BOOT_WARN": ("text", WIDE, 2), "T_INSTALL_NO_GAME": ("text", DIALOG, 4),
+    "T_INSTALL_RAISE_ASK": ("text", WIDE, 3),
     "T_INSTALL_WHICH_GAME": ("text", 320, 1), "T_INSTALLING": ("text", DIALOG, 1), "T_INSTALL_OK": ("text", DIALOG, 1),
     "T_INSTALL_FAILED": ("text", DIALOG, 1), "T_INSTALL_CANCEL_TITLE": ("text", DIALOG, 1),
     "T_INSTALL_CANCEL_TEXT": ("text", DIALOG, 1), "T_KEEP_ALL": ("text", 200, 1),
 }
 PARAGRAPH = ("text", DIALOG, 3)     # error messages and the rest: up to 3 lines in a box
-# what only an sd2psx is ever told (being moved to another card, its boot cards): not
+# what only an sd2psx is ever told (being moved to another card, its boot cards, one more channel for a folder): not
 # checked with another device's name
 ONLY_SD2PSX = {"T_SWITCHING", "T_INSERT", "T_INSERT_DONE", "T_INSERT_FAILED", "T_INSERT_NEEDS_BOOT", "T_INSERT_NEEDS_GAMEID",
-               "T_INSERT_BOOT_ASK", "T_SWITCH_ASK", "T_SWITCH_FAILED", "T_SWITCH_BACK_FAILED",
+               "T_INSERT_BOOT_ASK", "T_SWITCH_ASK", "T_SWITCH_FAILED", "T_SWITCH_BACK_FAILED", "T_INSTALL_RAISE_ASK",
                "T_INSTALL_BOOT_WARN"}
 
 # the button legends at the bottom: (texts, the last one apart at the right edge). They go from the right edge

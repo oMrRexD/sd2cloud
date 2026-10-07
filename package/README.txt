@@ -119,10 +119,12 @@ screen are the ones that do something with the selected entry.
   lowest free number in Cards, the next channel of the BootCard in Boot and, in Games, the next channel of
   the game's folder, which is created when the game has none. The game is told by the file's name
   (SLUS-21065-1.mcd, or SLUS_210.65_0.bin as OPL names them) or by the saved data inside; when there is more
-  than one, SD2Cloud asks which. Inside a game's folder, "New card" adds a channel to that game. X on an
-  existing card replaces it with the file's card, after you confirm. The file is read whole before anything
-  is written, and the card is read back afterwards. A .zip whose card doesn't fit in the PS2's memory (more
-  than 16 MB) can't be opened, but can be installed.
+  than one, SD2Cloud asks which. Inside a game's folder, "New card" adds a channel to that game. When a
+  folder already has every channel the sd2psx goes to in it (8, unless the folder's .ini says otherwise),
+  SD2Cloud offers to raise that limit by one (MaxChannels, in that .ini). X on an existing card replaces it
+  with the file's card, after you confirm. The file is read whole before anything is written, and the card is
+  read back afterwards. A .zip whose card doesn't fit in the PS2's memory (more than 16 MB) can't be opened,
+  but can be installed.
 Changing the card the sd2psx is using, by importing into it or by replacing it, works as any other change
 to it: SD2Cloud asks, switches the sd2psx to another card and back.
 Names with accented letters may be shown abbreviated, or not open at all (a limit of the FAT driver of the

@@ -151,16 +151,24 @@ static void insert_at(buffer_t *b, size_t pos, const char *s)
  * the commented one is created first. 0 = written */
 int config_set(const char *section, const char *key, const char *value)
 {
-    char path[260], line[300], l[300];
+    char path[260];
+    int r;
+    snprintf(path, sizeof(path), "%ssd2cloud.ini", dataDir);
+    if (!file_exists(path))
+        config_write_template();
+    r = file_exists(path) ? ini_set(path, section, key, value) : -1;
+    log_msg("settings: [%s] %s = %s (%d)", section, key, value, r);
+    return r;
+}
+
+int ini_set(const char *path, const char *section, const char *key, const char *value)
+{
+    char line[300], l[300];
     buffer_t in = {0}, out = {0};
     const char *p, *end;
     size_t klen = strlen(key), after = 0;
     int inSection = 0, seen = 0, done = 0, r;
-    snprintf(path, sizeof(path), "%ssd2cloud.ini", dataDir);
-    if (!file_exists(path))
-        config_write_template();
-    if (file_read(path, &in) != 0)
-        return -1;
+    file_read(path, &in);   /* a file that isn't there yet starts empty */
     snprintf(line, sizeof(line), "%s = %s\r\n", key, value);
     for (p = (const char *)in.data, end = p + in.len; p && p < end;) {
         const char *nl = memchr(p, '\n', end - p);
@@ -196,12 +204,11 @@ int config_set(const char *section, const char *key, const char *value)
     }
     if (!seen) {
         char head[80];
-        snprintf(head, sizeof(head), "%s[%s]\r\n", out.len && out.data[out.len - 1] != '\n' ? "\r\n\r\n" : "\r\n", section);
+        snprintf(head, sizeof(head), "%s[%s]\r\n", !out.len ? "" : out.data[out.len - 1] != '\n' ? "\r\n\r\n" : "\r\n", section);
         buf_append(&out, head, strlen(head));
         buf_append(&out, line, strlen(line));
     }
     r = file_replace(path, out.data, out.len);
-    log_msg("settings: [%s] %s = %s (%d)", section, key, value, r);
     buf_free(&in);
     buf_free(&out);
     return r;

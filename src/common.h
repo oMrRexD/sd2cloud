@@ -88,6 +88,9 @@ int file_write(const char *path, const unsigned char *d, size_t n);
 int file_replace(const char *path, const unsigned char *d, size_t n);   /* .new -> verify -> rename */
 int file_write_checked(const char *path, const unsigned char *d, size_t n);   /* written and read back: 1 = it's there, as it should be */
 int file_exists(const char *path);
+/* one "key = value" of an .ini, changed or added (at the end of its section; a section that isn't there, at the end
+ * of the file; a file that isn't there is made): everything else stays as it was. 0 = written */
+int ini_set(const char *path, const char *section, const char *key, const char *value);
 /* what a folder has (a path ending in /): the folders first, then the files, each by name. Returns how many (the
  * ones past max are left out), or -1 when it can't be read */
 typedef struct {
@@ -220,6 +223,7 @@ int game_title(const char *id, char *out, size_t size);   /* the game of that ID
 /* where the sd2psx keeps a game's cards: the folder Game2Folder.ini gives that ID, or one named after the ID */
 void game_folder(const char *id, char *out, size_t size);
 int max_channels(const char *folder);       /* how many channels a folder of cards has (its .ini's MaxChannels, or 8) */
+int max_channels_set(const char *folder, int n);   /* the sd2psx goes up to that many in that folder from now on. 0 = written */
 /* fingerprint of each included card's index; progress(i, n) before each card */
 void cards_check(void (*progress)(int i, int n, const card_t *c));
 void cards_recheck(card_t *c);              /* one card again (after a save was copied in or out) */

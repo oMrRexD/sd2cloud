@@ -200,6 +200,17 @@ int max_channels(const char *folder)
     return n;
 }
 
+int max_channels_set(const char *folder, int n)
+{
+    char path[260], v[8];
+    int r;
+    folder_ini(folder, path, sizeof(path));
+    snprintf(v, sizeof(v), "%d", n);
+    r = ini_set(path, "Settings", "MaxChannels", v);
+    log_msg("%s: MaxChannels = %d (%d)", path, n, r);
+    return r;
+}
+
 /* a file of a folder of cards, as the next of cards[] when it is the .mcd of one of that folder's channels (1) */
 static int add_file(const char *base, const char *folder, const char *file)
 {

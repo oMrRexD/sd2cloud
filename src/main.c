@@ -2436,7 +2436,8 @@ static void dest_new_name(void)
     char folder[48];
     const char *game = dest_game_folder();
     dst.newName[0] = 0;
-    if (dst.g.n && dst.g.idx[dst.g.cursor] < 0 && (dst.g.tab != TAB_GAMES || game[0]) && !new_card(dst.g.tab, game, 8, folder, dst.newName))
+    /* (the next channel, even one past those the folder has: that is asked about when it is picked) */
+    if (dst.g.n && dst.g.idx[dst.g.cursor] < 0 && (dst.g.tab != TAB_GAMES || game[0]) && !new_card(dst.g.tab, game, 255, folder, dst.newName))
         dst.newName[0] = 0;
 }
 
@@ -2500,7 +2501,7 @@ static int install_card(void)
 {
     char folder[48], base[56], gameFolder[48], id[12], title[64], t[300], active[96];
     card_t fresh, *to;
-    int tab, r, max, again = 0;
+    int tab, r, max, more = 0, again = 0;   /* more = the folder is to have that many channels (0 = as it is) */
     file_games();
     for (;;) {
         if (!install_dest(&to, &tab, gameFolder, again))
@@ -2527,10 +2528,28 @@ static int install_card(void)
                     game_title(id, title, sizeof(title));
             }
             max = tab == TAB_CARDS ? 0 : max_channels(tab == TAB_BOOT ? "BOOT" : gameFolder);
+            more = 0;
             if (!new_card(tab, gameFolder, max, folder, base)) {
-                snprintf(t, sizeof(t), T(T_INSTALL_NO_CHANNEL), max);
-                message_wait(0, NULL, COLOR_WARN, t);
-                continue;
+                /* every channel the folder has is taken. The sd2psx goes as far as the folder's .ini says (8 without
+                 * one): it can be told of one more */
+                if (!dev->sd2psx || max >= 255) {
+                    snprintf(t, sizeof(t), T(T_INSTALL_NO_CHANNEL), max);
+                    message_wait(0, NULL, COLOR_WARN, t);
+                    continue;
+                }
+                snprintf(t, sizeof(t), T(T_INSTALL_RAISE_ASK), max, max + 1);
+                dlg_new(0, NULL);
+                dlg_line(FONT_TEXT, COLOR_TEXT, 0, t);
+                dlg_buttons(BUTTON_CIRCLE, T_BACK, BUTTON_CROSS, T_CONTINUE);
+                next.wide = 1;
+                dlg_show();
+                if (!(wait_button(PAD_CROSS | PAD_CIRCLE, 0) & PAD_CROSS)) {
+                    sound_play(SND_BACK);
+                    continue;
+                }
+                sound_play(SND_CONFIRM);
+                more = max + 1;
+                new_card(tab, gameFolder, more, folder, base);
             }
             dlg_new(COLOR_TITLE, T(T_INSTALL_NEW_ASK));
             dlg_line(FONT_TEXT, COLOR_ACCENT, title[0] ? 2 : 0, base);
@@ -2544,7 +2563,7 @@ static int install_card(void)
         sound_play(SND_BACK);   /* back to the cards */
     }
     sound_play(SND_CONFIRM);
-    if (!to) {   /* a card to be: its folder first */
+    if (!to) {   /* a card to be: its folder first, and its channel within the sd2psx's reach */
         memset(&fresh, 0, sizeof(fresh));
         snprintf(fresh.folder, sizeof(fresh.folder), "%s", folder);
         snprintf(fresh.base, sizeof(fresh.base), "%s", base);
@@ -2552,6 +2571,10 @@ static int install_card(void)
         snprintf(fresh.path, sizeof(fresh.path), "%s%s/%s/", sdRoot, dev->cards, folder);
         ensure_dir(fresh.path);
         snprintf(fresh.path, sizeof(fresh.path), "%s%s/%s/%s%s", sdRoot, dev->cards, folder, base, dev->ext);
+        if (more && max_channels_set(folder, more) != 0) {
+            message_wait(0, NULL, COLOR_ERROR, T(T_ERR_EXPORT));
+            return 0;
+        }
     } else if (card_free(to, NULL))
         return 0;
     restoreCard = to ? to : &fresh;

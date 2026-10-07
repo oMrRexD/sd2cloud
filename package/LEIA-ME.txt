@@ -127,9 +127,11 @@ com o item selecionado.
   do jogo, que é criada quando o jogo ainda não tem nenhuma. O jogo é identificado pelo nome do arquivo
   (SLUS-21065-1.mcd, ou SLUS_210.65_0.bin, como o OPL os nomeia) ou pelos dados salvos de dentro; quando há
   mais de um, o SD2Cloud pergunta qual. Dentro da pasta de um jogo, "Novo cartão" adiciona um canal a esse
-  jogo. X em um cartão existente o substitui pelo cartão do arquivo, depois da sua confirmação. O arquivo é
-  lido por inteiro antes de qualquer gravação, e o cartão é lido de volta depois. Um .zip cujo cartão não
-  cabe na memória do PS2 (mais de 16 MB) não pode ser aberto, mas pode ser instalado.
+  jogo. Quando a pasta já tem todos os canais que o sd2psx alcança nela (8, a menos que o .ini da pasta diga
+  outra coisa), o SD2Cloud oferece aumentar esse limite em um (MaxChannels, nesse .ini). X em um cartão
+  existente o substitui pelo cartão do arquivo, depois da sua confirmação. O arquivo é lido por inteiro antes
+  de qualquer gravação, e o cartão é lido de volta depois. Um .zip cujo cartão não cabe na memória do PS2
+  (mais de 16 MB) não pode ser aberto, mas pode ser instalado.
 Alterar o cartão que está em uso no sd2psx, importando para ele ou substituindo-o, funciona como qualquer
 outra alteração nele: o SD2Cloud pergunta, troca o sd2psx para outro cartão e volta.
 Nomes com letras acentuadas podem aparecer abreviados, ou não abrir (limitação do driver de FAT do SDK do
