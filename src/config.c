@@ -168,7 +168,12 @@ int ini_set(const char *path, const char *section, const char *key, const char *
     const char *p, *end;
     size_t klen = strlen(key), after = 0;
     int inSection = 0, seen = 0, done = 0, r;
-    file_read(path, &in);   /* a file that isn't there yet starts empty */
+    /* a file that isn't there yet starts empty; one that is there and can't be read is left alone, never written
+     * again from nothing (a folder's .ini has its channels' names) */
+    if (file_read(path, &in) != 0 && file_exists(path)) {
+        buf_free(&in);
+        return -1;
+    }
     snprintf(line, sizeof(line), "%s = %s\r\n", key, value);
     for (p = (const char *)in.data, end = p + in.len; p && p < end;) {
         const char *nl = memchr(p, '\n', end - p);
