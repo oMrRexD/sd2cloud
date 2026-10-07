@@ -20,8 +20,9 @@ TTF = str(ROOT / "third_party/varelaround/VarelaRound-Regular.ttf")
 BASE = 0.25                      # how far above the ground it stands (an icon fills a box of 5 units)
 LIT = (238, 242, 248)            # what the screen shows: white on black, as the sd2psx's own
 
-# the texture: the card's face on rows 0-111, plain colors on 112-127 (one for each part that has no drawing)
-SHELL, EDGE, BLUE, GREY, BLACK = [((16 + 26 * i) / 128, 120 / 128) for i in range(5)]
+# the texture: the card's face on rows 0-106; on 107-127, plain colors (one for each part that has no drawing) and
+# the tag's two faces
+SHELL, EDGE, BLUE, GREY, DARK = [((6 + 12 * i) / 128, 117.5 / 128) for i in range(5)]
 verts = []
 
 
@@ -78,7 +79,7 @@ def cloud_shape(cx, cy, s):
 
 
 CW, CH, CT = 3.3, 4.5, 0.5      # the card: width, height, thickness
-FACE = (0, 0, 1, 112 / 128)      # its face in the texture (rows 0-111)
+FACE = (0, 0, 1, 107 / 128)      # its face in the texture (rows 0-106)
 
 
 def card_outline(w, h, r, y0):
@@ -109,7 +110,7 @@ def plate(shape, z0, z1, color, box):
     def uv(p):
         return (box[0] + (p[0] - min(xs)) / (max(xs) - min(xs)) * (box[2] - box[0]),
                 box[3] - (p[1] - min(ys)) / (max(ys) - min(ys)) * (box[3] - box[1]))
-    c = (0.0, (min(ys) + max(ys)) / 2)
+    c = ((min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2)
     for i, p in enumerate(shape):
         q = shape[(i + 1) % len(shape)]
         tri([(c[0], c[1], z1), (p[0], p[1], z1), (q[0], q[1], z1)], (0, 0, 1), [uv(c), uv(p), uv(q)])
@@ -139,7 +140,70 @@ def model():
     for x in (-0.9, 0.9):   # the two buttons
         slab(rect(x - 0.28, y0 + 0.3, x + 0.28, y0 + 0.48), z, z + 0.07, GREY)
     slab(cloud_shape(-0.02, y0 + CLOUD_Y, 0.34), z, z + 0.11, BLUE)   # the cloud, over the name
+    # the card gets a little smaller, to stand next to the tag as the other apps' models do
+    for i, ((x, y, zz), n, uv) in enumerate(verts):
+        verts[i] = ((x * SCALE, (y - BASE) * SCALE + BASE, zz * SCALE), n, uv)
+    tag()
     return verts
+
+
+SCALE = 0.86
+# The small memory card that the Save Application System's icons carry on their upper right corner, saying what the
+# folder is ("APP"). It is the same card in the same place as on the others (measured on theirs: leaning back, behind
+# the model's face), so that this icon sits among them as one of them. Its front and its back, each from the upper left
+# corner around, and where each corner is in the texture (in texels, from the corner of the tag's part of it)
+TAG_FRONT = [(1.628, 4.105, -0.899), (1.640, 3.061, -0.459), (1.665, 3.019, -0.441), (1.710, 2.998, -0.433),
+             (2.430, 3.000, -0.443), (2.475, 3.023, -0.453), (2.500, 3.063, -0.470), (2.491, 4.109, -0.911)]
+TAG_FRONT_UV = [(0.5, 127.0), (27.2, 126.9), (28.2, 126.3), (28.8, 125.3), (28.8, 108.8), (28.2, 107.8), (27.2, 107.2), (0.5, 107.2)]
+TAG_BACK = [(1.626, 4.050, -1.029), (1.640, 3.003, -0.587), (1.664, 2.965, -0.571), (1.709, 2.942, -0.562),
+            (2.429, 2.946, -0.573), (2.474, 2.968, -0.582), (2.498, 3.008, -0.599), (2.489, 4.054, -1.041)]
+TAG_BACK_UV = [(31.5, 107.3), (58.5, 107.3), (59.5, 107.7), (61.5, 108.6), (61.5, 126.3), (59.5, 126.5), (58.5, 127.5), (31.5, 127.5)]
+TAG_U = 64                                  # the tag's part of the texture starts at this column (and at row 107)
+TAG_BODY, TAG_LABEL = (40, 40, 40), (22, 28, 62)   # a PS2 memory card's black, and the dark blue of its label
+
+
+def tag():
+    def minus(a, b):
+        return (a[0] - b[0], a[1] - b[1], a[2] - b[2])
+
+    def cross(a, b):
+        return (a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0])
+
+    def unit(a):
+        l = math.sqrt(sum(x * x for x in a))
+        return (a[0] / l, a[1] / l, a[2] / l)
+    f, b = TAG_FRONT, TAG_BACK
+    n = unit(cross(minus(f[1], f[0]), minus(f[7], f[0])))   # the way the front looks: toward the viewer, and up
+    if n[2] < 0:
+        n = (-n[0], -n[1], -n[2])
+    fuv = [((TAG_U + u) / 128, v / 128) for u, v in TAG_FRONT_UV]
+    buv = [((TAG_U + u) / 128, v / 128) for u, v in TAG_BACK_UV]
+    middle = tuple(sum(q[i] for q in f) / len(f) for i in range(3))
+    for i in range(1, 7):
+        tri([f[0], f[i], f[i + 1]], n, [fuv[0], fuv[i], fuv[i + 1]])
+        tri([b[0], b[i], b[i + 1]], (-n[0], -n[1], -n[2]), [buv[0], buv[i], buv[i + 1]])
+    for i in range(8):   # its rim
+        j = (i + 1) % 8
+        m = unit(cross(minus(f[j], f[i]), n))
+        if sum(m[k] * ((f[i][k] + f[j][k]) / 2 - middle[k]) for k in range(3)) < 0:
+            m = (-m[0], -m[1], -m[2])
+        quad([f[i], f[j], b[j], b[i]], m, DARK)
+
+
+def tag_art(k):
+    """the tag's front, upright and drawn large (20 x 28 texels): the blue line a PS2 memory card has at its top, the
+    grey of its small print, and the label that says what the folder is"""
+    im = Image.new("RGB", (20 * k, 28 * k), TAG_BODY)
+    d = ImageDraw.Draw(im)
+    d.rectangle((3 * k, 3.2 * k, 17 * k, 3.9 * k), fill=(36, 52, 150))
+    d.rectangle((1.5 * k, 2.6 * k, 4 * k, 4.6 * k), fill=(56, 84, 236))
+    d.rectangle((6 * k, 7.4 * k, 14 * k, 8.6 * k), fill=(92, 92, 102))
+    d.rectangle((5 * k, 9.8 * k, 15 * k, 11 * k), fill=(92, 92, 102))
+    d.rectangle((1 * k, 13.5 * k, 19 * k, 23.5 * k), fill=TAG_LABEL)
+    d.text((10 * k, 18.5 * k), "APP", font=ImageFont.truetype(TTF, int(7.4 * k)), anchor="mm", fill=(255, 255, 255),
+           stroke_width=max(1, k // 4), stroke_fill=(255, 255, 255))
+    d.rectangle((6 * k, 25.2 * k, 14 * k, 26.2 * k), fill=(26, 26, 28))
+    return im
 
 
 def cloud(d, cx, cy, s, fill):
@@ -147,8 +211,8 @@ def cloud(d, cx, cy, s, fill):
 
 
 def texture():
-    """the card's face, drawn large in its own proportions and brought down to the texture's rows 0-111; plain colors
-    under it"""
+    """the card's face, drawn large in its own proportions and brought down to the texture's rows 0-106; under it,
+    the plain colors and the tag's faces (its front lying on its side, as the tag's corners expect it)"""
     k = 8
     w, h = 128 * k, int(128 * k * CH / CW)
     px = w / CW   # pixels to a unit of the model
@@ -177,36 +241,55 @@ def texture():
     d.rectangle((cx - 1.5 * k, cy - 2 * k, cx + 1.5 * k, cy + 5 * k), fill=(3, 4, 8))
     d.polygon(((cx, cy - 8 * k), (cx - 5 * k, cy - 2 * k), (cx + 5 * k, cy - 2 * k)), fill=(3, 4, 8))
     im = Image.new("RGB", (128, 128), (0, 0, 0))
-    im.paste(face.resize((128, 112), Image.LANCZOS), (0, 0))
+    im.paste(face.resize((128, 107), Image.LANCZOS), (0, 0))
     d = ImageDraw.Draw(im)
-    for i, c in enumerate(((44, 47, 54), (78, 84, 96), (112, 190, 255), (96, 103, 118), (3, 4, 8))):
-        d.rectangle((3 + 26 * i, 112, 28 + 26 * i, 127), fill=c)
+    d.rectangle((0, 107, 127, 127), fill=TAG_BODY)
+    for i, c in enumerate(((44, 47, 54), (78, 84, 96), (112, 190, 255), (96, 103, 118), TAG_BODY)):
+        d.rectangle((12 * i, 107, 12 * i + 11, 127), fill=c)
+    im.paste(tag_art(k).rotate(90, expand=True).resize((28, 20), Image.LANCZOS), (TAG_U, 107))
+    d.rectangle((TAG_U + 36, 110, TAG_U + 57, 124), fill=(34, 34, 34))   # its back: the same black, a shade deeper inside
     return im
 
 
 def a1b5g5r5(im):
-    out = bytearray()
-    for r, g, b in im.getdata():
-        out += struct.pack("<H", 0x8000 | ((b >> 3) << 10) | ((g >> 3) << 5) | (r >> 3))
-    return bytes(out)
+    return [0x8000 | ((b >> 3) << 10) | ((g >> 3) << 5) | (r >> 3) for r, g, b in im.getdata()]
+
+
+def rle(words):
+    """the texture packed as the PS2 does: a count and the word to repeat that many times, or 65536 - n and the n
+    words that follow, as they are"""
+    out, i, n = [], 0, len(words)
+    while i < n:
+        j = i
+        while j < n and words[j] == words[i] and j - i < 0x7FFF:
+            j += 1
+        if j - i < 3:   # nothing worth a count here: as they are, up to where three of a kind begin
+            j = i + 1
+            while j < n and j - i < 0x80 and not (j + 2 < n and words[j] == words[j + 1] == words[j + 2]):
+                j += 1
+            out += [0x10000 - (j - i)] + words[i:j]
+        else:
+            out += [j - i, words[i]]
+        i = j
+    return struct.pack("<I", 2 * len(out)) + struct.pack("<%dH" % len(out), *out)
 
 
 def icn(vertices, tex):
     def s(f):
         return max(-32768, min(32767, int(round(f * 4096))))
-    out = struct.pack("<IIIfI", 0x00010000, 1, 0x07, 1.0, len(vertices))
+    out = struct.pack("<IIIfI", 0x00010000, 1, 0x0E, 1.0, len(vertices))
     for (x, y, z), (nx, ny, nz), (u, t) in vertices:   # the file's y points down and its z away from the viewer
         out += struct.pack("<hhhH", s(x), s(-y), s(-z), 0x0400)
         out += struct.pack("<hhhH", s(nx), s(-ny), s(-nz), 0)
         out += struct.pack("<hhBBBB", s(u), s(t), 0x80, 0x80, 0x80, 0x80)
     out += struct.pack("<IIfII", 1, 1, 1.0, 0, 1)          # the animation: one frame of the only shape
     out += struct.pack("<IIff", 0, 1, 0.0, 1.0)
-    return out + a1b5g5r5(tex)
+    return out + rle(a1b5g5r5(tex))
 
 
 def icon_sys(title, icon_file):
     t = title.encode("shift_jis")
-    out = b"PS2D" + struct.pack("<HHI", 0, len(t), 0) + struct.pack("<I", 0x40)
+    out = b"PS2D" + struct.pack("<HHI", 1, len(t), 0) + struct.pack("<I", 0x40)   # (1: the folder is software)
     for c in ((22, 40, 104), (34, 60, 150), (8, 14, 44), (16, 28, 84)):   # the browser's background, corner by corner
         out += struct.pack("<4i", c[0], c[1], c[2], 0)
     for dvec in ((0.45, 0.6, 0.66), (-0.3, -0.8, 0.5), (0.0, 0.3, -0.9)):
