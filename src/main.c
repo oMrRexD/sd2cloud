@@ -1317,9 +1317,8 @@ static void tabs_draw(const tabs_t *g, int dots)
             } else if (g->idx[k] < 0) {   /* "All saves": two small cards, one behind the other */
                 ui_image(IMG_MINICARD, x + 7, y - 11, 12, 14, 0xFFFFFF, 0x44);
                 ui_image(IMG_MINICARD, x + 1, y - 6, 13, 15, 0xFFFFFF, 0x80);
-            } else if (folders) {   /* a small folder, as the Files group has them */
-                ui_rect(x + 2, y - 8, 7, 3, 0xD9B95C, 0x58);
-                ui_rect(x + 2, y - 6, 16, 12, 0xD9B95C, 0x58);
+            } else if (folders) {   /* a game's folder: a small arrow, as the tabs have (it opens) */
+                ui_triangle(x + 5, y - 6, x + 5, y + 6, x + 14, y, 0x6E9AE0, 0x80);
                 for (i = g->first[k - tabs_lead(g)]; i < g->first[k - tabs_lead(g) + 1]; i++)
                     here |= g->games[i] == activeCard;
                 x -= 22;   /* the mark of the card in use goes before the folder */
@@ -1330,8 +1329,7 @@ static void tabs_draw(const tabs_t *g, int dots)
             }
         }
         if (g->tab == TAB_GAMES && g->open >= 0) {   /* over a folder's cards, small: which folder this is */
-            ui_rect(LIST_X + 24, LIST_Y + 22, 6, 2, 0xD9B95C, 0x48);
-            ui_rect(LIST_X + 24, LIST_Y + 24, 13, 10, 0xD9B95C, 0x48);
+            ui_triangle(LIST_X + 27, LIST_Y + 23, LIST_X + 27, LIST_Y + 33, LIST_X + 35, LIST_Y + 28, 0x6E9AE0, 0x70);
             ui_text_fit(FONT_SMALL, LIST_X + 44, LIST_Y + 21, FOLDER_W - 20, 0x8E98AA, game_of(&cards[g->idx[g->add]]));
         }
         rowsDx = 0;

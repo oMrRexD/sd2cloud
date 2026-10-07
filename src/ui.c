@@ -509,6 +509,9 @@ void ui_line(float x1, float y1, float x2, float y2, u32 color, int a)
 void ui_triangle(float x1, float y1, float x2, float y2, float x3, float y3, u32 color, int a)
 {
     gsKit_prim_triangle(gs, x1, y1, x2, y2, x3, y3, 1, gs_color(color, a));
+    /* gsKit joins a primitive to the one before it when they are of the same kind, and of two flat triangles joined
+     * that way only the first shows: an empty sprite after each keeps them apart */
+    gsKit_prim_sprite(gs, x1, y1, x1, y1, 1, gs_color(0, 0));
 }
 
 void ui_quad(const float *xy, const u32 *colors, const int *alphas)
