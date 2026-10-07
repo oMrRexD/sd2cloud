@@ -33,6 +33,8 @@ typedef struct {
 
 icon_t *icon_load(const buffer_t *iconsys, const buffer_t *ico);   /* NULL = couldn't read it */
 icon_t *icon_make_sd2psx(void);   /* the memory card with "SD2PSX" on the label; with the screen locked (the font) */
+/* a plain blue cube: what the PS2 browser shows for a save whose icon it can't read, and so does SD2Cloud */
+icon_t *icon_make_cube(void);
 void icon_free(icon_t *ic);       /* with the screen locked when it may be on screen */
 /* draws it in a square of side size centered on (cx, cy), seen from above like in the PS2 browser: turning and
  * animated at t seconds, or still and facing the front with t < 0 */

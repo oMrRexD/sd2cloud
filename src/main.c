@@ -52,6 +52,7 @@ static int backupCancelled;        /* the user confirmed cancelling the backup *
 static int restoring;              /* the backup running is the one before a restore (cancelling it doesn't leave) */
 static const card_t *singleCard;   /* the card of run_backup's mode 3 */
 static icon_t *sd2psxIcon;         /* the SD2PSX memory card, for the cards shared by many games */
+static icon_t *cubeIcon;           /* the blue cube of a save without an icon (or with one that can't be read) */
 static int activeCard = -1;        /* the card the sd2psx is emulating (index in cards[]); -1 = none here, or not known */
 
 /* ------------------------------------------------------------ small things */
@@ -1917,7 +1918,10 @@ static void browser_icons(int spin)
         if (v->icon) {
             int k = i - first;
             icon_draw_cell(v->icon, k % GRID_COLS, k / GRID_COLS, spin && i == brw.cursor ? (now_ms() - brw.since) / 1000.0f : -1);
-        } else if (v->tried) {   /* a save without an icon: a plain grey block */
+        } else if (v->tried && cubeIcon) {   /* a save without an icon: the blue cube the PS2 browser gives it */
+            int k = i - first;
+            icon_draw_cell(cubeIcon, k % GRID_COLS, k / GRID_COLS, spin && i == brw.cursor ? (now_ms() - brw.since) / 1000.0f : -1);
+        } else if (v->tried) {
             grid_cell(i, 2.5f, &cx, &cy);
             ui_rect(cx - 16, cy - 16, 32, 32, 0x505056, 0x60);
         }
@@ -2136,8 +2140,8 @@ static void scene_save(float t)
     ui_rect(0, 0, W, H, 0x02040C, 0x9C);
     ui_alpha(look_fade(t));
     ui_light(190, 318, 110, 34, 0xFFFFFF, 0x26);
-    if (v->icon)
-        icon_draw(v->icon, 190, 232, 214, (now_ms() - sp.since) / 1000.0f);
+    if (v->icon || (v->tried && cubeIcon))
+        icon_draw(v->icon ? v->icon : cubeIcon, 190, 232, 214, (now_ms() - sp.since) / 1000.0f);
     text_center_shadow(FONT_TEXT, cx, y, 0xE8E8EC, sp.where);
     y += 26;
     if (v->line1[0])
@@ -4597,3 +4601,4 @@ int main(int argc, char *argv[])
     manual();
     return 0;
 }
+    cubeIcon = icon_make_cube();

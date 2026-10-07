@@ -415,6 +415,61 @@ icon_t *icon_make_sd2psx(void)
     return ic;
 }
 
+/* ------------------------------------------------------------ the cube of a save without an icon */
+
+icon_t *icon_make_cube(void)
+{
+    /* each face: its normal and its four corners, counterclockwise as seen from outside */
+    static const float face[6][5][3] = {
+        {{0, 0, 1}, {-1, -1, 1}, {1, -1, 1}, {1, 1, 1}, {-1, 1, 1}},
+        {{0, 0, -1}, {1, -1, -1}, {-1, -1, -1}, {-1, 1, -1}, {1, 1, -1}},
+        {{1, 0, 0}, {1, -1, 1}, {1, -1, -1}, {1, 1, -1}, {1, 1, 1}},
+        {{-1, 0, 0}, {-1, -1, -1}, {-1, -1, 1}, {-1, 1, 1}, {-1, 1, -1}},
+        {{0, 1, 0}, {-1, 1, 1}, {1, 1, 1}, {1, 1, -1}, {-1, 1, -1}},
+        {{0, -1, 0}, {-1, -1, -1}, {1, -1, -1}, {1, -1, 1}, {-1, -1, 1}},
+    };
+    static const float uv[4][2] = {{0, 1}, {1, 1}, {1, 0}, {0, 0}};
+    static const int corner[6] = {0, 1, 2, 0, 2, 3};   /* two triangles */
+    /* in the units of a save's own icon, which stands on the ground and fills a box of 5: a cube of 3, a little
+     * above the ground */
+    const float h = 1.5f, up = 2.1f;
+    unsigned short body = rgb16(34, 62, 178);
+    int f, i, k = 0;
+    icon_t *ic = new_icon();
+    if (!ic)
+        return NULL;
+    ic->shapes = 1;
+    ic->nv = 6 * 6;
+    ic->pos = malloc(sizeof(float) * 3 * ic->nv);
+    ic->nrm = malloc(sizeof(float) * 3 * ic->nv);
+    ic->uv = malloc(sizeof(float) * 2 * ic->nv);
+    ic->col = malloc(4 * ic->nv);
+    if (!ic->pos || !ic->nrm || !ic->uv || !ic->col) {
+        icon_free(ic);
+        return NULL;
+    }
+    for (f = 0; f < 6; f++)
+        for (i = 0; i < 6; i++, k++) {
+            const float *p = face[f][1 + corner[i]];
+            ic->pos[k * 3] = p[0] * h, ic->pos[k * 3 + 1] = p[1] * h + up, ic->pos[k * 3 + 2] = p[2] * h;
+            memcpy(ic->nrm + k * 3, face[f][0], sizeof(float) * 3);
+            ic->uv[k * 2] = uv[corner[i]][0], ic->uv[k * 2 + 1] = uv[corner[i]][1];
+            memset(ic->col + k * 4, 0x80, 4);
+        }
+    /* plain blue all over, as the PS2's own: the lights are what tells one face from another */
+    for (i = 0; i < TEX * TEX; i++)
+        ic->tex[i] = body;
+    ic->lightDir[0][0] = -0.45f, ic->lightDir[0][1] = 0.6f, ic->lightDir[0][2] = 0.66f;
+    ic->lightCol[0][0] = ic->lightCol[0][1] = ic->lightCol[0][2] = 0.6f;
+    ic->lightDir[1][0] = 0.3f, ic->lightDir[1][1] = -0.8f, ic->lightDir[1][2] = 0.5f;
+    ic->lightCol[1][0] = ic->lightCol[1][1] = 0.22f, ic->lightCol[1][2] = 0.3f;
+    ic->ambient[0] = ic->ambient[1] = ic->ambient[2] = 0.5f;
+    bounds(ic);
+    ic->ok = 1;
+    FlushCache(0);
+    return ic;
+}
+
 /* ------------------------------------------------------------ drawing */
 
 /* the weight of each shape at a moment of the animation (the keys of each frame, interpolated in a loop) */
