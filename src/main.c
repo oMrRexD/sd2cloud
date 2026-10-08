@@ -1422,9 +1422,9 @@ static int restore_progress(int phase, long long done, long long total)
 }
 
 /* is this card the one the sd2psx is emulating right now? 1 = yes, 0 = no, -1 = couldn't tell.
- * A CardN comes with its number. Card number 0 is the BootCard, a game card or a named folder, which the MMCE commands
- * don't tell apart: then it compares the root folder the PS2 sees in that slot with the one inside the .mcd (the same
- * saves with the same modification times = the same card) */
+ * A CardN comes with its number, which the slot is checked against. Card number 0 is the BootCard, a game card or a
+ * named folder, which the MMCE commands don't tell apart: then it compares the root folder the PS2 sees in that slot
+ * with the one inside the .mcd (the same saves with the same modification times = the same card) */
 static int card_in_use(const card_t *c, int active, int channel)
 {
     char seen[65], file[65];
@@ -1435,8 +1435,26 @@ static int card_in_use(const card_t *c, int active, int channel)
             return -1;
         return strcmp(seen, file) == 0;
     }
-    if (active >= 1)
-        return c->type == TYPE_NORMAL && card_number(c) == active && c->channel == channel;
+    if (active >= 1) {
+        const card_t *told = NULL;
+        int i;
+        if (c->type == TYPE_NORMAL && card_number(c) == active && c->channel == channel)
+            return 1;
+        /* Another card than the one the device says it is on. That isn't taken on its word alone, as it may be the
+         * number of the card it was on before (see find_active): unless the root folder the PS2 sees in the slot is
+         * that numbered card's, this card is in use when that root folder is its own */
+        if (mc_root_signature(sdRoot[4] - '0', seen) != 0)
+            return 0;
+        for (i = 0; i < nCards && !told; i++)
+            if (cards[i].type == TYPE_NORMAL && card_number(&cards[i]) == active && cards[i].channel == channel)
+                told = &cards[i];
+        if (told && mcfs_root_signature(told->path, file) == 0 && !strcmp(seen, file))
+            return 0;
+        if (mcfs_root_signature(c->path, file) != 0 || strcmp(seen, file) != 0)
+            return 0;
+        log_msg("%s is in the slot, though the device says card %d, channel %d", c->id, active, channel);
+        return 1;
+    }
     if (active == 0 && (c->type == TYPE_NORMAL || c->channel != channel))
         return 0;
     if (mc_root_signature(sdRoot[4] - '0', seen) != 0 || mcfs_root_signature(c->path, file) != 0)
@@ -1615,8 +1633,10 @@ static int insert_card(const card_t *c)
         return 0;
     slot_settle();
     log_msg("sd2psx: asking for %s", c->id);
-    if (cardTold && c->type == TYPE_NORMAL ? active == number : activeCard >= 0 && cards[activeCard].type == c->type &&
-                                                                !strcmp(cards[activeCard].folder, c->folder))
+    /* (the folder it is on: the one of the card found in the slot, when one was, as the device's own number may be
+     * of the card it was on before; else that number) */
+    if (activeCard >= 0 ? cards[activeCard].type == c->type && !strcmp(cards[activeCard].folder, c->folder)
+                        : cardTold && c->type == TYPE_NORMAL && active == number)
         now = activeCard >= 0 ? activeCard : nCards;   /* on that folder already (nCards: on a channel that isn't here) */
     else if (c->type == TYPE_BOOT) {
         if (mmce_set_card(1, 0) == 0)
@@ -2569,6 +2589,15 @@ static int pick_game(char id[12])
     return 1;
 }
 
+/* is that card's file on the microSD? One that isn't among the cards here may still be there: past the cards SD2Cloud
+ * handles, or made by the device itself since they were listed. A new card never takes the place of such a file */
+static int card_file_there(const char *folder, const char *base)
+{
+    char path[200];
+    snprintf(path, sizeof(path), "%s%s/%s/%s%s", sdRoot, dev->cards, folder, base, dev->ext);
+    return file_exists(path);
+}
+
 /* The card a new one would be in a group: the lowest numbered card there is none of yet, on its first channel; or the
  * lowest channel that is free in a folder that has max of them (the BootCard's, or a game's: gameFolder).
  * 0 = that folder has them all */
@@ -2578,22 +2607,21 @@ static int new_card(int tab, const char *gameFolder, int max, char folder[48], c
     if (tab == TAB_CARDS) {
         for (n = 1;; n++) {
             snprintf(folder, 48, "%s%d", dev->numbered, n);
+            snprintf(base, 56, "%s%d-1", dev->numbered, n);
             for (i = 0; i < nCards && strcasecmp(cards[i].folder, folder); i++)
                 ;
-            if (i == nCards)
+            if (i == nCards && !card_file_there(folder, base))
                 break;
         }
-        snprintf(base, 56, "%s%d-1", dev->numbered, n);
         return 1;
     }
     snprintf(folder, 48, "%s", tab == TAB_BOOT ? "BOOT" : gameFolder);
     for (n = 1; n <= max; n++) {
         for (i = 0; i < nCards && (strcasecmp(cards[i].folder, folder) || cards[i].channel != n); i++)
             ;
-        if (i == nCards) {
-            snprintf(base, 56, "%.44s-%d", tab == TAB_BOOT ? "BootCard" : folder, n);
+        snprintf(base, 56, "%.44s-%d", tab == TAB_BOOT ? "BootCard" : folder, n);
+        if (i == nCards && !card_file_there(folder, base))
             return 1;
-        }
     }
     return 0;
 }
@@ -2656,7 +2684,11 @@ static int dest_new_place(void)
         if (!ask_more_channels(max))
             return 0;
         destNewMore = max + 1;
-        new_card(TAB_GAMES, game, destNewMore, folder, base);
+        if (!new_card(TAB_GAMES, game, destNewMore, folder, base)) {   /* (that one's file is there already) */
+            snprintf(t, sizeof(t), T(T_NEWCARD_NO_CHANNEL), destNewMore);
+            message_wait(0, NULL, COLOR_WARN, t);
+            return 0;
+        }
     }
     memset(&destNew, 0, sizeof(destNew));
     snprintf(destNew.folder, sizeof(destNew.folder), "%s", folder);
@@ -2682,7 +2714,7 @@ static card_t *dest_real(card_t *to)
 {
     char dir[200], file[80];
     card_t *c = NULL;
-    int r;
+    int r, there;
     if (to != &destNew)
         return to;
     dlg_new(0, NULL);
@@ -2691,17 +2723,21 @@ static card_t *dest_real(card_t *to)
     dlg_show();
     snprintf(dir, sizeof(dir), "%s%s/%s/", sdRoot, dev->cards, destNew.folder);
     ensure_dir(dir);
-    r = destNewMore && max_channels_set(destNew.folder, destNewMore) != 0 ? MCFS_ERR_IO : mcfs_new_card(destNew.path, new_card_progress);
+    there = file_exists(destNew.path);   /* (made by the device since the place was picked: left as it is) */
+    r = there || (destNewMore && max_channels_set(destNew.folder, destNewMore) != 0) ? MCFS_ERR_IO
+                                                                                     : mcfs_new_card(destNew.path, new_card_progress);
     snprintf(file, sizeof(file), "%s%s", destNew.base, dev->ext);
     if (r == MCFS_OK && (c = cards_append(destNew.folder, file)) != NULL) {
         cards_recheck(c);
         cardsUnsorted = 1;
     }
-    log_msg("new card %s: %d%s", destNew.id, r, c ? "" : ", not one of the cards");
+    log_msg("new card %s: %d%s%s", destNew.id, r, c ? "" : ", not one of the cards", there ? " (its file was there already)" : "");
     if (!c) {
-        unlink(destNew.path);   /* a card that isn't whole is no card; nor is its folder to stay, if it was made for it */
-        dir[strlen(dir) - 1] = 0;
-        rmdir(dir);
+        if (!there) {   /* a card that isn't whole is no card; nor is its folder to stay, if it was made for it */
+            unlink(destNew.path);
+            dir[strlen(dir) - 1] = 0;
+            rmdir(dir);
+        }
         message_wait(0, NULL, COLOR_ERROR, T(T_NEWCARD_FAILED));
     }
     return c;
@@ -2806,7 +2842,11 @@ static int install_card(void)
                 if (!ask_more_channels(max))
                     continue;
                 more = max + 1;
-                new_card(tab, gameFolder, more, folder, base);
+                if (!new_card(tab, gameFolder, more, folder, base)) {   /* (that one's file is there already) */
+                    snprintf(t, sizeof(t), T(T_INSTALL_NO_CHANNEL), more);
+                    message_wait(0, NULL, COLOR_WARN, t);
+                    continue;
+                }
             }
             dlg_new(COLOR_TITLE, T(T_INSTALL_NEW_ASK));
             dlg_line(FONT_TEXT, COLOR_ACCENT, title[0] ? 2 : 0, base);
@@ -2828,6 +2868,10 @@ static int install_card(void)
         snprintf(fresh.path, sizeof(fresh.path), "%s%s/%s/", sdRoot, dev->cards, folder);
         ensure_dir(fresh.path);
         snprintf(fresh.path, sizeof(fresh.path), "%s%s/%s/%s%s", sdRoot, dev->cards, folder, base, dev->ext);
+        if (file_exists(fresh.path)) {   /* (made by the device since the place was picked: left as it is) */
+            message_wait(0, NULL, COLOR_ERROR, T(T_NEWCARD_FAILED));
+            return 0;
+        }
         if (more && max_channels_set(folder, more) != 0) {
             message_wait(0, NULL, COLOR_ERROR, T(T_ERR_EXPORT));
             return 0;
