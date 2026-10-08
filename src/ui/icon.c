@@ -8,8 +8,9 @@
  *   animation: id 1, frame length, speed (float), play offset, frame count; per frame: shape, key count (+1), 2 words,
  *              then (time, value) float pairs
  *   texture: 128x128 A1B5G5R5, raw (type 7) or RLE (u32 size, then u16 codes)
- * When a card is shared by many games (CardN, named folders) or the icon can't be read, a memory card model made here
- * with "SD2PSX" on its label is shown instead.
+ * When a card is shared by many games (CardN, named folders) or the icon can't be read, the model of an sd2psx memory
+ * card is shown instead: an icon file too, embedded in the program (assets/sd2psx.icn, made by
+ * tools/make_card_model.py).
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -211,16 +212,16 @@ static void bounds(icon_t *ic)
     ic->radius = r > 1 ? r : 1;
 }
 
-icon_t *icon_load(const buffer_t *iconsys, const buffer_t *ico)
+/* the model, its animation and its texture */
+static icon_t *read_icon(const buffer_t *ico)
 {
     const unsigned char *d = ico->data;
     size_t n = ico->len, off = 20, stride;
     unsigned int type;
     int i, s, f;
     icon_t *ic;
-    if (!iconsys->data || iconsys->len < 964 || !d || n < 20 || le32u(d) != 0x00010000 || !(ic = new_icon()))
+    if (!d || n < 20 || le32u(d) != 0x00010000 || !(ic = new_icon()))
         return NULL;
-    read_iconsys(ic, iconsys->data);
     ic->shapes = le32u(d + 4);
     type = le32u(d + 8);
     ic->nv = le32u(d + 16);
@@ -296,126 +297,45 @@ bad:
     return NULL;
 }
 
-/* ------------------------------------------------------------ the SD2PSX memory card */
-
-static unsigned short rgb16(int r, int g, int b) { return 0x8000 | ((b >> 3) << 10) | ((g >> 3) << 5) | (r >> 3); }
-
-/* a over b, a of 15 */
-static unsigned short mix16(unsigned short b, unsigned short c, int a)
+icon_t *icon_load(const buffer_t *iconsys, const buffer_t *ico)
 {
-    int k, out = 0x8000;
-    for (k = 0; k < 15; k += 5) {
-        int x = (b >> k) & 31, y = (c >> k) & 31;
-        out |= ((x * (15 - a) + y * a) / 15) << k;
-    }
-    return out;
-}
-
-/* text into the texture, centered on x with its top at y, squashed vertically by sy and, when it is wider than maxw,
- * horizontally too (font.c renders it: the screen must be locked) */
-typedef struct {
-    unsigned short *tex, color;
-    float x0, base, sx, sy;
-} tex_text_t;
-
-static void tex_plot(int x, int y, int coverage, void *u)
-{
-    tex_text_t *p = u;
-    int tx = (int)(p->x0 + x / p->sx), ty = (int)(p->base + y / p->sy);
-    if (tx >= 0 && tx < TEX && ty >= 0 && ty < TEX)
-        p->tex[ty * TEX + tx] = mix16(p->tex[ty * TEX + tx], p->color, coverage * 15 / 255);
-}
-
-static void tex_text(unsigned short *tex, int x, int y, float sy, int maxw, unsigned short color, const char *s)
-{
-    tex_text_t p;
-    int width = ui_measure(FONT_TITLE, s);
-    p.tex = tex;
-    p.color = color;
-    p.sy = sy;
-    p.sx = width > maxw ? (float)width / maxw : 1;
-    p.x0 = x - width / p.sx / 2;
-    p.base = y + ui_line_height(FONT_TITLE) * 0.72f / sy;
-    ui_rasterize(FONT_TITLE, s, tex_plot, &p);
-}
-
-icon_t *icon_make_sd2psx(void)
-{
-    /* outline of the card (y up), the top right corner cut like a PS2 memory card; z = +/- half the thickness */
-    static const float px[5] = {-0.5f, 0.5f, 0.5f, 0.3f, -0.5f}, py[5] = {-0.65f, -0.65f, 0.45f, 0.65f, 0.65f};
-    const float hz = 0.08f;
-    unsigned short body = rgb16(84, 92, 106), edge = rgb16(52, 57, 66), label = rgb16(236, 238, 242), ink = rgb16(30, 34, 44);
-    int i, k = 0, x, y;
-    icon_t *ic = new_icon();
-    if (!ic)
+    icon_t *ic;
+    if (!iconsys->data || iconsys->len < 964 || !(ic = read_icon(ico)))
         return NULL;
-    ic->shapes = 1;
-    ic->nv = 9 + 9 + 5 * 6;
-    ic->pos = malloc(sizeof(float) * 3 * ic->nv);
-    ic->nrm = malloc(sizeof(float) * 3 * ic->nv);
-    ic->uv = malloc(sizeof(float) * 2 * ic->nv);
-    ic->col = malloc(4 * ic->nv);
-    if (!ic->pos || !ic->nrm || !ic->uv || !ic->col) {
-        icon_free(ic);
-        return NULL;
-    }
-#define VTX(X, Y, Z, NX, NY, NZ, U, V)                                                              \
-    do {                                                                                           \
-        ic->pos[k * 3] = (X), ic->pos[k * 3 + 1] = (Y), ic->pos[k * 3 + 2] = (Z);                  \
-        ic->nrm[k * 3] = (NX), ic->nrm[k * 3 + 1] = (NY), ic->nrm[k * 3 + 2] = (NZ);               \
-        ic->uv[k * 2] = (U), ic->uv[k * 2 + 1] = (V);                                              \
-        memset(ic->col + k * 4, 0x80, 4);                                                          \
-        k++;                                                                                       \
-    } while (0)
-    /* front (the whole texture) and back (a plain spot of it), as fans from the first corner */
-    for (i = 1; i < 4; i++) {
-        VTX(px[0], py[0], hz, 0, 0, 1, px[0] + 0.5f, (0.65f - py[0]) / 1.3f);
-        VTX(px[i], py[i], hz, 0, 0, 1, px[i] + 0.5f, (0.65f - py[i]) / 1.3f);
-        VTX(px[i + 1], py[i + 1], hz, 0, 0, 1, px[i + 1] + 0.5f, (0.65f - py[i + 1]) / 1.3f);
-    }
-    for (i = 1; i < 4; i++) {
-        VTX(px[0], py[0], -hz, 0, 0, -1, 0.03f, 0.03f);
-        VTX(px[i + 1], py[i + 1], -hz, 0, 0, -1, 0.03f, 0.03f);
-        VTX(px[i], py[i], -hz, 0, 0, -1, 0.03f, 0.03f);
-    }
-    /* the sides, a darker spot of the texture */
-    for (i = 0; i < 5; i++) {
-        int j = (i + 1) % 5;
-        float dx = px[j] - px[i], dy = py[j] - py[i], l = sqrtf(dx * dx + dy * dy), nx = dy / l, ny = -dx / l;
-        VTX(px[i], py[i], hz, nx, ny, 0, 0.97f, 0.03f);
-        VTX(px[i], py[i], -hz, nx, ny, 0, 0.97f, 0.03f);
-        VTX(px[j], py[j], hz, nx, ny, 0, 0.97f, 0.03f);
-        VTX(px[j], py[j], hz, nx, ny, 0, 0.97f, 0.03f);
-        VTX(px[i], py[i], -hz, nx, ny, 0, 0.97f, 0.03f);
-        VTX(px[j], py[j], -hz, nx, ny, 0, 0.97f, 0.03f);
-    }
-#undef VTX
-    /* the texture: the body, a darker spot for the sides and the label with the name */
-    for (y = 0; y < TEX; y++)
-        for (x = 0; x < TEX; x++)
-            ic->tex[y * TEX + x] = body;
-    for (y = 0; y < 8; y++)
-        for (x = TEX - 8; x < TEX; x++)
-            ic->tex[y * TEX + x] = edge;
-    for (y = 58; y < 104; y++)
-        for (x = 10; x < TEX - 10; x++)
-            ic->tex[y * TEX + x] = label;
-    tex_text(ic->tex, TEX / 2, 68, 1.3f, TEX - 34, ink, "SD2PSX");
-    /* neutral lights: a key light from the top left, a soft one from below and the ambient */
+    read_iconsys(ic, iconsys->data);
+    return ic;
+}
+
+/* the lights of a model that has no icon.sys: a key light from the top left, a soft one from below and the ambient */
+static void neutral_lights(icon_t *ic)
+{
     ic->lightDir[0][0] = -0.45f, ic->lightDir[0][1] = 0.6f, ic->lightDir[0][2] = 0.66f;
     ic->lightCol[0][0] = ic->lightCol[0][1] = ic->lightCol[0][2] = 0.6f;
     ic->lightDir[1][0] = 0.3f, ic->lightDir[1][1] = -0.8f, ic->lightDir[1][2] = 0.5f;
     ic->lightCol[1][0] = ic->lightCol[1][1] = 0.22f, ic->lightCol[1][2] = 0.3f;
     ic->ambient[0] = ic->ambient[1] = ic->ambient[2] = 0.5f;
+}
+
+/* ------------------------------------------------------------ the SD2PSX memory card */
+
+extern unsigned char asset_sd2psx_icn[];
+extern unsigned int size_asset_sd2psx_icn;
+
+icon_t *icon_make_sd2psx(void)
+{
+    buffer_t ico = {asset_sd2psx_icn, size_asset_sd2psx_icn, 0};
+    icon_t *ic = read_icon(&ico);
+    if (!ic)
+        return NULL;
+    neutral_lights(ic);
     snprintf(ic->title, sizeof(ic->title), "SD2PSX");
     ic->swing = 1;
-    bounds(ic);
-    ic->ok = 1;
-    FlushCache(0);
     return ic;
 }
 
 /* ------------------------------------------------------------ the cube of a save without an icon */
+
+static unsigned short rgb16(int r, int g, int b) { return 0x8000 | ((b >> 3) << 10) | ((g >> 3) << 5) | (r >> 3); }
 
 icon_t *icon_make_cube(void)
 {
@@ -459,11 +379,7 @@ icon_t *icon_make_cube(void)
     /* plain blue all over, as the PS2's own: the lights are what tells one face from another */
     for (i = 0; i < TEX * TEX; i++)
         ic->tex[i] = body;
-    ic->lightDir[0][0] = -0.45f, ic->lightDir[0][1] = 0.6f, ic->lightDir[0][2] = 0.66f;
-    ic->lightCol[0][0] = ic->lightCol[0][1] = ic->lightCol[0][2] = 0.6f;
-    ic->lightDir[1][0] = 0.3f, ic->lightDir[1][1] = -0.8f, ic->lightDir[1][2] = 0.5f;
-    ic->lightCol[1][0] = ic->lightCol[1][1] = 0.22f, ic->lightCol[1][2] = 0.3f;
-    ic->ambient[0] = ic->ambient[1] = ic->ambient[2] = 0.5f;
+    neutral_lights(ic);
     bounds(ic);
     ic->ok = 1;
     FlushCache(0);

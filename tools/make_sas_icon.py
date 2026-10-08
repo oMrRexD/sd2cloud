@@ -15,6 +15,8 @@ import sys
 
 from PIL import Image, ImageDraw, ImageFont
 
+from ps2icon import icn
+
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 TTF = str(ROOT / "third_party/varelaround/VarelaRound-Regular.ttf")
 BASE = 0.25                      # how far above the ground it stands (an icon fills a box of 5 units)
@@ -249,42 +251,6 @@ def texture():
     im.paste(tag_art(k).rotate(90, expand=True).resize((28, 20), Image.LANCZOS), (TAG_U, 107))
     d.rectangle((TAG_U + 36, 110, TAG_U + 57, 124), fill=(34, 34, 34))   # its back: the same black, a shade deeper inside
     return im
-
-
-def a1b5g5r5(im):
-    return [0x8000 | ((b >> 3) << 10) | ((g >> 3) << 5) | (r >> 3) for r, g, b in im.getdata()]
-
-
-def rle(words):
-    """the texture packed as the PS2 does: a count and the word to repeat that many times, or 65536 - n and the n
-    words that follow, as they are"""
-    out, i, n = [], 0, len(words)
-    while i < n:
-        j = i
-        while j < n and words[j] == words[i] and j - i < 0x7FFF:
-            j += 1
-        if j - i < 3:   # nothing worth a count here: as they are, up to where three of a kind begin
-            j = i + 1
-            while j < n and j - i < 0x80 and not (j + 2 < n and words[j] == words[j + 1] == words[j + 2]):
-                j += 1
-            out += [0x10000 - (j - i)] + words[i:j]
-        else:
-            out += [j - i, words[i]]
-        i = j
-    return struct.pack("<I", 2 * len(out)) + struct.pack("<%dH" % len(out), *out)
-
-
-def icn(vertices, tex):
-    def s(f):
-        return max(-32768, min(32767, int(round(f * 4096))))
-    out = struct.pack("<IIIfI", 0x00010000, 1, 0x0E, 1.0, len(vertices))
-    for (x, y, z), (nx, ny, nz), (u, t) in vertices:   # the file's y points down and its z away from the viewer
-        out += struct.pack("<hhhH", s(x), s(-y), s(-z), 0x0400)
-        out += struct.pack("<hhhH", s(nx), s(-ny), s(-nz), 0)
-        out += struct.pack("<hhBBBB", s(u), s(t), 0x80, 0x80, 0x80, 0x80)
-    out += struct.pack("<IIfII", 1, 1, 1.0, 0, 1)          # the animation: one frame of the only shape
-    out += struct.pack("<IIff", 0, 1, 0.0, 1.0)
-    return out + rle(a1b5g5r5(tex))
 
 
 def icon_sys(title, icon_file):

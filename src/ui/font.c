@@ -257,27 +257,3 @@ static int walk(int id, float x, float y, u64 color, const char *utf8, int draw)
 int font_draw(int id, float x, float y, u64 color, const char *utf8) { return walk(id, x, y, color, utf8, 1); }
 int font_width(int id, const char *utf8) { return walk(id, 0, 0, 0, utf8, 0); }
 int font_line(int id) { return id >= 0 && id < nfonts ? fonts[id]->line : 0; }
-
-int font_rasterize(int id, const char *utf8, void (*plot)(int x, int y, int coverage, void *u), void *u)
-{
-    fnt_t *f;
-    const unsigned char *p = (const unsigned char *)utf8;
-    int pen = 0, i, j;
-    if (id < 0 || id >= nfonts)
-        return 0;
-    f = fonts[id];
-    while (*p) {
-        unsigned int index;
-        FT_GlyphSlot s = f->face->glyph;
-        if (render(f, next_utf8(&p), &index) != 0)
-            continue;
-        for (j = 0; j < (int)s->bitmap.rows; j++)
-            for (i = 0; i < (int)s->bitmap.width; i++) {
-                int a = s->bitmap.buffer[j * s->bitmap.pitch + i];
-                if (a)
-                    plot(((pen + 32) >> 6) + s->bitmap_left + i, j - s->bitmap_top, a, u);
-            }
-        pen += s->advance.x + f->bold;
-    }
-    return (pen + 32) >> 6;
-}

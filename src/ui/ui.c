@@ -386,10 +386,6 @@ static int text_a(int font, float x, float y, u32 color, int a, const char *utf8
 }
 
 int ui_measure(int font, const char *utf8) { return font_width(fontId[font], utf8); }
-int ui_rasterize(int font, const char *utf8, void (*plot)(int x, int y, int coverage, void *u), void *u)
-{
-    return font_rasterize(fontId[font], utf8, plot, u);
-}
 int ui_line_height(int font) { return font_line(fontId[font]); }
 
 void ui_text_center(int font, float cx, float y, u32 color, const char *utf8)

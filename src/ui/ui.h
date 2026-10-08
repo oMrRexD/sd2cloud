@@ -65,8 +65,6 @@ int ui_paragraph(int font, float x, float y, int width, u32 color, const char *u
 int ui_paragraph_height(int font, int width, const char *utf8);
 /* a single line; if it is wider than width, it is cut and ends with "..." */
 int ui_text_fit(int font, float x, float y, int width, u32 color, const char *utf8);
-/* renders a text into pixels through plot (the baseline at y = 0); the screen must be locked */
-int ui_rasterize(int font, const char *utf8, void (*plot)(int x, int y, int coverage, void *u), void *u);
 
 void ui_rect(float x, float y, float w, float h, u32 color, int alpha);
 void ui_gradient(float x, float y, float w, float h, u32 top, int alphaTop, u32 bottom, int alphaBottom);   /* vertical */

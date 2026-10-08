@@ -12,8 +12,5 @@ int font_load(const void *ttf, int ttfSize, int pixels, int bold);
 int font_draw(int id, float x, float y, u64 color, const char *utf8);
 int font_width(int id, const char *utf8);
 int font_line(int id);     /* line height in pixels */
-/* renders a text into a pixel buffer through plot(x, y, coverage 0..255): the baseline at y = 0 and the pen at x = 0.
- * Returns the width */
-int font_rasterize(int id, const char *utf8, void (*plot)(int x, int y, int coverage, void *u), void *u);
 
 #endif
