@@ -30,7 +30,8 @@ SOURCES = main format dialog leave work account backup tabs history active saves
 # the PS2 itself (platform) and the drawing (ui). See docs/ARCHITECTURE.md
 SRC_DIRS = src src/app src/core src/platform src/ui
 vpath %.c $(SRC_DIRS)
-HEADERS = src/common.h src/app/app.h src/platform/platform.h $(addprefix src/ui/, messages.h messages.def ui.h font.h image.h icon.h look.h sound.h)
+# (any header changed rebuilds everything: there are few enough of them)
+HEADERS = $(wildcard src/*.h src/*/*.h) src/ui/messages.def
 # the interface's images, sounds and font, embedded in the program (assets/ is made by tools/make_assets.py; the sounds
 # by tools/make_sounds.py)
 IMAGES = space glow buttons card minicard

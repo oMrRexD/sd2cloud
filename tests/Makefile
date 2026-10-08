@@ -13,7 +13,7 @@ TESTS = $(basename $(wildcard test_*.c))
 OUT = build
 
 CC ?= cc
-CFLAGS += -O1 -g -Wall -Wno-format-truncation -Ihost -I$(SRC) -I$(CORE) -I$(SRC)/ui -I.
+CFLAGS += -O1 -g -Wall -Wno-format-truncation -Ihost -I$(SRC) -I$(CORE) -I$(SRC)/platform -I$(SRC)/ui -I.
 LDFLAGS += -Wl,--wrap=malloc
 LDLIBS += -lz
 
