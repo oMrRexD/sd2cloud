@@ -268,6 +268,7 @@ X(T_INSTALL_NEW_ASK, "Install as a new card?", "Deseja instalar como um novo car
 X(T_INSTALL_REPLACE_ASK, "Replace %s?", "Deseja substituir %s?")
 X(T_INSTALL_REPLACE_TEXT, "Its contents will be replaced with the card in this file. This action cannot be undone.", "O conteúdo dele será substituído pelo cartão deste arquivo. Esta ação não pode ser desfeita.")
 X(T_INSTALL_BOOT_WARN, "This is a BootCard: what your console starts from may be on it.", "Este é um BootCard: o que inicia o seu console pode estar nele.")
+X(T_INSTALL_BIG_WARN, "If the file can't be read to the end and the installation is cancelled, %s will be left empty.", "Se a leitura do arquivo falhar e a instalação for cancelada, %s ficará vazio.")
 X(T_INSTALL_NO_GAME, "Unable to tell which game this card is for. Install it under Cards, or name the file after the game's ID (SLUS-21065-1.mcd).", "Não foi possível identificar de qual jogo é este cartão. Instale-o em Cartões ou dê ao arquivo o ID do jogo (SLUS-21065-1.mcd).")
 X(T_INSTALL_WHICH_GAME, "Which game is this card for?", "De qual jogo é este cartão?")
 X(T_INSTALL_RAISE_ASK, "This folder already has %d cards, as many as the sd2psx goes to in it. Raise that limit to %d and install?", "Esta pasta já tem %d cartões, o máximo que o sd2psx alcança nela. Deseja aumentar esse limite para %d e instalar?")

@@ -2863,6 +2863,19 @@ static int install_dest(card_t **to, int *tab, char gameFolder[48], int again)
     return r;
 }
 
+/* Is the file's card read whole before the card it goes to is touched (card_file_install)? One that doesn't fit in
+ * memory isn't: it is written as it is read */
+static int file_read_first(void)
+{
+    void *volatile p;   /* (volatile: or the compiler takes the room for granted and asks for none) */
+    if (cardFile.image || cardFile.zip)
+        return 1;
+    if (!(p = malloc((size_t)cardFile.size)))
+        return 0;
+    free(p);
+    return 1;
+}
+
 /* 1 = the file is a card of the microSD now */
 static int install_card(void)
 {
@@ -2880,7 +2893,11 @@ static int install_card(void)
             dlg_new(COLOR_TITLE, t);
             dlg_line(FONT_TEXT, COLOR_TEXT, 8, T(T_INSTALL_REPLACE_TEXT));
             if (to->type == TYPE_BOOT)   /* what the console starts from may be on it */
-                dlg_line(FONT_TEXT, COLOR_WARN, 0, T(T_INSTALL_BOOT_WARN));
+                dlg_line(FONT_TEXT, COLOR_WARN, 6, T(T_INSTALL_BOOT_WARN));
+            if (!file_read_first()) {   /* what a file that stops reading halfway can cost, said before it does */
+                snprintf(t, sizeof(t), T(T_INSTALL_BIG_WARN), to->base);
+                dlg_line(FONT_SMALL, COLOR_WARN, 0, t);
+            }
             dlg_buttons(BUTTON_CIRCLE, T_BACK, BUTTON_CROSS, T_REPLACE);
         } else {
             if (tab == TAB_GAMES) {
