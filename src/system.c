@@ -185,7 +185,7 @@ u32 pad_buttons(void)
  * the next progress screen (P = checking the cards, E = uploading or downloading, W = writing a restored card, halfway
  * through); an "I" at the start runs as IGR; an "A" right after the cards are checked shows the questions that
  * follow the first sign-in (the automatic sync).
- * Without a script, the test also runs as IGR (main.c).
+ * Without a script it is the program as it is, with the real controller: only the log tells it apart.
  * "." waits a second on the screen it is on. Right after the cards are checked: "N" = the first try at the network
  * finds no cable, "n" = it gets no address from the router, "u" = the network starts as it used to, without the heap
  * it takes being zeroed (see __wrap_malloc). While a card file is installed: "z" = the file can't be read, halfway

@@ -5,8 +5,8 @@
 #   - src/credentials.h: python tools/make_credentials.py <client_secret.json> src/credentials.h (Google Cloud OAuth
 #     client of type "TVs and Limited Input devices").
 # make         -> dist/SD2CLOUD.ELF and dist/SD2CLOUD-IGR.ELF (the IGR helper, built in igr/)
-# make DEBUG=1  -> dist/SD2CLOUD-DEBUG.ELF: "(debug)" folder on Drive, keeps 3 backups, a script.txt presses the buttons
-#                 (without a script it runs as IGR)
+# make DEBUG=1  -> dist/SD2CLOUD-DEBUG.ELF: keeps a log (SD2Cloud/debug-log.txt, written when it closes), "(debug)"
+#                 folder on Drive, keeps 3 backups; a script.txt, when there is one, presses the buttons
 # Then python tools/make_release.py packages the release in dist/.
 PORTS4096 ?= ports4096
 MMCEMAN ?= third_party/mmceman/mmceman.irx

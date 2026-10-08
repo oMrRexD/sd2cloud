@@ -5463,8 +5463,8 @@ int main(int argc, char *argv[])
     system_init(argc, argv);
     token_read();
 #ifdef DEBUG_BUILD
-    if (!igrMode)
-        igrMode = debug_has_script() ? debug_take('I') : 1;   /* on the console, with nobody at the controller: run as IGR */
+    if (!igrMode && debug_has_script())
+        igrMode = debug_take('I');   /* (script: an "I" at the start runs it as IGR does) */
 #endif
     /* IGR with no sync to do: straight to what comes after it, before the screen and the sound are even started. The
      * helper does this by itself when it can (igr/igr.c); this is for when it can't: a helper from before it did, or
@@ -5486,6 +5486,22 @@ int main(int argc, char *argv[])
      * the settings are always in the same place on the microSD, so the program itself can be in any folder of it (in
      * its usual folder nothing is written). Its version, once a copy on another device (a USB drive) has handed over
      * to this one: started by IGR, that copy runs by itself only if it is the same version */
+#ifdef DEBUG_BUILD
+    /* The debug build is opened by hand, to look into a problem: on the console it doesn't take the program's place,
+     * so the IGR helper and the shortcut go on opening the real one (and the real backups go on being made). A debug
+     * build from before this did take it: put back, when the program is in its usual folder. On PCSX2 the debug build
+     * is the only program there is */
+    if (!strncmp(appPath, "mmce", 4)) {
+        static const char usual[] = "APPS/SD2Cloud/SD2CLOUD.ELF";
+        char c[80];
+        snprintf(c, sizeof(c), "%s%s", sdRoot, usual);
+        if (!strcasecmp(cfg.app_path, appPath) && strcasecmp(appPath + 7, usual) != 0 && file_exists(c)) {
+            snprintf(cfg.app_path, sizeof(cfg.app_path), "mmce?:/%s", usual);
+            config_set("app", "app_path", cfg.app_path);
+            log_msg("this debug build was what IGR opened: %s is again", cfg.app_path);
+        }
+    } else
+#endif
     if (!strncmp(appPath, "mmce", 4) || !strncmp(appPath, "host:", 5)) {
         if (strcasecmp(cfg.app_path, appPath) != 0) {
             snprintf(cfg.app_path, sizeof(cfg.app_path), "%s", appPath);
