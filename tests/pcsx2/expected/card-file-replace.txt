@@ -1,0 +1,40 @@
+# log
+SD2Cloud <version> -- program in host:APPS/SD2Cloud/ (host:SD2CLOUD-DEBUG.ELF), data in host:SD2Cloud/, manual
+settings: [app] app_path = host:SD2CLOUD-DEBUG.ELF (0)
+3 card(s) on the microSD
+Card1/Card1-1: 2 folders, fingerprint 64fbc81ffd3ff7a8, new
+Card2/Card2-1: 0 folders, fingerprint e3b0c44298fc1c14, new
+SLUS-21065/SLUS-21065-1: 2 folders, fingerprint 64fbc81ffd3ff7a8, new
+3 card(s) seen for the first time: fingerprint kept as the reference (0)
+[script] >
+[script] >
+[script] X
+files: host:: 5 entries
+  0: Files/ (0 bytes)
+  1: MemoryCards/ (0 bytes)
+  2: SD2Cloud/ (0 bytes)
+[script] X
+files: host:Files/: 1 entries
+  0: card.mcd (8388608 bytes)
+[script] Q
+card file host:Files/card.mcd (8388608 bytes): 0, a 8388608 byte card
+install: card.mcd may be of 1 game(s), first SLUS-21065
+[script] D
+[script] D
+[script] X
+[script] X
+install: host:Files/card.mcd as host:MemoryCards/PS2/Card2/Card2-1.mcd
+install: Card2/Card2-1 written and verified (8388608 bytes, sha e67be4206c58f05d)
+install: from memory, N s reading the file, N s writing the card, N s reading it back
+install card.mcd as Card2/Card2-1: 0
+Card2/Card2-1: 2 folders, fingerprint 64fbc81ffd3ff7a8, changed
+[script] X
+(end: capture)
+
+# files
+e67be4206c58f05d290d04e24ef9bd240e0a329b479dd8d202f12d40f464d347  Files/card.mcd
+e67be4206c58f05d290d04e24ef9bd240e0a329b479dd8d202f12d40f464d347  MemoryCards/PS2/Card1/Card1-1.mcd
+e67be4206c58f05d290d04e24ef9bd240e0a329b479dd8d202f12d40f464d347  MemoryCards/PS2/Card2/Card2-1.mcd
+e67be4206c58f05d290d04e24ef9bd240e0a329b479dd8d202f12d40f464d347  MemoryCards/PS2/SLUS-21065/SLUS-21065-1.mcd
+17df2e2a16cbab4cb8357fe9a735f1765b89ed8fcaf21c00a1634ed98fb36c3e  SD2Cloud/sd2cloud.ini
+5d80b04c692d54f468ed80c2ad845b735c3fe68663e8b45858780407f59b0673  SD2Cloud/state-debug.ini

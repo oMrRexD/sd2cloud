@@ -10,8 +10,6 @@
 #define SAVE "BASLUS-99999TESTS"
 #define DEST "sd/MemoryCards/PS2/Card1/Card1-1.mcd"
 
-void make_psu(const char *path, const char *folder, const unsigned int *sizes, int n, unsigned int seed);
-
 /* a card with a save in it, as the file to install; a copy of it is kept to put the file back from */
 static void make_source(const char *path)
 {

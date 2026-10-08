@@ -1,0 +1,26 @@
+# log
+SD2Cloud <version> -- program in host:APPS/SD2Cloud/ (host:SD2CLOUD-DEBUG.ELF), data in host:SD2Cloud/, manual
+settings: [app] app_path = host:SD2CLOUD-DEBUG.ELF (0)
+3 card(s) on the microSD
+Card1/Card1-1: 2 folders, fingerprint 64fbc81ffd3ff7a8, new
+Card2/Card2-1: 0 folders, fingerprint e3b0c44298fc1c14, new
+SLUS-21065/SLUS-21065-1: 2 folders, fingerprint 64fbc81ffd3ff7a8, new
+3 card(s) seen for the first time: fingerprint kept as the reference (0)
+[script] X
+Card1/Card1-1: 2 saves, 8270848 bytes free
+[script] X
+[script] X
+[script] X
+[script] X
+mcfs: copy of BASLUS-21065ALPHA: 0, 54 reads and 7 writes of the cards in N ms
+copy BASLUS-21065ALPHA from Card1/Card1-1 to Card2/Card2-1: 0
+Card2/Card2-1: 1 folders, fingerprint 8c4e0ecbbb4b8e17, changed
+[script] X
+(end: capture)
+
+# files
+e67be4206c58f05d290d04e24ef9bd240e0a329b479dd8d202f12d40f464d347  MemoryCards/PS2/Card1/Card1-1.mcd
+df3efd643bc895a538e8a9c836c41b957b80b2cec323d6223d80dfff6b25ce68  MemoryCards/PS2/Card2/Card2-1.mcd
+e67be4206c58f05d290d04e24ef9bd240e0a329b479dd8d202f12d40f464d347  MemoryCards/PS2/SLUS-21065/SLUS-21065-1.mcd
+17df2e2a16cbab4cb8357fe9a735f1765b89ed8fcaf21c00a1634ed98fb36c3e  SD2Cloud/sd2cloud.ini
+5d80b04c692d54f468ed80c2ad845b735c3fe68663e8b45858780407f59b0673  SD2Cloud/state-debug.ini

@@ -58,6 +58,8 @@ buffer_t t_read(const char *path);                            /* a whole file (e
 long long t_size(const char *path);                           /* -1 = it isn't there */
 int t_same(const char *a, const char *b);                     /* do both files hold the same bytes? */
 void t_fill(unsigned char *d, size_t n, unsigned int seed);   /* bytes that look random and are always the same */
+/* a .psu of that save folder, with n files (file0.bin...) of those sizes: file i holds t_fill(seed + i) */
+void make_psu(const char *path, const char *folder, const unsigned int *sizes, int n, unsigned int seed);
 
 /* what the tests can ask of the stand-ins for the PS2 (host/host.c) */
 extern size_t hostMallocLimit;   /* a malloc bigger than this fails (0 = none does): "it doesn't fit in memory" */

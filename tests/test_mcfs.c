@@ -7,57 +7,7 @@
 #define CARD_BYTES (8 * 1024 * 1024)
 #define SAVE "BASLUS-99999TESTS"
 
-static void put32(unsigned char *p, unsigned int v)
-{
-    p[0] = v;
-    p[1] = v >> 8;
-    p[2] = v >> 16;
-    p[3] = v >> 24;
-}
-
 static unsigned int get32(const unsigned char *p) { return p[0] | (p[1] << 8) | (p[2] << 16) | ((unsigned int)p[3] << 24); }
-
-/* an entry as a memory card keeps it (and a .psu after it): 0x8427 = a folder, 0x8497 = a file */
-static void entry(unsigned char *e, unsigned int mode, unsigned int len, const char *name)
-{
-    static const unsigned char when[8] = {0, 5, 4, 3, 2, 1, 0xEA, 0x07};   /* 2026-01-02 03:04:05 */
-    memset(e, 0, ENT);
-    e[0] = mode;
-    e[1] = mode >> 8;
-    put32(e + 4, len);
-    memcpy(e + 8, when, 8);
-    memcpy(e + 24, when, 8);
-    snprintf((char *)e + 64, 32, "%s", name);
-}
-
-/* a .psu of that save folder, with n files (file0.bin...) of those sizes: file i holds t_fill(seed + i) */
-void make_psu(const char *path, const char *folder, const unsigned int *sizes, int n, unsigned int seed)
-{
-    static const unsigned char pad[1024];
-    unsigned char e[ENT];
-    buffer_t b = {0};
-    char name[32];
-    int i;
-    entry(e, 0x8427, n + 2, folder);
-    buf_append(&b, e, ENT);
-    entry(e, 0x8427, 0, ".");
-    buf_append(&b, e, ENT);
-    entry(e, 0x8427, 0, "..");
-    buf_append(&b, e, ENT);
-    for (i = 0; i < n; i++) {
-        unsigned char *d = malloc(sizes[i] + 1);
-        snprintf(name, sizeof(name), "file%d.bin", i);
-        entry(e, 0x8497, sizes[i], name);
-        buf_append(&b, e, ENT);
-        t_fill(d, sizes[i], seed + i);
-        buf_append(&b, d, sizes[i]);
-        if (sizes[i] % 1024)
-            buf_append(&b, pad, 1024 - sizes[i] % 1024);
-        free(d);
-    }
-    t_write(path, b.data, b.len);
-    buf_free(&b);
-}
 
 /* does that .psu (in memory) hold exactly the files make_psu put in one? */
 static int psu_holds(const buffer_t *b, const char *folder, const unsigned int *sizes, int n, unsigned int seed)

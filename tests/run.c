@@ -35,68 +35,12 @@ static void wipe(const char *path)
     closedir(d);
 }
 
-void t_mkdir(const char *path)
-{
-    char c[600];
-    size_t i;
-    snprintf(c, sizeof(c), "%s/", path);
-    for (i = 1; c[i]; i++)
-        if (c[i] == '/') {
-            c[i] = 0;
-            mkdir(c, 0777);
-            c[i] = '/';
-        }
-}
-
 void t_fresh(void)
 {
     wipe(".");
     t_mkdir("sd/SD2Cloud");
     hostMallocLimit = 0;
     googleError[0] = 0;
-}
-
-void t_write(const char *path, const void *d, size_t n)
-{
-    FILE *f = fopen(path, "wb");
-    if (!f || fwrite(d, 1, n, f) != n) {
-        fprintf(stderr, "the tests can't write %s\n", path);
-        exit(2);
-    }
-    fclose(f);
-}
-
-void t_text(const char *path, const char *text) { t_write(path, text, strlen(text)); }
-
-buffer_t t_read(const char *path)
-{
-    buffer_t b = {0};
-    file_read(path, &b);
-    return b;
-}
-
-long long t_size(const char *path)
-{
-    struct stat st;
-    return stat(path, &st) == 0 ? (long long)st.st_size : -1;
-}
-
-int t_same(const char *a, const char *b)
-{
-    buffer_t x = t_read(a), y = t_read(b);
-    int same = x.len == y.len && x.len && !memcmp(x.data, y.data, x.len);
-    buf_free(&x);
-    buf_free(&y);
-    return same;
-}
-
-void t_fill(unsigned char *d, size_t n, unsigned int seed)
-{
-    size_t i;
-    for (i = 0; i < n; i++) {
-        seed = seed * 1664525u + 1013904223u;
-        d[i] = (unsigned char)(seed >> 24);
-    }
 }
 
 int main(void)

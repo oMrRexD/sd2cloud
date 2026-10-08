@@ -20,3 +20,4 @@ third_party/src/
 
 
 __pycache__/
+tests/pcsx2/work/

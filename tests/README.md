@@ -44,8 +44,33 @@ the list of `run.c`.
 A change to `mcfs.c`, `restore.c`, `stream.c`, `cards.c`, `config.c`, `state.c`, `json.c` or `files.c` comes with
 the test that would have caught it going wrong.
 
-## What these tests don't reach
+## The screens, on PCSX2
 
-The screens, the Google Drive calls and the PS2 itself. The screens and the calls to Google are tried on PCSX2 with
-the debug build (`make DEBUG=1`), which a `script.txt` in the `SD2Cloud` folder can drive; the sd2psx, the USB port
-and the IGR of a game only on a console.
+What the user does on the screens (open a card, copy a save, install a card file...) is tried on the emulator, with
+the debug build: it follows a `script.txt` instead of a controller, and its "microSD" is a folder of the PC.
+
+```
+make DEBUG=1
+python tests/pcsx2/run.py --pcsx2 <path to pcsx2-qt.exe>
+```
+
+Each scenario of `pcsx2/scenarios.py` starts from cards made for it (`pcsx2/fixtures`), runs its script, and has to
+leave what it left when it was recorded (`pcsx2/expected`): the program's own log, without what changes from one
+run to the next, and the SHA-256 of every file of the "microSD". `--list` names the scenarios, `--only a,b` runs
+some, `--show` prints what each one left.
+
+It needs a PCSX2 of your own, which can't be had on GitHub (the emulator needs a PlayStation 2 BIOS): a **portable**
+one, set up, with "Enable Host Filesystem" on. `run.py` refuses to start a PCSX2 that isn't portable, so that it
+never touches the one you play on.
+
+A change that makes a scenario leave something else shows as a difference. When that is what the change was for (a
+new line in the log, say), look at it with `--show` and record it again with `--record`; the new expected result
+goes in the same commit.
+
+`pcsx2/fixtures` is made by the program's own code: `make -C tests fixtures` (an empty card, a card with two saves,
+and a save as a `.psu` file).
+
+## What neither reaches
+
+The calls to Google Drive, which need an account, and the PS2 itself: the sd2psx, the USB port, the IGR of a game.
+Those are tried by hand, on PCSX2 and on a console, and a pull request says how it was.
