@@ -291,3 +291,4 @@ X(T_NEWCARD_MAKING, "Creating the memory card...", "Criando o cartão de memóri
 X(T_NEWCARD_FAILED, "Unable to create the memory card.", "Não foi possível criar o cartão de memória.")
 X(T_NEWCARD_NO_CHANNEL, "This game's folder already has all of its %d cards.", "A pasta deste jogo já tem todos os seus %d cartões.")
 X(T_PICK_ELF, "Choose an ELF...", "Escolher um ELF...")
+X(T_CARD_UNREADABLE, "Unable to read this memory card.", "Não foi possível ler este cartão de memória.")

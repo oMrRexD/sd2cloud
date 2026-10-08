@@ -1478,6 +1478,18 @@ static void find_active(void)
         for (i = 0; i < nCards && found < 0; i++)
             if (cards[i].type == TYPE_NORMAL && card_number(&cards[i]) == active && cards[i].channel == channel)
                 found = i;
+        /* What the device says is checked against what the PS2 sees in the slot: changed to a game's card with its
+         * own buttons, an sd2psx went on giving the number of the card it had been on (seen on a console). When the
+         * root folder in the slot isn't that card's and is another card's, that other one is the card in use */
+        if (mc_root_signature(sdRoot[4] - '0', seen) == 0 &&
+            (found < 0 || mcfs_root_signature(cards[found].path, file) != 0 || strcmp(seen, file) != 0))
+            for (pass = 0; pass < 3; pass++)
+                for (i = 0; i < nCards; i++)
+                    if (cards[i].type == order[pass] && mcfs_root_signature(cards[i].path, file) == 0 && !strcmp(seen, file)) {
+                        found = i;
+                        pass = 3;
+                        break;
+                    }
     } else if (active == 0 && mc_root_signature(sdRoot[4] - '0', seen) == 0) {
         for (pass = 0; pass < 3 && found < 0; pass++)
             for (i = 0; i < nCards && found < 0; i++)
@@ -1965,6 +1977,7 @@ typedef struct {
     char line1[72], line2[72];
 } save_view_t;
 
+static int brwUnread;      /* the card on screen couldn't be read (a MemCard PRO2 gave nothing of a card, seen 10/2026) */
 static struct {
     card_t *card;          /* whose saves these are (&allGames: every game card's) */
     save_view_t *saves;
@@ -2061,8 +2074,8 @@ static void scene_browser(float t)
         snprintf(s, sizeof(s), T(T_FREE_KB), (int)(brw.freeBytes / 1024));
         ui_text_shadow(FONT_TEXT, 100, 60, 0xE6E6E6, s);
     }
-    if (!brw.n)
-        ui_text_center(FONT_BROWSER, W / 2.0f, 200, 0xF0F0F0, T(T_CARD_EMPTY));
+    if (!brw.n)   /* (a card that couldn't be read isn't an empty one) */
+        ui_text_center(FONT_BROWSER, W / 2.0f, 200, 0xF0F0F0, T(brwUnread ? T_CARD_UNREADABLE : T_CARD_EMPTY));
     /* the selected save: a white light behind it, it turns; its name in yellow at the top right */
     if (brw.n) {
         float cx, cy;
@@ -3222,8 +3235,11 @@ static void browser_load(card_t *c, int cursor)
     if (!brwSaves && !(brwSaves = calloc(BRW_MAX, sizeof(save_view_t))))
         return;
     n = mcfs_list_saves(c->path, brwList, MCFS_MAX_SAVES, &freeBytes);
-    if (n < 0)
+    brwUnread = n < 0;
+    if (n < 0) {
+        log_msg("%s: its saves couldn't be read (%d)", c->id, n);
         n = 0;
+    }
     ui_lock();
     browser_drop_icons();   /* a list read again (after a move or a delete): the old icons go */
     memset(brwSaves, 0, sizeof(save_view_t) * n);
