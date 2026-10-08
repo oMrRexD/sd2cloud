@@ -6,12 +6,14 @@
 #   SD2CLOUD_TEST_LOG=1      shows the program's own log while they run
 #   make -C tests fixtures   makes again the cards the PCSX2 scenarios start from (pcsx2/fixtures)
 SRC = ../src
+CORE = $(SRC)/core
+HEADERS = $(wildcard $(SRC)/*.h $(SRC)/*/*.h) $(SRC)/ui/messages.def
 ENGINE = mcfs stream restore cards config state json files
 TESTS = $(basename $(wildcard test_*.c))
 OUT = build
 
 CC ?= cc
-CFLAGS += -O1 -g -Wall -Wno-format-truncation -Ihost -I$(SRC) -I.
+CFLAGS += -O1 -g -Wall -Wno-format-truncation -Ihost -I$(SRC) -I$(CORE) -I$(SRC)/ui -I.
 LDFLAGS += -Wl,--wrap=malloc
 LDLIBS += -lz
 
@@ -36,13 +38,13 @@ fixtures: $(OUT)/make_fixtures
 $(OUT)/make_fixtures: $(COMMON) $(OUT)/make_fixtures.o
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-$(OUT)/%.o: $(SRC)/%.c $(wildcard $(SRC)/*.h) $(SRC)/messages.def | $(OUT)
+$(OUT)/%.o: $(CORE)/%.c $(HEADERS) | $(OUT)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(OUT)/%.o: %.c t.h $(wildcard $(SRC)/*.h) | $(OUT)
+$(OUT)/%.o: %.c t.h $(HEADERS) | $(OUT)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(OUT)/%.o: host/%.c $(wildcard $(SRC)/*.h) $(SRC)/messages.def | $(OUT)
+$(OUT)/%.o: host/%.c $(HEADERS) | $(OUT)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(OUT):

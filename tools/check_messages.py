@@ -197,7 +197,7 @@ def legend_width(texts, apart, start=False):
 
 
 def main():
-    txt = (ROOT / "src" / "messages.def").read_text(encoding="utf-8")
+    txt = (ROOT / "src" / "ui" / "messages.def").read_text(encoding="utf-8")
     items = re.findall(r'^X\((\w+),\s*"((?:[^"\\]|\\.)*)",\s*"((?:[^"\\]|\\.)*)"\)', txt, re.M)
     texts = {id_: (en.replace('\\"', '"'), pt.replace('\\"', '"')) for id_, en, pt in items}
     if "--device" in sys.argv:

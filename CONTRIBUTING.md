@@ -35,7 +35,7 @@ it.
 Conventions of the code:
 
 - Code, comments, file names and commit messages are in English.
-- Every text shown on screen exists in English and in Portuguese. The texts are in `src/messages.def`, and
+- Every text shown on screen exists in English and in Portuguese. The texts are in `src/ui/messages.def`, and
   `python tools/check_messages.py` checks that each one fits where it is drawn.
 - Follow the style of the code around your change, and keep the build free of warnings.
 

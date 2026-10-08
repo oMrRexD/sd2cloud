@@ -24,7 +24,11 @@ EE_BIN = $(OBJ_DIR)/sd2cloud-unpacked.elf
 EE_BIN_PACKED = $(DIST)/SD2CLOUD.ELF
 endif
 SOURCES = main system ui font image look sound files json i18n config state cards mcfs stream google helper update restore icon
-HEADERS = $(addprefix src/, common.h messages.h messages.def ui.h font.h image.h icon.h look.h sound.h)
+# where the sources are: the screens and what they do (app), the rules with no screen and no PS2 hardware (core),
+# the PS2 itself (platform) and the drawing (ui). See docs/ARCHITECTURE.md
+SRC_DIRS = src src/app src/core src/platform src/ui
+vpath %.c $(SRC_DIRS)
+HEADERS = src/common.h $(addprefix src/ui/, messages.h messages.def ui.h font.h image.h icon.h look.h sound.h)
 # the interface's images, sounds and font, embedded in the program (assets/ is made by tools/make_assets.py; the sounds
 # by tools/make_sounds.py)
 IMAGES = space glow buttons card minicard
@@ -41,7 +45,7 @@ EMBEDDED_IRX = mmceman mcman mcserv usbd usbmass_bd bdm bdmfs_fatfs mx4sio_bd at
 CARD_FILES = igr_elf open_elf icon_sys icon_icn title_cfg
 EE_OBJS = $(addprefix $(OBJ_DIR)/, $(addsuffix .o, $(SOURCES)) qrcodegen.o cacert_pem.o ini_default.o $(ASSET_OBJS) \
           $(addprefix irx_, $(addsuffix .o, $(EMBEDDED_IRX))) $(addprefix card_, $(addsuffix .o, $(CARD_FILES))))
-EE_INCS += -Isrc -I. -Ithird_party/qrcodegen -I$(PORTS4096)/include -I$(PS2SDK)/ports/include \
+EE_INCS += $(addprefix -I, $(SRC_DIRS)) -I. -Ithird_party/qrcodegen -I$(PORTS4096)/include -I$(PS2SDK)/ports/include \
            -I$(PS2SDK)/ports/include/freetype2 -I$(GSKIT)/include
 # malloc and memalign go through system.c, which zeroes what the network libraries take while they start
 EE_LDFLAGS += -L$(PORTS4096)/lib -L$(PS2SDK)/ports/lib -L$(GSKIT)/lib -Wl,--wrap=malloc -Wl,--wrap=memalign
@@ -81,7 +85,7 @@ igr: igr/SD2CLOUD-IGR.ELF
 	@mkdir -p $(DIST)
 	cp igr/SD2CLOUD-IGR.ELF $(DIST)/
 
-$(OBJ_DIR)/%.o: src/%.c $(HEADERS)
+$(OBJ_DIR)/%.o: %.c $(HEADERS)
 	@mkdir -p $(OBJ_DIR)
 	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
 
