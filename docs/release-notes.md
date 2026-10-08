@@ -1,18 +1,17 @@
-# SD2Cloud v1.5
+# SD2Cloud v1.5.1
 
 **Manage and back up your sd2psx memory cards, right on your PS2.**
 
-### What's new in 1.5
-- **Memory card files.** The Files tab opens `.mcd`, a MemCard PRO2's `.mc2`, `.ps2`, OPL's virtual memory cards (`.bin`) and the `.zip` that "Copy to a device" writes. The card inside is shown like any other, its saved data can be copied to your cards, and SQUARE installs it on the microSD: as a new card (numbered, a game's, or one more BootCard channel) or in place of an existing one. A folder that already has all its channels can get one more.
-- **All saves.** The Games tab starts with a screen that shows the saved data of every game card together.
-- **Faster, and with a progress screen.** Importing a `.psu`, and copying or moving saved data between cards, now shows the save's icon, a progress bar and a way to cancel (the card is left as it was). It is also about four times faster: a 1.6 MB save that took close to 30 seconds on an sd2psx now takes 6. Deleting, exporting and reading icons got faster too.
-- **Start other programs.** X on an ELF in the Files tab runs it, and "Exit to" has a new "Run an ELF..." item. Saved data that is an application (a folder with a `title.cfg`, as the Save Application System keeps them) gets "Start application": SD2Cloud switches the sd2psx to that card and starts it.
-- **The sd2psx taken out.** If the device is removed while SD2Cloud is open (to change its microSD, for example), SD2Cloud says so and, once it is back, reads everything again from the microSD that is in it.
-- **Automatic sync.** Fixed the "Unable to obtain an IP address from the router" failures after a game. A sync that fails now leaves a note in `SD2Cloud/sync-error.txt`.
-- **MemCard PRO2 (experimental).** The device is recognized (its `.mc2` cards, in `/PS2`), and switching cards from the app is offered as a preview. SD2Cloud has not been tried on one yet.
-- **Files tab.** SQUARE on a `.psu` installs it without opening it first; when a file of the same name is already there, SQUARE keeps both.
-- Saved data without an icon shows the PS2 browser's blue cube; a game's folder is marked with a small arrow.
-- **New download: `APP_SD2CLOUD.psu`**, SD2Cloud as a Save Application System (SAS) package: the `APP_SD2CLOUD` folder, with its own 3D icon for the PS2 browser.
+### What's new in 1.5.1
+- **Update channels.** Settings has "Update channel": Stable, the released versions, or Beta, a build made from every change (the `beta` pre-release), which may have bugs. Going back to Stable offers the stable version again.
+- **SAS package.** What automatic sync keeps on the memory card is now the `APP_SD2CLOUD` folder, the Save Application System way: the IGR helper and a shortcut that opens SD2Cloud from the PS2 browser, with its 3D icon (about 240 KB). In OPL, "IGR Path" is `mc0:/APP_SD2CLOUD/IGR.ELF`. A helper installed by an earlier version (`mc0:/BOOT/SD2CLOUD-IGR.ELF`) keeps working. `APP_SD2CLOUD.psu` now comes inside the zip (`Extras/`) and is that folder only: the program stays on the microSD.
+- **A new card for a game.** When saved data is copied, moved or imported, the Games tab offers "New card": an empty 8 MB card for that game is made on the spot, as the device itself makes them.
+- **IGR path.** "After IGR, open" is now "IGR path", and "Choose an ELF..." takes any program from the folders of the microSD or of a USB drive.
+- **MemCard PRO2.** The device is now recognized by its microSD's layout (it was taken for an sd2psx and its cards were not found).
+- The card in use follows a change made with the sd2psx's own buttons.
+- Saved data with a title in Japanese shows its game's name instead of its code.
+- Automatic sync waits longer for the network link: fixes "No network connection" right after a game.
+- "About" shows the commit the program was built from.
 
 To update, use Settings > Check for updates, or copy the new files over the old ones.
 
@@ -43,20 +42,20 @@ SD2Cloud runs on the PS2 itself and works with the memory cards on the microSD o
 - Interface inspired by the PlayStation BB Navigator, with sound effects.
 - English and Portuguese.
 
-**Installation:** extract `SD2Cloud-v1.5.zip` to the root of the sd2psx microSD and open SD2Cloud from the OPL Apps tab. See README.txt for details.
+**Installation:** extract `SD2Cloud-v1.5.1.zip` to the root of the sd2psx microSD and open SD2Cloud from the OPL Apps tab. See README.txt for details.
 
 ---
 
 **Gerencie e proteja os cartões de memória do seu sd2psx, direto no PS2.**
 
-**Novidades da 1.5**
-- Arquivos de cartão: a aba Arquivos abre `.mcd`, `.mc2`, `.ps2`, os cartões virtuais do OPL (`.bin`) e o `.zip` do "Copiar para dispositivo"; dá para copiar os dados salvos de dentro e instalar o cartão no microSD (QUADRADO).
-- "Todos os saves": uma tela que junta os dados salvos de todos os cartões de jogo.
-- Importar, copiar e mover dados salvos: tela com ícone, barra de progresso e cancelar, e cerca de 4 vezes mais rápido (1,6 MB: de quase 30 s para 6 s).
-- Iniciar outros programas: X sobre um ELF na aba Arquivos, "Executar um ELF..." no "Sair para" e "Iniciar aplicativo" nos apps guardados em cartões (formato SAS).
-- sd2psx removido com o app aberto: o SD2Cloud avisa e, quando ele volta, lê tudo de novo do microSD.
-- Sincronização automática: corrigida a falha "Não foi possível obter um endereço IP"; uma falha deixa um registro em `SD2Cloud/sync-error.txt`.
-- MemCard PRO2 reconhecido (experimental), com a troca de cartão pelo app em preview.
-- Novo download: `APP_SD2CLOUD.psu`, o SD2Cloud como pacote SAS, com ícone 3D próprio.
+**Novidades da 1.5.1**
+- Canais de atualização: Estável ou Beta (uma compilação a cada alteração; pode ter erros).
+- Pacote SAS: a pasta `APP_SD2CLOUD` no cartão de memória, com o assistente de IGR e um atalho com ícone no browser do PS2. No OPL, "Definir saída do IGR": `mc0:/APP_SD2CLOUD/IGR.ELF`. O `.psu` agora vem dentro do zip (`Extras/`).
+- "Novo cartão" ao copiar, mover ou importar dados salvos: cria na hora um cartão de 8 MB para o jogo.
+- "Saída do IGR" (antes "Após o IGR, abrir"), com "Escolher um ELF...".
+- MemCard PRO2 reconhecido pelo formato do microSD.
+- O cartão em uso acompanha a troca feita nos botões do sd2psx.
+- Dados salvos com título em japonês mostram o nome do jogo.
+- Sincronização automática: espera mais pelo cabo de rede logo depois do jogo.
 
-**Instalação:** extraia o `SD2Cloud-v1.5.zip` na raiz do microSD do sd2psx e abra o SD2Cloud pela aba Apps do OPL. Consulte o LEIA-ME.txt para mais detalhes.
+**Instalação:** extraia o `SD2Cloud-v1.5.1.zip` na raiz do microSD do sd2psx e abra o SD2Cloud pela aba Apps do OPL. Consulte o LEIA-ME.txt para mais detalhes.

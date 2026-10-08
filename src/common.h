@@ -6,7 +6,7 @@
 #include <tamtypes.h>
 
 #define APP_NAME    "SD2Cloud"
-#define APP_VERSION "1.5"
+#define APP_VERSION "1.5.1"
 #ifndef APP_COMMIT
 #define APP_COMMIT ""       /* the commit it was built from (7 characters), when the build is told: see the Makefile */
 #endif

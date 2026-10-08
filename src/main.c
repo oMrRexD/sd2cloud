@@ -2436,7 +2436,8 @@ static card_t *choose_dest(const card_t *from, int title, long long need, const 
     tabs_init(&dst.g, from, destFiles);
     if (save && save_game_id(save, id)) {
         game_folder(id, dst.g.newGame, sizeof(dst.g.newGame));
-        tabs_show(&dst.g, dst.g.tab);   /* (counted again: the Games group may be there only for this) */
+        /* (counted again: the Games group may be there only for this, and is then the one to open on) */
+        tabs_show(&dst.g, dst.g.tab == TAB_FILES ? TAB_GAMES : dst.g.tab);
     }
     destFiles = 0;
     destDevice = -1;
