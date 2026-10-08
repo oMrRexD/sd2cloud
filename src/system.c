@@ -188,7 +188,9 @@ u32 pad_buttons(void)
  * Without a script, the test also runs as IGR (main.c).
  * "." waits a second on the screen it is on. Right after the cards are checked: "N" = the first try at the network
  * finds no cable, "n" = it gets no address from the router, "u" = the network starts as it used to, without the heap
- * it takes being zeroed (see __wrap_malloc). For the rescue (at the end of this file): "@<seconds>" at the very
+ * it takes being zeroed (see __wrap_malloc). While a card file is installed: "z" = the file can't be read, halfway
+ * through, once; "k" = circle halfway through the writing. "M" and "e" capture a new card being made and a card being
+ * copied to a device, halfway through. For the rescue (at the end of this file): "@<seconds>" at the very
  * start is the test's time limit, "Y" hangs and "Z" crashes, to try it. */
 static char script[256];
 static int scriptPos, hasScript;

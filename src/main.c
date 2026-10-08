@@ -653,6 +653,40 @@ static void upload_screen(long long done, long long total)
     ui_scene(scene_upload);
 }
 
+/* A whole card that is not being sent but restored, installed from a file, copied to a device or made: the same
+ * screen, saying that instead (text). own = a game's card turns the icon of its newest save, as when it is sent; any
+ * other, and a card that isn't there yet, the memory card. fixed = what is being done can't be given up */
+static void card_work(const card_t *c, int own, const char *text, int fixed)
+{
+    if (own)
+        load_card_icon(c);
+    ui_lock();
+    if (!own) {
+        if (cardIcon != sd2psxIcon)
+            icon_free(cardIcon);
+        cardIcon = sd2psxIcon;
+        current = c;
+        iconStart = now_ms();
+    }
+    saveIcon = NULL;
+    workText = text;
+    workFixed = fixed;
+    currentN = totalN = 1;
+    ui_unlock();
+    cancelLatched = 0;
+    upload_screen(0, 1);
+}
+
+static void card_work_done(void)
+{
+    ui_scene(scene_frame);   /* off the screen before what it shows is let go of */
+    ui_lock();
+    current = NULL;
+    workText = NULL;
+    workFixed = 0;
+    ui_unlock();
+}
+
 #ifdef DEBUG_BUILD
 /* script "V<n>" at the start: shows the backup screen of card n (in the menu's order) for 1.5 s without sending
  * anything, and captures it: to check the icons on PCSX2 */
@@ -1373,26 +1407,63 @@ static void tabs_draw(const tabs_t *g, int dots)
 
 /* -------- restore */
 
-static const card_t *restoreCard;
-/* a card file is being installed, not a backup from Drive restored: 1 = it is read first, 2 = it is in memory already,
- * and writing it is all there is to wait for */
+/* a card file is being installed, not a backup from Drive restored: 1 = it is read into memory first, 2 = it is
+ * there already, and writing it is all there is to wait for, 3 = it goes straight from the file (or it isn't known yet
+ * which: it is 1 once the file is seen being read) */
 static int restoreFile;
+static int restoreNew;   /* as a card that wasn't there: it can be given up on to the end (it is deleted then) */
 static u64 lastRestoreDraw;
 static int lastRestorePhase;
 
+/* A piece of a card file couldn't be read, with the card half written. X tries again (a drive that came loose can
+ * be put back), circle gives the file up. 1 = given up */
+static int source_lost(void)
+{
+    char t[200];
+    int again;
+    watchOff++;
+    sound_play(SND_BACK);
+    dlg_new(COLOR_ERROR, T(T_INSTALL_LOST));
+    if (!restoreNew && current) {   /* (a new card just isn't made) */
+        snprintf(t, sizeof(t), T(T_INSTALL_LOST_TEXT), current->base);
+        dlg_line(FONT_TEXT, COLOR_TEXT, 0, t);
+    }
+    dlg_buttons(BUTTON_CIRCLE, T_CANCEL, BUTTON_CROSS, T_TRY_AGAIN);
+    dlg_show();
+    again = (wait_button(PAD_CROSS | PAD_CIRCLE, 0) & PAD_CROSS) != 0;
+    sound_play(again ? SND_CONFIRM : SND_BACK);
+    log_msg("the card file can't be read: %s", again ? "trying again" : "given up");
+    cancelLatched = 0;
+    circleDown = 1;
+    watchOff--;
+    if (again)
+        ui_scene(scene_upload);
+    return !again;
+}
+
 /* one screen and one bar for the whole restore, so the bar never goes back: downloading 30%, checking the download
- * 10%, writing 40%, reading it back 20% (a card that is in memory already: writing 65%, reading it back 35%). The two
- * steps the user cares about are the only ones named */
+ * 10%, writing 40%, reading it back 20%. A card file: read into memory 25%, written 50%, read back 25%; when it is in
+ * memory already, 65% and 35%; when it goes straight from the file, 80% and 20%. The two steps the user cares about
+ * are the only ones named */
 static int restore_progress(int phase, long long done, long long total)
 {
-    static const int start[] = {0, 300, 400, 800}, span[] = {300, 100, 400, 200};
-    static const int startMem[] = {0, 0, 0, 650}, spanMem[] = {0, 0, 650, 350};
-    char t[200];
-    if (phase < RESTORE_WRITE) {   /* once it starts writing over the card there's no cancelling */
+    static const int start[4][4] = {{0, 300, 400, 800}, {0, 250, 250, 750}, {0, 0, 0, 650}, {0, 0, 0, 800}};
+    static const int span[4][4] = {{300, 100, 400, 200}, {250, 0, 500, 250}, {0, 0, 650, 350}, {0, 0, 800, 200}};
+    int canStop;
+    if (phase == RESTORE_LOST)
+        return source_lost();
+    if (restoreFile == 3 && phase == RESTORE_DOWNLOAD)
+        restoreFile = 1;
+    canStop = phase < RESTORE_WRITE || restoreNew;   /* once it starts writing over a card there's no cancelling */
+#ifdef DEBUG_BUILD
+    if (phase == RESTORE_WRITE && total && done * 2 >= total && debug_take('k'))
+        cancelLatched = 1;   /* (script: circle halfway through the writing) */
+#endif
+    if (canStop) {
         watch_cancel();
         if (cancelLatched) {
             if (confirm_cancel(restoreFile ? T_INSTALL_CANCEL_TITLE : T_RESTORE_CANCEL_TITLE,
-                               restoreFile ? T_INSTALL_CANCEL_TEXT : T_RESTORE_CANCEL_TEXT))
+                               restoreNew ? T_INSTALL_CANCEL_NEW : restoreFile ? T_INSTALL_CANCEL_TEXT : T_RESTORE_CANCEL_TEXT))
                 return 1;
             lastRestoreDraw = 0;
         }
@@ -1403,17 +1474,11 @@ static int restore_progress(int phase, long long done, long long total)
     lastRestoreDraw = now_ms();
     if (done > total)
         done = total;
-    snprintf(t, sizeof(t), T(restoreFile ? T_INSTALLING : T_RESTORING), restoreCard->base);
-    dlg_new(COLOR_TITLE, t);
-    dlg_line(FONT_TEXT, COLOR_DIM, 0,
-             T(phase >= RESTORE_WRITE ? T_RESTORE_STEP_WRITE : restoreFile ? T_LOADING : T_RESTORE_STEP_DOWNLOAD));
-    if (restoreFile == 2)
-        dlg_bar(startMem[phase] + (total ? (int)(spanMem[phase] * done / total) : 0), NULL);
-    else
-        dlg_bar(start[phase] + (total ? (int)(span[phase] * done / total) : 0), NULL);
-    if (phase < RESTORE_WRITE)
-        dlg_buttons(BUTTON_CIRCLE, T_CANCEL, 0, 0);
-    dlg_show();
+    ui_lock();
+    workText = T(phase >= RESTORE_WRITE ? T_RESTORE_STEP_WRITE : restoreFile ? T_LOADING : T_RESTORE_STEP_DOWNLOAD);
+    workFixed = !canStop;
+    ui_unlock();
+    upload_screen(start[restoreFile][phase] + (total ? span[restoreFile][phase] * done / total : 0), 1000);
 #ifdef DEBUG_BUILD
     if (total && done * 2 >= total)
         debug_capture_if(phase == RESTORE_WRITE ? 'W' : 'E');
@@ -1866,11 +1931,11 @@ static int restore_flow(card_t *c, const drive_file_t *f)
             return 0;
         }
     }
-    restoreCard = c;
     lastRestoreDraw = 0;
     lastRestorePhase = -1;
-    cancelLatched = 0;
+    card_work(c, 1, T(T_RESTORE_STEP_DOWNLOAD), 0);
     r = restore_card(c, f, restore_progress);
+    card_work_done();
     if (r == -2)
         return 0;   /* cancelled before writing: the card didn't change */
     dlg_new(r == 0 ? COLOR_OK : COLOR_ERROR, T(r == 0 ? T_RESTORE_OK : T_RESTORE_FAILED));
@@ -2701,9 +2766,11 @@ static int dest_new_place(void)
 
 static void new_card_progress(long long done, long long total)
 {
-    ui_lock();
-    dlg.permille = total ? (int)(done * 1000 / total) : 0;
-    ui_unlock();
+    upload_screen(done, total);
+#ifdef DEBUG_BUILD
+    if (done * 2 >= total)
+        debug_capture_if('M');
+#endif
 }
 
 /* The card a save goes to, once the user agreed to it. A card that is still to be made (&destNew) is made now: an
@@ -2717,10 +2784,7 @@ static card_t *dest_real(card_t *to)
     int r, there;
     if (to != &destNew)
         return to;
-    dlg_new(0, NULL);
-    dlg_line(FONT_TEXT, COLOR_TEXT, 0, T(T_NEWCARD_MAKING));
-    dlg_bar(0, NULL);
-    dlg_show();
+    card_work(&destNew, 0, T(T_NEWCARD_MAKING), 1);
     snprintf(dir, sizeof(dir), "%s%s/%s/", sdRoot, dev->cards, destNew.folder);
     ensure_dir(dir);
     there = file_exists(destNew.path);   /* (made by the device since the place was picked: left as it is) */
@@ -2732,6 +2796,7 @@ static card_t *dest_real(card_t *to)
         cardsUnsorted = 1;
     }
     log_msg("new card %s: %d%s%s", destNew.id, r, c ? "" : ", not one of the cards", there ? " (its file was there already)" : "");
+    card_work_done();
     if (!c) {
         if (!there) {   /* a card that isn't whole is no card; nor is its folder to stay, if it was made for it */
             unlink(destNew.path);
@@ -2878,13 +2943,14 @@ static int install_card(void)
         }
     } else if (card_free(to, NULL))
         return 0;
-    restoreCard = to ? to : &fresh;
-    restoreFile = cardFile.image ? 2 : 1;
+    restoreFile = cardFile.image ? 2 : 3;
+    restoreNew = !to && (!cardFile.zip || cardFile.image);   /* (a .zip inflated over the card can't be stopped) */
     lastRestoreDraw = 0;
     lastRestorePhase = -1;
-    cancelLatched = 0;
+    card_work(to ? to : &fresh, 0, T(T_LOADING), 1);   /* (what it says is set right as soon as it starts) */
     r = card_file_install(&cardFile, to ? to : &fresh, restore_progress);
-    restoreFile = 0;
+    card_work_done();
+    restoreFile = restoreNew = 0;
     log_msg("install %s as %s: %d", cardFileName, to ? to->id : fresh.id, r);
     if (to) {
         cards_recheck(to);
@@ -2904,7 +2970,7 @@ static int install_card(void)
         menu_refresh();
     }
     if (r == -2)
-        return 0;   /* cancelled before writing: nothing changed */
+        return 0;   /* cancelled: before writing, or a new card, which is no more */
     dlg_new(r == 0 ? COLOR_OK : COLOR_ERROR, T(r == 0 ? T_INSTALL_OK : T_INSTALL_FAILED));
     dlg_line(FONT_TEXT, COLOR_ACCENT, 4, to ? to->base : base);
     if (r != 0)
@@ -3919,10 +3985,13 @@ static int export_save(card_t *c, save_view_t *v, char file[48])
             return 0;
         snprintf(path, sizeof(path), "%s%s", fb.dir, file);
     }
-    message(0, NULL, COLOR_TEXT, T(T_WORKING_EXPORT));
+    save_into(c, v, T_WORKING_EXPORT);   /* (the card it comes from, here) */
+    save_into_fixed();
     r = mcfs_export_psu(c->path, v->s.folder, &psu);
+    upload_screen(400, 1000);   /* read; to be written and read back */
     if (r == MCFS_OK && !(ok = file_write_checked(path, psu.data, psu.len)))
         unlink(path);   /* half a file, or one that reads back different, is no use to anyone */
+    save_into_done();
     log_msg("export %s of %s to %s (%u bytes): %d, %s", v->s.folder, c->id, path, (unsigned)psu.len, r,
             ok ? "written and read back" : "not written");
     buf_free(&psu);
@@ -3936,9 +4005,11 @@ static int export_save(card_t *c, save_view_t *v, char file[48])
 
 static int card_export_progress(long long done, long long total)
 {
-    ui_lock();
-    dlg.permille = total ? (int)(done * 1000 / total) : 0;
-    ui_unlock();
+    upload_screen(done, total);
+#ifdef DEBUG_BUILD
+    if (done * 2 >= total)
+        debug_capture_if('e');
+#endif
     return 0;
 }
 
@@ -3964,11 +4035,9 @@ static int export_card(card_t *c)
             return 0;
         snprintf(path, sizeof(path), "%s%s", fb.dir, file);
     }
-    dlg_new(0, NULL);
-    dlg_line(FONT_TEXT, COLOR_TEXT, 0, T(T_WORKING_EXPORT));
-    dlg_bar(0, NULL);
-    dlg_show();
+    card_work(c, 1, T(T_WORKING_EXPORT), 1);
     r = card_export(c, path, ps2, card_export_progress);
+    card_work_done();
     log_msg("export card %s to %s: %d", c->id, path, r);
     if (r == 0) {
         snprintf(t, sizeof(t), T(T_DONE_EXPORT), file);

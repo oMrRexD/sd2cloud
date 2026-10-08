@@ -147,29 +147,29 @@ out:
     return r;
 }
 
-/* reads the card back and hashes it */
+/* reads the card back and hashes it. -2 = given up (progress != 0) */
 static int hash_file(const char *path, char sha[65], unsigned long size, int (*progress)(int, long long, long long))
 {
     static unsigned char buf[BLOCK] __attribute__((aligned(64)));
     unsigned char h[WC_SHA256_DIGEST_SIZE];
     wc_Sha256 s;
     long long done = 0;
-    int fd = open(path, O_RDONLY), n, i;
+    int fd = open(path, O_RDONLY), n, i, stop = 0;
     if (fd < 0)
         return -1;
     wc_InitSha256(&s);
-    while ((n = read(fd, buf, sizeof(buf))) > 0) {
+    while (!stop && (n = read(fd, buf, sizeof(buf))) > 0) {
         wc_Sha256Update(&s, buf, n);
         done += n;
         if (progress)
-            progress(RESTORE_VERIFY, done, size);
+            stop = progress(RESTORE_VERIFY, done, size) != 0;
     }
     close(fd);
     wc_Sha256Final(&s, h);
     wc_Sha256Free(&s);
     for (i = 0; i < WC_SHA256_DIGEST_SIZE; i++)
         sprintf(sha + i * 2, "%02x", h[i]);
-    return n < 0 ? -1 : 0;
+    return stop ? -2 : n < 0 ? -1 : 0;
 }
 
 /* the first n bytes of the file inside the .zip. 0 = got them */
@@ -356,11 +356,36 @@ static int restore_card_file(card_t *c, const char *path, int (*progress)(int ph
  * card is inflated to memory when it is opened, checked as it goes, and stays there. One that doesn't fit in memory
  * can't be looked into, but is installed the way a backup is restored.
  *
- * Installing reads the whole card before the first byte is written (into memory when it fits, so that it is read
- * only once), so a file that can't be read leaves the card it would replace as it was; what was written is read
- * back. As everywhere else, only one file is open at a time: the file and the card may both be on the sd2psx. */
+ * Installing a card that fits in memory reads it whole before the first byte is written, so a file that can't be
+ * read leaves the card it would replace as it was. One that doesn't fit (32 MB and up) goes straight from its file
+ * to the card, a piece at a time, read only once: reading it all first just to see that it reads took as long again,
+ * minutes of it on the PS2's USB 1.1. A piece that can't be read is asked about (RESTORE_LOST) and tried again, so
+ * that a drive that came loose doesn't cost the card. What was written is read back.
+ *
+ * Only one file of the sd2psx is open at a time: the file and the card may both be on it. A file that is elsewhere
+ * (a USB drive) stays open from start to end. */
 
 #define PIECE (512 * 1024)
+
+/* the file being read: left open from one piece to the next (srcKeep) when it isn't on the device the card is written
+ * to. Opening it again for each piece means finding the piece's place again, which on a FAT is a walk from the
+ * file's first cluster */
+static int srcFd = -1, srcKeep;
+static long long srcAt;   /* where srcFd is */
+
+static void src_close(void)
+{
+    if (srcFd >= 0)
+        close(srcFd);
+    srcFd = -1;
+}
+
+/* are both on the same device ("mmce0:", "mass0:")? */
+static int same_device(const char *a, const char *b)
+{
+    const char *c = strchr(a, ':');
+    return !c || !strncmp(a, b, c - a + 1);
+}
 
 /* the sizes a card of the sd2psx has */
 static int size_ok(long long size)
@@ -512,86 +537,141 @@ void card_file_close(card_file_t *f)
     mcfs_image(NULL, NULL, 0);
 }
 
-/* n bytes of the card (as a .mcd) from at, read from its file, which is open only for that. out has room for them
- * with their ECC. at and n are whole pages */
+/* n bytes of the card (as a .mcd) from at, read from its file. out has room for them with their ECC. at and n are
+ * whole pages */
 static int file_piece(const card_file_t *f, long long at, unsigned char *out, int n)
 {
-    int want = f->ecc ? n / 512 * 528 : n, got = 0, k = 0, fd = open(f->path, O_RDONLY);
+    long long from = f->ecc ? at / 512 * 528 : at;
+    int want = f->ecc ? n / 512 * 528 : n, got = 0, k = 0;
     unsigned e = 0;
-    if (fd < 0)
+#ifdef DEBUG_BUILD
+    if (at * 2 >= f->size && debug_take('z')) {   /* (script: the file can't be read, halfway through, once) */
+        src_close();
         return -1;
-    if (lseek(fd, (long)(f->ecc ? at / 512 * 528 : at), SEEK_SET) >= 0)
-        for (; got < want && (k = read(fd, out + got, want - got > BLOCK ? BLOCK : want - got)) > 0; got += k)
+    }
+#endif
+    if (srcFd < 0) {
+        if ((srcFd = open(f->path, O_RDONLY)) < 0)
+            return -1;
+        srcAt = 0;
+    }
+    if (srcAt == from || lseek(srcFd, (long)from, SEEK_SET) >= 0)
+        for (; got < want && (k = read(srcFd, out + got, want - got > BLOCK ? BLOCK : want - got)) > 0; got += k)
             ;
-    close(fd);
+    srcAt = from + got;
+    if (!srcKeep || got != want)
+        src_close();
     if (got != want)
         return -1;
     return f->ecc ? (int)strip_ecc(out, got, &e) : got;
 }
 
-/* the whole card read once, before anything is written: kept in memory when it fits there (it is written from there
- * then), and its SHA-256 either way. 0 = ok, -2 = cancelled */
-static int file_load(card_file_t *f, unsigned char *piece, int (*progress)(int, long long, long long))
+static void sha_hex(wc_Sha256 *s, char sha[65])
 {
     unsigned char h[WC_SHA256_DIGEST_SIZE];
+    int i;
+    wc_Sha256Final(s, h);
+    wc_Sha256Free(s);
+    for (i = 0; i < WC_SHA256_DIGEST_SIZE; i++)
+        sprintf(sha + i * 2, "%02x", h[i]);
+}
+
+/* how long the file took to be read and the card to be written, for the log: on the console those are what an
+ * install waits for */
+static u64 msRead, msWrite;
+
+/* the whole card read into memory (f->image, which has room for it) before anything is written, and its SHA-256.
+ * 0 = ok, -2 = cancelled */
+static int file_load(card_file_t *f, unsigned char *piece, int (*progress)(int, long long, long long))
+{
     wc_Sha256 s;
     long long at;
-    int n, i, r = 0;
-    f->image = malloc((size_t)f->size);
+    int n, r = 0;
     wc_InitSha256(&s);
+    if (progress && progress(RESTORE_DOWNLOAD, 0, f->size))   /* (the screen says what is being done from the start) */
+        r = -2;
     for (at = 0; at < f->size && r == 0; at += n) {
+        u64 t = now_ms();
         n = f->size - at > PIECE ? PIECE : (int)(f->size - at);
         if (file_piece(f, at, piece, n) != n)
             r = -1;
         else {
+            msRead += now_ms() - t;
             wc_Sha256Update(&s, piece, n);
-            if (f->image)
-                memcpy(f->image + at, piece, n);
+            memcpy(f->image + at, piece, n);
             if (progress && progress(RESTORE_DOWNLOAD, at + n, f->size))
                 r = -2;
         }
     }
-    wc_Sha256Final(&s, h);
-    wc_Sha256Free(&s);
-    for (i = 0; i < WC_SHA256_DIGEST_SIZE; i++)
-        sprintf(f->sha + i * 2, "%02x", h[i]);
-    if (r != 0) {
-        free(f->image);
-        f->image = NULL;
-    }
+    sha_hex(&s, f->sha);
     return r;
 }
 
-/* the card onto dest, a piece at a time: dest is open only while a piece goes into it */
-static int file_write_card(const card_file_t *f, const char *dest, unsigned char *piece, int (*progress)(int, long long, long long))
+/* The card onto dest, a piece at a time: dest is open only while a piece goes into it. From memory, or (a card that
+ * doesn't fit there) straight from its file, hashed on its way (f->sha). A card that is there already, and isn't
+ * bigger, is written over where it is: the sd2psx syncs the file after every 4 KB it is given, which on a file that
+ * grows means its entry in the folder and the FAT each time, and on one that keeps its size means nothing. *began =
+ * dest isn't what it was any more. 0 = ok, -2 = given up (progress != 0), -1 = error (googleError says which) */
+static int file_write_card(card_file_t *f, const char *dest, unsigned char *piece, int *began,
+                           int (*progress)(int, long long, long long))
 {
+    wc_Sha256 s;
     long long at;
-    int n, fd, done, k = 0;
-    for (at = 0; at < f->size; at += n) {
-        const unsigned char *d = f->image ? f->image + at : piece;
-        n = f->size - at > PIECE ? PIECE : (int)(f->size - at);
-        if (!f->image && file_piece(f, at, piece, n) != n)
-            return -1;
-        if ((fd = open(dest, at ? O_WRONLY : O_WRONLY | O_CREAT | O_TRUNC, 0666)) < 0)
-            return -1;
-        if (at)
-            lseek(fd, (long)at, SEEK_SET);
-        for (done = 0; done < n; done += k)
-            if ((k = write(fd, d + done, n - done > BLOCK ? BLOCK : n - done)) <= 0)
-                break;
-        if (close(fd) < 0 || done < n)
-            return -1;
-        if (progress)
-            progress(RESTORE_WRITE, at + n, f->size);
+    int n, fd, done, k = 0, r = 0, flags = O_WRONLY | O_CREAT | O_TRUNC;
+    long end;
+    if ((fd = open(dest, O_RDONLY)) >= 0) {
+        if ((end = lseek(fd, 0, SEEK_END)) >= 0 && end <= f->size)
+            flags = O_WRONLY;
+        close(fd);
     }
-    return 0;
+    if (!f->image)
+        wc_InitSha256(&s);
+    if (progress && progress(RESTORE_WRITE, 0, f->size))
+        r = -2;
+    for (at = 0; at < f->size && r == 0; at += n) {
+        const unsigned char *d = f->image ? f->image + at : piece;
+        u64 t = now_ms();
+        n = f->size - at > PIECE ? PIECE : (int)(f->size - at);
+        if (!f->image) {
+            /* a piece that can't be read is asked about, and tried again unless the file is given up on */
+            while ((r = file_piece(f, at, piece, n) == n ? 0 : -1) != 0 && progress && !progress(RESTORE_LOST, at, f->size))
+                t = now_ms();
+            if (r != 0) {
+                snprintf(googleError, sizeof(googleError), "%s", T(T_ERR_READ_FILE));
+                break;
+            }
+            msRead += now_ms() - t;
+            wc_Sha256Update(&s, piece, n);
+            t = now_ms();
+        }
+        if ((fd = open(dest, at ? O_WRONLY : flags, 0666)) >= 0) {
+            *began = 1;
+            if (at)
+                lseek(fd, (long)at, SEEK_SET);
+            for (done = 0; done < n; done += k)
+                if ((k = write(fd, d + done, n - done > BLOCK ? BLOCK : n - done)) <= 0)
+                    break;
+            if (close(fd) < 0 || done < n)
+                r = -1;
+        } else
+            r = -1;
+        msWrite += now_ms() - t;
+        if (r != 0)
+            snprintf(googleError, sizeof(googleError), "%s", T(T_ERR_WRITE));
+        else if (progress && progress(RESTORE_WRITE, at + n, f->size))
+            r = -2;
+    }
+    if (!f->image)
+        sha_hex(&s, f->sha);
+    return r;
 }
 
 int card_file_install(card_file_t *f, card_t *to, int (*progress)(int phase, long long done, long long total))
 {
     unsigned char *piece;
     char back[65];
-    int r = 0;
+    u64 t;
+    int r = 0, began = 0, fd, streamed;
     googleError[0] = 0;
     log_msg("install: %s as %s", f->path, to->path);
     if (f->zip && !f->image)   /* a .zip whose card doesn't fit in memory: as a backup from Drive is restored */
@@ -600,23 +680,40 @@ int card_file_install(card_file_t *f, card_t *to, int (*progress)(int phase, lon
         snprintf(googleError, sizeof(googleError), "%s", T(T_ERR_TOO_BIG));
         return -1;
     }
-    if (!f->image && (r = file_load(f, piece, progress)) != 0) {
+    msRead = msWrite = 0;
+    srcKeep = !same_device(f->path, to->path);
+    if (!f->image && (f->image = malloc((size_t)f->size)) != NULL && (r = file_load(f, piece, progress)) != 0) {
+        src_close();
         free(piece);
+        free(f->image);
+        f->image = NULL;
         if (r == -1)
             snprintf(googleError, sizeof(googleError), "%s", T(T_ERR_READ_FILE));
         return r;
     }
-    /* from here on there's no cancelling */
-    r = file_write_card(f, to->path, piece, progress);
+    if (!(streamed = !f->image))
+        src_close();
+    r = file_write_card(f, to->path, piece, &began, progress);
+    src_close();
     free(piece);
-    if (r != 0 || hash_file(to->path, back, f->size, progress) != 0 || strcmp(back, f->sha) != 0) {
-        log_msg("install: %s didn't check out after writing", to->path);
-        snprintf(googleError, sizeof(googleError), "%s", T(T_ERR_WRITE));
+    /* (a card written over where it was, and only in part, would still pass for one: it is left empty) */
+    if (r != 0 && began && (fd = open(to->path, O_WRONLY | O_TRUNC)) >= 0)
+        close(fd);
+    t = now_ms();
+    if (r == 0 && (r = hash_file(to->path, back, f->size, progress)) == 0 && strcmp(back, f->sha) != 0)
         r = -1;
-    } else {
+    if (r == 0) {
         log_msg("install: %s written and verified (%lld bytes, sha %.16s)", to->id, f->size, f->sha);
         to->size = f->size;
+    } else if (r == -2)
+        log_msg("install: %s given up", to->path);
+    else {
+        log_msg("install: %s failed (%s)", to->path, googleError[0] ? googleError : "it doesn't read back as it was written");
+        if (!googleError[0])
+            snprintf(googleError, sizeof(googleError), "%s", T(T_ERR_WRITE));
     }
+    log_msg("install: %s, %d s reading the file, %d s writing the card, %d s reading it back",
+            streamed ? "straight from the file" : "from memory", (int)(msRead / 1000), (int)(msWrite / 1000), (int)((now_ms() - t) / 1000));
     if (!f->zip) {   /* the file is there to be read again; a .zip's card stays, to be looked into */
         free(f->image);
         f->image = NULL;

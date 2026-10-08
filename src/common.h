@@ -377,7 +377,7 @@ const char *update_tag(void);               /* what was found: "v1.6", or "beta 
 int update_install(void (*progress)(long long done, long long total));
 
 /* ------------------------------------------------------------ restore.c */
-enum { RESTORE_DOWNLOAD, RESTORE_CHECK, RESTORE_WRITE, RESTORE_VERIFY };
+enum { RESTORE_DOWNLOAD, RESTORE_CHECK, RESTORE_WRITE, RESTORE_VERIFY, RESTORE_LOST };
 /* replaces the card on the microSD with a backup from Drive, checked before and after writing.
  * progress(phase, done, total) != 0 cancels (only before RESTORE_WRITE).
  * 0 = restored; -2 = cancelled (the card didn't change); -1 = error (googleError says why) */
@@ -396,8 +396,12 @@ typedef struct {
  * and the card can't be looked into, only installed. 0 = ok, -2 = cancelled, -1 = error (googleError says why) */
 int card_file_open(card_file_t *f, const char *path, int (*progress)(int phase, long long done, long long total));
 void card_file_close(card_file_t *f);
-/* writes it as the .mcd of a card of the microSD (to->path; the caller makes sure the sd2psx isn't using it), read
- * whole before and read back after. The same phases and answers as restore_card */
+/* writes it as the .mcd of a card of the microSD (to->path; the caller makes sure the sd2psx isn't using it) and reads
+ * it back. The same phases and answers as restore_card, and two things more. A card that doesn't fit in memory
+ * goes straight from its file, with no RESTORE_DOWNLOAD: a piece of it that can't be read is asked about,
+ * progress(RESTORE_LOST) != 0 gives the file up (-1) and 0 has it tried again. And progress != 0 while it is written
+ * or read back gives up as well (-2), which is for the caller to allow only of a card that wasn't there, and to
+ * delete it then. A card that was there and didn't get written whole is left empty */
 int card_file_install(card_file_t *f, card_t *to, int (*progress)(int phase, long long done, long long total));
 
 /* ------------------------------------------------------------ helper.c */
