@@ -393,16 +393,21 @@ void card_file_close(card_file_t *f);
 int card_file_install(card_file_t *f, card_t *to, int (*progress)(int phase, long long done, long long total));
 
 /* ------------------------------------------------------------ helper.c */
+/* What SD2Cloud keeps on the memory card in use for the automatic sync: the APP_SD2CLOUD save folder, with the IGR
+ * helper, the shortcut that opens SD2Cloud, an icon and a title.cfg, all embedded in the program. A helper that a
+ * version up to 1.5 left alone in BOOT is kept where it is (helperLegacy = 1, set by helper_status) */
 enum { HELPER_NO_FILE, HELPER_NOT_INSTALLED, HELPER_DIFFERENT, HELPER_SAME };
-int helper_status(void);                    /* the helper in mc0:/BOOT compared with the one in the app's folder */
+int helper_status(void);                    /* what the card has, compared with what this version would write */
+extern int helperLegacy;
+const char *helper_path(void);              /* the helper on the card, for OPL: "/APP_SD2CLOUD/SD2CLOUD-IGR.ELF" */
+const char *helper_place(void);             /* where it is installed: "/APP_SD2CLOUD" (or the file in BOOT) */
 int mc_root_signature(int port, char hex[65]);   /* mcfs_root_signature of the card in that slot, through mcman */
 int mc_card_state(int port);                     /* 0 = the card in that slot is the one it was when last asked */
-#define HELPER_TARGET "/BOOT/SD2CLOUD-IGR.ELF"
-int helper_present(void);                   /* the helper's ELF is in the app's folder, and it can be installed */
-int helper_install(void);                   /* copies it to mc0: 0 = ok, -2 = the ELF is missing, -1 = couldn't write,
-                                               -3 = not enough room (helperNeedKb, helperFreeKb) */
+int helper_present(void);                   /* it can be installed (always, unless the program can't be found by it) */
+int helper_install(void);                   /* writes it to mc0: 0 = ok, -1 = couldn't write, -3 = not enough room
+                                               (helperNeedKb, helperFreeKb) */
 /* what installing takes on the memory card in use and what the card has free, for the question before installing:
- * fills helperNeedKb and helperFreeKb (-1 = unknown). 0 = known (-1 = the helper's ELF is missing) */
+ * fills helperNeedKb and helperFreeKb (-1 = unknown) */
 int helper_space(void);
 int helper_uninstall(void);                 /* removes it from mc0: 0 = removed (or it wasn't there) */
 extern int helperNeedKb, helperFreeKb;

@@ -4202,8 +4202,6 @@ static void sync_all(void)
 static const char *helper_result(int r)
 {
     static char t[200];
-    if (r == -2)
-        return T(T_HELPER_MISSING);
     if (r == -3) {
         snprintf(t, sizeof(t), T(T_HELPER_FULL), helperNeedKb, helperFreeKb);
         return t;
@@ -4244,6 +4242,7 @@ static const char *helper_space_text(void)
  * doneTitle = the title of that last screen */
 static void helper_install_now(int doneTitle)
 {
+    char path[80];
     int r;
     message(0, NULL, COLOR_TEXT, T(T_AUTO_INSTALLING));
     r = helper_install();
@@ -4252,9 +4251,10 @@ static void helper_install_now(int doneTitle)
         message_wait(COLOR_ERROR, T(T_HELPER_TITLE), COLOR_TEXT, helper_result(r));
         return;
     }
+    snprintf(path, sizeof(path), "mc?:%s", helper_path());
     dlg_new(COLOR_OK, T(doneTitle));
     dlg_line(FONT_TEXT, COLOR_TEXT, 2, T(T_AUTO_OPL));
-    dlg_line(FONT_TEXT, COLOR_ACCENT, 10, "mc?:" HELPER_TARGET);
+    dlg_line(FONT_TEXT, COLOR_ACCENT, 10, path);
     dlg_line(FONT_SMALL, COLOR_DIM, 0, T(T_AUTO_NOTE));
     dlg_buttons(BUTTON_CROSS, T_FINISH, 0, 0);
     next.wide = 1;
@@ -4296,6 +4296,7 @@ static void helper_on_card(int title)
 /* 1 = the helper was installed or removed (its state has to be read again) */
 static int helper_screen(void)
 {
+    char place[80];
     if (appOnCard && helperState == HELPER_SAME) {
         helper_on_card(T_HELPER_TITLE);
         return 0;
@@ -4331,10 +4332,13 @@ static int helper_screen(void)
             return 1;
         }
     }
+    /* a helper an earlier version left alone in BOOT is written again there; otherwise it goes in SD2Cloud's own save
+     * folder, which is also a shortcut to it in the PS2 browser */
+    snprintf(place, sizeof(place), "mc0:%s", helper_place());
     dlg_new(COLOR_TITLE, T(T_HELPER_TITLE));
     dlg_line(FONT_TEXT, COLOR_TEXT, 10, T(T_HELPER_ABOUT));
-    dlg_line(FONT_TEXT, COLOR_TEXT, 2, T(T_HELPER_WHERE));
-    dlg_line(FONT_TEXT, COLOR_ACCENT, 4, "mc0:" HELPER_TARGET);
+    dlg_line(FONT_TEXT, COLOR_TEXT, 2, T(helperLegacy ? T_HELPER_WHERE : T_HELPER_WHERE_FOLDER));
+    dlg_line(FONT_TEXT, COLOR_ACCENT, 4, place);
     dlg_line(FONT_TEXT, COLOR_TEXT, 10, helper_space_text());
     dlg_line(FONT_SMALL, COLOR_DIM, 4, T(T_HELPER_AUTOBOOT));
     dlg_line(FONT_SMALL, COLOR_DIM, 0, T(T_HELPER_USB_HINT));

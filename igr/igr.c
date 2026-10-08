@@ -20,6 +20,11 @@
  *
  * With no sync to do (the automatic sync turned off in SD2Cloud's settings, or no Google account connected), SD2Cloud
  * isn't started at all: what comes after IGR is started from here (see skip_sync).
+ *
+ * SD2CLOUD-OPEN.ELF -- the shortcut: this same program built with -DOPEN. SD2Cloud puts both in a save folder of the
+ * memory card (mc?:/APP_SD2CLOUD, with an icon and a title.cfg, the Save Application System's way), and the shortcut
+ * is what that folder starts from the PS2 browser or a launcher: it finds SD2Cloud on the microSD the same way and
+ * opens it as the user would, with no -igr. When it isn't there, it says so on the screen.
  */
 #include <string.h>
 #include <strings.h>
@@ -37,6 +42,12 @@
 #include <fileXio_rpc.h>
 #include <ps2_fileXio_driver.h>
 #include <ps2_sio2man_driver.h>
+#ifdef OPEN
+#include <debug.h>
+#define AS_IGR 0   /* the shortcut: SD2Cloud is opened as the user would open it */
+#else
+#define AS_IGR 1   /* the IGR helper: SD2Cloud is told that it was IGR that started it */
+#endif
 
 extern unsigned char mmceman_irx[];
 extern unsigned int size_mmceman_irx;
@@ -128,10 +139,11 @@ static void run_next_to(const char *self)
     strcpy(path + dir, ELF);
     SifLoadFileInit();
     sbv_patch_disable_prefix_check();   /* the ROM's loader only takes a few devices otherwise */
-    run(path, 1);
+    run(path, AS_IGR);
     SifLoadFileExit();   /* not there: on with the usual way, from scratch */
 }
 
+#ifndef OPEN
 /* Started from a memory card: SD2Cloud may be in the same save folder (the Save Application System package keeps both
  * there). beside = that one's path when it is there, looked for while whatever started this file can still read the
  * card */
@@ -181,6 +193,7 @@ static void run_beside(void)
     SifLoadModule("rom0:MCMAN", 0, NULL);
     LoadELFFromFile(beside, 1, args);
 }
+#endif
 
 /* SD2Cloud's settings on the microSD being looked at, whole */
 static char ini[16 * 1024 + 1];
@@ -250,6 +263,21 @@ static int on_sd(char *path, const char *root)
     return !strncmp(path, root, strchr(root, ':') - root + 1);
 }
 
+#ifdef OPEN
+/* The shortcut found no SD2Cloud to open: said on the screen (the SDK's text screen has no accented letters), for long
+ * enough to be read, before the PS2 menu */
+static void not_found(void)
+{
+    init_scr();
+    scr_printf("\n\n\n   SD2Cloud\n\n"
+               "   SD2Cloud was not found on the sd2psx microSD.\n"
+               "   Extract SD2Cloud's .zip file to the root of the microSD:\n"
+               "   github.com/oMrRexD/sd2cloud\n\n"
+               "   SD2Cloud ausente no microSD do sd2psx.\n"
+               "   Extraia o arquivo .zip do SD2Cloud na raiz do microSD.\n");
+    sleep(12);
+}
+#else
 /* With no sync to do, SD2Cloud isn't needed, and loading it would only take time: the automatic sync turned off in
  * its settings ([igr] auto_sync = no), or no Google account connected (no token in token.dat). What comes after IGR
  * is then started from here: the program in [igr] return or, with "auto", the OPL SD2Cloud found the last time it
@@ -274,6 +302,7 @@ static void skip_sync(const char *root)
     if (on_sd(v, root))
         run(v, 0);
 }
+#endif
 
 int main(int argc, char *argv[])
 {
@@ -281,7 +310,9 @@ int main(int argc, char *argv[])
     int i, k;
     SifInitRpc(0);
     note("started as", argc > 0 && argv[0] ? argv[0] : "(nothing)", argc);
+#ifndef OPEN
     look_beside(argc > 0 && argv[0] ? argv[0] : "");
+#endif
     run_next_to(argc > 0 && argv[0] ? argv[0] : "");
     while (!SifIopReset("", 0))
         ;
@@ -301,23 +332,31 @@ int main(int argc, char *argv[])
         for (k = 0; roots[k]; k++) {   /* what SD2Cloud's settings on that microSD say */
             if (!read_text(roots[k], "sd2cloud.ini", ini, sizeof(ini)))
                 continue;
+#ifndef OPEN
             skip_sync(roots[k]);
+#endif
             setting(ini, "app", "app_path", path, sizeof(path));   /* where SD2Cloud said it is */
             on_sd(path, roots[k]);
             if (path[0])
-                run(path, 1);
+                run(path, AS_IGR);
         }
         for (k = 0; roots[k]; k++) {   /* its usual folder */
             strcpy(path, roots[k]);
             strcat(path, "APPS/SD2Cloud/" ELF);
-            run(path, 1);
+            run(path, AS_IGR);
         }
+#ifndef OPEN
         if (beside[0])   /* it is on the memory card, then: no use waiting for the microSD to have it */
             break;
+#endif
         usleep(300 * 1000);
     }
+#ifdef OPEN
+    not_found();
+#else
     if (beside[0])
         run_beside();
+#endif
     /* not found (or it didn't run): the OSD, as OPL would do without an "Exit to" */
     ExecOSD(0, NULL);
     return 0;

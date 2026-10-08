@@ -98,12 +98,11 @@ If your OPL does not list the apps on the sd2psx microSD (a build without MMCE s
 `APPS/SD2Cloud` folder to the `APPS` folder of your USB drive or MX4SIO card and open SD2Cloud from there. It hands
 over to the copy on the microSD, where the settings, the IGR helper and the updates are kept.
 
-**Save Application System (SAS).** Each release also has `APP_SD2CLOUD.psu`: the same program as a single
-`APP_SD2CLOUD` folder, with its own 3D icon for the PS2 browser. In the `APPS` folder of the microSD
-(`APPS/APP_SD2CLOUD`) it works exactly as described here. On a memory card, among the saved data, it stays there:
-it updates itself in that folder (the card needs room for the new version next to the current one), and for the
-automatic sync OPL's "IGR Path" is `mc?:/APP_SD2CLOUD/SD2CLOUD-IGR.ELF`, with nothing to install. When there is
-also an SD2Cloud on the microSD, that one takes over.
+**On the memory card.** When automatic sync is turned on, SD2Cloud puts an `APP_SD2CLOUD` folder on the memory card
+in use, the Save Application System (SAS) way: the IGR helper and a shortcut that opens SD2Cloud from the microSD,
+with its own 3D icon for the PS2 browser (about 240 KB). The program itself stays on the microSD. Each release also
+has that folder as `APP_SD2CLOUD.psu`, for whoever prefers to import it by hand; with no SD2Cloud on the microSD,
+the shortcut only says so.
 
 The [README.txt](package/README.txt) included in the release explains every screen in detail.
 
@@ -120,10 +119,11 @@ The [README.txt](package/README.txt) included in the release explains every scre
 ## Automatic sync after a game (IGR)
 
 1. In SD2Cloud, open Settings (START) and select **IGR helper** (it is also offered right after you sign in).
-   SD2Cloud shows how much space the helper takes (about 95 KB) and asks before writing it to
-   `mc0:/BOOT/SD2CLOUD-IGR.ELF` on the memory card in use; with Autoboot, install it while the BootCard is in
-   use.
-2. In OPL Settings, set **IGR Path** to `mc?:/BOOT/SD2CLOUD-IGR.ELF`.
+   SD2Cloud shows how much space it takes (about 240 KB) and asks before writing the `APP_SD2CLOUD` folder to the
+   memory card in use (`mc0:/APP_SD2CLOUD`: the helper, and a shortcut to SD2Cloud for the PS2 browser); with
+   Autoboot, install it while the BootCard is in use.
+2. In OPL Settings, set **IGR Path** to `mc?:/APP_SD2CLOUD/SD2CLOUD-IGR.ELF`. A helper installed by a version up
+   to 1.5 (`mc?:/BOOT/SD2CLOUD-IGR.ELF`) keeps working and is updated where it is: nothing has to change in OPL.
 3. In OPL, also turn on **IGR Bootcard Slot(s)** (MMCE page), set to the sd2psx slot or BOTH: when you exit a game,
    OPL switches back to the BootCard, where the helper is installed.
 

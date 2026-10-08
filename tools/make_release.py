@@ -90,9 +90,12 @@ def main():
 
     sas = PKG / "sas"
     cfg = (sas / "title.cfg").read_text(encoding="utf-8").replace("@VERSION@", v)
+    # the very files SD2Cloud writes to the memory card when the automatic sync is turned on (src/helper.c), in the
+    # same order: the shortcut that opens SD2Cloud from the microSD, and the IGR helper
     inside = [("icon.sys", (sas / "icon.sys").read_bytes()), ("sd2cloud.icn", (sas / "sd2cloud.icn").read_bytes()),
-              ("title.cfg", crlf(cfg.encode("utf-8")))]
-    inside += [(name.split("/")[-1], data) for name, data in files if name.startswith("APPS/SD2Cloud/SD2CLOUD") or "/" not in name]
+              ("title.cfg", crlf(cfg.encode("utf-8"))),
+              ("SD2CLOUD-OPEN.ELF", (ROOT / "igr" / "SD2CLOUD-OPEN.ELF").read_bytes()),
+              ("SD2CLOUD-IGR.ELF", files[1][1])]
     package = psu(SAS, inside, sas_date(SAS))
     (DIST / (SAS + ".psu")).write_bytes(package)
 
@@ -108,7 +111,7 @@ def main():
 | SD2CLOUD-IGR.ELF | `{hi}` |
 | {SAS}.psu | `{hp}` |
 
-`SD2CLOUD.ELF` and `SD2CLOUD-IGR.ELF` are the same files included in the zip, also attached individually so that SD2Cloud can update itself. `{SAS}.psu` is the same program as a Save Application System (SAS) package: the `{SAS}` folder, with its own 3D icon.
+`SD2CLOUD.ELF` and `SD2CLOUD-IGR.ELF` are the same files included in the zip, also attached individually so that SD2Cloud can update itself. `{SAS}.psu` is the memory card folder SD2Cloud installs by itself when automatic sync is turned on, as a Save Application System (SAS) package, for whoever prefers to import it by hand: the IGR helper and a shortcut that opens SD2Cloud from the microSD, with its own 3D icon. It does not contain the program.
 """
     notes.write_text(t, encoding="utf-8", newline="\n")
     print(f"{zip_name} {(DIST / zip_name).stat().st_size} B  sha {hz}")

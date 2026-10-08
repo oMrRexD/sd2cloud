@@ -57,13 +57,11 @@ INSTALAÇÃO
    Se o seu OPL não lista os apps do microSD do sd2psx (versão sem suporte a MMCE), copie também a pasta
    APPS/SD2Cloud para a pasta APPS do pendrive USB ou do cartão do MX4SIO e abra o SD2Cloud por lá. Ele
    passa a vez para a cópia do microSD, onde ficam as configurações, o assistente de IGR e as atualizações.
-   Save Application System (SAS): cada release traz também o APP_SD2CLOUD.psu, o mesmo programa em uma
-   única pasta APP_SD2CLOUD, com ícone 3D próprio para o browser do PS2. Na pasta APPS do microSD
-   (APPS/APP_SD2CLOUD) ele funciona exatamente como descrito aqui. Em um cartão de memória, junto dos
-   dados salvos, ele fica por lá: atualiza-se nessa mesma pasta (o cartão precisa ter espaço para a versão
-   nova ao lado da atual) e, para a sincronização automática, o "Definir saída do IGR" do OPL é
-   mc?:/APP_SD2CLOUD/SD2CLOUD-IGR.ELF, sem instalar nada. Se também houver um SD2Cloud no microSD, é ele
-   que assume.
+   No cartão de memória: ao ativar a sincronização automática, o SD2Cloud grava uma pasta APP_SD2CLOUD no
+   cartão de memória em uso, no formato do Save Application System (SAS): o assistente de IGR e um atalho
+   que abre o SD2Cloud do microSD, com ícone 3D próprio para o browser do PS2 (cerca de 240 KB). O programa
+   em si fica no microSD. Cada release traz também essa pasta como APP_SD2CLOUD.psu, para quem prefere
+   importar à mão; sem o SD2Cloud no microSD, o atalho apenas avisa.
 3. Sem uma conta do Google conectada, o SD2Cloud pergunta se você deseja conectá-la agora. Escolhendo
    "Agora não", ele abre direto na tela principal ("Não perguntar mais", no TRIÂNGULO, faz o mesmo e a pergunta não volta:
    ask_connect = no no sd2cloud.ini); a conta pode ser conectada depois, em Configurações
@@ -173,11 +171,13 @@ CONFIGURAÇÕES (START)
 As alterações são gravadas no sd2cloud.ini, que também pode ser editado no PC.
 
 SINCRONIZAÇÃO AUTOMÁTICA APÓS O JOGO (IGR)
-1. No SD2Cloud, pressione START e selecione "Assistente de IGR". O SD2Cloud informa o espaço que o
-   assistente ocupa no cartão de memória em uso (cerca de 95 KB) e o espaço livre, e pede confirmação antes
-   de instalar. O assistente é gravado em mc0:/BOOT/SD2CLOUD-IGR.ELF. Se o seu sd2psx usa o Autoboot, faça
-   a instalação com o BootCard em uso.
-2. Nas configurações do OPL, em "Definir saída do IGR", informe: mc?:/BOOT/SD2CLOUD-IGR.ELF
+1. No SD2Cloud, pressione START e selecione "Assistente de IGR". O SD2Cloud informa o espaço necessário no
+   cartão de memória em uso (cerca de 240 KB) e o espaço livre, e pede confirmação antes de instalar. Ele
+   grava a pasta APP_SD2CLOUD (mc0:/APP_SD2CLOUD): o assistente e um atalho do SD2Cloud para o browser do
+   PS2. Se o seu sd2psx usa o Autoboot, faça a instalação com o BootCard em uso.
+2. Nas configurações do OPL, em "Definir saída do IGR", informe: mc?:/APP_SD2CLOUD/SD2CLOUD-IGR.ELF
+   Um assistente instalado por uma versão até a 1.5 (mc?:/BOOT/SD2CLOUD-IGR.ELF) continua funcionando e é
+   atualizado onde está: não é preciso mudar nada no OPL.
 3. No OPL, ative também "Slot(s) de Bootcard IGR" (página MMCE), no slot do sd2psx ou em BOTH: ao sair do
    jogo, o OPL volta para o BootCard, onde o assistente está instalado.
 A partir daí, ao sair de um jogo pelo IGR, o SD2Cloud envia os cartões alterados, exibe "Envio concluído"

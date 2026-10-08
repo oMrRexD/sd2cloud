@@ -235,6 +235,7 @@ X(T_HELPER_UNINSTALLED, "IGR helper uninstalled.", "Assistente de IGR desinstala
 X(T_HELPER_UNINSTALL_ERROR, "Unable to remove the IGR helper from the memory card.", "Não foi possível remover o assistente de IGR do cartão de memória.")
 X(T_HELPER_ELSEWHERE, "SD2Cloud was opened from another device. To install the helper on the memory card, also copy the APPS/SD2Cloud folder to the sd2psx microSD.", "O SD2Cloud foi aberto a partir de outro dispositivo. Para instalar o assistente no cartão de memória, copie também a pasta APPS/SD2Cloud para o microSD do sd2psx.")
 X(T_HELPER_USB, "If that device is a USB drive, nothing needs to be installed. In OPL, set \"IGR Path\" to:", "Se esse dispositivo for um pendrive USB, não é preciso instalar nada. No OPL, em \"Definir saída do IGR\", informe:")
+X(T_HELPER_WHERE_FOLDER, "It will be installed on the memory card in use, with a shortcut to SD2Cloud for the PS2 browser:", "Será instalado no cartão de memória em uso, com um atalho do SD2Cloud para o browser do PS2:")
 X(T_HELPER_ON_CARD, "It is already on the memory card, next to SD2Cloud: nothing needs to be installed.", "Ele já está no cartão de memória, junto com o SD2Cloud: não é preciso instalar nada.")
 X(T_HELPER_USB_HINT, "Optional with SD2Cloud on a USB drive: see the README.", "Opcional com o SD2Cloud em um pendrive: veja o LEIA-ME.")
 X(T_DEV_SD, "microSD", "microSD")

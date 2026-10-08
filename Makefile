@@ -34,8 +34,12 @@ ASSET_OBJS = $(addprefix asset_, $(addsuffix _png.o, $(IMAGES)) $(addsuffix _adp
 # the IOP modules embedded in the program: mmceman (the sd2psx), and the drivers of the other devices a program can be
 # opened from after SD2Cloud (loaded only for that, see run_elf)
 EMBEDDED_IRX = mmceman mcman mcserv usbd usbmass_bd bdm bdmfs_fatfs mx4sio_bd ata_bd ps2dev9 ps2atad ps2hdd ps2fs
+# what SD2Cloud writes to the memory card when the automatic sync is turned on, embedded in the program: the
+# APP_SD2CLOUD save folder, with the IGR helper, the shortcut that opens SD2Cloud (both built in igr/), and the Save
+# Application System's icon and title.cfg (package/sas)
+CARD_FILES = igr_elf open_elf icon_sys icon_icn title_cfg
 EE_OBJS = $(addprefix $(OBJ_DIR)/, $(addsuffix .o, $(SOURCES)) qrcodegen.o cacert_pem.o ini_default.o $(ASSET_OBJS) \
-          $(addprefix irx_, $(addsuffix .o, $(EMBEDDED_IRX))))
+          $(addprefix irx_, $(addsuffix .o, $(EMBEDDED_IRX))) $(addprefix card_, $(addsuffix .o, $(CARD_FILES))))
 EE_INCS += -Isrc -I. -Ithird_party/qrcodegen -I$(PORTS4096)/include -I$(PS2SDK)/ports/include \
            -I$(PS2SDK)/ports/include/freetype2 -I$(GSKIT)/include
 # malloc and memalign go through system.c, which zeroes what the network libraries take while they start
@@ -67,9 +71,12 @@ $(EE_BIN_PACKED): $(EE_BIN)
 	@mkdir -p $(DIST)
 	ps2-packer $< $@ > /dev/null
 
-# the IGR helper: its own small program, in igr/ (its debug variant is built there with make DEBUG=1, after make clean)
-igr: $(MMCEMAN)
-	$(MAKE) -C igr MMCEMAN=$(abspath $(MMCEMAN))
+# the IGR helper and the shortcut: one small program built two ways, in igr/ (their debug variants are built there
+# with make DEBUG=1). The program embeds the normal ones, whichever way it is built itself
+igr/SD2CLOUD-IGR.ELF igr/SD2CLOUD-OPEN.ELF &: $(MMCEMAN) igr/igr.c igr/Makefile
+	$(MAKE) -C igr DEBUG= MMCEMAN=$(abspath $(MMCEMAN))
+
+igr: igr/SD2CLOUD-IGR.ELF
 	@mkdir -p $(DIST)
 	cp igr/SD2CLOUD-IGR.ELF $(DIST)/
 
@@ -124,6 +131,29 @@ $(OBJ_DIR)/ini_default.c: package/sd2cloud.ini
 	bin2c $< $@ ini_default
 
 $(OBJ_DIR)/ini_default.o: $(OBJ_DIR)/ini_default.c
+	$(EE_CC) -c $< -o $@
+
+$(OBJ_DIR)/card_igr_elf.c: igr/SD2CLOUD-IGR.ELF
+	@mkdir -p $(OBJ_DIR)
+	bin2c $< $@ card_igr_elf
+
+$(OBJ_DIR)/card_open_elf.c: igr/SD2CLOUD-OPEN.ELF
+	@mkdir -p $(OBJ_DIR)
+	bin2c $< $@ card_open_elf
+
+$(OBJ_DIR)/card_icon_sys.c: package/sas/icon.sys
+	@mkdir -p $(OBJ_DIR)
+	bin2c $< $@ card_icon_sys
+
+$(OBJ_DIR)/card_icon_icn.c: package/sas/sd2cloud.icn
+	@mkdir -p $(OBJ_DIR)
+	bin2c $< $@ card_icon_icn
+
+$(OBJ_DIR)/card_title_cfg.c: package/sas/title.cfg
+	@mkdir -p $(OBJ_DIR)
+	bin2c $< $@ card_title_cfg
+
+$(OBJ_DIR)/card_%.o: $(OBJ_DIR)/card_%.c
 	$(EE_CC) -c $< -o $@
 
 $(OBJ_DIR)/asset_%.o: $(OBJ_DIR)/asset_%.c

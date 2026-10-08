@@ -1,12 +1,12 @@
 /*
- * SD2Cloud -- installs the IGR helper (SD2CLOUD-IGR.ELF) on the memory card in use, and removes it.
+ * SD2Cloud -- what it keeps on the memory card: the APP_SD2CLOUD save folder, with the IGR helper and the shortcut.
  *
  * OPL's IGR only runs the "Exit to" ELF (exit_path) from the memory card or USB: it only loads rom0:SIO2MAN and
- * rom0:MCMAN. With "MMCE IGR slot" on, OPL switches to the BootCard first, so the helper has to be in BOOT/ of the boot
- * card. The helper only loads the mmceman and runs SD2Cloud from the microSD with -igr.
+ * rom0:MCMAN. With "MMCE IGR slot" on, OPL switches to the BootCard first, so the helper has to be on the boot card.
+ * The helper only loads the mmceman and runs SD2Cloud from the microSD with -igr.
  *
- * The helper finds SD2Cloud by the path SD2Cloud keeps in its own settings (sd2cloud.ini, "app_path"), so nothing
- * but the helper itself goes to the memory card.
+ * The helper finds SD2Cloud by the path SD2Cloud keeps in its own settings (sd2cloud.ini, "app_path"), so the
+ * program itself never goes to the memory card.
  *
  * It writes through mcman (the same path games use to save), only after the user confirms, and reads it back.
  */
@@ -19,8 +19,6 @@
 #include <ps2_memcard_driver.h>
 #include "common.h"
 
-#define TARGET_DIR "/BOOT"
-#define TARGET     HELPER_TARGET
 
 static int mc_wait(void)
 {
@@ -140,47 +138,124 @@ int mc_card_state(int port)
     return mc_wait();
 }
 
-/* is the helper on the memory card in use the same as the one in the app's folder? (after SD2Cloud is updated, the
- * one on the memory card stays old until someone reinstalls it: the settings show it) */
-int helper_status(void)
+/* ------------------------------------------------------------ what goes to the memory card
+
+   Turning the automatic sync on puts a save folder on the memory card in use, the Save Application System's way:
+   APP_SD2CLOUD, with its icon and its title.cfg, the IGR helper (what OPL's "IGR Path" points at) and the shortcut
+   the folder starts from the PS2 browser or from a launcher, which opens SD2Cloud from the microSD. All of it is
+   embedded in the program (see the Makefile), so what is on the card can always be told from what this version
+   would write, and written again.
+
+   Up to version 1.5 only the helper went to the card, as mc0:/BOOT/SD2CLOUD-IGR.ELF. One that is there stays there
+   (OPL was given that path) and is kept up to date in place: helperLegacy says that it is the one in use. */
+
+extern unsigned char card_igr_elf[], card_open_elf[], card_icon_sys[], card_icon_icn[], card_title_cfg[];
+extern unsigned int size_card_igr_elf, size_card_open_elf, size_card_icon_sys, size_card_icon_icn, size_card_title_cfg;
+
+#define CARD_DIR    "/APP_SD2CLOUD"
+#define CARD_HELPER CARD_DIR "/SD2CLOUD-IGR.ELF"
+#define LEGACY_DIR  "/BOOT"
+#define LEGACY      LEGACY_DIR "/SD2CLOUD-IGR.ELF"
+
+int helperLegacy;
+
+const char *helper_path(void) { return helperLegacy ? LEGACY : CARD_HELPER; }
+const char *helper_place(void) { return helperLegacy ? LEGACY : CARD_DIR; }
+
+typedef struct {
+    const char *name;
+    const unsigned char *data;
+    unsigned int len;
+} folder_file_t;
+#define FOLDER_FILES 5
+
+/* title.cfg as the package has it (tools/make_release.py): this version in place of @VERSION@, Windows line endings */
+static void folder_title(buffer_t *b)
+{
+    const char *p = (const char *)card_title_cfg, *end = p + size_card_title_cfg;
+    for (; p < end; p++) {
+        if (*p == '\r')
+            continue;
+        if (*p == '\n')
+            buf_append(b, "\r\n", 2);
+        else if (end - p >= 9 && !memcmp(p, "@VERSION@", 9)) {
+            buf_append(b, APP_VERSION, strlen(APP_VERSION));
+            p += 8;
+        } else
+            buf_append(b, p, 1);
+    }
+}
+
+/* the folder's files, in the order the package has them (title.cfg is made in title, which the caller frees) */
+static void folder_list(folder_file_t f[FOLDER_FILES], buffer_t *title)
+{
+    folder_title(title);
+    f[0] = (folder_file_t){"icon.sys", card_icon_sys, size_card_icon_sys};
+    f[1] = (folder_file_t){"sd2cloud.icn", card_icon_icn, size_card_icon_icn};
+    f[2] = (folder_file_t){"title.cfg", title->data, (unsigned int)title->len};
+    f[3] = (folder_file_t){"SD2CLOUD-OPEN.ELF", card_open_elf, size_card_open_elf};
+    f[4] = (folder_file_t){"SD2CLOUD-IGR.ELF", card_igr_elf, size_card_igr_elf};
+}
+
+/* a file or a folder of the memory card in use: its size (a folder's: how many entries it has), -1 = it isn't there */
+static int mc_size(const char *path)
+{
+    static sceMcTblGetDir e[1];
+    mcGetDir(0, 0, path, 0, 1, e);
+    return mc_wait() == 1 ? (int)e[0].FileSizeByte : -1;
+}
+
+/* is that file of the memory card in use these very bytes? 1 = yes, 0 = it is another, -1 = it isn't there */
+static int mc_same(const char *path, const unsigned char *d, int n)
 {
     static unsigned char block[16 * 1024] __attribute__((aligned(64)));
-    char source[260];
-    buffer_t elf = {0};
-    int fd, done = 0, n, r = HELPER_SAME;
-    if (appOnCard)   /* the helper OPL runs is the one next to the program: there, it is the right one */
-        return card_app_helper() ? HELPER_SAME : HELPER_NO_FILE;
-    snprintf(source, sizeof(source), "%sSD2CLOUD-IGR.ELF", appDir);
-    if (appElsewhere || file_read(source, &elf) != 0 || elf.len < 1024) {
-        buf_free(&elf);
-        return HELPER_NO_FILE;
-    }
-    if (memcard_ready(0) != 0) {
-        buf_free(&elf);
-        return HELPER_NOT_INSTALLED;
-    }
-    mcOpen(0, 0, TARGET, MC_RDONLY);
-    if ((fd = mc_wait()) < 0) {
-        buf_free(&elf);
-        return HELPER_NOT_INSTALLED;
-    }
+    int fd, done = 0, k, same = 1;
+    mcOpen(0, 0, path, MC_RDONLY);
+    if ((fd = mc_wait()) < 0)
+        return -1;
     for (;;) {
         mcRead(fd, block, sizeof(block));
-        if ((n = mc_wait()) <= 0)
+        if ((k = mc_wait()) <= 0)
             break;
-        if (done + n > (int)elf.len || memcmp(block, elf.data + done, n) != 0) {
-            r = HELPER_DIFFERENT;
+        if (done + k > n || memcmp(block, d + done, k) != 0) {
+            same = 0;
             break;
         }
-        done += n;
+        done += k;
     }
-    if (r == HELPER_SAME && done != (int)elf.len)
-        r = HELPER_DIFFERENT;
+    if (done != n)
+        same = 0;
     mcClose(fd);
     mc_wait();
-    buf_free(&elf);
-    log_msg("helper on the memory card: %s", r == HELPER_SAME ? "same as in APPS" : "DIFFERENT from the one in APPS");
-    return r;
+    return same;
+}
+
+/* What the memory card in use has of this version's folder. The helper is compared byte by byte: it is what runs with
+ * nobody watching. The shortcut and the icon only by their sizes: this is asked every time SD2Cloud opens, and reading
+ * from a memory card is slow. title.cfg isn't compared at all, or every new version would call the folder outdated
+ * for the number in it */
+int helper_status(void)
+{
+    int same;
+    helperLegacy = 0;
+    if (appOnCard)   /* the helper OPL runs is the one next to the program: there, it is the right one */
+        return card_app_helper() ? HELPER_SAME : HELPER_NO_FILE;
+    if (appElsewhere)
+        return HELPER_NO_FILE;
+    if (memcard_ready(0) != 0)
+        return HELPER_NOT_INSTALLED;
+    if ((same = mc_same(CARD_HELPER, card_igr_elf, (int)size_card_igr_elf)) >= 0) {
+        if (same && (mc_size(CARD_DIR "/SD2CLOUD-OPEN.ELF") != (int)size_card_open_elf
+                     || mc_size(CARD_DIR "/sd2cloud.icn") != (int)size_card_icon_icn
+                     || mc_size(CARD_DIR "/icon.sys") != (int)size_card_icon_sys || mc_size(CARD_DIR "/title.cfg") < 0))
+            same = 0;
+    } else if ((same = mc_same(LEGACY, card_igr_elf, (int)size_card_igr_elf)) >= 0)
+        helperLegacy = 1;
+    else
+        return HELPER_NOT_INSTALLED;
+    log_msg("helper on the memory card%s: %s", helperLegacy ? " (in BOOT, as versions up to 1.5 kept it)" : "",
+            same ? "this version's" : "DIFFERENT from this version's");
+    return same ? HELPER_SAME : HELPER_DIFFERENT;
 }
 
 /* the root folder of the card the PS2 sees in that slot (the one the sd2psx is emulating), as mcfs_root_signature
@@ -212,94 +287,144 @@ int mc_root_signature(int port, char hex[65])
 
 int helperNeedKb, helperFreeKb;
 
-/* the memory card's free space plus what the helper already there will give back when it's replaced, in KB; -1 =
- * unknown */
+/* a file in 1 KB clusters, and a few more for its folder and the entries in it */
+static int need_kb(size_t len) { return (int)((len + 1023) / 1024) + 4; }
+
+/* what installing takes: the helper alone where an earlier version put it, the whole folder otherwise */
+static int install_kb(void)
+{
+    folder_file_t f[FOLDER_FILES];
+    buffer_t title = {0};
+    int i, kb = 6;
+    if (helperLegacy)
+        return need_kb(size_card_igr_elf);
+    folder_list(f, &title);
+    for (i = 0; i < FOLDER_FILES; i++)
+        kb += (int)((f[i].len + 1023) / 1024);
+    buf_free(&title);
+    return kb;
+}
+
+/* the memory card's free space plus what is there now and gives its room back when it is replaced (the helper in
+ * BOOT, or everything the folder has), in KB; -1 = unknown */
 static int room_kb(void)
 {
-    static sceMcTblGetDir entry[1];
-    int type = 0, freeKb = 0, format = 0, n;
+    static sceMcTblGetDir list[32];
+    int type = 0, freeKb = 0, format = 0, n, i;
     mcGetInfo(0, 0, &type, &freeKb, &format);
     if (mc_wait() < -1)   /* 0 and -1 (a card was changed) both come with the information */
         return -1;
-    mcGetDir(0, 0, TARGET, 0, 1, entry);
+    mcGetDir(0, 0, helperLegacy ? LEGACY : CARD_DIR "/*", 0, 32, list);
     n = mc_wait();
-    if (n == 1)
-        freeKb += (entry[0].FileSizeByte + 1023) / 1024;
+    for (i = 0; i < n; i++)
+        if (list[i].AttrFile & MC_ATTR_FILE)
+            freeKb += (list[i].FileSizeByte + 1023) / 1024;
     return freeKb;
-}
-
-/* the helper in 1 KB clusters, and a few more for the BOOT folder and its entries */
-static int need_kb(size_t elfLen) { return (int)((elfLen + 1023) / 1024) + 4; }
-
-/* the helper's ELF, from the app's folder. 0 = read */
-static int read_helper(buffer_t *elf)
-{
-    char source[260];
-    snprintf(source, sizeof(source), "%sSD2CLOUD-IGR.ELF", appDir);
-    if (file_read(source, elf) != 0 || elf->len < 1024) {
-        buf_free(elf);
-        return -1;
-    }
-    return 0;
 }
 
 int helper_space(void)
 {
-    buffer_t elf = {0};
-    helperNeedKb = 0;
-    helperFreeKb = -1;
-    if (read_helper(&elf) != 0)
-        return -1;
-    helperNeedKb = need_kb(elf.len);
-    buf_free(&elf);
-    if (memcard_ready(0) == 0)
-        helperFreeKb = room_kb();
+    helperNeedKb = install_kb();
+    helperFreeKb = memcard_ready(0) == 0 ? room_kb() : -1;
     return 0;
+}
+
+/* everything the folder has, deleted: its own files from an earlier version, or the whole program the package of
+ * version 1.5 kept there */
+static void folder_clear(void)
+{
+    static sceMcTblGetDir list[32];
+    char path[100];
+    int n, i;
+    mcGetDir(0, 0, CARD_DIR "/*", 0, 32, list);
+    n = mc_wait();
+    for (i = 0; i < n; i++) {
+        const char *name = (const char *)list[i].EntryName;
+        if (!strcmp(name, ".") || !strcmp(name, ".."))
+            continue;
+        snprintf(path, sizeof(path), CARD_DIR "/%.32s", name);
+        mcDelete(0, 0, path);
+        mc_wait();
+    }
+}
+
+/* The folder's date is the one the Save Application System gives it by its name (tools/make_release.py, sas_date:
+ * 2098-12-31 13:46:24 for APP_SD2CLOUD): the menus that list a card's programs sort them by it */
+static void folder_date(void)
+{
+    static sceMcTblGetDir e;
+    memset(&e, 0, sizeof(e));
+    e._Create.Sec = 24;
+    e._Create.Min = 46;
+    e._Create.Hour = 13;
+    e._Create.Day = 31;
+    e._Create.Month = 12;
+    e._Create.Year = 2098;
+    e._Modify = e._Create;
+    mcSetFileInfo(0, 0, CARD_DIR, &e, sceMcFileInfoCreate | sceMcFileInfoModify);
+    log_msg("helper: the folder's date set (%d)", mc_wait());
 }
 
 int helper_install(void)
 {
-    buffer_t elf = {0};
-    int r = -1;
-    if (read_helper(&elf) != 0)
-        return -2;
-    if (memcard_ready(0) == 0) {
-        helperNeedKb = need_kb(elf.len);
-        helperFreeKb = room_kb();
-        log_msg("helper: %d KB needed, %d KB available", helperNeedKb, helperFreeKb);
-        if (helperFreeKb >= 0 && helperFreeKb < helperNeedKb) {
-            buf_free(&elf);
-            return -3;   /* not enough room: nothing was touched */
-        }
-        mcMkDir(0, 0, TARGET_DIR);
+    folder_file_t f[FOLDER_FILES];
+    buffer_t title = {0};
+    char path[100];
+    int i, r = 0;
+    if (appOnCard || memcard_ready(0) != 0)
+        return -1;
+    helperNeedKb = install_kb();
+    helperFreeKb = room_kb();
+    log_msg("helper: %d KB needed, %d KB available%s", helperNeedKb, helperFreeKb, helperLegacy ? " (in BOOT)" : "");
+    if (helperFreeKb >= 0 && helperFreeKb < helperNeedKb)
+        return -3;   /* not enough room: nothing was touched */
+    if (helperLegacy) {
+        mcMkDir(0, 0, LEGACY_DIR);
+        mc_wait();
+        r = mc_write_file(0, LEGACY, card_igr_elf, (int)size_card_igr_elf);
+    } else {
+        mcMkDir(0, 0, CARD_DIR);
         log_msg("helper: mkdir %d (fine if it exists)", mc_wait());
-        r = mc_write_file(0, TARGET, elf.data, (int)elf.len);
+        folder_clear();
+        folder_list(f, &title);
+        for (i = 0; i < FOLDER_FILES && r == 0; i++) {
+            snprintf(path, sizeof(path), CARD_DIR "/%s", f[i].name);
+            r = mc_write_file(0, path, f[i].data, (int)f[i].len);
+        }
+        buf_free(&title);
+        folder_date();
     }
-    log_msg("helper: %s (%u bytes)", r == 0 ? "installed and verified" : "FAILED", (unsigned)elf.len);
-    buf_free(&elf);
+    log_msg("helper: %s", r == 0 ? "installed and verified" : "FAILED");
     return r;
 }
 
+/* the folder and the helper an earlier version left in BOOT, whichever are there */
 int helper_uninstall(void)
 {
-    int r;
-    if (memcard_ready(0) != 0)
+    int r, ok = 1;
+    if (appOnCard || memcard_ready(0) != 0)
         return -1;
-    mcDelete(0, 0, TARGET);
+    if (mc_size(CARD_DIR) >= 0) {
+        folder_clear();
+        mcDelete(0, 0, CARD_DIR);
+        r = mc_wait();
+        log_msg("helper: folder removed (%d)", r);
+        ok &= r == 0 || r == -4;   /* -4: it wasn't there */
+    }
+    mcDelete(0, 0, LEGACY);
     r = mc_wait();
-    log_msg("helper: removed (%d)", r);
-    return (r == 0 || r == -4) ? 0 : -1;   /* -4: it wasn't there */
+    log_msg("helper: the one in BOOT removed (%d)", r);
+    ok &= r == 0 || r == -4;
+    return ok ? 0 : -1;
 }
 
 int helper_present(void)
 {
-    char source[260];
     if (appOnCard)
         return card_app_helper();
     /* the helper only starts SD2Cloud from the microSD: with this copy started from another device and none there,
      * installing it would do nothing */
-    snprintf(source, sizeof(source), "%sSD2CLOUD-IGR.ELF", appDir);
-    return !appElsewhere && file_exists(source);
+    return !appElsewhere;
 }
 
 /* ------------------------------------------------------------ the program on a memory card
