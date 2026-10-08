@@ -97,7 +97,7 @@ microSD and a USB drive for .psu files and memory card files (see FILES).
 - The Games tab starts with "All saves": the saved data of every game card on one screen, the newest first,
   as if it were all on a single card. Each item still belongs to its own card, whose name is at the top of
   the item's page, and what is done to an item is done to that card.
-- START opens the settings (see SETTINGS).
+- START opens the settings (see SETTINGS), and SELECT the tools (see TEMPLATES).
 - X on a saved data item opens its page, with Copy and Move (to another card on the microSD, chosen from the
   same tabs as the main screen; the destination's free space is shown, and a card without enough space cannot
   be selected; when the item's name tells its game, the Games tab also has "New card", in that game's folder
@@ -144,6 +144,22 @@ Changing the card the sd2psx is using, by importing into it or by replacing it, 
 to it: SD2Cloud asks, switches the sd2psx to another card and back.
 Names with accented letters may be shown abbreviated, or not open at all (a limit of the FAT driver of the
 PS2 SDK): prefer plain names for the folders you use here.
+
+TEMPLATES (SELECT)
+A template is a set of saved data items you pick, kept on the microSD to be put into cards. The device makes
+the card of a new game empty: a template gives it what every card of yours should have, as the network
+settings an online game asks for. SELECT, on the main screen, opens the tools; Templates is the first.
+- New template: its name is typed on a keyboard on the screen (X types, SQUARE erases, START finishes). Then
+  the cards are shown as on the main screen: X opens one, and inside it X marks and unmarks an item. The marks
+  stay from card to card, and their count is at the top. START ends the marking, and the items are copied to
+  the template.
+- X on a template opens it, shown as a card is. X on an item removes it from the template. TRIANGLE has the
+  rest: Apply to a card, Add saves (marked the same way; an item the template already has can be replaced by
+  the one marked), Rename and Delete template.
+- Apply to a card puts into the card the items it lacks. An item the card already has is never touched, and
+  a card without enough space is left as it is.
+A template is a folder of SD2Cloud/templates on the microSD with a .psu file for each item: a .psu put there
+with a PC is part of the template too.
 
 SETTINGS (START)
 - Sync all cards: uploads the cards that are not synced; if all of them are, SD2Cloud says so and lets you

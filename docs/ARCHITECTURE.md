@@ -40,6 +40,7 @@ a PC's compiler. `src/app` is the only place that knows the screens; it calls do
 | `history.c` | A card's backups on Drive, and restoring one |
 | `active.c` | The card the device is using right now: finding it, switching it, noticing it change |
 | `settings.c`, `account.c` | The settings; the Google account |
+| `tools.c`, `keyboard.c` | The tools (SELECT): the templates, made by marking saves on the cards and put into cards; the keyboard on the screen their names are typed on |
 | `leave.c` | Which program is opened when SD2Cloud closes |
 | `dialog.c`, `work.c`, `format.c` | The dialog box; the screen of something being done; how sizes and dates are said |
 
@@ -54,6 +55,7 @@ a PC's compiler. `src/app` is the only place that knows the screens; it calls do
 | `stream.c` | A card read and turned into a `.zip`, piece by piece, without ever holding it whole |
 | `google.c` | Google Drive: the sign-in with a code, folders, the resumable upload, downloads |
 | `restore.c` | A card written back from a backup, or installed from a file |
+| `templates.c` | The templates: sets of saves kept on the microSD as `.psu` files, and put into cards |
 | `config.c`, `state.c` | The settings (`sd2cloud.ini`); what is remembered between runs (`state.ini`, `token.dat`) |
 | `update.c` | Updating the program from its GitHub releases |
 | `files.c`, `json.c` | Whole files and `.ini` files; the little of JSON the answers need |
@@ -115,8 +117,8 @@ The code is shaped by what an sd2psx can and can't do. Breaking one of these cor
 ## What it writes, and where
 
 On the microSD: `SD2Cloud/sd2cloud.ini` (the settings, the user's file), `SD2Cloud/state.ini` (what was backed up),
-`SD2Cloud/token.dat` (the access to Google), the cards themselves under `MemoryCards/PS2/`, and whatever the user
-exports. On the memory card in use, only when the automatic sync is turned on: the `APP_SD2CLOUD` save folder (the
+`SD2Cloud/token.dat` (the access to Google), `SD2Cloud/templates/` (a folder for each template, a `.psu` for each
+of its saves), the cards themselves under `MemoryCards/PS2/`, and whatever the user exports. On the memory card in use, only when the automatic sync is turned on: the `APP_SD2CLOUD` save folder (the
 SAS package: the IGR helper and a shortcut), written by `platform/helper.c` through the PS2's own memory card driver.
 
 ## The debug build

@@ -81,7 +81,7 @@ int ui_qr(const char *text, float x, float y, int module);
 
 /* the controller's symbols */
 enum { BUTTON_CROSS, BUTTON_CIRCLE, BUTTON_TRIANGLE, BUTTON_SQUARE,
-       BUTTON_START };   /* START has no symbol: look_legend writes its name in a small box */
+       BUTTON_START, BUTTON_SELECT };   /* those two as the controller has them: a small arrow and a small bar */
 void ui_button(int button, float x, float y, float size);
 
 #ifdef DEBUG_BUILD

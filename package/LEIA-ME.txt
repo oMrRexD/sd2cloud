@@ -65,12 +65,12 @@ INSTALAÇÃO
    microSD, o atalho apenas avisa.
 3. Sem uma conta do Google conectada, o SD2Cloud pergunta se você deseja conectá-la agora. Escolhendo
    "Agora não", ele abre direto na tela principal ("Não perguntar mais", no TRIÂNGULO, faz o mesmo e a pergunta não volta:
-   ask_connect = no no sd2cloud.ini); a conta pode ser conectada depois, em Configurações
+   ask_connect = no no sd2cloud.ini); a conta pode ser conectada depois, em Ajustes
    (START). Para conectar, acesse google.com/device no celular ou no computador (ou use o QR code) e digite
    o código exibido na TV. O SD2Cloud tem acesso apenas aos arquivos que ele mesmo cria no seu Drive.
 4. Logo depois de conectar a conta, o SD2Cloud pergunta se você deseja ativar a sincronização automática
    (veja SINCRONIZAÇÃO AUTOMÁTICA). Aceitando, ele instala o pacote SAS e mostra o caminho a informar
-   no OPL; recusando, ela pode ser ativada depois em Configurações (START).
+   no OPL; recusando, ela pode ser ativada depois em Ajustes (START).
 5. Em seguida, o SD2Cloud oferece a sincronização de todos os cartões. A partir daí, somente os cartões
    alterados são enviados. Cada sincronização cria um backup do cartão no Drive.
    Mesmo sem sincronizar, o SD2Cloud registra o estado de cada cartão na primeira vez que o vê: a
@@ -103,7 +103,7 @@ arquivos .psu e de arquivos de cartão de memória (veja ARQUIVOS).
 - A aba Jogos começa com "Todos os saves": os dados salvos de todos os cartões de jogo em uma só tela, do
   mais novo ao mais antigo, como se estivessem em um único cartão. Cada item continua no cartão dele, cujo
   nome aparece no topo da página do item, e o que se faz com um item é feito nesse cartão.
-- START abre as configurações (veja CONFIGURAÇÕES).
+- START abre os ajustes (veja AJUSTES), e SELECT as ferramentas (veja TEMPLATES).
 - X em um item de dados salvos abre a página do item, com as opções Copiar e Mover (para outro cartão do
   microSD, escolhido nas mesmas abas da tela principal; o espaço livre do cartão de destino é exibido e um
   cartão sem espaço suficiente não pode ser escolhido; quando o nome do item indica o jogo, a aba Jogos traz
@@ -152,7 +152,24 @@ outra alteração nele: o SD2Cloud pergunta, troca o sd2psx para outro cartão e
 Nomes com letras acentuadas podem aparecer abreviados, ou não abrir (limitação do driver de FAT do SDK do
 PS2): prefira nomes simples para as pastas usadas aqui.
 
-CONFIGURAÇÕES (START)
+TEMPLATES (SELECT)
+Um template é um conjunto de dados salvos escolhidos por você, guardado no microSD para ser colocado em
+cartões. O aparelho cria vazio o cartão de um jogo novo: um template dá a ele o que todo cartão seu deve ter,
+como o network settings que um jogo online pede. SELECT, na tela principal, abre as ferramentas; Templates é
+a primeira.
+- Novo template: o nome é digitado em um teclado na tela (X digita, QUADRADO apaga, START conclui). Em
+  seguida os cartões aparecem como na tela principal: X abre um deles e, dentro dele, X marca e desmarca um
+  item. As marcas continuam de um cartão para outro, e a contagem fica no alto. START encerra a marcação, e os
+  itens são copiados para o template.
+- X em um template o abre, exibido como um cartão. X em um item o remove do template. TRIÂNGULO traz o
+  restante: Aplicar a um cartão, Adicionar saves (marcados do mesmo jeito; um item que o template já tem pode
+  ser substituído pelo marcado), Renomear e Eliminar template.
+- Aplicar a um cartão coloca no cartão os itens que faltam nele. Um item que o cartão já tem nunca é
+  alterado, e um cartão sem espaço suficiente fica como está.
+Um template é uma pasta de SD2Cloud/templates no microSD com um arquivo .psu para cada item: um .psu colocado
+ali pelo PC também faz parte do template.
+
+AJUSTES (START)
 - Sincronizar todos os cartões: envia os cartões não sincronizados; se todos estiverem sincronizados, o
   SD2Cloud avisa e permite sincronizar todos novamente.
 - Sincronização automática: Ativada ou Desativada. Desativada, sair de um jogo pelo IGR vai direto para o
@@ -191,7 +208,7 @@ no sd2cloud.ini ("app_path"), e o pacote o inicia a partir dali. Depois de movê
 Para desinstalar o pacote, selecione "Pacote SAS" novamente e escolha "Desinstalar"; depois,
 altere "Definir saída do IGR" no OPL.
 Para pausar a sincronização sem desinstalar nada, deixe "Sincronização automática" como Desativada em
-Configurações (START): o IGR passa a ir direto para o programa aberto depois dele, sem iniciar o SD2Cloud. O
+Ajustes (START): o IGR passa a ir direto para o programa aberto depois dele, sem iniciar o SD2Cloud. O
 mesmo acontece enquanto não há conta do Google conectada.
 Sem instalar nada (pendrive USB): o IGR do OPL também abre programas de um pendrive USB. Se a pasta
 APPS/SD2Cloud estiver em um, formatado em FAT32, pule o passo 1 e informe em "Definir saída do IGR":
@@ -199,7 +216,7 @@ mass:/APPS/SD2Cloud/SD2CLOUD-IGR.ELF
 Nada é gravado no cartão de memória. Para isso, o OPL carrega os drivers USB USBD.IRX e USBHDFSD.IRX de
 mc?:/SYS-CONF, onde o FMCB os instala. O pacote SAS no cartão de memória só é necessário quando o SD2Cloud
 está apenas no microSD do sd2psx ou em um dispositivo que o IGR do OPL não lê (MX4SIO, HD).
-O programa aberto depois do IGR é escolhido em Configurações (START), entre os programas da pasta APPS do
+O programa aberto depois do IGR é escolhido em Ajustes (START), entre os programas da pasta APPS do
 microSD. Se o seu OPL fica em outro dispositivo, informe o caminho no sd2cloud.ini, na seção [igr],
 começando pelo dispositivo: mc?:/ (cartão de memória), mass:/ (USB), mx4sio:/, ata:/ (HD interno exFAT) ou
 hdd0:PARTIÇÃO:pfs:/ (HD interno APA), por exemplo hdd0:__common:pfs:/APPS/OPL/OPNPS2LD.ELF. O SD2Cloud
@@ -219,15 +236,15 @@ LOCAL DOS ARQUIVOS
                    o novo backup é verificado.
 
 ATUALIZAÇÃO
-O SD2Cloud não procura atualizações sozinho. Nas configurações (START), a opção "Verificar atualizações"
+O SD2Cloud não procura atualizações sozinho. Nos ajustes (START), a opção "Verificar atualizações"
 consulta o GitHub para saber se há uma versão mais recente e, se houver, oferece a atualização. O aplicativo
 baixa os novos arquivos, verifica-os com o SHA-256 publicado no GitHub, substitui os anteriores e inicia a
 nova versão. As configurações são mantidas.
-Em seguida, atualize também o pacote SAS: nas configurações, ele aparece como "Desatualizado" quando o que
+Em seguida, atualize também o pacote SAS: nos ajustes, ele aparece como "Desatualizado" quando o que
 está gravado no cartão de memória é diferente.
 Para atualizar manualmente, copie apenas a pasta APPS/SD2Cloud do novo arquivo .zip (ou não substitua o
 sd2cloud.ini quando o Windows perguntar).
-O canal beta: a opção "Canal de atualização", nas configurações, escolhe de onde vêm as atualizações. Estável
+O canal beta: a opção "Canal de atualização", nos ajustes, escolhe de onde vêm as atualizações. Estável
 são as versões lançadas. Beta é uma compilação feita automaticamente a cada alteração do projeto, antes dos
 testes que uma versão recebe: traz as novidades mais cedo e pode ter erros. Ao escolher um canal, a
 atualização dele é procurada na hora; ao voltar de Beta para Estável, a versão estável é oferecida no lugar

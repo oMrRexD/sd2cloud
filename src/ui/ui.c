@@ -540,7 +540,8 @@ void ui_light(float cx, float cy, float rx, float ry, u32 color, int a)
 
 void ui_button(int button, float x, float y, float size)
 {
-    ui_image_part(IMG_BUTTONS, x, y, size, size, button * 32, 0, button * 32 + 32, 32, 0xFFFFFF, 0x80);
+    int u = button % 4 * 32, v = button / 4 * 32;   /* (four to a row) */
+    ui_image_part(IMG_BUTTONS, x, y, size, size, u, v, u + 32, v + 32, 0xFFFFFF, 0x80);
 }
 
 /* ------------------------------------------------------------ QR code */

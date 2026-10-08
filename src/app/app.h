@@ -219,6 +219,9 @@ extern char fileGameFolder[48];
 int install_card(void);
 void card_file_screen(const char *file, int install);
 
+/* ------------------------------------------------------------ keyboard.c */
+int keyboard(const char *title, char *text, size_t size);
+
 /* ------------------------------------------------------------ leave.c */
 int find_opl(char *out, size_t size);
 void resolve_target(const char *target, char *out, size_t size);
@@ -269,8 +272,30 @@ struct brw_s {
     int n, cursor, top;    /* top = the first row on screen */
     long long freeBytes;
     u64 since;             /* when the cursor last moved (the selected icon starts turning from the front) */
+    /* for saves that aren't a card's own (a template's): what is said under the name instead of the free space
+     * ("" = that), in the middle when there are none (a text; 0 = the card is empty) and at the bottom (nLegend 0 =
+     * the usual buttons) */
+    char note[64];
+    int emptyText;
+    legend_t legend[3];
+    int nLegend;
 };
 extern struct brw_s brw;
+#define MARKS_MAX TPL_SAVES
+struct marks_s {
+    int on;                /* the screens of saves are marking */
+    int n, done;           /* how many are marked; START ended it */
+    struct {
+        card_t *card;
+        char folder[33];
+    } save[MARKS_MAX];
+};
+extern struct marks_s marks;
+int marked(const card_t *c, const char *folder);
+extern int (*brwIcon)(const save_view_t *v, buffer_t *iconsys, buffer_t *ico);
+void browser_scene(void);
+void browser_fill(card_t *c, const mcfs_save_t *list, int n, int cursor);
+u32 browser_wait(u32 buttons);
 extern card_t fileCard;
 extern card_file_t cardFile;
 extern card_t allGames;
@@ -304,6 +329,9 @@ void tabs_find(tabs_t *g, int card);
 int tabs_folder_nav(tabs_t *g, u32 b);
 int tabs_nav(tabs_t *g, u32 b);
 void tabs_draw(const tabs_t *g, int dots);
+
+/* ------------------------------------------------------------ tools.c */
+void tools_screen(void);
 
 /* ------------------------------------------------------------ work.c */
 void checking_progress(int i, int n, const card_t *c);

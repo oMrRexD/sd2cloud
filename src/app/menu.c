@@ -68,23 +68,24 @@ static void scene_menu(float t)
     ui_alpha(look_fade(t));
     tabs_draw(&menu.g, 1);
     if (menu.g.tab == TAB_FILES) {   /* the devices: what the group is for, where a card's picture would be */
-        legend_t l[3] = {{BUTTON_CIRCLE, T(T_MENU_EXIT)}, {BUTTON_CROSS, T(T_OPEN)}, {BUTTON_START, T(T_SETTINGS)}};
-        look_legend(l, 3, 1);
+        legend_t l[4] = {{BUTTON_CIRCLE, T(T_MENU_EXIT)}, {BUTTON_CROSS, T(T_OPEN)}, {BUTTON_SELECT, T(T_TOOLS)},
+                         {BUTTON_START, T(T_SETTINGS)}};
+        look_legend(l, 4, 1);
         ui_text_center(FONT_TEXT, CARD_CX, 82, 0x7E8AA0, T(deviceText[menu.g.cursor]));
         ui_paragraph(FONT_SMALL, CARD_X - 16, CARD_Y + 70, LOOK_CARD_W + 32, COLOR_DIM, T(T_FILES_HINT));
         return;
     }
     {
-        /* inside a folder of the Games group circle goes back to the folders ("Back" and the other three don't fit
-         * the line: the settings stay on START, unsaid) */
+        /* inside a folder of the Games group circle goes back to the folders ("Back" and the other four don't fit
+         * the line: the tools and the settings stay on SELECT and START, unsaid) */
         int inside = menu.g.tab == TAB_GAMES && menu.g.open >= 0;
-        legend_t l[4] = {{BUTTON_CIRCLE, T(inside ? T_BACK : T_MENU_EXIT)}, {BUTTON_CROSS, T(T_OPEN)},
-                         {BUTTON_TRIANGLE, T(T_OPTIONS)}, {BUTTON_START, T(T_SETTINGS)}};
+        legend_t l[5] = {{BUTTON_CIRCLE, T(inside ? T_BACK : T_MENU_EXIT)}, {BUTTON_CROSS, T(T_OPEN)},
+                         {BUTTON_TRIANGLE, T(T_OPTIONS)}, {BUTTON_SELECT, T(T_TOOLS)}, {BUTTON_START, T(T_SETTINGS)}};
         if (menu.g.n && menu.g.idx[menu.g.cursor] < 0) {   /* "All saves": not a card, there are no options of one */
-            l[2] = l[3];
-            look_legend(l, 3, 1);
+            l[2] = l[3], l[3] = l[4];
+            look_legend(l, 4, 1);
         } else
-            look_legend(l, inside ? 3 : 4, !inside);
+            look_legend(l, inside ? 3 : 5, 0);
     }
     if (menu.g.n && menu.g.idx[menu.g.cursor] < 0) {   /* "All saves": the game cards, and how many they are */
         snprintf(s, sizeof(s), T(T_GAME_CARDS_N), menu.g.nGames);
@@ -244,7 +245,7 @@ void manual(void)
     }
     ui_unlock();
     for (;;) {
-        u32 b, keys = PAD_UP | PAD_DOWN | TAB_KEYS | PAD_CROSS | PAD_CIRCLE | PAD_TRIANGLE | PAD_START;
+        u32 b, keys = PAD_UP | PAD_DOWN | TAB_KEYS | PAD_CROSS | PAD_CIRCLE | PAD_TRIANGLE | PAD_START | PAD_SELECT;
         ui_scene(scene_menu);
 #ifdef DEBUG_BUILD
         if (debug_take('G')) {
@@ -277,6 +278,9 @@ void manual(void)
         } else if (b & PAD_START) {
             sound_play(SND_CONFIRM);
             settings_screen();
+        } else if (b & PAD_SELECT) {
+            sound_play(SND_CONFIRM);
+            tools_screen();
         } else if (b & PAD_CIRCLE) {
             sound_play(SND_BACK);
             exit_menu();

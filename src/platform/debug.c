@@ -3,8 +3,8 @@
 #include "platform.h"
 
 #ifdef DEBUG_BUILD
-/* Debug build: a script.txt in the data folder ("X O T Q R S U D < >", T = triangle, Q = square, R = R1, S = START,
- * U/D = up/down,
+/* Debug build: a script.txt in the data folder ("X O T Q R S L U D < >", T = triangle, Q = square, R = R1, S = START,
+ * L = SELECT, U/D = up/down,
  * < > = left/right)
  * presses the buttons instead of someone holding the controller; "H" hands over to the real controller. "K" presses circle in the middle of an upload or
  * download (to test cancelling). "C" captures the screen that is waiting for a button to host:screen.tga
@@ -85,7 +85,8 @@ u32 script_next_button(u32 mask)
     while (script[scriptPos]) {
         char ch = script[scriptPos++];
         u32 b = ch == 'X' ? PAD_CROSS : ch == 'O' ? PAD_CIRCLE : ch == 'T' ? PAD_TRIANGLE : ch == 'Q' ? PAD_SQUARE : ch == 'R' ? PAD_R1
-              : ch == 'S' ? PAD_START : ch == 'U' ? PAD_UP : ch == 'D' ? PAD_DOWN : ch == '<' ? PAD_LEFT : ch == '>' ? PAD_RIGHT : 0;
+              : ch == 'S' ? PAD_START : ch == 'L' ? PAD_SELECT : ch == 'U' ? PAD_UP : ch == 'D' ? PAD_DOWN : ch == '<' ? PAD_LEFT
+              : ch == '>' ? PAD_RIGHT : 0;
         if (ch == 'C')
             debug_capture_and_stop();
         if (ch == 'H') {   /* hand over: from here on the real controller (to watch it on PCSX2) */

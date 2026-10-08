@@ -99,10 +99,11 @@ def glow():
 
 
 def buttons():
-    """the controller's symbols, 32x32 each: cross, circle, triangle, square (the colors of the PS2 controller, in
-    thin strokes like the console's menus)"""
+    """the controller's symbols, 32x32 each. On the first row cross, circle, triangle, square (the colors of the PS2
+    controller, in thin strokes like the console's menus); on the second START and SELECT, drawn as the DualShock 2
+    has them: a small button that points to the right and a small bar"""
     S, K = 32, 8   # drawn 8x bigger and reduced: smooth edges
-    big = Image.new("RGBA", (4 * S * K, S * K), (0, 0, 0, 0))
+    big = Image.new("RGBA", (4 * S * K, 2 * S * K), (0, 0, 0, 0))
     d = ImageDraw.Draw(big)
     w = int(2.6 * K)
     cols = [(140, 150, 245, 255), (238, 86, 86, 255), (70, 205, 140, 255), (236, 130, 210, 255)]
@@ -121,7 +122,13 @@ def buttons():
     # square
     x0 = 3 * S * K
     d.rectangle([x0 + m, m, x0 + S * K - m, S * K - m], outline=cols[3], width=w)
-    small = big.resize((4 * S, S), Image.LANCZOS)
+    # START and SELECT: filled, in the grey of the legends' text (on the controller they are dark, as it is)
+    grey, y0 = (204, 210, 220, 255), S * K
+    pts = [(9.5 * K, y0 + 8.5 * K), (9.5 * K, y0 + 23.5 * K), (23.5 * K, y0 + 16 * K)]
+    d.polygon(pts, fill=grey)
+    d.line(pts + [pts[0], pts[1]], fill=grey, width=3 * K, joint="curve")   # (its corners are round)
+    d.rounded_rectangle([S * K + 5 * K, y0 + 10 * K, S * K + 27 * K, y0 + 22 * K], radius=4 * K, fill=grey)
+    small = big.resize((4 * S, 2 * S), Image.LANCZOS)
     # a faint glow of each color under the strokes
     halo = small.filter(ImageFilter.GaussianBlur(2.2))
     ha = np.asarray(halo, np.float32)

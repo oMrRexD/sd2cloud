@@ -52,18 +52,23 @@ LONG_CARD = "SLUS-21065-1"          # a long card name, for the texts that show 
 LONG_DATE = "02/10/2026 21:10"
 LONG_SAVE = "Shin Megami Tensei: Digital Devil Saga 2"   # a long icon.sys title, for the questions about a save
 LONG_FILE = "BASLUS-21065SAVEDATA0001.psu"   # a long name of an exported save
+LONG_TEMPLATE = "My Network Settings 2026"   # a template's name, as long as it can be
 
 
 def fill(s, id_):
     """%d, %lld and %s with the worst case"""
     if "%s" in s and id_ in ("T_CONFIRM_COPY", "T_CONFIRM_MOVE", "T_DELETE_ASK", "T_CONFIRM_CLOUD", "T_CONFIRM_IMPORT",
-                             "T_CONFIRM_EXPORT"):
+                             "T_CONFIRM_EXPORT", "T_TPL_REMOVE_ASK"):
         s = s.replace("%s", LONG_SAVE, 1).replace("%s", LONG_CARD)
+    if "%s" in s and id_ in ("T_TPL_CREATE_ASK", "T_TPL_CREATED", "T_TPL_DELETE_ASK", "T_TPL_ADD_ASK", "T_TPL_APPLY_ASK"):
+        s = s.replace("%s", LONG_TEMPLATE, 1).replace("%s", LONG_CARD)
+    if id_ == "T_TPL_SUMMARY":
+        s = s.replace("%d", "32", 1)   # saves, then KB
     if "%s" in s:
         if id_ in ("T_HIST_TITLE", "T_RESTORE_TITLE", "T_RESTORE_IN_USE", "T_RESTORING", "T_CARD_IN_USE", "T_DONE_COPY",
                    "T_DONE_MOVE", "T_DELETE_TEXT", "T_ERR_EXISTS", "T_ERR_FULL", "T_ERR_MC_CHECK", "T_DONE_IMPORT",
                    "T_SWITCH_ASK", "T_INSERT_DONE", "T_INSERT_FAILED", "T_SWITCH_BACK_FAILED", "T_INSTALL_REPLACE_ASK",
-                   "T_INSTALLING"):
+                   "T_INSTALLING", "T_TPL_NOTHING", "T_TPL_NO_ROOM", "T_TPL_APPLIED", "T_TPL_APPLIED_FULL"):
             s = s.replace("%s", LONG_CARD)
         elif id_ in ("T_CARD_LAST", "T_RESTORE_FROM"):
             s = s.replace("%s", LONG_DATE)
@@ -71,7 +76,7 @@ def fill(s, id_):
             s = s.replace("%s", LONG_FILE)
         else:
             s = s.replace("%s", "v10.10" if "SD2Cloud" in s else "999 MB")
-    if id_ in ("T_HELPER_SPACE", "T_HELPER_SPACE_NEED", "T_HELPER_FULL", "T_FREE_KB", "T_SAVE_KB"):
+    if id_ in ("T_HELPER_SPACE", "T_HELPER_SPACE_NEED", "T_HELPER_FULL", "T_FREE_KB", "T_SAVE_KB", "T_TPL_SUMMARY", "T_TPL_NO_ROOM"):
         s = s.replace("%d", "8192")   # KB of a memory card
     return s.replace("%lld", "99999999").replace("%d", "99")
 
@@ -164,6 +169,16 @@ PLACE = {
     "T_INSTALL_WHICH_GAME": ("text", 320, 1), "T_INSTALLING": ("text", DIALOG, 1), "T_INSTALL_OK": ("text", DIALOG, 1),
     "T_INSTALL_FAILED": ("text", DIALOG, 1), "T_INSTALL_CANCEL_TITLE": ("text", DIALOG, 1),
     "T_INSTALL_CANCEL_TEXT": ("text", DIALOG, 1), "T_KEEP_ALL": ("text", 200, 1),
+    # the tools and the templates: the boxes with a list (the tools, a template's options), the list of templates
+    # and the title over the big card, the keyboard's title, the screen where saves are marked, a template open on
+    # the screen of saves (what is under its name, and in the middle when it has none), a save's page there, and
+    # the screen of a save on its way
+    "T_TOOLS": ("text", 320, 1), "T_TEMPLATES": ("text", 200, 1), "T_TPL_APPLY_CARD": ("text", 320, 1),
+    "T_TPL_ADD_SAVES": ("text", 320, 1), "T_TPL_RENAME": ("text", 320, 1), "T_TPL_DELETE": ("text", 320, 1),
+    "T_TPL_NEW": ("text", 172, 1), "T_TPL_NAME": ("text", 400, 1), "T_TPL_MARK_TITLE": ("text", 200, 1),
+    "T_MARKED_N": ("text", 200, 1), "T_TPL_SUMMARY": ("text", 244, 1), "T_TPL_EMPTY": ("browser", 540, 1),
+    "T_TPL_REMOVE": ("browser", 304, 1), "T_TPL_APPLY_TO": ("text", 200, 1), "T_TPL_COPYING": ("text", 296, 1),
+    "T_TPL_APPLYING": ("text", 296, 1), "T_TPL_RENAMING": ("text", DIALOG, 1),
 }
 PARAGRAPH = ("text", DIALOG, 3)     # error messages and the rest: up to 3 lines in a box
 # what only an sd2psx is ever told (being moved to another card, its boot cards, one more channel for a folder): not
@@ -174,26 +189,32 @@ ONLY_SD2PSX = {"T_INSERT", "T_INSERT_NEEDS_BOOT", "T_INSERT_BOOT_ASK", "T_SWITCH
 # the button legends at the bottom: (texts, the last one apart at the right edge). They go from the right edge
 # (x = 596) toward the left and must not pass x = 40
 LEGENDS = [
-    (("T_MENU_EXIT", "T_OPEN", "T_OPTIONS", "T_SETTINGS"), True, True), (("T_BACK", "T_OPEN", "T_SYNC"), False, False),
-    (("T_BACK", "T_DELETE"), False, False), (("T_BACK", "T_SELECT"), False, False), (("T_BACK", "T_RESTORE"), False, False),
-    (("T_CANCEL_NO", "T_CANCEL_YES"), False, False), (("T_LATER", "T_YES"), False, False),
-    (("T_BACK", "T_HELPER_INSTALL"), False, False), (("T_CANCEL",), False, False), (("T_BACK", "T_SYNC"), False, False),
-    (("T_BACK", "T_LOGOUT_YES"), False, False), (("T_BACK", "T_HELPER_UNINSTALL"), False, False), (("T_LATER", "T_AUTO_ON"), False, False), (("T_FINISH",), False, False), (("T_LATER", "T_CONNECT"), False, False), (("T_LATER", "T_NEVER_ASK", "T_CONNECT"), False, False),
-    (("T_MENU_EXIT", "T_OPEN", "T_SETTINGS"), True, True), (("T_BACK", "T_OPEN", "T_INSTALL_SAVE"), False, False), (("T_BACK", "T_OPEN", "T_EXPORT"), False, False),
-    (("T_BACK", "T_EXPORT"), False, False), (("T_BACK", "T_REPLACE"), False, False), (("T_BACK", "T_IMPORT_YES"), False, False),
-    (("T_BACK", "T_CONTINUE"), False, False), (("T_BACK", "T_INSERT_YES"), False, False),
-    (("T_BACK", "T_OPEN", "T_OPTIONS"), False, False), (("T_BACK", "T_OPEN", "T_INSTALL"), False, False),
-    (("T_BACK", "T_REPLACE", "T_KEEP_BOTH"), False, False), (("T_BACK", "T_OPEN"), False, False), (("T_BACK", "T_INSTALL_YES"), False, False),
-    (("T_BACK", "T_RUN"), False, False), (("T_EXIT_BROWSER",), False, False),
+    (("T_MENU_EXIT", "T_OPEN", "T_OPTIONS", "T_TOOLS", "T_SETTINGS"), False), (("T_BACK", "T_OPEN", "T_SYNC"), False),
+    (("T_BACK", "T_DELETE"), False), (("T_BACK", "T_SELECT"), False), (("T_BACK", "T_RESTORE"), False),
+    (("T_CANCEL_NO", "T_CANCEL_YES"), False), (("T_LATER", "T_YES"), False),
+    (("T_BACK", "T_HELPER_INSTALL"), False), (("T_CANCEL",), False), (("T_BACK", "T_SYNC"), False),
+    (("T_BACK", "T_LOGOUT_YES"), False), (("T_BACK", "T_HELPER_UNINSTALL"), False), (("T_LATER", "T_AUTO_ON"), False),
+    (("T_FINISH",), False), (("T_LATER", "T_CONNECT"), False), (("T_LATER", "T_NEVER_ASK", "T_CONNECT"), False),
+    (("T_MENU_EXIT", "T_OPEN", "T_TOOLS", "T_SETTINGS"), True), (("T_BACK", "T_OPEN", "T_INSTALL_SAVE"), False),
+    (("T_BACK", "T_OPEN", "T_EXPORT"), False),
+    (("T_BACK", "T_EXPORT"), False), (("T_BACK", "T_REPLACE"), False), (("T_BACK", "T_IMPORT_YES"), False),
+    (("T_BACK", "T_CONTINUE"), False), (("T_BACK", "T_INSERT_YES"), False),
+    (("T_BACK", "T_OPEN", "T_OPTIONS"), False), (("T_BACK", "T_OPEN", "T_INSTALL"), False),
+    (("T_BACK", "T_REPLACE", "T_KEEP_BOTH"), False), (("T_BACK", "T_OPEN"), False), (("T_BACK", "T_INSTALL_YES"), False),
+    (("T_BACK", "T_RUN"), False), (("T_EXIT_BROWSER",), False),
+    # the keyboard, the screens where saves are marked, and the templates' questions
+    (("T_BACK", "T_KB_TYPE", "T_KB_ERASE", "T_FINISH"), False), (("T_BACK", "T_MARK", "T_FINISH"), False),
+    (("T_BACK", "T_OPEN", "T_FINISH"), False), (("T_BACK", "T_MARK_DROP_YES"), False), (("T_BACK", "T_TPL_CREATE"), False),
+    (("T_BACK", "T_TPL_REMOVE_YES"), False), (("T_BACK", "T_TPL_APPLY"), False), (("T_BACK", "T_TPL_ADD"), False),
+    (("T_BACK", "T_REPLACE", "T_TPL_KEEP"), False),
 ]
 
 
-def legend_width(texts, apart, start=False):
-    """start = the last button is START: its name in a small box (look.c start_button) instead of a 20 px symbol"""
-    w = sum(measure("text", t) + 26 for t in texts) + 26 * (len(texts) - 1)
-    if start:
-        w += measure("small", "START") + 10 - 20
-    return w + (70 - 26 if apart and len(texts) > 1 else 0)
+def legend_width(texts, apart):
+    """each button is a 20 px symbol, 6 px and its text; five of them stand a little closer together (look_legend)"""
+    gap = 22 if len(texts) > 4 else 26
+    w = sum(measure("text", t) + 26 for t in texts) + gap * (len(texts) - 1)
+    return w + (70 - gap if apart and len(texts) > 1 else 0)
 
 
 def main():
@@ -214,9 +235,9 @@ def main():
             if n > max_lines:
                 bad += 1
                 print(f"  DOESN'T FIT  {id_} [{lang}] {w} px / {width} px ({n} lines, max {max_lines}): {s}")
-    for ids, apart, start in LEGENDS:
+    for ids, apart in LEGENDS:
         for k, lang in enumerate(("en", "pt")):
-            w = legend_width([texts[i][k] for i in ids], apart, start)
+            w = legend_width([texts[i][k] for i in ids], apart)
             if w > 596 - 40:
                 bad += 1
                 print(f"  LEGEND TOO WIDE [{lang}] {w} px: {' / '.join(texts[i][k] for i in ids)}")

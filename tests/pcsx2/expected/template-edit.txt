@@ -1,0 +1,48 @@
+# log
+SD2Cloud <version> -- program in host:APPS/SD2Cloud/ (host:SD2CLOUD-DEBUG.ELF), data in host:SD2Cloud/, manual
+settings: [app] app_path = host:SD2CLOUD-DEBUG.ELF (0)
+3 card(s) on the microSD
+Card1/Card1-1: 2 folders, fingerprint 64fbc81ffd3ff7a8, new
+Card2/Card2-1: 0 folders, fingerprint e3b0c44298fc1c14, new
+SLUS-21065/SLUS-21065-1: 2 folders, fingerprint 64fbc81ffd3ff7a8, new
+3 card(s) seen for the first time: fingerprint kept as the reference (0)
+[script] L
+[script] X
+templates: 1
+[script] D
+[script] X
+[script] T
+[script] D
+[script] D
+[script] X
+[script] Q
+[script] D
+[script] D
+[script] >
+[script] >
+[script] X
+[script] S
+templates: Net renamed to NeW: ok
+[script] T
+[script] D
+[script] X
+[script] X
+Card1/Card1-1: 2 saves, 8270848 bytes free
+[script] X
+[script] S
+[script] X
+templates: BASLUS-21065ALPHA of host:MemoryCards/PS2/Card1/Card1-1.mcd into NeW: 0
+[script] X
+[script] X
+[script] X
+[script] X
+templates: BASLUS-21065GAMMA out of NeW
+(end: capture)
+
+# files
+e67be4206c58f05d290d04e24ef9bd240e0a329b479dd8d202f12d40f464d347  MemoryCards/PS2/Card1/Card1-1.mcd
+9b26f87a6ae6b13ddf74cec52f77df98dccf3447dd4041c66394f113efddc738  MemoryCards/PS2/Card2/Card2-1.mcd
+e67be4206c58f05d290d04e24ef9bd240e0a329b479dd8d202f12d40f464d347  MemoryCards/PS2/SLUS-21065/SLUS-21065-1.mcd
+17df2e2a16cbab4cb8357fe9a735f1765b89ed8fcaf21c00a1634ed98fb36c3e  SD2Cloud/sd2cloud.ini
+5d80b04c692d54f468ed80c2ad845b735c3fe68663e8b45858780407f59b0673  SD2Cloud/state-debug.ini
+b44df2d8481d5fbe8aefebf6c7a86f628b19dc53c6a48a16838f75d346acad26  SD2Cloud/templates/NeW/BASLUS-21065ALPHA.psu

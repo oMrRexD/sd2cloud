@@ -24,6 +24,7 @@
 #include "google.h"
 #include "update.h"
 #include "restore.h"
+#include "templates.h"
 #include "helper.h"
 
 #endif

@@ -20,6 +20,51 @@ card_t allGames;
 /* the card a save was last copied or moved to (save_transfer): on that screen it shows there right away */
 card_t *transferDest;
 char cardFileName[256];     /* and its name, which may tell which game the card is of */
+/* Saves being marked, on whichever cards, for what comes next (a template is made of them): while that is on, X on
+ * this screen marks and unmarks the save under the cursor instead of opening it, and START ends the marking */
+struct marks_s marks;
+/* where a save's icon comes from when the saves on screen aren't a card's (NULL = they are): a template's, each in
+ * its .psu file */
+int (*brwIcon)(const save_view_t *v, buffer_t *iconsys, buffer_t *ico);
+
+/* which mark that save has (-1 = none) */
+int marked(const card_t *c, const char *folder)
+{
+    int i;
+    for (i = 0; i < marks.n; i++)
+        if (marks.save[i].card == c && !strcmp(marks.save[i].folder, folder))
+            return i;
+    return -1;
+}
+
+/* X while marking. A template has one save of each folder: marking one unmarks the one of that folder on another
+ * card. 0 = no more can be marked */
+static int mark_toggle(const save_view_t *v)
+{
+    int k = marked(v->card, v->s.folder), i, ok = 1;
+    ui_lock();
+    if (k < 0)
+        for (i = 0; i < marks.n; i++)
+            if (!strcmp(marks.save[i].folder, v->s.folder))
+                k = i;
+    if (k >= 0) {
+        int same = marks.save[k].card == v->card;
+        memmove(&marks.save[k], &marks.save[k + 1], sizeof(marks.save[0]) * (marks.n - k - 1));
+        marks.n--;
+        if (same)
+            k = -2;   /* (unmarked, and that is all) */
+    }
+    if (k != -2) {
+        if (marks.n < MARKS_MAX) {
+            marks.save[marks.n].card = v->card;
+            snprintf(marks.save[marks.n].folder, sizeof(marks.save[0].folder), "%s", v->s.folder);
+            marks.n++;
+        } else
+            ok = 0;
+    }
+    ui_unlock();
+    return ok;
+}
 
 /* A save's title, in its two lines, from its icon.sys. One written in Japanese comes empty (the font here has no
  * letters for it): the game's name takes its place, when the ID in the folder's name is one the sd2psx's list has,
@@ -89,7 +134,12 @@ static void scene_browser(float t)
     /* the card at the top left, its free space below */
     ui_image(IMG_MINICARD, 62, 38, 24, 28, 0xFFFFFF, 0x80);
     ui_text_shadow(FONT_BROWSER, 98, 32, 0xF4F4F4, brw.card->base);
-    if (brw.card == &allGames) {   /* no card's free space to tell: how many saves there are, all together */
+    if (marks.on) {   /* marking: how many saves are marked, on all the cards */
+        snprintf(s, sizeof(s), T(T_MARKED_N), marks.n);
+        ui_text_shadow(FONT_TEXT, 100, 60, COLOR_OK, s);
+    } else if (brw.note[0])
+        ui_text_shadow(FONT_TEXT, 100, 60, 0xE6E6E6, brw.note);
+    else if (brw.card == &allGames) {   /* no card's free space to tell: how many saves there are, all together */
         snprintf(s, sizeof(s), T(T_SAVES_COUNT), brw.n);
         ui_text_shadow(FONT_TEXT, 100, 60, 0xE6E6E6, s);
     } else if (brw.freeBytes >= 0) {
@@ -97,7 +147,8 @@ static void scene_browser(float t)
         ui_text_shadow(FONT_TEXT, 100, 60, 0xE6E6E6, s);
     }
     if (!brw.n)   /* (a card that couldn't be read isn't an empty one) */
-        ui_text_center(FONT_BROWSER, W / 2.0f, 200, 0xF0F0F0, T(brwUnread ? T_CARD_UNREADABLE : T_CARD_EMPTY));
+        ui_text_center(FONT_BROWSER, W / 2.0f, 200, 0xF0F0F0,
+                       T(brw.emptyText ? brw.emptyText : brwUnread ? T_CARD_UNREADABLE : T_CARD_EMPTY));
     /* the selected save: a white light behind it, it turns; its name in yellow at the top right */
     if (brw.n) {
         float cx, cy;
@@ -113,16 +164,38 @@ static void scene_browser(float t)
             ui_text_right(FONT_BROWSER, 596, 32, 0xE6E640, v->s.folder);
     }
     browser_icons(1);
+    if (marks.on) {   /* each marked save: a green tick over its icon, in a soft light */
+        int i;
+        for (i = first; i < brw.n && i < last; i++) {
+            float cx, cy;
+            int k;
+            if (marked(brw.saves[i].card, brw.saves[i].s.folder) < 0)
+                continue;
+            grid_cell(i, 4.2f, &cx, &cy);
+            ui_light(cx + 22, cy + 2, 16, 16, COLOR_OK, 0x60);
+            for (k = 0; k < 3; k++) {
+                ui_line(cx + 15, cy + 1 + k, cx + 20, cy + 6 + k, COLOR_OK, 0x80);
+                ui_line(cx + 20, cy + 6 + k, cx + 30, cy - 5 + k, COLOR_OK, 0x80);
+            }
+        }
+    }
     if (brw.top > 0)
         look_arrow(W / 2.0f, 92, 0, 0x3A5AE0);
     if (last < brw.n)
         look_arrow(W / 2.0f, 340, 1, 0x3A5AE0);
-    {
+    if (marks.on) {
+        legend_t l[3] = {{BUTTON_CIRCLE, T(T_BACK)}, {BUTTON_CROSS, T(T_MARK)}, {BUTTON_START, T(T_FINISH)}};
+        look_legend(l, 3, 0);
+    } else if (brw.nLegend)
+        look_legend(brw.legend, brw.nLegend, 0);
+    else {
         legend_t l[3] = {{BUTTON_CIRCLE, T(T_BACK)}, {BUTTON_CROSS, T(T_OPEN)},
                          {BUTTON_SQUARE, T(brw.card == &fileCard ? T_INSTALL : T_SYNC)}};
         look_legend(l, brw.card == &allGames ? 2 : 3, 0);   /* (no one card to sync there) */
     }
 }
+
+void browser_scene(void) { ui_scene(scene_browser); }
 
 /* reads the icon of the first save on screen that wasn't read yet; 0 = there was none */
 static int load_next_icon(void)
@@ -137,7 +210,7 @@ static int load_next_icon(void)
     {
         buffer_t iconsys = {0}, ico = {0};
         icon_t *ic = NULL;
-        if (mcfs_save_icon(brw.saves[i].card->path, &brw.saves[i].s, &iconsys, &ico) == 0)
+        if ((brwIcon ? brwIcon(&brw.saves[i], &iconsys, &ico) : mcfs_save_icon(brw.saves[i].card->path, &brw.saves[i].s, &iconsys, &ico)) == 0)
             ic = icon_load(&iconsys, &ico);
         buf_free(&iconsys);
         buf_free(&ico);
@@ -240,6 +313,25 @@ static void browser_load(card_t *c, int cursor)
     log_msg("%s: %d saves, %lld bytes free", c->id, n, freeBytes);
 }
 
+/* The screen's saves are these n, which aren't read from a card (a template's: brwIcon gives their icons). c = what
+ * stands for a card on screen: its name is shown where a card's would be */
+void browser_fill(card_t *c, const mcfs_save_t *list, int n, int cursor)
+{
+    int i;
+    if (!brwSaves && !(brwSaves = calloc(BRW_MAX, sizeof(save_view_t))))
+        return;
+    ui_lock();
+    browser_drop_icons();
+    memset(brwSaves, 0, sizeof(save_view_t) * n);
+    for (i = 0; i < n; i++) {
+        brwSaves[i].s = list[i];
+        brwSaves[i].card = c;
+    }
+    brwUnread = 0;
+    browser_set(c, n, cursor, -1);
+    ui_unlock();
+}
+
 /* the newest first, whichever card each is on; two of the same moment, by name */
 static int newer_view(const void *a, const void *b)
 {
@@ -315,52 +407,75 @@ static void browser_refresh(card_t *c)
     log_msg("every game card: %s read again, %d saves in all", c->id, k);
 }
 
+/* Waits on the screen of saves for one of those buttons. Meanwhile the icons are read, one by one while nobody
+ * presses anything, and the arrows move the cursor */
+u32 browser_wait(u32 buttons)
+{
+    for (;;) {
+        int pending = 1, n = brw.n, k = brw.cursor;
+        u32 b, keys = PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT | buttons;
+        while (pending && !(b = wait_nav_ms(keys, 0)))
+            pending = load_next_icon();
+        if (!pending)
+            b = wait_nav(keys);
+        if (!(b & (PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT)))
+            return b;
+        if (b & PAD_LEFT)
+            k = k > 0 ? k - 1 : k;
+        else if (b & PAD_RIGHT)
+            k = k < n - 1 ? k + 1 : k;
+        else if (b & PAD_UP)
+            k = k >= GRID_COLS ? k - GRID_COLS : k;
+        else if (b & PAD_DOWN)
+            k = k + GRID_COLS < n ? k + GRID_COLS : (k / GRID_COLS < (n - 1) / GRID_COLS ? n - 1 : k);
+        if (k != brw.cursor) {
+            ui_lock();
+            brw.cursor = k;
+            brw.since = now_ms();
+            if (k / GRID_COLS < brw.top)
+                brw.top = k / GRID_COLS;
+            if (k / GRID_COLS >= brw.top + GRID_ROWS)
+                brw.top = k / GRID_COLS - GRID_ROWS + 1;
+            ui_unlock();
+            drop_far_icons();
+            sound_play(SND_MOVE);
+        }
+    }
+}
+
 /* a card's saves. &allGames = every game card's, as if they were on one card */
 void card_screen(card_t *c)
 {
     int all = c == &allGames;
     brw.n = 0;
+    brw.note[0] = 0;
+    brw.emptyText = brw.nLegend = 0;
     if (all)
         browser_load_all();
     else
         browser_load(c, 0);
     ui_scene(scene_browser);
     for (;;) {
-        /* reads the icons one by one while nobody presses anything */
-        int pending = 1, n = brw.n;
-        u32 b, keys = PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT | PAD_CROSS | PAD_CIRCLE | (all ? 0 : PAD_SQUARE);
-        while (pending && !(b = wait_nav_ms(keys, 0)))
-            pending = load_next_icon();
-        if (!pending)
-            b = wait_nav(keys);
+        u32 b = browser_wait(PAD_CROSS | PAD_CIRCLE | (marks.on ? PAD_START : all ? 0 : PAD_SQUARE));
+        int n = brw.n;
         if (b & PAD_CIRCLE) {
             sound_play(SND_BACK);
             browser_close();
             return;
         }
-        if (b & (PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT)) {
-            int k = brw.cursor;
-            if (b & PAD_LEFT)
-                k = k > 0 ? k - 1 : k;
-            else if (b & PAD_RIGHT)
-                k = k < n - 1 ? k + 1 : k;
-            else if (b & PAD_UP)
-                k = k >= GRID_COLS ? k - GRID_COLS : k;
-            else if (b & PAD_DOWN)
-                k = k + GRID_COLS < n ? k + GRID_COLS : (k / GRID_COLS < (n - 1) / GRID_COLS ? n - 1 : k);
-            if (k != brw.cursor) {
-                ui_lock();
-                brw.cursor = k;
-                brw.since = now_ms();
-                if (k / GRID_COLS < brw.top)
-                    brw.top = k / GRID_COLS;
-                if (k / GRID_COLS >= brw.top + GRID_ROWS)
-                    brw.top = k / GRID_COLS - GRID_ROWS + 1;
-                ui_unlock();
-                drop_far_icons();
-                sound_play(SND_MOVE);
-            }
-        } else if ((b & PAD_CROSS) && n) {
+        if (marks.on) {   /* X marks and unmarks, START ends the marking (with something marked) */
+            if ((b & PAD_CROSS) && n)
+                sound_play(mark_toggle(&brw.saves[brw.cursor]) ? SND_CONFIRM : SND_BACK);
+            else if ((b & PAD_START) && marks.n) {
+                sound_play(SND_CONFIRM);
+                marks.done = 1;
+                browser_close();
+                return;
+            } else if (b & PAD_START)
+                sound_play(SND_BACK);
+            continue;
+        }
+        if ((b & PAD_CROSS) && n) {
             card_t *on = brw.saves[brw.cursor].card;
             int changed;
             sound_play(SND_CONFIRM);

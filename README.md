@@ -55,6 +55,10 @@ on one yet.
 - Imports and exports `.psu` files: the **Files** tab browses the folders of the microSD and of a USB drive (FAT32
   or exFAT), installs a `.psu` into any card and saves any item of a card as a `.psu`. What is written is read back
   and compared.
+- Keeps **templates**: sets of saved data you mark on your cards, kept on the microSD and put into any card in one
+  go. The device makes the card of a new game empty; a template gives it what every card of yours should have, as
+  the network settings an online game asks for. Saved data the card already has is never touched. They are in
+  **Tools** (SELECT).
 
 **Also**
 - Asks for confirmation before anything that uploads, writes or deletes data.
@@ -111,10 +115,11 @@ The [README.txt](package/README.txt) included in the release explains every scre
 
 | Screen | Buttons |
 |---|---|
-| Main screen | Up/Down: card · Left/Right or L1/R1: tab · X: open the card · TRIANGLE: card options (sync now, restore a backup, copy to a device, insert into the sd2psx) · START: settings · O: exit |
+| Main screen | Up/Down: card · Left/Right or L1/R1: tab · X: open the card · TRIANGLE: card options (sync now, restore a backup, copy to a device, insert into the sd2psx) · SELECT: tools · START: settings · O: exit |
 | Inside a card | X: open a save · SQUARE: sync this card · O: back |
 | A save's page | Copy · Move · Delete · Upload to Drive |
 | Files tab | X: open the device, a folder, a `.psu` file or a memory card file · SQUARE: install the selected `.psu` in a card, or the selected memory card file on the microSD · Left/Right: a page up or down · O: back. To export a save, use **Copy** on its page: the destinations include this tab, and TRIANGLE writes the `.psu` into the folder shown |
+| Tools (SELECT) > Templates | X: a new template (its name is typed; then its saves are marked on the cards: X marks, START finishes) or an existing one · In a template: X: a save, to remove it · TRIANGLE: apply to a card, add saves, rename, delete |
 | During an upload | O: cancel |
 
 ## Automatic sync after a game (IGR)

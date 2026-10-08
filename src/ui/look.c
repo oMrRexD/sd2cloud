@@ -110,36 +110,18 @@ void look_frame(void)
     ui_flush();
 }
 
-/* the START button: its name in a small dark box with a thin border (the corners left open, so it looks rounded), the
- * way PS2 games show it. right = where it ends; returns its width */
-static int start_button(float right, float y)
-{
-    int tw = ui_measure(FONT_SMALL, "START"), w = tw + 10, h = 18, lh = ui_line_height(FONT_SMALL);
-    float x = right - w;
-    ui_rect(x + 1, y + 1, w - 2, h - 2, 0x141C2C, 0x70);
-    ui_rect(x + 2, y, w - 4, 1, 0x9AA4B6, 0x60);
-    ui_rect(x + 2, y + h - 1, w - 4, 1, 0x9AA4B6, 0x60);
-    ui_rect(x, y + 2, 1, h - 4, 0x9AA4B6, 0x60);
-    ui_rect(x + w - 1, y + 2, 1, h - 4, 0x9AA4B6, 0x60);
-    ui_text(FONT_SMALL, x + 5, y + (h - lh) / 2.0f, 0xC8CED8, "START");
-    return w;
-}
-
 void look_legend(const legend_t *items, int n, int apart)
 {
-    const int size = 20, gap = 26, y = LOOK_BOTTOM + 11;
+    /* (five of them only fit the line a little closer together) */
+    const int size = 20, gap = n > 4 ? 22 : 26, y = LOOK_BOTTOM + 11;
     float x = LOOK_LINE_X1 - 8;
     int i;
     for (i = n - 1; i >= 0; i--) {
         int w = ui_measure(FONT_TEXT, items[i].text);
         x -= w;
         ui_text(FONT_TEXT, x, y, 0xE6E8EC, items[i].text);
-        if (items[i].button == BUTTON_START)
-            x -= start_button(x - 6, y + 2) + 6;
-        else {
-            x -= size + 6;
-            ui_button(items[i].button, x, y + 1, size);
-        }
+        x -= size + 6;
+        ui_button(items[i].button, x, y + 1, size);
         x -= (apart && i == n - 1) ? 70 : gap;
     }
 }
