@@ -203,7 +203,7 @@ X(T_AUTO_LATER, "Automatic sync can be turned on later in Settings (START), unde
 X(T_AUTO_INSTALLING, "Installing the SAS package...", "Instalando o pacote SAS...")
 X(T_AUTO_DONE, "Automatic sync turned on", "Sincronização automática ativada")
 X(T_AUTO_OPL, "In OPL, set \"IGR Path\" to:", "No OPL, em \"Definir saída do IGR\", informe:")
-X(T_AUTO_NOTE, "Write this path down: it is also in the README.", "Anote este caminho: ele também está no LEIA-ME.")
+X(T_AUTO_NOTE, "Write down the path above. If you forget it, see README.txt.", "Anote o caminho acima. Se esquecer, consulte o LEIA-ME.txt.")
 X(T_INSERT, "Insert into sd2psx", "Inserir no sd2psx")
 X(T_INSERT_PREVIEW, "Insert this card (preview)", "Inserir este cartão (preview)")
 X(T_INSERT_YES, "Insert", "Inserir")
