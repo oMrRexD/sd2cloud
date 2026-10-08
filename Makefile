@@ -23,12 +23,14 @@ OBJ_DIR = obj
 EE_BIN = $(OBJ_DIR)/sd2cloud-unpacked.elf
 EE_BIN_PACKED = $(DIST)/SD2CLOUD.ELF
 endif
-SOURCES = main system ui font image look sound files json i18n config state cards mcfs stream google helper update restore icon
+# (one name each, whatever the folder: the objects all go to the same place)
+SOURCES = main format dialog leave work account backup tabs history active saves save dest install browse menu settings autosync \
+          system helper ui font image look sound icon i18n files json config state cards mcfs stream google update restore
 # where the sources are: the screens and what they do (app), the rules with no screen and no PS2 hardware (core),
 # the PS2 itself (platform) and the drawing (ui). See docs/ARCHITECTURE.md
 SRC_DIRS = src src/app src/core src/platform src/ui
 vpath %.c $(SRC_DIRS)
-HEADERS = src/common.h $(addprefix src/ui/, messages.h messages.def ui.h font.h image.h icon.h look.h sound.h)
+HEADERS = src/common.h src/app/app.h $(addprefix src/ui/, messages.h messages.def ui.h font.h image.h icon.h look.h sound.h)
 # the interface's images, sounds and font, embedded in the program (assets/ is made by tools/make_assets.py; the sounds
 # by tools/make_sounds.py)
 IMAGES = space glow buttons card minicard
