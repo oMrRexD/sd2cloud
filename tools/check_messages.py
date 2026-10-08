@@ -60,7 +60,8 @@ def fill(s, id_):
     if "%s" in s and id_ in ("T_CONFIRM_COPY", "T_CONFIRM_MOVE", "T_DELETE_ASK", "T_CONFIRM_CLOUD", "T_CONFIRM_IMPORT",
                              "T_CONFIRM_EXPORT", "T_TPL_REMOVE_ASK"):
         s = s.replace("%s", LONG_SAVE, 1).replace("%s", LONG_CARD)
-    if "%s" in s and id_ in ("T_TPL_CREATE_ASK", "T_TPL_CREATED", "T_TPL_DELETE_ASK", "T_TPL_ADD_ASK", "T_TPL_APPLY_ASK"):
+    if "%s" in s and id_ in ("T_TPL_CREATE_ASK", "T_TPL_CREATED", "T_TPL_DELETE_ASK", "T_TPL_ADD_ASK", "T_TPL_APPLY_ASK",
+                             "T_TPL_MAIN_NOW", "T_TPL_GAMES_ASK", "T_TPL_WARN"):
         s = s.replace("%s", LONG_TEMPLATE, 1).replace("%s", LONG_CARD)
     if id_ == "T_TPL_SUMMARY":
         s = s.replace("%d", "32", 1)   # saves, then KB
@@ -179,6 +180,8 @@ PLACE = {
     "T_MARKED_N": ("text", 200, 1), "T_TPL_SUMMARY": ("text", 244, 1), "T_TPL_EMPTY": ("browser", 540, 1),
     "T_TPL_REMOVE": ("browser", 304, 1), "T_TPL_APPLY_TO": ("text", 200, 1), "T_TPL_COPYING": ("text", 296, 1),
     "T_TPL_APPLYING": ("text", 296, 1), "T_TPL_RENAMING": ("text", DIALOG, 1),
+    "T_TPL_APPLY_GAMES": ("text", 320, 1), "T_TPL_MAKE_MAIN": ("text", 320, 1), "T_TPL_UNMAKE_MAIN": ("text", 320, 1),
+    "T_TPL_MAIN": ("small", 100, 1), "T_TPL_CHECKING": ("text", DIALOG, 1), "T_TPL_WARN": ("text", WIDE, 2),
 }
 PARAGRAPH = ("text", DIALOG, 3)     # error messages and the rest: up to 3 lines in a box
 # what only an sd2psx is ever told (being moved to another card, its boot cards, one more channel for a folder): not
@@ -186,16 +189,16 @@ PARAGRAPH = ("text", DIALOG, 3)     # error messages and the rest: up to 3 lines
 ONLY_SD2PSX = {"T_INSERT", "T_INSERT_NEEDS_BOOT", "T_INSERT_BOOT_ASK", "T_SWITCH_ASK", "T_SWITCH_FAILED",
                "T_SWITCH_BACK_FAILED", "T_INSTALL_RAISE_ASK", "T_INSTALL_BOOT_WARN"}
 
-# the button legends at the bottom: (texts, the last one apart at the right edge). They go from the right edge
-# (x = 596) toward the left and must not pass x = 40
+# the button legends at the bottom: (texts, how many of the last ones stand apart at the right edge). They go from
+# the right edge (x = 596) toward the left and must not pass x = 40
 LEGENDS = [
-    (("T_MENU_EXIT", "T_OPEN", "T_OPTIONS", "T_TOOLS", "T_SETTINGS"), False), (("T_BACK", "T_OPEN", "T_SYNC"), False),
+    (("T_MENU_EXIT", "T_OPEN", "T_OPTIONS", "T_TOOLS", "T_SETTINGS"), 2), (("T_BACK", "T_OPEN", "T_SYNC"), False),
     (("T_BACK", "T_DELETE"), False), (("T_BACK", "T_SELECT"), False), (("T_BACK", "T_RESTORE"), False),
     (("T_CANCEL_NO", "T_CANCEL_YES"), False), (("T_LATER", "T_YES"), False),
     (("T_BACK", "T_HELPER_INSTALL"), False), (("T_CANCEL",), False), (("T_BACK", "T_SYNC"), False),
     (("T_BACK", "T_LOGOUT_YES"), False), (("T_BACK", "T_HELPER_UNINSTALL"), False), (("T_LATER", "T_AUTO_ON"), False),
     (("T_FINISH",), False), (("T_LATER", "T_CONNECT"), False), (("T_LATER", "T_NEVER_ASK", "T_CONNECT"), False),
-    (("T_MENU_EXIT", "T_OPEN", "T_TOOLS", "T_SETTINGS"), True), (("T_BACK", "T_OPEN", "T_INSTALL_SAVE"), False),
+    (("T_MENU_EXIT", "T_OPEN", "T_TOOLS", "T_SETTINGS"), 2), (("T_BACK", "T_OPEN", "T_INSTALL_SAVE"), False),
     (("T_BACK", "T_OPEN", "T_EXPORT"), False),
     (("T_BACK", "T_EXPORT"), False), (("T_BACK", "T_REPLACE"), False), (("T_BACK", "T_IMPORT_YES"), False),
     (("T_BACK", "T_CONTINUE"), False), (("T_BACK", "T_INSERT_YES"), False),
@@ -206,15 +209,16 @@ LEGENDS = [
     (("T_BACK", "T_KB_TYPE", "T_KB_ERASE", "T_FINISH"), False), (("T_BACK", "T_MARK", "T_FINISH"), False),
     (("T_BACK", "T_OPEN", "T_FINISH"), False), (("T_BACK", "T_MARK_DROP_YES"), False), (("T_BACK", "T_TPL_CREATE"), False),
     (("T_BACK", "T_TPL_REMOVE_YES"), False), (("T_BACK", "T_TPL_APPLY"), False), (("T_BACK", "T_TPL_ADD"), False),
-    (("T_BACK", "T_REPLACE", "T_TPL_KEEP"), False),
+    (("T_BACK", "T_REPLACE", "T_TPL_KEEP"), False), (("T_LATER", "T_TPL_APPLY", "T_TPL_NO_WARN"), False),
 ]
 
 
 def legend_width(texts, apart):
-    """each button is a 20 px symbol, 6 px and its text; five of them stand a little closer together (look_legend)"""
-    gap = 22 if len(texts) > 4 else 26
+    """each button is a 20 px symbol, 6 px and its text; the last apart of them stand apart from the others, by a
+    wider gap; five of them stand closer together (look_legend)"""
+    gap, wide = (18, 34) if len(texts) > 4 else (26, 70)
     w = sum(measure("text", t) + 26 for t in texts) + gap * (len(texts) - 1)
-    return w + (70 - gap if apart and len(texts) > 1 else 0)
+    return w + (wide - gap if apart and len(texts) > apart else 0)
 
 
 def main():

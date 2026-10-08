@@ -331,6 +331,7 @@ int tabs_nav(tabs_t *g, u32 b);
 void tabs_draw(const tabs_t *g, int dots);
 
 /* ------------------------------------------------------------ tools.c */
+void templates_startup(void);
 void tools_screen(void);
 
 /* ------------------------------------------------------------ work.c */

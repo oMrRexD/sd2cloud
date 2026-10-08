@@ -14,6 +14,8 @@ templates: 1
 [script] T
 [script] D
 [script] D
+[script] D
+[script] D
 [script] X
 [script] Q
 [script] D
@@ -24,6 +26,8 @@ templates: 1
 [script] S
 templates: Net renamed to NeW: ok
 [script] T
+[script] D
+[script] D
 [script] D
 [script] X
 [script] X

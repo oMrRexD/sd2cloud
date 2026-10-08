@@ -162,10 +162,15 @@ a primeira.
   item. As marcas continuam de um cartão para outro, e a contagem fica no alto. START encerra a marcação, e os
   itens são copiados para o template.
 - X em um template o abre, exibido como um cartão. X em um item o remove do template. TRIÂNGULO traz o
-  restante: Aplicar a um cartão, Adicionar saves (marcados do mesmo jeito; um item que o template já tem pode
-  ser substituído pelo marcado), Renomear e Eliminar template.
+  restante: Aplicar a um cartão, Aplicar aos cartões de jogo, Tornar principal, Adicionar saves (marcados do
+  mesmo jeito; um item que o template já tem pode ser substituído pelo marcado), Renomear e Eliminar template.
 - Aplicar a um cartão coloca no cartão os itens que faltam nele. Um item que o cartão já tem nunca é
-  alterado, e um cartão sem espaço suficiente fica como está.
+  alterado, e um cartão sem espaço suficiente fica como está. Aplicar aos cartões de jogo faz isso com todo
+  cartão de jogo em que faltam itens do template, um depois do outro, e informa quantos os receberam.
+- Tornar principal: o template principal é o que todo cartão de jogo deve ter (uma luz amarela o marca na
+  lista). Quando o SD2Cloud abre e falta ele em um cartão de jogo, como no cartão de um jogo novo, o SD2Cloud
+  diz em qual e espera a resposta: X aplica, O deixa para depois, QUADRADO deixa de avisar sobre esses
+  cartões. Cada cartão é perguntado uma vez; só volta a ser quando o template principal ganha outros itens.
 Um template é uma pasta de SD2Cloud/templates no microSD com um arquivo .psu para cada item: um .psu colocado
 ali pelo PC também faz parte do template.
 

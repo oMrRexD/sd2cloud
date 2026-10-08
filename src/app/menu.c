@@ -70,7 +70,7 @@ static void scene_menu(float t)
     if (menu.g.tab == TAB_FILES) {   /* the devices: what the group is for, where a card's picture would be */
         legend_t l[4] = {{BUTTON_CIRCLE, T(T_MENU_EXIT)}, {BUTTON_CROSS, T(T_OPEN)}, {BUTTON_SELECT, T(T_TOOLS)},
                          {BUTTON_START, T(T_SETTINGS)}};
-        look_legend(l, 4, 1);
+        look_legend(l, 4, 2);
         ui_text_center(FONT_TEXT, CARD_CX, 82, 0x7E8AA0, T(deviceText[menu.g.cursor]));
         ui_paragraph(FONT_SMALL, CARD_X - 16, CARD_Y + 70, LOOK_CARD_W + 32, COLOR_DIM, T(T_FILES_HINT));
         return;
@@ -83,9 +83,9 @@ static void scene_menu(float t)
                          {BUTTON_TRIANGLE, T(T_OPTIONS)}, {BUTTON_SELECT, T(T_TOOLS)}, {BUTTON_START, T(T_SETTINGS)}};
         if (menu.g.n && menu.g.idx[menu.g.cursor] < 0) {   /* "All saves": not a card, there are no options of one */
             l[2] = l[3], l[3] = l[4];
-            look_legend(l, 4, 1);
+            look_legend(l, 4, 2);
         } else
-            look_legend(l, inside ? 3 : 5, 0);
+            look_legend(l, inside ? 3 : 5, inside ? 0 : 2);
     }
     if (menu.g.n && menu.g.idx[menu.g.cursor] < 0) {   /* "All saves": the game cards, and how many they are */
         snprintf(s, sizeof(s), T(T_GAME_CARDS_N), menu.g.nGames);
@@ -232,6 +232,7 @@ void manual(void)
     if (google_has_access() && state_empty())
         first_run();
     remember_unseen();
+    templates_startup();   /* a game card that lacks the main template (the card of a new game): said now */
     /* the cursor starts on the first card that needs a backup, in its group */
     for (i = 0; i < nCards && !is_selected(&cards[i], 1); i++)
         ;

@@ -24,7 +24,7 @@ What is covered:
 | `test_card_file.c` | A card file installed on the microSD: as a new card and over a smaller, an equal and a bigger one; from memory and, when it doesn't fit there, straight from its file; a file that stops reading (tried again, or given up); a new card cancelled; a `.ps2` with its ECC bytes; a card copied out to a `.zip` and installed back |
 | `test_cards.c` | The list of cards: which files are cards and of which kind, what the settings leave out, what the state makes of each |
 | `test_small.c` | The JSON reader, the `.ini` files changed in place, the settings and the state |
-| `test_templates.c` | The templates: one made of a card's saves, listed again from the microSD, with a `.psu` put there by hand; a save replaced and one taken out; a template put into a card that lacks it all, that has a save of its own (left as it is) and that has no room; one renamed, deleted, and as many as there can be |
+| `test_templates.c` | The templates: one made of a card's saves, listed again from the microSD, with a `.psu` put there by hand; a save replaced and one taken out; a template put into a card that lacks it all, that has a save of its own (left as it is) and that has no room; one renamed, deleted, and as many as there can be; the main template, and the cards that are settled with it |
 
 The cards and the saves are made by the tests themselves: nothing in this folder comes from a game.
 

@@ -14,6 +14,117 @@ int nTemplates;
 
 static void root_dir(char *out, size_t size) { snprintf(out, size, "%stemplates/", dataDir); }
 
+/* ------------------------------------------------------------ templates.ini
+ *
+ *   [templates]
+ *   main = <the main template's name>
+ *   [cards]
+ *   <card id> = <signature of the main template the card is settled with>
+ */
+
+char tplMain[TPL_NAME + 1];
+static struct {
+    char id[96], sig[9];
+} settled[MAX_CARDS];
+static int nSettled;
+
+static void ini_path(char *out, size_t size) { snprintf(out, size, "%stemplates/templates.ini", dataDir); }
+
+static void on_setting(const char *section, const char *key, const char *value, void *u)
+{
+    (void)u;
+    if (!strcmp(section, "templates") && !strcmp(key, "main"))
+        snprintf(tplMain, sizeof(tplMain), "%s", value);
+    else if (!strcmp(section, "cards") && nSettled < MAX_CARDS && value[0]) {
+        snprintf(settled[nSettled].id, sizeof(settled[0].id), "%s", key);
+        snprintf(settled[nSettled].sig, sizeof(settled[0].sig), "%s", value);
+        nSettled++;
+    }
+}
+
+static void read_settings(void)
+{
+    char path[80];
+    tplMain[0] = 0;
+    nSettled = 0;
+    ini_path(path, sizeof(path));
+    ini_read(path, on_setting, NULL);
+}
+
+int templates_main_set(void)
+{
+    read_settings();
+    return tplMain[0] != 0;
+}
+
+int templates_save(void)
+{
+    buffer_t b = {0};
+    char path[80], line[160], dir[64];
+    int i, r;
+    snprintf(line, sizeof(line), "; What SD2Cloud keeps about its templates. It writes this file itself.\n[templates]\nmain = %s\n\n[cards]\n",
+             tplMain);
+    r = buf_append(&b, line, strlen(line));
+    for (i = 0; i < nSettled && r == 0; i++) {
+        snprintf(line, sizeof(line), "%s = %s\n", settled[i].id, settled[i].sig);
+        r = buf_append(&b, line, strlen(line));
+    }
+    root_dir(dir, sizeof(dir));
+    ensure_dir(dir);
+    ini_path(path, sizeof(path));
+    if (r == 0)
+        r = file_replace(path, b.data, b.len);
+    buf_free(&b);
+    return r;
+}
+
+template_t *template_main(void) { return tplMain[0] ? template_find(tplMain) : NULL; }
+
+void template_set_main(const template_t *t) { snprintf(tplMain, sizeof(tplMain), "%s", t ? t->name : ""); }
+
+static int by_text(const void *a, const void *b) { return strcmp(*(const char *const *)a, *(const char *const *)b); }
+
+/* of a template's saves: the folders they are of, whatever their order. Eight characters are plenty to tell two
+ * templates of one user apart */
+static void signature(const template_t *t, char sig[9])
+{
+    const char *names[TPL_SAVES];
+    buffer_t b = {0};
+    char hex[65] = "";
+    int i;
+    for (i = 0; i < t->n; i++)
+        names[i] = t->saves[i].folder;
+    qsort(names, t->n, sizeof(names[0]), by_text);
+    for (i = 0; i < t->n; i++)
+        buf_append(&b, names[i], strlen(names[i]) + 1);
+    sha256_hex(b.data ? b.data : (const unsigned char *)"", b.len, hex);
+    buf_free(&b);
+    snprintf(sig, 9, "%.8s", hex);
+}
+
+int template_settled(const template_t *t, const char *cardId)
+{
+    char sig[9];
+    int i;
+    signature(t, sig);
+    for (i = 0; i < nSettled; i++)
+        if (!strcmp(settled[i].id, cardId))
+            return !strcmp(settled[i].sig, sig);
+    return 0;
+}
+
+void template_settle(const template_t *t, const char *cardId)
+{
+    int i;
+    for (i = 0; i < nSettled && strcmp(settled[i].id, cardId); i++)
+        ;
+    if (i == MAX_CARDS)
+        return;
+    if (i == nSettled)
+        snprintf(settled[nSettled++].id, sizeof(settled[0].id), "%s", cardId);
+    signature(t, settled[i].sig);
+}
+
 void template_path(const template_t *t, int i, char *out, size_t size)
 {
     char root[64];
@@ -94,7 +205,8 @@ int templates_scan(void)
         nTemplates++;
     }
     qsort(templates, nTemplates, sizeof(templates[0]), by_name);
-    log_msg("templates: %d", nTemplates);
+    read_settings();
+    log_msg("templates: %d%s%s", nTemplates, tplMain[0] ? ", the main one is " : "", tplMain);
     return nTemplates;
 }
 
@@ -241,6 +353,10 @@ int template_delete(template_t *t)
         return -1;
     }
     log_msg("templates: %s deleted", t->name);
+    if (!strcasecmp(tplMain, t->name)) {   /* (the main one: there is none from now on) */
+        tplMain[0] = 0;
+        templates_save();
+    }
     memmove(&templates[k], &templates[k + 1], sizeof(templates[0]) * (nTemplates - k - 1));
     nTemplates--;
     return 0;
@@ -286,6 +402,10 @@ template_t *template_rename(template_t *t, const char *name)
         return NULL;
     }
     sum(fresh);
+    if (!strcasecmp(tplMain, old.name)) {   /* (the main one stays the main one) */
+        template_set_main(fresh);
+        templates_save();
+    }
     if (delete_folder(&old) != 0)
         log_msg("templates: the folder of %s is still there", old.name);
     return fresh;

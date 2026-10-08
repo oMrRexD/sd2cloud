@@ -19,7 +19,8 @@ typedef struct {
     int button;                                /* BUTTON_* */
     const char *text;
 } legend_t;
-/* the buttons at the bottom, right-aligned; with apart, the last one stands apart at the right edge */
+/* the buttons at the bottom, right-aligned; the last apart of them stand apart, as a group, at the right edge (the
+ * program's own: the tools and the settings) */
 void look_legend(const legend_t *items, int n, int apart);
 void look_panel(float x, float y, float w, float h);   /* a box for messages */
 /* an item of a menu; selected = it glows. center: x is the center. Returns the width */

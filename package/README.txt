@@ -154,10 +154,15 @@ settings an online game asks for. SELECT, on the main screen, opens the tools; T
   stay from card to card, and their count is at the top. START ends the marking, and the items are copied to
   the template.
 - X on a template opens it, shown as a card is. X on an item removes it from the template. TRIANGLE has the
-  rest: Apply to a card, Add saves (marked the same way; an item the template already has can be replaced by
-  the one marked), Rename and Delete template.
+  rest: Apply to a card, Apply to the game cards, Make main, Add saves (marked the same way; an item the
+  template already has can be replaced by the one marked), Rename and Delete template.
 - Apply to a card puts into the card the items it lacks. An item the card already has is never touched, and
-  a card without enough space is left as it is.
+  a card without enough space is left as it is. Apply to the game cards does that to every game card that
+  lacks items of the template, one after the other, and says how many got them.
+- Make main: the main template is the one every game card should have (a yellow light marks it in the
+  list). When SD2Cloud opens and a game card lacks it, as the card of a new game does, SD2Cloud says which
+  and waits for an answer: X applies it, O leaves it for later, SQUARE stops the warning for those cards. A
+  card is asked about once; it is asked about again only when the main template gets other items.
 A template is a folder of SD2Cloud/templates on the microSD with a .psu file for each item: a .psu put there
 with a PC is part of the template too.
 

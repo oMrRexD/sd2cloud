@@ -271,9 +271,74 @@ static void templates_renamed_and_deleted(void)
     CHECK_STR(templates[TPL_MAX - 1].name, "Zed");
 }
 
+static void main_template(void)
+{
+    static const char *const card = "SLUS-21065/SLUS-21065-1";
+    template_t *t;
+    new_card(CARD_A);
+    put_save(CARD_A, NET, 1);
+    put_save(CARD_A, GAME, 2);
+    CHECK_INT(templates_scan(), 0);
+    t = template_new("Online");
+    CHECK(t != NULL);
+    if (!t)
+        return;
+    CHECK_INT(template_add(t, CARD_A, NET), MCFS_OK);
+
+    /* there is none until one is made it, and that is kept on the microSD */
+    CHECK_INT(templates_main_set(), 0);
+    CHECK(template_main() == NULL);
+    template_set_main(t);
+    CHECK(template_main() == t);
+    CHECK_INT(templates_save(), 0);
+    CHECK_INT(templates_main_set(), 1);
+    CHECK_STR(tplMain, "Online");
+
+    /* a card is settled with the template as it is, and that is kept too */
+    CHECK_INT(template_settled(t, card), 0);
+    template_settle(t, card);
+    CHECK_INT(template_settled(t, card), 1);
+    CHECK_INT(template_settled(t, "Card1/Card1-1"), 0);
+    CHECK_INT(templates_save(), 0);
+    CHECK_INT(templates_scan(), 1);
+    t = template_main();
+    CHECK(t != NULL && !strcmp(t->name, "Online"));
+    if (!t)
+        return;
+    CHECK_INT(template_settled(t, card), 1);
+    CHECK_INT(template_settled(t, "Card1/Card1-1"), 0);
+
+    /* with another save it is another template, for that: the card isn't settled any more */
+    CHECK_INT(template_add(t, CARD_A, GAME), MCFS_OK);
+    CHECK_INT(template_settled(t, card), 0);
+    template_settle(t, card);
+    CHECK_INT(template_settled(t, card), 1);
+    CHECK_INT(template_remove(t, template_find_save(t, GAME)), 0);
+    CHECK_INT(template_settled(t, card), 0);
+    template_settle(t, card);
+
+    /* renamed, it is still the main one, and the cards are as settled as they were; deleted, there is none */
+    t = template_rename(t, "Network");
+    CHECK(t != NULL);
+    CHECK_STR(tplMain, "Network");
+    CHECK_INT(templates_scan(), 1);
+    CHECK_STR(tplMain, "Network");
+    t = template_main();
+    CHECK(t != NULL);
+    if (!t)
+        return;
+    CHECK_INT(template_settled(t, card), 1);
+    CHECK_INT(template_delete(t), 0);
+    CHECK(template_main() == NULL);
+    CHECK_INT(templates_main_set(), 0);
+    /* (templates.ini is no template) */
+    CHECK_INT(templates_scan(), 0);
+}
+
 void suite_templates(void)
 {
     RUN(templates_are_made);
     RUN(template_into_cards);
     RUN(templates_renamed_and_deleted);
+    RUN(main_template);
 }

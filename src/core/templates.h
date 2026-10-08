@@ -53,4 +53,16 @@ int template_lacking(const template_t *t, const char *card, unsigned char lacks[
 int template_apply(const template_t *t, const char *card, int (*before)(const template_t *t, int i), mcfs_step_cb progress,
                    int *put);
 
+/* The main template is the one every game card should have. What is settled about a card is remembered with it, in
+ * templates.ini: the card was given the main template as it is now, or the user asked not to be told that it lacks
+ * it. Only a card that isn't settled is looked into again; and a template that gets other saves is another one,
+ * for that: its signature tells */
+extern char tplMain[TPL_NAME + 1];                 /* the main template's name ("" = there is none) */
+int templates_main_set(void);                      /* reads templates.ini alone: is there a main template? */
+template_t *template_main(void);                   /* NULL = none (or its folder is gone) */
+void template_set_main(const template_t *t);       /* NULL = none */
+int template_settled(const template_t *t, const char *cardId);
+void template_settle(const template_t *t, const char *cardId);
+int templates_save(void);                          /* templates.ini written with what those two changed. 0 = written */
+
 #endif
