@@ -57,7 +57,9 @@ INSTALLATION
    Save Application System (SAS): each release also has APP_SD2CLOUD.psu, the same program as a single
    APP_SD2CLOUD folder with its own 3D icon for the PS2 browser. In the APPS folder of the microSD
    (APPS/APP_SD2CLOUD) it works exactly as described here. On a memory card, among the saved data, it
-   works as a copy on another device does.
+   stays there: it updates itself in that folder (the card needs room for the new version next to the
+   current one), and for the automatic sync OPL's "IGR Path" is mc?:/APP_SD2CLOUD/SD2CLOUD-IGR.ELF, with
+   nothing to install. When there is also an SD2Cloud on the microSD, that one takes over.
 3. Without a connected Google account, SD2Cloud asks whether to connect one now. Choosing "Not now" opens the
    main screen directly; "Don't ask again" (TRIANGLE) does the same and stops the question for good (ask_connect = no in sd2cloud.ini).
    The account can be connected later in Settings (START). To connect, visit

@@ -103,7 +103,10 @@ vez para a cópia do microSD, onde ficam as configurações, o assistente de IGR
 **Save Application System (SAS).** Cada release traz também o `APP_SD2CLOUD.psu`: o mesmo programa em uma única
 pasta `APP_SD2CLOUD`, com ícone 3D próprio para o browser do PS2. Na pasta `APPS` do microSD
 (`APPS/APP_SD2CLOUD`) ele funciona exatamente como descrito aqui. Em um cartão de memória, junto dos dados
-salvos, funciona como uma cópia em outro dispositivo: abre e passa a vez para o SD2Cloud do microSD, quando há um.
+salvos, ele fica por lá: atualiza-se nessa mesma pasta (o cartão precisa ter espaço para a versão nova ao lado da
+atual) e, para a sincronização automática, o "Definir saída do IGR" do OPL é
+`mc?:/APP_SD2CLOUD/SD2CLOUD-IGR.ELF`, sem instalar nada. Se também houver um SD2Cloud no microSD, é ele que
+assume.
 
 O [LEIA-ME.txt](package/LEIA-ME.txt) incluído na release explica cada tela em detalhes.
 

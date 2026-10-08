@@ -60,7 +60,10 @@ INSTALAÇÃO
    Save Application System (SAS): cada release traz também o APP_SD2CLOUD.psu, o mesmo programa em uma
    única pasta APP_SD2CLOUD, com ícone 3D próprio para o browser do PS2. Na pasta APPS do microSD
    (APPS/APP_SD2CLOUD) ele funciona exatamente como descrito aqui. Em um cartão de memória, junto dos
-   dados salvos, funciona como uma cópia em outro dispositivo.
+   dados salvos, ele fica por lá: atualiza-se nessa mesma pasta (o cartão precisa ter espaço para a versão
+   nova ao lado da atual) e, para a sincronização automática, o "Definir saída do IGR" do OPL é
+   mc?:/APP_SD2CLOUD/SD2CLOUD-IGR.ELF, sem instalar nada. Se também houver um SD2Cloud no microSD, é ele
+   que assume.
 3. Sem uma conta do Google conectada, o SD2Cloud pergunta se você deseja conectá-la agora. Escolhendo
    "Agora não", ele abre direto na tela principal ("Não perguntar mais", no TRIÂNGULO, faz o mesmo e a pergunta não volta:
    ask_connect = no no sd2cloud.ini); a conta pode ser conectada depois, em Configurações

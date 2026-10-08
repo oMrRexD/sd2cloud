@@ -4272,11 +4272,33 @@ static void helper_remove(void)
     message_wait(0, NULL, r == 0 ? COLOR_OK : COLOR_ERROR, T(r == 0 ? T_HELPER_UNINSTALLED : T_HELPER_UNINSTALL_ERROR));
 }
 
+/* SD2Cloud lives on a memory card, with the helper next to it: OPL runs that one, and all there is to do is tell OPL
+ * where it is */
+static void helper_on_card(int title)
+{
+    char path[120];
+    snprintf(path, sizeof(path), "mc?:%s/SD2CLOUD-IGR.ELF", appCardDir);
+    dlg_new(COLOR_TITLE, T(title));
+    dlg_line(FONT_TEXT, COLOR_TEXT, 10, T(T_HELPER_ABOUT));
+    dlg_line(FONT_TEXT, COLOR_TEXT, 8, T(T_HELPER_ON_CARD));
+    dlg_line(FONT_TEXT, COLOR_TEXT, 2, T(T_AUTO_OPL));
+    dlg_line(FONT_TEXT, COLOR_ACCENT, 0, path);
+    dlg_buttons(BUTTON_CIRCLE, T_BACK, 0, 0);
+    next.wide = 1;
+    dlg_show();
+    wait_button(PAD_CIRCLE | PAD_CROSS, 0);
+    sound_play(SND_BACK);
+}
+
 /* the IGR helper in the settings. Not installed: says what it does, where it goes and how much of the memory card it
  * takes, and installs it once the user agrees. Installed: installs it again (or updates it), or removes it */
 /* 1 = the helper was installed or removed (its state has to be read again) */
 static int helper_screen(void)
 {
+    if (appOnCard && helperState == HELPER_SAME) {
+        helper_on_card(T_HELPER_TITLE);
+        return 0;
+    }
     if (!helper_present()) {
         dlg_new(COLOR_TITLE, T(T_HELPER_TITLE));
         if (appElsewhere) {
@@ -4329,24 +4351,42 @@ static int helper_screen(void)
 
 /* updates SD2Cloud: downloads, verifies, replaces and reopens the new version (which offers to update the memory
  * card's helper) */
+static void update_progress(long long done, long long total)
+{
+    ui_lock();
+    dlg.permille = total ? (int)(done * 1000 / total) : 0;
+    ui_unlock();
+}
+
 static void update_app(void)
 {
     char c[260];
+    int r;
     snprintf(c, sizeof(c), T(T_MENU_UPDATE), update_tag());
     if (!confirm(c, T(T_CONFIRM_UPDATE_TEXT), T_UPDATE))
         return;
-    message(0, NULL, COLOR_TEXT, T(T_UPDATE_RUNNING));
+    dlg_new(0, NULL);
+    dlg_line(FONT_TEXT, COLOR_TEXT, 0, T(T_UPDATE_RUNNING));
+    if (appOnCard)   /* writing to a memory card takes a while: a bar for it */
+        dlg_bar(0, NULL);
+    dlg_show();
     googleError[0] = 0;
-    if (update_install() != 0) {
+    if ((r = update_install(update_progress)) != 0) {
         char t[400];
-        snprintf(t, sizeof(t), "%s %s", T(T_UPDATE_ERROR), googleError);
+        if (r == -3)
+            snprintf(t, sizeof(t), T(T_HELPER_FULL), helperNeedKb, helperFreeKb);
+        else
+            snprintf(t, sizeof(t), "%s %s", T(T_UPDATE_ERROR), googleError);
         message_wait(0, NULL, COLOR_ERROR, t);
         return;
     }
     message(0, NULL, COLOR_OK, T(T_UPDATE_DONE));
     sound_play(SND_CONFIRM);
     sleep_ms(1500);
-    snprintf(c, sizeof(c), "%sSD2CLOUD.ELF", appDir);
+    if (appOnCard)
+        snprintf(c, sizeof(c), "mc%d:%s/SD2CLOUD.ELF", appCardPort, appCardDir);
+    else
+        snprintf(c, sizeof(c), "%sSD2CLOUD.ELF", appDir);
     run_elf(c);
 }
 
@@ -4663,6 +4703,10 @@ static void settings_screen(void)
  * the path to set in OPL; declined, where to turn it on later. Not offered when the helper is already there */
 static void offer_auto_sync(void)
 {
+    if (appOnCard && helperState == HELPER_SAME) {   /* nothing to install: only OPL has to be told where it is */
+        helper_on_card(T_IGR_TITLE);
+        return;
+    }
     if (helperState == HELPER_SAME || helperState == HELPER_NO_FILE)
         return;
     dlg_new(COLOR_TITLE, T(T_IGR_TITLE));

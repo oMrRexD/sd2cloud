@@ -16,6 +16,11 @@ extern char appPath[260];   /* the program itself, as it was started: mmce?:/APP
  * over: appDir is then where it would be on the microSD (APPS/SD2Cloud), which is where an update installs it */
 extern int appElsewhere;
 extern int appTookOver;     /* started by a copy of the program on another device, which handed over to this one */
+/* the program was started from a save folder of a memory card (the Save Application System package) and there is no
+ * SD2Cloud on the microSD to take over: that folder (appCardDir, as mcman names it: "/APP_SD2CLOUD") of the card in
+ * that slot (appCardPort, 0 = slot 1) has the program and its IGR helper, and is what an update is written to */
+extern int appOnCard, appCardPort;
+extern char appCardDir[64];
 extern char sdRoot[16];     /* root of the sd2psx microSD: mmce0:/ or mmce1:/ (host: on PCSX2) */
 extern char dataDir[32];    /* the user's data: <sdRoot>SD2Cloud/ (sd2cloud.ini, state.ini, token.dat) */
 extern int igrMode;         /* started by the IGR helper (-igr) */
@@ -348,7 +353,10 @@ long github_get(const char *url, buffer_t *b, int follow);
 /* ------------------------------------------------------------ update.c (GitHub Releases) */
 int update_check(void);                     /* 1 = there is a newer version (with SD2CLOUD.ELF and GitHub's SHA-256), 0 = not, -1 = no answer */
 const char *update_tag(void);
-int update_install(void);                   /* 0 = installed and verified (the app then reopens the new version) */
+/* 0 = installed and verified (the app then reopens the new version); -3 = the program is on a memory card with no
+ * room for the new one (helperNeedKb, helperFreeKb). progress: how far writing to that card is (elsewhere it isn't
+ * called) */
+int update_install(void (*progress)(long long done, long long total));
 
 /* ------------------------------------------------------------ restore.c */
 enum { RESTORE_DOWNLOAD, RESTORE_CHECK, RESTORE_WRITE, RESTORE_VERIFY };
@@ -388,5 +396,14 @@ int helper_install(void);                   /* copies it to mc0: 0 = ok, -2 = th
 int helper_space(void);
 int helper_uninstall(void);                 /* removes it from mc0: 0 = removed (or it wasn't there) */
 extern int helperNeedKb, helperFreeKb;
+/* the program on a memory card (appOnCard) */
+int card_app_helper(void);                  /* 1 = the IGR helper is in the program's folder, where OPL can run it */
+/* A new version written to that folder: the helper (left alone when it is the same) and the program, each one next
+ * to the old one, read back and only then in its place; title.cfg gets the version ("1.6") and its date ("October 7,
+ * 2026", "" = unknown), and the folder keeps its dates. progress is told how far the writing and the reading back
+ * are. 0 = done; -3 = no room for the new program next to the old one, nothing was touched (helperNeedKb,
+ * helperFreeKb); -1 = couldn't write */
+int card_app_update(const buffer_t *app, const buffer_t *helper, const char *version, const char *released,
+                    void (*progress)(long long done, long long total));
 
 #endif

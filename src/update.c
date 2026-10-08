@@ -5,6 +5,8 @@
  * The SHA-256 of each one comes from the API's "digest" field (without it, nothing is installed). Each file is
  * downloaded to memory, verified, written as .new, read back and only then replaces the old one: if anything fails
  * halfway, the current version stays whole. The settings (SD2Cloud/sd2cloud.ini) are never touched.
+ *
+ * A program that lives on a memory card (the Save Application System package) is updated right there (helper.c).
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,7 +24,7 @@
 #endif
 
 typedef struct {
-    char tag[32];
+    char tag[32], published[32];   /* "v1.6", "2026-10-07T21:33:59Z" */
     char url_app[512], sha_app[65];
     char url_igr[512], sha_igr[65];
 } release_t;
@@ -85,6 +87,7 @@ int update_check(void)
         return -1;
     }
     js_get_string((char *)b.data, b.len, "tag_name", latest.tag, sizeof(latest.tag));
+    js_get_string((char *)b.data, b.len, "published_at", latest.published, sizeof(latest.published));
     js_each((char *)b.data, b.len, "assets", on_asset, NULL);
     buf_free(&b);
     log_msg("update: latest release %s (this is %s)%s", latest.tag, APP_VERSION, latest.url_app[0] ? "" : ", without a loose SD2CLOUD.ELF");
@@ -97,36 +100,71 @@ int update_check(void)
 
 const char *update_tag(void) { return latest.tag; }
 
-/* downloads, checks GitHub's SHA-256 and replaces the file (file_replace: .new -> verify -> replace -> verify) */
-static int install_file(const char *url, const char *sha, const char *name)
+/* downloads a file of the release to memory and checks GitHub's SHA-256. 0 = it is in b, whole */
+static int download(const char *url, const char *sha, const char *name, buffer_t *b)
 {
-    char target[260], h[65];
-    buffer_t b = {0};
-    int ok;
-    snprintf(target, sizeof(target), "%s%s", appDir, name);
-    if (github_get(url, &b, 1) != 200 || !b.data) {
+    char h[65];
+    if (github_get(url, b, 1) != 200 || !b->data) {
         log_msg("update: couldn't download %s (%s)", name, googleError);
-        buf_free(&b);
+        buf_free(b);
         return -1;
     }
-    sha256_hex(b.data, b.len, h);
+    sha256_hex(b->data, b->len, h);
     if (strcasecmp(h, sha) != 0) {
         log_msg("update: %s doesn't match the published file (SHA-256)", name);
-        buf_free(&b);
+        buf_free(b);
         return -1;
     }
+    return 0;
+}
+
+/* downloads, checks and replaces the file (file_replace: .new -> verify -> replace -> verify) */
+static int install_file(const char *url, const char *sha, const char *name)
+{
+    char target[260];
+    buffer_t b = {0};
+    int ok;
+    if (download(url, sha, name, &b) != 0)
+        return -1;
+    snprintf(target, sizeof(target), "%s%s", appDir, name);
     ok = file_replace(target, b.data, b.len) == 0;   /* read back and compared there */
     log_msg("update: %s %s (%u bytes)", name, ok ? "installed and verified" : "FAILED", (unsigned)b.len);
     buf_free(&b);
     return ok ? 0 : -1;
 }
 
-int update_install(void)
+/* The program on a memory card: both files are downloaded and checked before the card is touched, then written to the
+ * program's folder there (card_app_update), whose title.cfg tells the version and the day it came out, as the Save
+ * Application System writes it ("October 7, 2026") */
+static int install_on_card(void (*progress)(long long done, long long total))
+{
+    static const char *const months[] = {"January", "February", "March", "April", "May", "June", "July", "August", "September",
+                                         "October", "November", "December"};
+    buffer_t app = {0}, igr = {0};
+    char released[40] = "";
+    const char *version = latest.tag;
+    int y, m, d, r = -1;
+    while (*version && !isdigit((unsigned char)*version))
+        version++;
+    if (sscanf(latest.published, "%d-%d-%d", &y, &m, &d) == 3 && m >= 1 && m <= 12)
+        snprintf(released, sizeof(released), "%s %d, %d", months[m - 1], d, y);
+    if ((!latest.url_igr[0] || download(latest.url_igr, latest.sha_igr, ASSET_IGR, &igr) == 0)
+        && download(latest.url_app, latest.sha_app, ASSET_APP, &app) == 0)
+        r = card_app_update(&app, &igr, version, released, progress);
+    log_msg("update: on the memory card, %s (%d)", r == 0 ? "installed and verified" : "FAILED", r);
+    buf_free(&app);
+    buf_free(&igr);
+    return r;
+}
+
+int update_install(void (*progress)(long long done, long long total))
 {
     char c[260];
     static const char title[] = "title=SD2Cloud\nboot=SD2CLOUD.ELF\n";
     if (!latest.tag[0])
         return -1;
+    if (appOnCard)
+        return install_on_card(progress);
     /* started from another device with no SD2Cloud on the microSD: the update is what puts it there (with the title.cfg
      * that makes OPL list it) */
     ensure_dir(appDir);

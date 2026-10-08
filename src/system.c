@@ -77,6 +77,9 @@ char appDir[200];
 char appPath[260];
 int appElsewhere;
 int appTookOver;
+int appOnCard;
+int appCardPort;
+char appCardDir[64];
 char sdRoot[16];
 char dataDir[32];
 int igrMode;
@@ -873,7 +876,7 @@ static void find_sd(const char *a0)
  * folder copied to the USB drive or the MX4SIO card (or anywhere else that OPL lists). The SD2Cloud installed on the
  * microSD takes over, so there is a single place for the program, its IGR helper and its updates. Without one there,
  * this copy goes on by itself (it needs nothing from its own folder to work), and what it installs later, an update,
- * goes to the microSD */
+ * goes to the microSD; unless it was started from a memory card, where it stays */
 static void hand_over(int argc, char *argv[])
 {
     static char *args[8];
@@ -904,6 +907,17 @@ static void hand_over(int argc, char *argv[])
             logFd = -1;
         }
         LoadELFFromFile(c, n, args);   /* only comes back if it couldn't run it */
+    }
+    /* started from a save folder of a memory card (mc0:/APP_SD2CLOUD/SD2CLOUD.ELF, the Save Application System
+     * package): that folder is the program's place, with its IGR helper, and what an update is written to */
+    if (!strncmp(appPath, "mc", 2) && (appPath[2] == '0' || appPath[2] == '1') && appPath[3] == ':') {
+        const char *folder = appPath + 4 + (appPath[4] == '/'), *end = strchr(folder, '/');
+        if (end && end > folder && !strchr(end + 1, '/') && (size_t)(end - folder) < sizeof(appCardDir) - 1) {
+            appOnCard = 1;
+            appCardPort = appPath[2] - '0';
+            snprintf(appCardDir, sizeof(appCardDir), "/%.*s", (int)(end - folder), folder);
+            return;
+        }
     }
     appElsewhere = 1;
     snprintf(appDir, sizeof(appDir), "%sAPPS/SD2Cloud/", sdRoot);
@@ -974,8 +988,9 @@ void system_init(int argc, char *argv[])
 #ifdef DEBUG_BUILD
     script_read();
 #endif
-    log_msg(APP_NAME " " APP_VERSION " -- program in %s (%s), data in %s, %s%s%s", appDir, appPath, dataDir, igrMode ? "IGR" : "manual",
-            appTookOver ? ", took over from a copy on another device" : "", appElsewhere ? ", started from another device" : "");
+    log_msg(APP_NAME " " APP_VERSION " -- program in %s (%s), data in %s, %s%s%s%s", appDir, appPath, dataDir, igrMode ? "IGR" : "manual",
+            appTookOver ? ", took over from a copy on another device" : "", appElsewhere ? ", started from another device" : "",
+            appOnCard ? ", on a memory card" : "");
 #ifdef DEBUG_BUILD
     rescue_init();
 #endif

@@ -14,6 +14,10 @@
  * APPS/SD2Cloud folder copied to one, "Exit to" can point at this file right there. SD2Cloud is then next to it, and
  * is started from there.
  *
+ * SD2Cloud itself may live on the memory card, in the save folder the Save Application System package makes
+ * (mc?:/APP_SD2CLOUD), with this file next to it: "Exit to" points at this file there, and with no SD2Cloud on the
+ * microSD the one next to it is started.
+ *
  * With no sync to do (the automatic sync turned off in SD2Cloud's settings, or no Google account connected), SD2Cloud
  * isn't started at all: what comes after IGR is started from here (see skip_sync).
  */
@@ -28,11 +32,18 @@
 #include <iopheap.h>
 #include <sbv_patches.h>
 #include <elf-loader.h>
+/* only for fileXioInit and fileXioExit, which don't touch newlib's file descriptors */
+#define NEWLIB_PORT_AWARE
+#include <fileXio_rpc.h>
 #include <ps2_fileXio_driver.h>
 #include <ps2_sio2man_driver.h>
 
 extern unsigned char mmceman_irx[];
 extern unsigned int size_mmceman_irx;
+extern unsigned char iomanX_irx[];
+extern unsigned int size_iomanX_irx;
+extern unsigned char fileXio_irx[];
+extern unsigned int size_fileXio_irx;
 
 #ifndef DEBUG_BUILD
 #define ELF "SD2CLOUD.ELF"
@@ -119,6 +130,56 @@ static void run_next_to(const char *self)
     sbv_patch_disable_prefix_check();   /* the ROM's loader only takes a few devices otherwise */
     run(path, 1);
     SifLoadFileExit();   /* not there: on with the usual way, from scratch */
+}
+
+/* Started from a memory card: SD2Cloud may be in the same save folder (the Save Application System package keeps both
+ * there). beside = that one's path when it is there, looked for while whatever started this file can still read the
+ * card */
+static char beside[256];
+
+static void look_beside(const char *self)
+{
+    const char *name = strrchr(self, '/');
+    size_t dir;
+    int fd;
+    if (strncmp(self, "mc", 2) != 0 || !name || (dir = name - self + 1) + sizeof(ELF) > sizeof(beside))
+        return;
+    memcpy(beside, self, dir);
+    strcpy(beside + dir, ELF);
+    fd = open(beside, O_RDONLY);
+    note("open", beside, fd);
+    if (fd < 0)
+        beside[0] = 0;
+    else
+        close(fd);
+}
+
+/* SD2Cloud from the memory card. What is loaded by now reads the microSD, not the card: the ROM's own drivers do, as
+ * when OPL started this file */
+static void run_beside(void)
+{
+    static char *args[] = {"-igr", NULL};
+    int k;
+    note("from the memory card:", beside, 0);
+    for (k = 0; roots[k]; k++)
+        save_notes(roots[k]);
+    while (!SifIopReset("", 0))
+        ;
+    while (!SifIopSync())
+        ;
+    SifInitRpc(0);
+    SifLoadFileInit();
+    SifInitIopHeap();
+    sbv_patch_enable_lmb();
+    sbv_patch_disable_prefix_check();
+    /* the ELF loader asks for the file through fileXio before it loads it: back too, bound to the new IOP */
+    SifExecModuleBuffer(iomanX_irx, size_iomanX_irx, 0, NULL, NULL);
+    SifExecModuleBuffer(fileXio_irx, size_fileXio_irx, 0, NULL, NULL);
+    fileXioExit();
+    fileXioInit();
+    SifLoadModule("rom0:SIO2MAN", 0, NULL);
+    SifLoadModule("rom0:MCMAN", 0, NULL);
+    LoadELFFromFile(beside, 1, args);
 }
 
 /* SD2Cloud's settings on the microSD being looked at, whole */
@@ -220,6 +281,7 @@ int main(int argc, char *argv[])
     int i, k;
     SifInitRpc(0);
     note("started as", argc > 0 && argv[0] ? argv[0] : "(nothing)", argc);
+    look_beside(argc > 0 && argv[0] ? argv[0] : "");
     run_next_to(argc > 0 && argv[0] ? argv[0] : "");
     while (!SifIopReset("", 0))
         ;
@@ -250,8 +312,12 @@ int main(int argc, char *argv[])
             strcat(path, "APPS/SD2Cloud/" ELF);
             run(path, 1);
         }
+        if (beside[0])   /* it is on the memory card, then: no use waiting for the microSD to have it */
+            break;
         usleep(300 * 1000);
     }
+    if (beside[0])
+        run_beside();
     /* not found (or it didn't run): the OSD, as OPL would do without an "Exit to" */
     ExecOSD(0, NULL);
     return 0;
