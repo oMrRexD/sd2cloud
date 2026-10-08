@@ -97,6 +97,12 @@ void look_frame(void)
         snprintf(v, sizeof(v), "v%s", APP_VERSION);
         ui_text_right(FONT_SMALL, LOOK_LINE_X1 - 4, 40, 0x6A7486, v);
     }
+#ifdef DEBUG_BUILD
+    {   /* the debug build says so, before its version: nothing else on the screen tells it from the program */
+        int w = ui_measure(FONT_SMALL, v) + (news[0] ? ui_measure(FONT_SMALL, news) : 0);
+        ui_text_right(FONT_SMALL, LOOK_LINE_X1 - 4 - w - 10, 40, COLOR_WARN, "debug");
+    }
+#endif
     ui_rect(LOOK_LINE_X0, LOOK_TOP, LOOK_LINE_X1 - LOOK_LINE_X0, 1, 0x5C6476, 0x80);
     ui_rect(LOOK_LINE_X0, LOOK_TOP + 1, LOOK_LINE_X1 - LOOK_LINE_X0, 1, 0x5C6476, 0x28);
     ui_rect(LOOK_LINE_X0, LOOK_BOTTOM, LOOK_LINE_X1 - LOOK_LINE_X0, 1, 0x5C6476, 0x80);

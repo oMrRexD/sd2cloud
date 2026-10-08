@@ -4951,6 +4951,9 @@ static void about_screen(void)
     char t[120];
     /* with the commit it was built from, when the build was told: it is what tells one beta from another */
     snprintf(t, sizeof(t), "SD2Cloud v%s%s%s%s", APP_VERSION, APP_COMMIT[0] ? " (" : "", APP_COMMIT, APP_COMMIT[0] ? ")" : "");
+#ifdef DEBUG_BUILD
+    snprintf(t + strlen(t), sizeof(t) - strlen(t), " debug");
+#endif
     dlg_new(COLOR_TITLE, t);
     dlg_line(FONT_TEXT, COLOR_TEXT, 10, T(T_ABOUT_TEXT));
     dlg_line(FONT_SMALL, COLOR_DIM, 4, T(T_ABOUT_CREDITS));
