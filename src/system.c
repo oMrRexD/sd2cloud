@@ -619,7 +619,8 @@ int network_up(void)
         debug_log_memory("after the network drivers");
 #endif
     }
-    if (wait_for(link_up, 5000) != 0) {
+    /* (right after a game the link has taken more than 5 s to come up, and a sync at IGR failed for it) */
+    if (wait_for(link_up, 12000) != 0) {
         log_msg("network: no link (cable?) after %d ms", (int)(now_ms() - t0));
 #ifdef DEBUG_BUILD
         debugNoLinkOnce = 0;
@@ -753,13 +754,17 @@ const device_t *dev = &devSd2psx;
 int cardTold = 1;
 int devicePings;
 
+static int has_dir(const char *root, const char *dir);
+
 /* which one answers in the microSD's slot: the ping gives the protocol's version, the product (1 = SD2PSX, 2 = MemCard
  * PRO2, 3 and 4 = the PicoMemcards) and its revision. One that doesn't answer is a MemCard PRO2 when its firmware's
- * file is on the microSD */
+ * file is on the microSD. And whatever it answers, the microSD itself tells: one with no MemoryCards/PS2 and with the
+ * MemCard PRO2's own /PS2 is a MemCard PRO2's (a real one, 10/2026, was taken for an sd2psx and its cards not found) */
 static void find_device(void)
 {
     char c[64];
     int r = mmce_devctl(MMCE_CMD_PING, NULL, 0), product = r >= 0 ? (r >> 8) & 0xFF : 0;
+    dev = &devSd2psx;
 #ifdef DEBUG_BUILD
     {   /* PCSX2 has no device: product.txt in the data folder says which one to be */
         buffer_t b = {0};
@@ -770,7 +775,7 @@ static void find_device(void)
     }
 #endif
     snprintf(c, sizeof(c), "%smcp2.bin", sdRoot);
-    if (product == 2 || (r < 0 && r != -2 && file_exists(c)))
+    if (product == 2 || (r < 0 && r != -2 && file_exists(c)) || (!has_dir(sdRoot, "MemoryCards/PS2") && has_dir(sdRoot, "PS2")))
         dev = &devMcp2;
     cardTold = dev->sd2psx;
     devicePings = r >= 0;

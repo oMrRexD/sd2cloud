@@ -156,12 +156,12 @@ CONFIGURAÇÕES (START)
 - Sincronizar todos os cartões: envia os cartões não sincronizados; se todos estiverem sincronizados, o
   SD2Cloud avisa e permite sincronizar todos novamente.
 - Sincronização automática: Ativada ou Desativada. Desativada, sair de um jogo pelo IGR vai direto para o
-  programa de "Após o IGR, abrir", sem exibir o SD2Cloud. Também fica desativada enquanto não há conta do
+  programa de "Saída do IGR", sem exibir o SD2Cloud. Também fica desativada enquanto não há conta do
   Google conectada.
 - Pacote SAS: instala a pasta do SD2Cloud no cartão de memória em uso (o que o OPL executa no IGR, e um
   atalho para o browser do PS2; veja SINCRONIZAÇÃO AUTOMÁTICA). Depois de instalado, a mesma opção permite
   reinstalar (ou atualizar) e desinstalar o pacote.
-- Após o IGR, abrir: o programa iniciado depois da sincronização pelo IGR. As opções são Automático (o OPL
+- Saída do IGR: o programa iniciado depois da sincronização pelo IGR. As opções são Automático (o OPL
   encontrado no microSD), os programas da pasta APPS e o browser do PS2.
 - Idioma e Backups guardados por cartão (3, 5, 10, 20, 50 ou sem limite): quantos backups de cada cartão
   ficam no Drive; passando disso, o mais antigo é removido.
@@ -179,8 +179,8 @@ SINCRONIZAÇÃO AUTOMÁTICA APÓS O JOGO (IGR)
    de memória em uso (cerca de 240 KB) e o espaço livre, e pede confirmação antes de instalar. Ele grava a
    pasta APP_SD2CLOUD (mc0:/APP_SD2CLOUD). Se o seu sd2psx usa o Autoboot, faça a instalação com o BootCard
    em uso.
-2. Nas configurações do OPL, em "Definir saída do IGR", informe: mc?:/APP_SD2CLOUD/IGR.ELF
-   Se uma versão até a 1.5 deixou o assistente dela no cartão (mc?:/BOOT/SD2CLOUD-IGR.ELF), esse caminho
+2. Nas configurações do OPL, em "Definir saída do IGR", informe: mc0:/APP_SD2CLOUD/IGR.ELF
+   Se uma versão até a 1.5 deixou o assistente dela no cartão (mc0:/BOOT/SD2CLOUD-IGR.ELF), esse caminho
    continua valendo: instalar o pacote também atualiza esse arquivo.
 3. No OPL, ative também "Slot(s) de Bootcard IGR" (página MMCE), no slot do sd2psx ou em BOTH: ao sair do
    jogo, o OPL volta para o BootCard, onde o pacote está instalado.

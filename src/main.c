@@ -3471,6 +3471,8 @@ static int is_card_file(const char *name, long long size)
  * save's own page is waiting underneath) */
 enum { FB_ENTER = 1, FB_PSU, FB_CARD, FB_ELF };
 static int fbExit;   /* the folders were opened from "Exit to": the program run from them is the choice kept for next time */
+static int fbPick;   /* or to choose a program without running it (the one to open after IGR): X on an ELF gives it, in fbPicked */
+static char fbPicked[200];
 
 static int is_elf(const char *name)
 {
@@ -3976,6 +3978,10 @@ static void files_screen(int dev)
                 snprintf(path, sizeof(path), "%s%s", fb.dir, name);
                 if (strlen(path) < sizeof(target)) {
                     target_for_ini(path, target, sizeof(target));
+                    if (fbPick) {
+                        snprintf(fbPicked, sizeof(fbPicked), "%s", target);
+                        return;
+                    }
                     if (fbExit && strcasecmp(target, cfg.manual_return) != 0) {
                         if (cfg.manual_name[0])
                             config_set("manual", "name", "");
@@ -4425,7 +4431,7 @@ static void helper_install_now(int doneTitle)
         message_wait(COLOR_ERROR, T(T_HELPER_TITLE), COLOR_TEXT, helper_result(r));
         return;
     }
-    snprintf(path, sizeof(path), "mc?:%s", helper_path());
+    snprintf(path, sizeof(path), "mc0:%s", helper_path());   /* (OPL didn't find it as "mc?:" when it was typed so) */
     dlg_new(COLOR_OK, T(doneTitle));
     dlg_line(FONT_TEXT, COLOR_TEXT, 2, T(T_AUTO_OPL));
     dlg_line(FONT_TEXT, COLOR_ACCENT, 10, path);
@@ -4454,7 +4460,7 @@ static void helper_remove(void)
 static void helper_on_card(int title)
 {
     char path[120];
-    snprintf(path, sizeof(path), "mc?:%s/SD2CLOUD-IGR.ELF", appCardDir);
+    snprintf(path, sizeof(path), "mc%d:%s/SD2CLOUD-IGR.ELF", appCardPort, appCardDir);
     dlg_new(COLOR_TITLE, T(title));
     dlg_line(FONT_TEXT, COLOR_TEXT, 10, T(T_HELPER_ABOUT));
     dlg_line(FONT_TEXT, COLOR_TEXT, 8, T(T_HELPER_ON_CARD));
@@ -4646,11 +4652,12 @@ static void pick_channel(void)
     check_updates_now(!k);
 }
 
-/* where to go after IGR: automatic, a program in APPS or the PS2 menu */
+/* where to go after IGR: automatic, a program in APPS, any ELF picked in the folders of the microSD or of a USB drive,
+ * or the PS2 menu */
 static void pick_return(void)
 {
-    static const char *items[MAX_APPS + 3];
-    static char values[MAX_APPS + 3][200];
+    static const char *items[MAX_APPS + 4], *devices[FDEVS];
+    static char values[MAX_APPS + 4][200];
     char *now = cfg.igr_return, q[260], w[260];
     int n = 0, i, k, start = 0;
     items[n] = T(T_AUTO);
@@ -4659,6 +4666,8 @@ static void pick_return(void)
         items[n] = given_name(apps[i].path) ? given_name(apps[i].path) : apps[i].title;
         target_for_ini(apps[i].path, values[n++], sizeof(values[0]));
     }
+    items[n] = T(T_PICK_ELF);
+    snprintf(values[n++], sizeof(values[0]), "files");
     items[n] = T(T_RET_OSD);
     snprintf(values[n++], sizeof(values[0]), "osd");
     n = add_custom(now, items, values, n);
@@ -4670,6 +4679,19 @@ static void pick_return(void)
     }
     if ((k = choose(T(T_SET_IGR_RETURN), items, n, start)) < 0)
         return;
+    if (!strcmp(values[k], "files")) {   /* the folders: X on an ELF chooses it */
+        for (i = 0; i < FDEVS; i++)
+            devices[i] = T(deviceText[i]);
+        if ((i = choose(T(T_PICK_ELF), devices, FDEVS, 0)) < 0)
+            return;
+        fbPicked[0] = 0;
+        fbPick = 1;
+        files_screen(i);
+        fbPick = 0;
+        if (!fbPicked[0])
+            return;
+        snprintf(values[k], sizeof(values[0]), "%s", fbPicked);
+    }
     if (!strcasecmp(values[k], now))
         return;
     if (cfg.igr_name[0]) {   /* the name was the other program's */
@@ -5026,7 +5048,7 @@ static void device_watch(void)
 {
     int i;
     /* (a device that never answered the ping, as a MemCard PRO2 may not, would look taken out all the time) */
-    if (watchOff || !devicePings || strncmp(sdRoot, "mmce", 4) != 0 || now_ms() < watchNext)
+    if (watchOff || !devicePings || !dev->sd2psx || strncmp(sdRoot, "mmce", 4) != 0 || now_ms() < watchNext)
         return;
     watchNext = now_ms() + 2000;
     for (i = 0; i < 3; i++) {   /* three times in a row: it may only be busy (changing cards) */
@@ -5080,6 +5102,7 @@ static void device_lost(void)
     fbCard = NULL;
     fbGive.c = NULL;
     fbExit = 0;
+    fbPick = 0;
     movedOff = NULL;
     transferDest = NULL;
     appsListed = 0;

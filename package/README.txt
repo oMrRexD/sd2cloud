@@ -153,7 +153,7 @@ SETTINGS (START)
 - SAS package: installs SD2Cloud's folder on the memory card in use (what OPL runs on IGR, and a shortcut
   for the PS2 browser; see AUTOMATIC SYNC). Once it is installed, the same option reinstalls it (or updates
   it) or uninstalls it.
-- After IGR, open: the program started after the IGR sync. The choices are Automatic (the OPL found on the
+- IGR path: the program started after the IGR sync. The choices are Automatic (the OPL found on the
   microSD), the programs in the APPS folder and the PS2 browser.
 - Language and Backups kept per card (3, 5, 10, 20, 50 or no limit): how many backups of each card stay on
   Drive; past that, the oldest is removed.
@@ -169,8 +169,8 @@ AUTOMATIC SYNC AFTER A GAME (IGR)
 1. In SD2Cloud, press START and select "SAS package". SD2Cloud shows how much space it takes on the memory
    card in use (about 240 KB) and how much is free, and asks before installing. It writes the APP_SD2CLOUD
    folder (mc0:/APP_SD2CLOUD). If your sd2psx uses Autoboot, install it while the BootCard is in use.
-2. In OPL Settings, set "IGR Path" to: mc?:/APP_SD2CLOUD/IGR.ELF
-   If a version up to 1.5 left its helper on the card (mc?:/BOOT/SD2CLOUD-IGR.ELF), that path keeps working:
+2. In OPL Settings, set "IGR Path" to: mc0:/APP_SD2CLOUD/IGR.ELF
+   If a version up to 1.5 left its helper on the card (mc0:/BOOT/SD2CLOUD-IGR.ELF), that path keeps working:
    installing the package also brings that file up to date.
 3. In OPL, also turn on "IGR Bootcard Slot(s)" (MMCE page), set to the sd2psx slot or BOTH: when you exit a
    game, OPL switches back to the BootCard, where the package is installed.

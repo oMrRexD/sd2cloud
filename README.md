@@ -122,8 +122,8 @@ The [README.txt](package/README.txt) included in the release explains every scre
 1. In SD2Cloud, open Settings (START) and select **SAS package** (it is also offered right after you sign in).
    SD2Cloud shows how much space it takes (about 240 KB) and asks before writing the `APP_SD2CLOUD` folder to the
    memory card in use; with Autoboot, install it while the BootCard is in use.
-2. In OPL Settings, set **IGR Path** to `mc?:/APP_SD2CLOUD/IGR.ELF`. If a version up to 1.5 left its helper on the
-   card (`mc?:/BOOT/SD2CLOUD-IGR.ELF`), that path keeps working: installing the package also brings that file up
+2. In OPL Settings, set **IGR Path** to `mc0:/APP_SD2CLOUD/IGR.ELF`. If a version up to 1.5 left its helper on the
+   card (`mc0:/BOOT/SD2CLOUD-IGR.ELF`), that path keeps working: installing the package also brings that file up
    to date.
 3. In OPL, also turn on **IGR Bootcard Slot(s)** (MMCE page), set to the sd2psx slot or BOTH: when you exit a game,
    OPL switches back to the BootCard, where the package is installed.
