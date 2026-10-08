@@ -2,7 +2,7 @@
 
 Measures like the app: the same font (Varela Round) at the same sizes, plus what the app's emboldening adds to each
 letter (font.c: the advance grows by the "bold" amount). Where each text goes and how wide that place is follows
-src/main.c and src/look.c (a 640 px screen; the frame's lines go from x = 36 to 604).
+src/app and src/ui/look.c (a 640 px screen; the frame's lines go from x = 36 to 604).
 
 usage: python tools/check_messages.py [--device NAME]     (exits with an error if a text doesn't fit its place)
 

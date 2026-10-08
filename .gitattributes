@@ -2,3 +2,5 @@
 * text=auto eol=lf
 *.png binary
 *.ttf binary
+*.gz binary
+*.psu binary

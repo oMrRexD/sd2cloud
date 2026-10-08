@@ -175,6 +175,10 @@ O SD2Cloud é escrito em C com o toolchain do [ps2dev](https://github.com/ps2dev
    o atalho); `make DEBUG=1` gera uma versão de debug para o PCSX2.
 5. `python tools/make_release.py` monta a release em `dist/`, com os textos de `package/`.
 
+`make -C tests` roda os testes de regressão, com o compilador do próprio PC e sem o toolchain do PS2: veja
+[tests/README.md](tests/README.md). O mapa do código está em [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) (em
+inglês).
+
 ## Relatar bugs e colaborar
 
 Encontrou um problema? Abra uma [issue](../../issues/new/choose) e preencha o formulário: a versão do SD2Cloud, o

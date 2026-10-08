@@ -26,17 +26,25 @@ it.
 ## Sending a pull request
 
 1. Fork the repository and create a branch from `main`.
-2. Build it: the steps are in the [README](README.md#building). GitHub Actions also builds every pull request; that
+2. Find your way: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) is the map of the code, and each source file says
+   what it is for at its top.
+3. Build it: the steps are in the [README](README.md#building). GitHub Actions also builds every pull request; that
    build has no Google credentials, so it only shows that the code compiles.
-3. Test it and say in the pull request how: `make DEBUG=1` builds a debug version for PCSX2, and on a real console
+4. Run the tests: `make -C tests` needs no PS2 toolchain, and GitHub Actions runs it too. A change to the parts it
+   covers comes with a test of it; a change to a screen is tried with the scenarios on PCSX2, if you have one. Both
+   are in [tests/README.md](tests/README.md).
+5. Say in the pull request how you tried it: `make DEBUG=1` builds a debug version for PCSX2, and on a real console
    say which sd2psx device and firmware were used.
-4. Keep one subject per pull request.
+6. Keep one subject per pull request.
 
 Conventions of the code:
 
 - Code, comments, file names and commit messages are in English.
 - Every text shown on screen exists in English and in Portuguese. The texts are in `src/ui/messages.def`, and
   `python tools/check_messages.py` checks that each one fits where it is drawn.
-- Follow the style of the code around your change, and keep the build free of warnings.
+- Follow the style of the code around your change (4 spaces, lines up to 120 columns: `.editorconfig` has it), and
+  keep the build free of warnings.
+- A function or a variable that only its own file uses is `static`. What another file uses is declared in that
+  module's header (`src/app/app.h` for the screens).
 
 Contributions are accepted under the project's license, the [GNU General Public License v3](LICENSE).
