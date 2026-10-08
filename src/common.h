@@ -393,14 +393,15 @@ void card_file_close(card_file_t *f);
 int card_file_install(card_file_t *f, card_t *to, int (*progress)(int phase, long long done, long long total));
 
 /* ------------------------------------------------------------ helper.c */
-/* What SD2Cloud keeps on the memory card in use for the automatic sync: the APP_SD2CLOUD save folder, with the IGR
- * helper, the shortcut that opens SD2Cloud, an icon and a title.cfg, all embedded in the program. A helper that a
- * version up to 1.5 left alone in BOOT is kept where it is (helperLegacy = 1, set by helper_status) */
+/* What SD2Cloud keeps on the memory card in use for the automatic sync, the "SAS package" of the screens: the
+ * APP_SD2CLOUD save folder, with the IGR helper, the shortcut that opens SD2Cloud, an icon and a title.cfg, all
+ * embedded in the program. A helper that a version up to 1.5 left alone in BOOT is also there (helperLegacy = 1, set
+ * by helper_status): it is written again with the folder, so the path OPL was given keeps working */
 enum { HELPER_NO_FILE, HELPER_NOT_INSTALLED, HELPER_DIFFERENT, HELPER_SAME };
 int helper_status(void);                    /* what the card has, compared with what this version would write */
 extern int helperLegacy;
-const char *helper_path(void);              /* the helper on the card, for OPL: "/APP_SD2CLOUD/SD2CLOUD-IGR.ELF" */
-const char *helper_place(void);             /* where it is installed: "/APP_SD2CLOUD" (or the file in BOOT) */
+const char *helper_path(void);              /* the helper on the card, for OPL: "/APP_SD2CLOUD/IGR.ELF" */
+const char *helper_place(void);             /* where it is installed: "/APP_SD2CLOUD" */
 int mc_root_signature(int port, char hex[65]);   /* mcfs_root_signature of the card in that slot, through mcman */
 int mc_card_state(int port);                     /* 0 = the card in that slot is the one it was when last asked */
 int helper_present(void);                   /* it can be installed (always, unless the program can't be found by it) */

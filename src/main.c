@@ -4255,7 +4255,9 @@ static void helper_install_now(int doneTitle)
     dlg_new(COLOR_OK, T(doneTitle));
     dlg_line(FONT_TEXT, COLOR_TEXT, 2, T(T_AUTO_OPL));
     dlg_line(FONT_TEXT, COLOR_ACCENT, 10, path);
-    dlg_line(FONT_SMALL, COLOR_DIM, 0, T(T_AUTO_NOTE));
+    dlg_line(FONT_SMALL, COLOR_DIM, 4, T(T_AUTO_NOTE));
+    if (helperLegacy)   /* OPL may still have the path of the helper in BOOT: that one was kept, and works */
+        dlg_line(FONT_SMALL, COLOR_DIM, 0, T(T_HELPER_OLD_PATH));
     dlg_buttons(BUTTON_CROSS, T_FINISH, 0, 0);
     next.wide = 1;
     dlg_show();
@@ -4291,8 +4293,9 @@ static void helper_on_card(int title)
     sound_play(SND_BACK);
 }
 
-/* the IGR helper in the settings. Not installed: says what it does, where it goes and how much of the memory card it
- * takes, and installs it once the user agrees. Installed: installs it again (or updates it), or removes it */
+/* The SAS package in the settings: SD2Cloud's folder on the memory card, with the IGR helper and the shortcut. Not
+ * installed: says what it is, where it goes and how much of the memory card it takes, and installs it once the user
+ * agrees. Installed: installs it again (or updates it), or removes it */
 /* 1 = the helper was installed or removed (its state has to be read again) */
 static int helper_screen(void)
 {
@@ -4332,16 +4335,13 @@ static int helper_screen(void)
             return 1;
         }
     }
-    /* a helper an earlier version left alone in BOOT is written again there; otherwise it goes in SD2Cloud's own save
-     * folder, which is also a shortcut to it in the PS2 browser */
     snprintf(place, sizeof(place), "mc0:%s", helper_place());
     dlg_new(COLOR_TITLE, T(T_HELPER_TITLE));
     dlg_line(FONT_TEXT, COLOR_TEXT, 10, T(T_HELPER_ABOUT));
-    dlg_line(FONT_TEXT, COLOR_TEXT, 2, T(helperLegacy ? T_HELPER_WHERE : T_HELPER_WHERE_FOLDER));
+    dlg_line(FONT_TEXT, COLOR_TEXT, 2, T(T_HELPER_WHERE));
     dlg_line(FONT_TEXT, COLOR_ACCENT, 4, place);
     dlg_line(FONT_TEXT, COLOR_TEXT, 10, helper_space_text());
-    dlg_line(FONT_SMALL, COLOR_DIM, 4, T(T_HELPER_AUTOBOOT));
-    dlg_line(FONT_SMALL, COLOR_DIM, 0, T(T_HELPER_USB_HINT));
+    dlg_line(FONT_SMALL, COLOR_DIM, 0, T(T_HELPER_AUTOBOOT));
     dlg_buttons(BUTTON_CIRCLE, T_BACK, BUTTON_CROSS, T_HELPER_INSTALL);
     next.wide = 1;
     dlg_show();

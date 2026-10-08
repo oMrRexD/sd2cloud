@@ -93,11 +93,11 @@ PLACE = {
     # the saves screen
     "T_FREE_KB": ("text", 300, 1), "T_CARD_EMPTY": ("browser", 540, 1),
     # inside the dialogs
-    "T_HELPER_ABOUT": ("text", WIDE, 2), "T_HELPER_WHERE": ("text", WIDE, 1), "T_HELPER_SPACE": ("text", WIDE, 1),
+    "T_HELPER_ABOUT": ("text", WIDE, 4), "T_HELPER_WHERE": ("text", WIDE, 1), "T_HELPER_SPACE": ("text", WIDE, 1),
     "T_HELPER_SPACE_NEED": ("text", WIDE, 1), "T_HELPER_OK": ("text", WIDE, 1),
     "T_HELPER_UNINSTALL_ASK": ("text", DIALOG, 1), "T_HELPER_UNINSTALL_TEXT": ("text", DIALOG, 3),
     "T_HELPER_ELSEWHERE": ("text", WIDE, 4), "T_HELPER_MISSING": ("text", WIDE, 2), "T_HELPER_USB": ("text", WIDE, 3),
-    "T_HELPER_USB_HINT": ("small", WIDE, 1),
+    "T_HELPER_OLD_PATH": ("small", WIDE, 2),
     "T_HELPER_AUTOBOOT": ("small", WIDE, 1), "T_FIRST_QUESTION": ("text", DIALOG, 2), "T_FIRST_AFTER": ("small", DIALOG, 1),
     "T_CANCEL_TEXT": ("text", DIALOG, 2), "T_RESTORE_FROM": ("text", WIDE, 1), "T_RESTORE_TEXT": ("text", WIDE, 2),
     "T_RESTORE_SAVE_FIRST": ("small", WIDE, 1), "T_RESTORE_IN_USE": ("small", WIDE, 2), "T_RESTORE_UNKNOWN": ("small", WIDE, 2),

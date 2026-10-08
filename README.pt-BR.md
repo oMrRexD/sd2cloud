@@ -100,13 +100,13 @@ SD2Cloud ainda não foi testado em um.
 
 Se o seu OPL não lista os apps do microSD do sd2psx (versão sem suporte a MMCE), copie também a pasta
 `APPS/SD2Cloud` para a pasta `APPS` do pendrive USB ou do cartão do MX4SIO e abra o SD2Cloud por lá. Ele passa a
-vez para a cópia do microSD, onde ficam as configurações, o assistente de IGR e as atualizações.
+vez para a cópia do microSD, onde ficam as configurações e as atualizações.
 
-**No cartão de memória.** Ao ativar a sincronização automática, o SD2Cloud grava uma pasta `APP_SD2CLOUD` no cartão
-de memória em uso, no formato do Save Application System (SAS): o assistente de IGR e um atalho que abre o SD2Cloud
-do microSD, com ícone 3D próprio para o browser do PS2 (cerca de 240 KB). O programa em si fica no microSD. Cada
-release traz também essa pasta como `APP_SD2CLOUD.psu`, para quem prefere importar à mão; sem o SD2Cloud no
-microSD, o atalho apenas avisa.
+**No cartão de memória: o pacote SAS.** Ao ativar a sincronização automática, o SD2Cloud grava o seu pacote SAS
+(Save Application System) no cartão de memória em uso: a pasta `APP_SD2CLOUD`, com o que o OPL executa no IGR e um
+atalho que abre o SD2Cloud do microSD, com ícone 3D próprio para o browser do PS2 (cerca de 240 KB). O programa em
+si fica no microSD. O zip traz também o pacote como `Extras/APP_SD2CLOUD.psu`, para importar à mão em outro cartão
+(a aba **Arquivos** do próprio SD2Cloud faz isso); sem o SD2Cloud no microSD, o atalho apenas avisa.
 
 O [LEIA-ME.txt](package/LEIA-ME.txt) incluído na release explica cada tela em detalhes.
 
@@ -122,19 +122,19 @@ O [LEIA-ME.txt](package/LEIA-ME.txt) incluído na release explica cada tela em d
 
 ## Sincronização automática após o jogo (IGR)
 
-1. No SD2Cloud, abra as Configurações (START) e selecione **Assistente de IGR** (ele também é oferecido logo
-   depois de você conectar a conta). O SD2Cloud informa o espaço necessário (cerca de 240 KB) e pede confirmação
-   antes de gravar a pasta `APP_SD2CLOUD` no cartão de memória em uso (`mc0:/APP_SD2CLOUD`: o assistente e um
-   atalho do SD2Cloud para o browser do PS2); com o Autoboot, faça a instalação com o BootCard em uso.
-2. Nas configurações do OPL, em **Definir saída do IGR**, informe `mc?:/APP_SD2CLOUD/SD2CLOUD-IGR.ELF`. Um
-   assistente instalado por uma versão até a 1.5 (`mc?:/BOOT/SD2CLOUD-IGR.ELF`) continua funcionando e é
-   atualizado onde está: não é preciso mudar nada no OPL.
+1. No SD2Cloud, abra as Configurações (START) e selecione **Pacote SAS** (ele também é oferecido logo depois de
+   você conectar a conta). O SD2Cloud informa o espaço necessário (cerca de 240 KB) e pede confirmação antes de
+   gravar a pasta `APP_SD2CLOUD` no cartão de memória em uso; com o Autoboot, faça a instalação com o BootCard em
+   uso.
+2. Nas configurações do OPL, em **Definir saída do IGR**, informe `mc?:/APP_SD2CLOUD/IGR.ELF`. Se uma versão até a
+   1.5 deixou o assistente dela no cartão (`mc?:/BOOT/SD2CLOUD-IGR.ELF`), esse caminho continua valendo: instalar
+   o pacote também atualiza esse arquivo.
 3. No OPL, ative também **Slot(s) de Bootcard IGR** (página MMCE), no slot do sd2psx ou em BOTH: ao sair do jogo,
-   o OPL volta para o BootCard, onde o assistente está instalado.
+   o OPL volta para o BootCard, onde o pacote está instalado.
 
 A partir daí, ao sair de um jogo pelo IGR, o SD2Cloud envia os cartões alterados e retorna ao OPL. A mesma opção
-reinstala ou desinstala o assistente. O SD2Cloud pode ficar em qualquer pasta do microSD do sd2psx: quando não
-está em `APPS/SD2Cloud`, ele registra onde está no `sd2cloud.ini`, e o assistente o inicia a partir dali.
+reinstala ou desinstala o pacote. O SD2Cloud pode ficar em qualquer pasta do microSD do sd2psx: quando não
+está em `APPS/SD2Cloud`, ele registra onde está no `sd2cloud.ini`, e o pacote o inicia a partir dali.
 
 Para pausar a sincronização sem desinstalar nada, deixe **Sincronização automática** como Desativada em
 Configurações (START): o IGR passa a ir direto para o programa aberto depois dele, sem iniciar o SD2Cloud. O mesmo
@@ -143,7 +143,7 @@ acontece enquanto não há conta do Google conectada.
 **Sem instalar nada (pendrive USB).** O IGR do OPL também abre programas de um pendrive USB. Se a pasta
 `APPS/SD2Cloud` estiver em um, formatado em FAT32, pule o passo 1 e informe `mass:/APPS/SD2Cloud/SD2CLOUD-IGR.ELF`
 em **Definir saída do IGR**: nada é gravado no cartão de memória. Para isso, o OPL carrega os drivers USB
-`USBD.IRX` e `USBHDFSD.IRX` de `mc?:/SYS-CONF`, onde o FMCB os instala. O assistente no cartão de memória só é
+`USBD.IRX` e `USBHDFSD.IRX` de `mc?:/SYS-CONF`, onde o FMCB os instala. O pacote SAS no cartão de memória só é
 necessário quando o SD2Cloud está apenas no microSD do sd2psx ou em um dispositivo que o IGR do OPL não lê
 (MX4SIO, HD).
 
@@ -170,8 +170,8 @@ O SD2Cloud é escrito em C com o toolchain do [ps2dev](https://github.com/ps2dev
    pode travar o sd2psx em transferências longas).
 3. Crie um cliente OAuth do tipo "TVs e dispositivos de entrada limitada" no Google Cloud Console, com a Drive API
    ativada, e gere o `src/credentials.h`: `python tools/make_credentials.py client_secret.json src/credentials.h`.
-4. `make` gera o `dist/SD2CLOUD.ELF` e o assistente de IGR (`igr/`); `make DEBUG=1` gera uma versão de debug para o
-   PCSX2.
+4. `make` gera o `dist/SD2CLOUD.ELF` e, em `igr/`, os dois programas pequenos do pacote SAS (o assistente de IGR e
+   o atalho); `make DEBUG=1` gera uma versão de debug para o PCSX2.
 5. `python tools/make_release.py` monta a release em `dist/`, com os textos de `package/`.
 
 ## Relatar bugs e colaborar

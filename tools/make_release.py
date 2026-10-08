@@ -1,13 +1,14 @@
 """Builds the release in dist/: the zip (to extract to the root of the microSD), next to the loose ELFs (the in-app
-update downloads those), APP_SD2CLOUD.psu, SHA256SUMS.txt and RELEASE-NOTES.md (docs/release-notes.md with the table
-of hashes).
-
-APP_SD2CLOUD.psu is the app as a Save Application System (SAS) package, for those who keep their apps that way: one
-APP_SD2CLOUD folder, as a save is, with what the zip has in APPS/SD2Cloud and its texts, the title.cfg the SAS asks
-for and the app's own 3D icon (package/sas; the icon is made by tools/make_sas_icon.py).
+update downloads those), SHA256SUMS.txt and RELEASE-NOTES.md (docs/release-notes.md with the table of hashes).
 
 The zip holds the two ELFs built by make (dist/SD2CLOUD.ELF, dist/SD2CLOUD-IGR.ELF) and what is in package/: the
 texts, the settings file (the same one the app creates when there is none) and its example.
+
+It also holds Extras/APP_SD2CLOUD.psu, the Save Application System (SAS) package: the save folder SD2Cloud itself
+writes to the memory card when the automatic sync is turned on (the IGR helper, the shortcut that opens SD2Cloud from
+the microSD, the title.cfg the SAS asks for and the app's own 3D icon: package/sas, igr/; the icon is made by
+tools/make_sas_icon.py), for whoever wants to import it into a card by hand. It is of no use without the program,
+which is why it comes with it instead of being a download of its own.
 usage: make, then python tools/make_release.py
 """
 import datetime
@@ -64,6 +65,16 @@ def main():
     v = version()
     zip_name = f"SD2Cloud-v{v}.zip"
     title = b"title=SD2Cloud\nboot=SD2CLOUD.ELF\n"
+    sas = PKG / "sas"
+    cfg = (sas / "title.cfg").read_text(encoding="utf-8").replace("@VERSION@", v)
+    # the very files SD2Cloud writes to the memory card when the automatic sync is turned on (src/helper.c), in the
+    # same order and under the same short names: the shortcut that opens SD2Cloud from the microSD, and the IGR helper
+    inside = [("icon.sys", (sas / "icon.sys").read_bytes()), ("sd2cloud.icn", (sas / "sd2cloud.icn").read_bytes()),
+              ("title.cfg", crlf(cfg.encode("utf-8"))),
+              ("OPEN.ELF", (ROOT / "igr" / "SD2CLOUD-OPEN.ELF").read_bytes()),
+              ("IGR.ELF", (DIST / "SD2CLOUD-IGR.ELF").read_bytes())]
+    package = psu(SAS, inside, sas_date(SAS))
+
     files = [
         ("APPS/SD2Cloud/SD2CLOUD.ELF", (DIST / "SD2CLOUD.ELF").read_bytes()),
         ("APPS/SD2Cloud/SD2CLOUD-IGR.ELF", (DIST / "SD2CLOUD-IGR.ELF").read_bytes()),
@@ -75,6 +86,8 @@ def main():
         ("THIRD-PARTY-NOTICES.txt", crlf((PKG / "THIRD-PARTY-NOTICES.txt").read_bytes())),
         ("LICENSE.txt", crlf((ROOT / "LICENSE").read_bytes())),
         ("OFL.txt", crlf((ROOT / "third_party/varelaround/OFL.txt").read_bytes())),
+        # what SD2Cloud itself writes to the memory card, for whoever wants to import it into a card by hand
+        (f"Extras/{SAS}.psu", package),
     ]
     tmp = DIST / (zip_name + ".new")
     with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as z:
@@ -88,20 +101,9 @@ def main():
             assert z.read(name) == data, name
     tmp.replace(DIST / zip_name)
 
-    sas = PKG / "sas"
-    cfg = (sas / "title.cfg").read_text(encoding="utf-8").replace("@VERSION@", v)
-    # the very files SD2Cloud writes to the memory card when the automatic sync is turned on (src/helper.c), in the
-    # same order: the shortcut that opens SD2Cloud from the microSD, and the IGR helper
-    inside = [("icon.sys", (sas / "icon.sys").read_bytes()), ("sd2cloud.icn", (sas / "sd2cloud.icn").read_bytes()),
-              ("title.cfg", crlf(cfg.encode("utf-8"))),
-              ("SD2CLOUD-OPEN.ELF", (ROOT / "igr" / "SD2CLOUD-OPEN.ELF").read_bytes()),
-              ("SD2CLOUD-IGR.ELF", files[1][1])]
-    package = psu(SAS, inside, sas_date(SAS))
-    (DIST / (SAS + ".psu")).write_bytes(package)
-
     h = lambda b: hashlib.sha256(b).hexdigest()
-    hz, ha, hi, hp = h((DIST / zip_name).read_bytes()), h(files[0][1]), h(files[1][1]), h(package)
-    (DIST / "SHA256SUMS.txt").write_text(f"{hz}  {zip_name}\n{ha}  SD2CLOUD.ELF\n{hi}  SD2CLOUD-IGR.ELF\n{hp}  {SAS}.psu\n",
+    hz, ha, hi = h((DIST / zip_name).read_bytes()), h(files[0][1]), h(files[1][1])
+    (DIST / "SHA256SUMS.txt").write_text(f"{hz}  {zip_name}\n{ha}  SD2CLOUD.ELF\n{hi}  SD2CLOUD-IGR.ELF\n",
                                         encoding="utf-8", newline="\n")
     notes = DIST / "RELEASE-NOTES.md"
     t = (ROOT / "docs" / "release-notes.md").read_text(encoding="utf-8").rstrip("\n") + "\n\n" + f"""| File | SHA-256 |
@@ -109,13 +111,12 @@ def main():
 | {zip_name} | `{hz}` |
 | SD2CLOUD.ELF | `{ha}` |
 | SD2CLOUD-IGR.ELF | `{hi}` |
-| {SAS}.psu | `{hp}` |
 
-`SD2CLOUD.ELF` and `SD2CLOUD-IGR.ELF` are the same files included in the zip, also attached individually so that SD2Cloud can update itself. `{SAS}.psu` is the memory card folder SD2Cloud installs by itself when automatic sync is turned on, as a Save Application System (SAS) package, for whoever prefers to import it by hand: the IGR helper and a shortcut that opens SD2Cloud from the microSD, with its own 3D icon. It does not contain the program.
+`SD2CLOUD.ELF` and `SD2CLOUD-IGR.ELF` are the same files included in the zip, also attached individually so that SD2Cloud can update itself.
 """
     notes.write_text(t, encoding="utf-8", newline="\n")
     print(f"{zip_name} {(DIST / zip_name).stat().st_size} B  sha {hz}")
-    print(f"SD2CLOUD.ELF {ha}\nSD2CLOUD-IGR.ELF {hi}\n{SAS}.psu {len(package)} B  sha {hp}")
+    print(f"SD2CLOUD.ELF {ha}\nSD2CLOUD-IGR.ELF {hi}\nExtras/{SAS}.psu (in the zip) {len(package)} B")
 
 
 if __name__ == "__main__":

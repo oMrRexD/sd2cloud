@@ -22,8 +22,8 @@
  * isn't started at all: what comes after IGR is started from here (see skip_sync).
  *
  * SD2CLOUD-OPEN.ELF -- the shortcut: this same program built with -DOPEN. SD2Cloud puts both in a save folder of the
- * memory card (mc?:/APP_SD2CLOUD, with an icon and a title.cfg, the Save Application System's way), and the shortcut
- * is what that folder starts from the PS2 browser or a launcher: it finds SD2Cloud on the microSD the same way and
+ * memory card (mc?:/APP_SD2CLOUD, with an icon and a title.cfg, the Save Application System's way), under the short
+ * names IGR.ELF and OPEN.ELF, and the shortcut is what that folder starts from the PS2 browser or a launcher: it finds SD2Cloud on the microSD the same way and
  * opens it as the user would, with no -igr. When it isn't there, it says so on the screen.
  */
 #include <string.h>
