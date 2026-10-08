@@ -43,7 +43,8 @@ SD2Cloud ainda não foi testado em um.
 **Gerenciador de cartões de memória**
 - Exibe os dados salvos de cada cartão como o navegador do PS2, com os ícones 3D animados.
 - Copia, move e elimina dados salvos entre os cartões do microSD (o espaço livre do destino é exibido), e envia
-  um item avulso ao Google Drive como arquivo `.psu`.
+  um item avulso ao Google Drive como arquivo `.psu`. Os dados salvos também podem ir para um cartão novo do
+  próprio jogo, criado na hora ("Novo cartão", na aba Jogos): um cartão vazio de 8 MB, como o aparelho cria.
 - Exibe os dados salvos de todos os cartões de jogo em uma só tela (**Todos os saves**, na aba Jogos), como se fossem
   um único cartão.
 - Organiza os cartões em abas: cartões numerados, cartões de jogos (Game ID), em pastas com o nome de cada jogo,

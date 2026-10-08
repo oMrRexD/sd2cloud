@@ -690,17 +690,27 @@ static int mmce_devctl(int cmd, void *arg, unsigned int len)
 
 int mmce_ping(void) { return mmce_devctl(MMCE_CMD_PING, NULL, 0); }
 
-int mmce_active_card(int *channel)
+/* the same, without a word in the log: it is asked over and over while the screens wait */
+int mmce_card_now(int *channel)
 {
     int card, ch;
     if (strncmp(sdRoot, "mmce", 4) != 0)
         return -2;
     card = mmce_devctl(MMCE_CMD_GET_CARD, NULL, 0);
     ch = mmce_devctl(MMCE_CMD_GET_CHANNEL, NULL, 0);
-    log_msg("sd2psx: card %d, channel %d", card, ch);
     if (card < 0 || ch < 0)
         return -1;
     *channel = ch;
+    return card;
+}
+
+int mmce_active_card(int *channel)
+{
+    int ch = -1, card = mmce_card_now(&ch);
+    if (card != -2)
+        log_msg("sd2psx: card %d, channel %d", card, ch);
+    if (card >= 0)
+        *channel = ch;
     return card;
 }
 

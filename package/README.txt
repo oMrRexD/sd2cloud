@@ -18,7 +18,7 @@ Cloud sync
 Memory card manager
 - Shows the saved data of each card the way the PS2 browser does, with animated 3D icons.
 - Copies, moves and deletes saved data between the cards on the microSD, and uploads a single item to Google
-  Drive as a .psu file.
+  Drive as a .psu file. Saved data can also go to a new card of its own game, made on the spot.
 - Organizes the cards in tabs: numbered cards, game (Game ID) cards, in folders named after each game, and
   boot cards.
 - Imports .psu files into any card and exports any item of a card as a .psu file, from and to the microSD or
@@ -100,7 +100,9 @@ microSD and a USB drive for .psu files and memory card files (see FILES).
 - START opens the settings (see SETTINGS).
 - X on a saved data item opens its page, with Copy and Move (to another card on the microSD, chosen from the
   same tabs as the main screen; the destination's free space is shown, and a card without enough space cannot
-  be selected), Delete and Upload to Drive (that item only, in .psu format, in a "Saves" folder next to the
+  be selected; when the item's name tells its game, the Games tab also has "New card", in that game's folder
+  or among the folders while the game has none: an empty 8 MB card is made for the item, as the device itself
+  makes them), Delete and Upload to Drive (that item only, in .psu format, in a "Saves" folder next to the
   card's backups). To change the card the sd2psx is using, SD2Cloud asks first, then switches the sd2psx to
   another card, makes the change and switches back; only for a folder with a name of its own the card has to
   be switched on the sd2psx beforehand.

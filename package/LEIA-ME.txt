@@ -20,7 +20,7 @@ Sincronização com a nuvem
 Gerenciador de cartões de memória
 - Exibe os dados salvos de cada cartão como o navegador do PS2, com os ícones 3D animados.
 - Copia, move e elimina dados salvos entre os cartões do microSD, e envia um item avulso ao Google Drive como
-  arquivo .psu.
+  arquivo .psu. Os dados salvos também podem ir para um cartão novo do próprio jogo, criado na hora.
 - Organiza os cartões em abas: cartões numerados, cartões de jogos (Game ID), em pastas com o nome de cada
   jogo, e cartões de boot.
 - Importa arquivos .psu para qualquer cartão e exporta qualquer item de um cartão como arquivo .psu, a partir
@@ -106,7 +106,9 @@ arquivos .psu e de arquivos de cartão de memória (veja ARQUIVOS).
 - START abre as configurações (veja CONFIGURAÇÕES).
 - X em um item de dados salvos abre a página do item, com as opções Copiar e Mover (para outro cartão do
   microSD, escolhido nas mesmas abas da tela principal; o espaço livre do cartão de destino é exibido e um
-  cartão sem espaço suficiente não pode ser escolhido), Eliminar e Enviar ao Drive (apenas esse item, em
+  cartão sem espaço suficiente não pode ser escolhido; quando o nome do item indica o jogo, a aba Jogos traz
+  também "Novo cartão", na pasta desse jogo ou entre as pastas enquanto o jogo não tem uma: um cartão vazio
+  de 8 MB é criado para o item, como o aparelho cria), Eliminar e Enviar ao Drive (apenas esse item, em
   formato .psu, na pasta "Saves" ao lado dos backups do cartão). Para alterar o cartão que está em uso no
   sd2psx, o SD2Cloud pergunta antes, troca o sd2psx para outro cartão, faz a alteração e volta; só para uma
   pasta com nome personalizado é preciso trocar o cartão no próprio sd2psx antes.

@@ -301,21 +301,31 @@ int cards_scan(void)
     return nCards;
 }
 
-card_t *cards_add(const char *folder, const char *file)
+card_t *cards_append(const char *folder, const char *file)
 {
-    char base[96], id[96];
-    int i;
+    char base[96];
     snprintf(base, sizeof(base), "%s%s", sdRoot, dev->cards);
     if (!add_file(base, folder, file))
         return NULL;
     fill_cards(base, folder, nCards - 1);
     set_included(&cards[nCards - 1]);
-    snprintf(id, sizeof(id), "%s", cards[nCards - 1].id);
-    qsort(cards, nCards, sizeof(cards[0]), compare);
     game_names();
+    log_msg("%s joined the cards: %d on the microSD", cards[nCards - 1].id, nCards);
+    return &cards[nCards - 1];
+}
+
+void cards_sort(void) { qsort(cards, nCards, sizeof(cards[0]), compare); }
+
+card_t *cards_add(const char *folder, const char *file)
+{
+    char id[96];
+    int i;
+    if (!cards_append(folder, file))
+        return NULL;
+    snprintf(id, sizeof(id), "%s", cards[nCards - 1].id);
+    cards_sort();
     for (i = 0; i < nCards && strcmp(cards[i].id, id); i++)
         ;
-    log_msg("%s joined the cards: %d on the microSD", id, nCards);
     return i < nCards ? &cards[i] : NULL;
 }
 

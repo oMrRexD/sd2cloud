@@ -54,7 +54,8 @@ int device_of(const char *path);
 /* the card the sd2psx is emulating right now: its number (0 = BootCard, a game card or a named folder) and channel.
  * -1 = couldn't ask; -2 = not on an MMCE device (testing on PCSX2) */
 int mmce_active_card(int *channel);
-int mmce_ping(void);                        /* does the device answer? < 0 = no (taken out of the console) */
+int mmce_card_now(int *channel);            /* the same, without a word in the log (asked while the screens wait) */
+int mmce_ping(void);                      /* does the device answer? < 0 = no (taken out of the console) */
 extern int devicePings;                     /* it answered when it was looked for: one that never does can't be watched */
 /* the device is back after being taken out: which one it is and the settings on its microSD, read again */
 void system_reload(void);
@@ -238,6 +239,10 @@ int cards_scan(void);                       /* lists the .mcd files on the micro
 /* a card just written to the microSD (the name of its folder and of its file) joins the list, in its place: the other
  * cards keep what is known of them, but may have moved in cards[]. Returns it, or NULL */
 card_t *cards_add(const char *folder, const char *file);
+/* the same, at the end of the list: no other card moves, so whatever is holding on to one keeps the right one.
+ * cards_sort puts the list in order again, when nothing is */
+card_t *cards_append(const char *folder, const char *file);
+void cards_sort(void);
 int is_game_id(const char *p);              /* SLUS-21065: the way a game's ID names its folder */
 int game_title(const char *id, char *out, size_t size);   /* the game of that ID in the sd2psx's list. 1 = it's there */
 /* where the sd2psx keeps a game's cards: the folder Game2Folder.ini gives that ID, or one named after the ID */
@@ -289,6 +294,9 @@ int mcfs_save_info(const char *path, const char *folder, long long *bytes, int *
 int mcfs_copy_save(const char *from, const char *folder, const char *to, mcfs_step_cb progress);
 int mcfs_delete_save(const char *path, const char *folder);
 int mcfs_export_psu(const char *path, const char *folder, buffer_t *out);
+/* a new card in that file: empty, formatted, 8 MB, as the sd2psx makes one. progress is told how much of it is
+ * written. 0 = ok (what it has was read back), else MCFS_ERR_* */
+int mcfs_new_card(const char *path, void (*progress)(long long done, long long total));
 /* what a .psu file holds: the save's folder, when it was last saved, its files' sizes added up, and its icon (the
  * buffers stay empty when it has none) */
 typedef struct {

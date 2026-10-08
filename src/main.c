@@ -38,6 +38,7 @@
 #define MAX_RESULTS 24
 
 static int W, H, helperState = HELPER_NO_FILE;
+static int helperStale;            /* the card in the device was changed since helperState was read (active_watch) */
 static int networkUp, updateAvailable;
 static char rootId[80];
 
@@ -1060,6 +1061,9 @@ typedef struct {
                                  a card file is being installed, as a new card or over one of these */
     int all;                  /* 1 = the folders of the Games group start with one, "All saves": every game card's
                                  saves on one screen (the main screen, with more than one game card) */
+    char newGame[48];         /* a save is on its way to a card: its game's folder ("" = no game can be told). The
+                                 Games group then offers "New card" for it: among the folders while the game has none
+                                 there, inside its folder once it has */
 } tabs_t;
 
 static void fit(int font, char *s, size_t size, int maxw);
@@ -1075,8 +1079,23 @@ static const char *game_of(const card_t *c) { return c->game[0] ? c->game : c->f
 /* is the list one of folders right now? */
 static int tabs_on_folders(const tabs_t *g) { return g->tab == TAB_GAMES && g->open < 0; }
 
+/* is "New card" offered in the list shown for the game of the save on its way (newGame)? Among the folders when none
+ * of them is that game's; in a folder when it is that game's (a folder of the list is a game, which may be more than
+ * one folder of the microSD: versions of the same game under one name) */
+static int tabs_new_game(const tabs_t *g)
+{
+    int k, i;
+    if (!g->newGame[0] || g->tab != TAB_GAMES)
+        return 0;
+    for (k = g->open >= 0 ? g->open : 0; k < (g->open >= 0 ? g->open + 1 : g->folders); k++)
+        for (i = g->first[k]; i < g->first[k + 1]; i++)
+            if (!strcasecmp(cards[g->games[i]].folder, g->newGame))
+                return g->open >= 0;
+    return g->open < 0;
+}
+
 /* how many rows that aren't a card or a folder the list shown starts with (idx -1): "New card", or "All saves" */
-static int tabs_lead(const tabs_t *g) { return g->add || (g->all && tabs_on_folders(g) && g->nGames > 1); }
+static int tabs_lead(const tabs_t *g) { return g->add || tabs_new_game(g) || (g->all && tabs_on_folders(g) && g->nGames > 1); }
 
 /* the Games group's list: its folders, or the cards of the one that is open (with ui_lock held) */
 static void tabs_games(tabs_t *g)
@@ -1157,6 +1176,8 @@ static void tabs_show(tabs_t *g, int tab)
         if (tab_of(&cards[i]) == tab)
             g->idx[g->n++] = i;
     }
+    if (g->newGame[0] && !g->count[TAB_GAMES])   /* no game card yet: the group is there for the new one */
+        g->count[TAB_GAMES] = 1;
     if (g->files)
         g->count[TAB_FILES] = FDEVS;
     if (tab == TAB_FILES)
@@ -1270,7 +1291,7 @@ static const char *tabs_text(int i, char *buf)
     if (rowsOf->tab == TAB_FILES)
         return T(deviceText[i]);
     if (rowsOf->idx[i] < 0)
-        return T(rowsOf->add ? T_NEW_CARD : T_ALL_SAVES);
+        return T(rowsOf->add || rowsOf->newGame[0] ? T_NEW_CARD : T_ALL_SAVES);
     return tabs_on_folders(rowsOf) ? rowsOf->label[i - tabs_lead(rowsOf)] : cards[rowsOf->idx[i]].base;
 }
 
@@ -1321,7 +1342,7 @@ static void tabs_draw(const tabs_t *g, int dots)
         for (k = g->top; g->tab != TAB_FILES && k < g->n && k < g->top + ROWS; k++) {
             float x = LIST_X + rowsDx, y = ROW_Y0 + (k - g->top) * ROW_H + ui_line_height(FONT_TEXT) / 2.0f + 1;
             int here = g->idx[k] >= 0 && g->idx[k] == activeCard;
-            if (g->idx[k] < 0 && g->add) {   /* "New card": a plus where a folder has its picture */
+            if (g->idx[k] < 0 && (g->add || g->newGame[0])) {   /* "New card": a plus where a folder has its picture */
                 ui_rect(x + 4, y - 1, 12, 2, COLOR_ACCENT, 0x70);
                 ui_rect(x + 9, y - 6, 2, 12, COLOR_ACCENT, 0x70);
             } else if (g->idx[k] < 0) {   /* "All saves": two small cards, one behind the other */
@@ -1341,7 +1362,7 @@ static void tabs_draw(const tabs_t *g, int dots)
         }
         if (g->tab == TAB_GAMES && g->open >= 0) {   /* over a folder's cards, small: which folder this is */
             ui_triangle(LIST_X + 27, LIST_Y + 23, LIST_X + 27, LIST_Y + 33, LIST_X + 35, LIST_Y + 28, 0x6E9AE0, 0x70);
-            ui_text_fit(FONT_SMALL, LIST_X + 44, LIST_Y + 21, FOLDER_W - 20, 0x8E98AA, game_of(&cards[g->idx[g->add]]));
+            ui_text_fit(FONT_SMALL, LIST_X + 44, LIST_Y + 21, FOLDER_W - 20, 0x8E98AA, game_of(&cards[g->idx[tabs_lead(g)]]));
         }
         rowsDx = 0;
         rowsWide = 0;
@@ -1963,6 +1984,41 @@ static card_t allGames;
 static card_t *transferDest;
 static char cardFileName[256];     /* and its name, which may tell which game the card is of */
 
+static int save_game_id(const char *folder, char id[12]);
+
+/* A save's title, in its two lines, from its icon.sys. One written in Japanese comes empty (the font here has no
+ * letters for it): the game's name takes its place, when the ID in the folder's name is one the sd2psx's list has,
+ * in two lines when it is long (with ui_lock held) */
+#define TITLE_W 330   /* as wide as a line of it gets on the save's own page */
+static void save_title(save_view_t *v, const icon_t *ic)
+{
+    char id[12], name[96], *cut, *p;
+    int skip = 3;
+    v->line1[0] = v->line2[0] = 0;
+    if (ic) {
+        snprintf(v->line1, sizeof(v->line1), "%s", ic->line1);
+        snprintf(v->line2, sizeof(v->line2), "%s", ic->line2);
+    }
+    if (v->line1[0] || v->line2[0] || !save_game_id(v->s.folder, id) || !game_title(id, name, sizeof(name)))
+        return;
+    /* "Simple 2000 Series Vol.105 - The Maid Fuku to Kikanjuu" breaks at its dash; any other long name, at the space
+     * nearest its middle */
+    if (!(cut = strstr(name, " - ")) && ui_measure(FONT_BROWSER, name) > TITLE_W) {
+        size_t half = strlen(name) / 2;
+        skip = 1;
+        for (p = name; (p = strchr(p, ' ')) != NULL; p++)
+            if (!cut || labs((long)(p - name) - (long)half) < labs((long)(cut - name) - (long)half))
+                cut = p;
+    }
+    if (cut) {
+        *cut = 0;
+        snprintf(v->line2, sizeof(v->line2), "%s", cut + skip);
+        fit(FONT_BROWSER, v->line2, sizeof(v->line2), TITLE_W);
+    }
+    snprintf(v->line1, sizeof(v->line1), "%s", name);
+    fit(FONT_BROWSER, v->line1, sizeof(v->line1), TITLE_W);
+}
+
 static void grid_cell(int i, float height, float *cx, float *cy)
 {
     int k = i - brw.top * GRID_COLS;
@@ -2053,10 +2109,7 @@ static int load_next_icon(void)
         ui_lock();
         brw.saves[i].icon = ic;
         brw.saves[i].tried = 1;
-        if (ic) {
-            snprintf(brw.saves[i].line1, sizeof(brw.saves[i].line1), "%s", ic->line1);
-            snprintf(brw.saves[i].line2, sizeof(brw.saves[i].line2), "%s", ic->line2);
-        }
+        save_title(&brw.saves[i], ic);
         ui_unlock();
     }
     return 1;
@@ -2278,6 +2331,11 @@ static void files_screen(int dev);
 static void target_for_ini(const char *path, char *out, size_t size);
 static int install_card(void);
 static void menu_refresh(void);
+static void dest_new_name(void);
+static int dest_new_place(void);
+/* "New card", picked as where a save goes (choose_dest): the card it will be, which is only made once the question
+ * that follows is answered (dest_real) */
+static card_t destNew;
 
 static void scene_dest(float t)
 {
@@ -2293,7 +2351,7 @@ static void scene_dest(float t)
     }
     look_title(CARD_CX, 82, dst.title, 1);
     if (!(c = tabs_card(&dst.g))) {
-        if (dst.g.add && dst.g.tab != TAB_FILES) {   /* "New card": the card to be, and its name when it is known */
+        if (dst.g.tab != TAB_FILES && dst.g.n && dst.g.idx[dst.g.cursor] < 0) {   /* "New card": the card to be, and its name when it is known */
             look_card(CARD_X, CARD_Y, "+", NULL);
             ui_text_center(FONT_TEXT, CARD_CX, CARD_Y + LOOK_CARD_H + 2, COLOR_ITEM_ON, dst.newName);
         }
@@ -2341,13 +2399,32 @@ static void dest_info(void)
     ui_unlock();
 }
 
-/* the card picked (NULL = circle). from = a card to leave out, title = the text over the card, need = the save's size */
-static card_t *choose_dest(const card_t *from, int title, long long need)
+/* the game a save is of, by the ID in its folder's name (BASLUS-21065...). 1 = it has one, in id */
+static int save_game_id(const char *folder, char id[12])
+{
+    id[0] = 0;
+    if (strlen(folder) < 12 || folder[0] != 'B' || !isupper((unsigned char)folder[1]))
+        return 0;
+    snprintf(id, 12, "%.10s", folder + 2);
+    if (!is_game_id(id))
+        id[0] = 0;
+    return id[0] != 0;
+}
+
+/* the card picked (NULL = circle). from = a card to leave out, title = the text over the card, need = the save's size,
+ * save = the save's folder (NULL = none): when its name tells the game, the Games group also offers a new card for
+ * that game, and &destNew comes back when that is what was picked */
+static card_t *choose_dest(const card_t *from, int title, long long need, const char *save)
 {
     card_t *c = NULL;
+    char id[12];
     int i;
     ui_lock();
     tabs_init(&dst.g, from, destFiles);
+    if (save && save_game_id(save, id)) {
+        game_folder(id, dst.g.newGame, sizeof(dst.g.newGame));
+        tabs_show(&dst.g, dst.g.tab);   /* (counted again: the Games group may be there only for this) */
+    }
     destFiles = 0;
     destDevice = -1;
     dst.title = T(title);
@@ -2356,6 +2433,7 @@ static card_t *choose_dest(const card_t *from, int title, long long need)
         dst.freeBytes[i] = -2;
     dst.icon = NULL;
     dst.iconCard = -1;
+    dest_new_name();
     ui_unlock();
     ui_scene(scene_dest);
     for (;;) {
@@ -2364,11 +2442,24 @@ static card_t *choose_dest(const card_t *from, int title, long long need)
             dest_info();
             b = wait_nav(keys);
         }
-        if (tabs_nav(&dst.g, b) || tabs_folder_nav(&dst.g, b))
+        if (tabs_nav(&dst.g, b) || tabs_folder_nav(&dst.g, b)) {
+            ui_lock();
+            dest_new_name();
+            ui_unlock();
             continue;
+        }
         if (b & PAD_CIRCLE) {
             sound_play(SND_BACK);
             break;
+        }
+        if ((b & PAD_CROSS) && dst.g.tab != TAB_FILES && dst.g.n && dst.g.idx[dst.g.cursor] < 0) {   /* "New card" */
+            sound_play(SND_CONFIRM);
+            if (dest_new_place()) {
+                c = &destNew;
+                break;
+            }
+            ui_scene(scene_dest);   /* back from a question: the cards again */
+            continue;
         }
         if ((b & PAD_CROSS) && dst.g.tab == TAB_FILES) {   /* a device: its folders are browsed next */
             sound_play(SND_CONFIRM);
@@ -2497,6 +2588,8 @@ static int new_card(int tab, const char *gameFolder, int max, char folder[48], c
  * that is asked first) */
 static const char *dest_game_folder(void)
 {
+    if (dst.g.newGame[0])   /* a save is on its way: its own game's folder, whichever folder is open */
+        return dst.g.newGame;
     return dst.g.tab == TAB_GAMES && dst.g.open >= 0 ? cards[dst.g.idx[1]].folder : fileGameFolder;
 }
 
@@ -2509,6 +2602,95 @@ static void dest_new_name(void)
     /* (the next channel, even one past those the folder has: that is asked about when it is picked) */
     if (dst.g.n && dst.g.idx[dst.g.cursor] < 0 && (dst.g.tab != TAB_GAMES || game[0]) && !new_card(dst.g.tab, game, 255, folder, dst.newName))
         dst.newName[0] = 0;
+}
+
+/* every channel a folder has is taken, and the sd2psx can be told the folder has one more: asked. 1 = yes */
+static int ask_more_channels(int max)
+{
+    char t[300];
+    snprintf(t, sizeof(t), T(T_INSTALL_RAISE_ASK), max, max + 1);
+    dlg_new(0, NULL);
+    dlg_line(FONT_TEXT, COLOR_TEXT, 0, t);
+    dlg_buttons(BUTTON_CIRCLE, T_BACK, BUTTON_CROSS, T_CONTINUE);
+    next.wide = 1;
+    dlg_show();
+    if (!(wait_button(PAD_CROSS | PAD_CIRCLE, 0) & PAD_CROSS)) {
+        sound_play(SND_BACK);
+        return 0;
+    }
+    sound_play(SND_CONFIRM);
+    return 1;
+}
+
+static int destNewMore;    /* the channels its folder has to be told it has, for the new card to be in reach (0 = as it is) */
+static int cardsUnsorted;  /* a card was made and is at the end of cards[]: the list is put in order back on the main screen */
+
+/* X on "New card" while a save's destination is picked: where the card would be (destNew), the next free channel of
+ * the game's folder. 0 = the folder has no place for one (said), or the user went back */
+static int dest_new_place(void)
+{
+    char folder[48], base[56], t[300];
+    const char *game = dst.g.newGame;
+    int max = max_channels(game);
+    destNewMore = 0;
+    if (!new_card(TAB_GAMES, game, max, folder, base)) {
+        if (!dev->sd2psx || max >= 255) {
+            snprintf(t, sizeof(t), T(T_NEWCARD_NO_CHANNEL), max);
+            message_wait(0, NULL, COLOR_WARN, t);
+            return 0;
+        }
+        if (!ask_more_channels(max))
+            return 0;
+        destNewMore = max + 1;
+        new_card(TAB_GAMES, game, destNewMore, folder, base);
+    }
+    memset(&destNew, 0, sizeof(destNew));
+    snprintf(destNew.folder, sizeof(destNew.folder), "%s", folder);
+    snprintf(destNew.base, sizeof(destNew.base), "%s", base);
+    snprintf(destNew.id, sizeof(destNew.id), "%s/%s", folder, base);
+    snprintf(destNew.path, sizeof(destNew.path), "%s%s/%s/%s%s", sdRoot, dev->cards, folder, base, dev->ext);
+    destNew.type = TYPE_GAMEID;
+    return 1;
+}
+
+static void new_card_progress(long long done, long long total)
+{
+    ui_lock();
+    dlg.permille = total ? (int)(done * 1000 / total) : 0;
+    ui_unlock();
+}
+
+/* The card a save goes to, once the user agreed to it. A card that is still to be made (&destNew) is made now: an
+ * empty 8 MB one, as the device itself makes them, in the game's folder and under the device's own extension. It
+ * joins the cards at the end of the list, so the card the save comes from stays where it is. NULL = it couldn't be
+ * made (said) */
+static card_t *dest_real(card_t *to)
+{
+    char dir[200], file[80];
+    card_t *c = NULL;
+    int r;
+    if (to != &destNew)
+        return to;
+    dlg_new(0, NULL);
+    dlg_line(FONT_TEXT, COLOR_TEXT, 0, T(T_NEWCARD_MAKING));
+    dlg_bar(0, NULL);
+    dlg_show();
+    snprintf(dir, sizeof(dir), "%s%s/%s/", sdRoot, dev->cards, destNew.folder);
+    ensure_dir(dir);
+    r = destNewMore && max_channels_set(destNew.folder, destNewMore) != 0 ? MCFS_ERR_IO : mcfs_new_card(destNew.path, new_card_progress);
+    snprintf(file, sizeof(file), "%s%s", destNew.base, dev->ext);
+    if (r == MCFS_OK && (c = cards_append(destNew.folder, file)) != NULL) {
+        cards_recheck(c);
+        cardsUnsorted = 1;
+    }
+    log_msg("new card %s: %d%s", destNew.id, r, c ? "" : ", not one of the cards");
+    if (!c) {
+        unlink(destNew.path);   /* a card that isn't whole is no card; nor is its folder to stay, if it was made for it */
+        dir[strlen(dir) - 1] = 0;
+        rmdir(dir);
+        message_wait(0, NULL, COLOR_ERROR, T(T_NEWCARD_FAILED));
+    }
+    return c;
 }
 
 /* 0 = circle. Else *to = the card picked, to be replaced, or NULL: a new card of the group *tab (of a game: in
@@ -2607,17 +2789,8 @@ static int install_card(void)
                     message_wait(0, NULL, COLOR_WARN, t);
                     continue;
                 }
-                snprintf(t, sizeof(t), T(T_INSTALL_RAISE_ASK), max, max + 1);
-                dlg_new(0, NULL);
-                dlg_line(FONT_TEXT, COLOR_TEXT, 0, t);
-                dlg_buttons(BUTTON_CIRCLE, T_BACK, BUTTON_CROSS, T_CONTINUE);
-                next.wide = 1;
-                dlg_show();
-                if (!(wait_button(PAD_CROSS | PAD_CIRCLE, 0) & PAD_CROSS)) {
-                    sound_play(SND_BACK);
+                if (!ask_more_channels(max))
                     continue;
-                }
-                sound_play(SND_CONFIRM);
                 more = max + 1;
                 new_card(tab, gameFolder, more, folder, base);
             }
@@ -2760,13 +2933,15 @@ static void save_into_done(void)
 static int save_transfer(card_t *c, save_view_t *v, int move)
 {
     card_t *to;
+    char game[12];
     long long bytes = 0;
     int files = 0, r;
-    if (nCards < 2 && move) {
+    save_game_id(v->s.folder, game);   /* (a save that tells its game can always go to a new card of that game) */
+    if (nCards < 2 && move && !game[0]) {
         message_wait(0, NULL, COLOR_WARN, T(T_NO_OTHER_CARDS));
         return 0;
     }
-    if (!nCards) {   /* a save of a card file, with no card on the microSD to copy it to */
+    if (!nCards && !game[0]) {   /* a save of a card file, with no card on the microSD to copy it to */
         message_wait(0, NULL, COLOR_WARN, T(T_NO_CARDS_SD));
         return 0;
     }
@@ -2774,7 +2949,7 @@ static int save_transfer(card_t *c, save_view_t *v, int move)
     /* a copy can also go to a folder of the microSD or of a USB drive, as a .psu (not from a card file: the folders
      * are already being browsed, on the screen underneath) */
     destFiles = !move && c != &fileCard;
-    if (!(to = choose_dest(c, move ? T_MOVE_TO : T_COPY_TO, bytes))) {
+    if (!(to = choose_dest(c, move ? T_MOVE_TO : T_COPY_TO, bytes, v->s.folder))) {
         if (destDevice >= 0) {
             fbGive.c = c;
             fbGive.v = v;
@@ -2787,9 +2962,11 @@ static int save_transfer(card_t *c, save_view_t *v, int move)
         char name[100], t[200];
         save_name(v, name, sizeof(name));
         snprintf(t, sizeof(t), T(move ? T_CONFIRM_MOVE : T_CONFIRM_COPY), name, to->base);
-        if (!confirm(t, NULL, move ? T_MOVE : T_COPY))
+        if (!confirm(t, to == &destNew ? T(T_NEWCARD_NOTE) : NULL, move ? T_MOVE : T_COPY))
             return 0;
     }
+    if (!(to = dest_real(to)))
+        return 0;
     if (card_free(to, c) || (move && card_free(c, to))) {
         card_back();
         return 0;
@@ -3503,10 +3680,7 @@ static int psu_open(const char *file)
     psu.v.s.when = psu.info.when;
     psu.v.icon = ic;
     psu.v.tried = 1;
-    if (ic) {
-        snprintf(psu.v.line1, sizeof(psu.v.line1), "%s", ic->line1);
-        snprintf(psu.v.line2, sizeof(psu.v.line2), "%s", ic->line2);
-    }
+    save_title(&psu.v, ic);
     ui_unlock();
     return 1;
 }
@@ -3523,18 +3697,18 @@ static void psu_close(void)
 /* that save into a card, which is picked next; asked before it is written */
 static void psu_import(void)
 {
-    char name[160], t[300];
+    char name[160], t[300], game[12];
     card_t *to;
     int r;
-    if (!nCards) {
+    if (!nCards && !save_game_id(psu.info.folder, game)) {
         message_wait(0, NULL, COLOR_WARN, T(T_NO_CARDS_SD));
         return;
     }
-    if (!(to = choose_dest(NULL, T_IMPORT_TO, psu.info.bytes)))
+    if (!(to = choose_dest(NULL, T_IMPORT_TO, psu.info.bytes, psu.info.folder)))
         return;
     save_name(&psu.v, name, sizeof(name));
     snprintf(t, sizeof(t), T(T_CONFIRM_IMPORT), name, to->base);
-    if (!confirm(t, NULL, T_IMPORT_YES) || card_free(to, NULL))
+    if (!confirm(t, to == &destNew ? T(T_NEWCARD_NOTE) : NULL, T_IMPORT_YES) || !(to = dest_real(to)) || card_free(to, NULL))
         return;
     save_into(to, &psu.v, T_WORKING_IMPORT);
     r = mcfs_import_psu(psu.path, to->path, save_progress);
@@ -4672,6 +4846,10 @@ static void settings_screen(void)
 {
     if (!appsListed)
         list_apps();
+    if (helperStale) {   /* the card in the device was changed since: the package is the one of the card in use */
+        helperStale = 0;
+        helperState = helper_status();
+    }
     build_settings();
     ui_scene(scene_settings);
     for (;;) {
@@ -4810,6 +4988,40 @@ static int device_answers(void)
 
 static void device_lost(void) __attribute__((noreturn));
 
+/* The card in the device may be changed with the device's own buttons while SD2Cloud is open. Each time the device
+ * is asked whether it is there, it is also asked which card it is on (what the sd2psx tells: a number and a
+ * channel), and mcman whether the card in the slot is another. A change is only looked into the next time around,
+ * with nothing changing in between: the device takes a moment to have the new card ready. Then the card in use is
+ * found again, and what the settings say of the SAS package, which is of the card in use, is read again when they
+ * are next opened (helperStale) */
+static void active_watch(void)
+{
+    static int seenCard = -3, seenChannel, seenSlot, pending;
+    /* mcman: -1 = another card since it was last asked (said once); 0 = the same one; anything else is how the slot
+     * is for now (no card that can be used), which only counts when it becomes so */
+    int channel = 0, card = cardTold ? mmce_card_now(&channel) : -1, state = mc_card_state(sdRoot[4] - '0'),
+        slot = state == -1 ? 0 : state;
+    if (seenCard == -3) {   /* the first time: what was found when SD2Cloud opened stands */
+        seenCard = card;
+        seenChannel = channel;
+        seenSlot = slot;
+        return;
+    }
+    if (card != seenCard || channel != seenChannel || slot != seenSlot || state == -1) {
+        seenCard = card;
+        seenChannel = channel;
+        seenSlot = slot;
+        pending = 1;
+        return;
+    }
+    if (pending) {
+        pending = 0;
+        log_msg("%s: another card in it (%d, channel %d)", dev->name, card, channel);
+        find_active();
+        helperStale = 1;
+    }
+}
+
 static void device_watch(void)
 {
     int i;
@@ -4823,6 +5035,7 @@ static void device_watch(void)
         if (r >= 0) {
             if (!said++)
                 log_msg("%s: watched while the screens wait (it answers %d)", dev->name, r);
+            active_watch();
             return;
         }
         sleep_ms(500);
@@ -4874,6 +5087,46 @@ static void device_lost(void)
     cancelLatched = 0;
     watchOff = 0;
     longjmp(reloadPoint, 1);
+}
+
+/* A card made while a save's destination was picked sits at the end of cards[], so that the cards that were being
+ * worked with kept their places. Back on the main screen nothing points at a card any more: the list is put in order,
+ * and the card in use and the one the device was moved off of are found again by their names */
+static void cards_resort(void)
+{
+    char active[96], moved[96], shown[96];
+    const card_t *c = tabs_card(&menu.g);
+    int i, inside = menu.g.tab == TAB_GAMES && menu.g.open >= 0;
+    snprintf(active, sizeof(active), "%s", activeCard >= 0 ? cards[activeCard].id : "");
+    snprintf(moved, sizeof(moved), "%s", movedOff ? movedOff->id : "");
+    snprintf(shown, sizeof(shown), "%s", c ? c->id : "");
+    ui_lock();
+    cards_sort();
+    for (activeCard = nCards - 1; activeCard >= 0 && strcmp(cards[activeCard].id, active); activeCard--)
+        ;
+    movedOff = NULL;
+    for (i = 0; i < nCards && moved[0]; i++)
+        if (!strcmp(cards[i].id, moved))
+            movedOff = &cards[i];
+    transferDest = NULL;
+    cardsUnsorted = 0;
+    icon_free(menu.icon);
+    menu.icon = NULL;
+    menu.iconCard = -1;
+    /* the main screen, on the card it was on: a folder that was open may be another one of the list now */
+    menu.g.open = -1;
+    tabs_show(&menu.g, menu.g.tab);
+    for (i = 0; i < nCards && strcmp(cards[i].id, shown); i++)
+        ;
+    if (shown[0] && i < nCards) {
+        tabs_find(&menu.g, i);
+        if (inside) {
+            tabs_open(&menu.g);
+            menu.g.moved = -1;   /* (it was open already: nothing slides) */
+            tabs_find(&menu.g, i);
+        }
+    }
+    ui_unlock();
 }
 
 static void manual(void)
@@ -4955,6 +5208,8 @@ static void manual(void)
             device_lost();
         }
 #endif
+        if (cardsUnsorted)   /* a card made for a save: into its place, now that nothing holds on to the others */
+            cards_resort();
         /* the selected card's icon is read when the cursor rests a moment */
         b = wait_nav_ms(keys, 250);
         if (!b) {
