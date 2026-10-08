@@ -63,7 +63,9 @@ on one yet.
 - Starts other programs: any ELF picked in the folders of the microSD or of a USB drive (X on it in **Files**, or
   "Run an ELF..." when leaving), and an application kept on a memory card the Save Application System's way ("Start
   application" on its page; the sd2psx is switched to that card for it).
-- Updates itself from this repository's releases, verified against GitHub's SHA-256.
+- Updates itself from this repository's releases, verified against GitHub's SHA-256. Two channels, chosen in the
+  settings: **Stable**, the released versions, and **Beta**, a build made automatically from every change, before it
+  is tested the way a version is (the [beta pre-release](../../releases/tag/beta)).
 - Interface inspired by the PlayStation BB Navigator.
 - English and Portuguese.
 

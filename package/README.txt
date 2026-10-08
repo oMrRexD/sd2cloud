@@ -157,6 +157,7 @@ SETTINGS (START)
 - Backup format: .mcd (the sd2psx's own) or .ps2 (the format PCSX2 uses: take the file out of the backup's zip
   and put it in PCSX2's memory card folder). Either one can be restored, whatever is set.
 - Check for updates: looks for a new version right away and, if there is one, offers to update.
+- Update channel: Stable (the released versions) or Beta (see UPDATING).
 - Google account: disconnects the account (backups on Drive are kept) or connects it again.
 - About SD2Cloud: version, credits and licenses.
 Changes are saved to sd2cloud.ini, which can also be edited on a PC.
@@ -211,6 +212,11 @@ Then update the IGR helper as well: the settings show it as "Outdated" when the 
 card is different.
 To update manually, copy only the APPS/SD2Cloud folder from the new .zip file (or do not replace
 sd2cloud.ini when prompted).
+The beta channel: "Update channel" in the settings chooses where the updates come from. Stable is the released
+versions. Beta is a build made automatically from every change to the project, before it is tested the way a
+version is: it has what is new sooner, and it may have bugs. Choosing a channel looks for its update right
+away; going from Beta back to Stable offers the stable version in place of the beta installed. "About
+SD2Cloud" shows, after the version, the change the program was built from.
 
 RESTORING
 On the PS2: select the card, press TRIANGLE and choose "Restore a backup"; choose the backup and press X.

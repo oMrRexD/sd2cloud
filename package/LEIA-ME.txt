@@ -167,6 +167,7 @@ CONFIGURAÇÕES (START)
   backup e coloque na pasta de cartões de memória do PCSX2). Os dois podem ser restaurados, seja qual for a
   opção escolhida.
 - Verificar atualizações: procura uma versão nova na hora e, se houver, oferece a atualização.
+- Canal de atualização: Estável (as versões lançadas) ou Beta (veja ATUALIZAÇÃO).
 - Conta do Google: desconecta a conta (os backups no Drive são mantidos) ou conecta novamente.
 - Sobre o SD2Cloud: versão, créditos e licenças.
 As alterações são gravadas no sd2cloud.ini, que também pode ser editado no PC.
@@ -222,6 +223,11 @@ Em seguida, atualize também o assistente de IGR: nas configurações, ele apare
 quando a versão gravada no cartão de memória é diferente.
 Para atualizar manualmente, copie apenas a pasta APPS/SD2Cloud do novo arquivo .zip (ou não substitua o
 sd2cloud.ini quando o Windows perguntar).
+O canal beta: a opção "Canal de atualização", nas configurações, escolhe de onde vêm as atualizações. Estável
+são as versões lançadas. Beta é uma compilação feita automaticamente a cada alteração do projeto, antes dos
+testes que uma versão recebe: traz as novidades mais cedo e pode ter erros. Ao escolher um canal, a
+atualização dele é procurada na hora; ao voltar de Beta para Estável, a versão estável é oferecida no lugar
+da beta instalada. "Sobre o SD2Cloud" mostra, depois da versão, a alteração de que o programa foi compilado.
 
 RESTAURAÇÃO
 No PS2: selecione o cartão, pressione TRIÂNGULO e escolha "Restaurar backup"; escolha o backup e

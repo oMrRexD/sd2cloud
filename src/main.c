@@ -3935,11 +3935,11 @@ static void helper_install_now(int doneTitle);
 
 
 enum { SET_SYNC_ALL, SET_AUTO_SYNC, SET_HELPER, SET_IGR_RETURN, SET_LANGUAGE, SET_KEEP, SET_FORMAT, SET_UPDATES,
-       SET_ACCOUNT, SET_ABOUT, SET_MAX };
+       SET_CHANNEL, SET_ACCOUNT, SET_ABOUT, SET_MAX };
 #define SET_X      80     /* the labels; the values end at SET_RIGHT */
 #define SET_RIGHT  560
-#define SET_Y0     122
-#define SET_ROW    24
+#define SET_Y0     120
+#define SET_ROW    22
 static struct {
     int n, cursor, item[SET_MAX];
     char label[SET_MAX][96], value[SET_MAX][64];
@@ -4139,6 +4139,7 @@ static void build_settings(void)
     if (updateAvailable)
         snprintf(v, sizeof(v), T(T_UPDATE_AVAILABLE), update_tag());
     set_item(&i, SET_UPDATES, T(T_SET_UPDATES), updateAvailable ? v : "");
+    set_item(&i, SET_CHANNEL, T(T_SET_CHANNEL), cfg.beta ? "Beta" : T(T_CHANNEL_STABLE));
     set_item(&i, SET_ACCOUNT, T(T_SET_ACCOUNT), T(google_has_access() ? T_ACCOUNT_ON : T_ACCOUNT_OFF));
     set_item(&i, SET_ABOUT, T(T_SET_ABOUT), "v" APP_VERSION);
     st.n = i;
@@ -4414,8 +4415,9 @@ static int add_custom(const char *target, const char **items, char (*values)[200
 }
 
 /* "Check for updates": asks GitHub (the only moment SD2Cloud looks for a new version: it never does by itself) and
- * offers the new version; otherwise says this one is the latest, or that GitHub couldn't be reached */
-static void check_updates_now(void)
+ * offers the new version; otherwise says this one is the latest, or that GitHub couldn't be reached. back = 1: the
+ * beta channel was just left, and the stable version is offered in place of the beta installed */
+static void check_updates_now(int back)
 {
     char t[200];
     int r;
@@ -4430,7 +4432,7 @@ static void check_updates_now(void)
             networkUp = 1;
         }
         message(0, NULL, COLOR_TEXT, T(T_UPDATE_CHECKING));
-        r = update_check();
+        r = update_check(back);
         if (r < 0) {
             message_wait(0, NULL, COLOR_ERROR, T(T_UPDATE_CHECK_FAILED));
             return;
@@ -4444,6 +4446,26 @@ static void check_updates_now(void)
         look_news(update_tag());
     }
     update_app();
+}
+
+/* where the updates come from: the releases (stable) or the build made from every change (beta, after saying what
+ * that means). The channel chosen is looked at right away; leaving the beta, that is the way back to the stable
+ * version */
+static void pick_channel(void)
+{
+    static const char *items[2];
+    int k;
+    items[0] = T(T_CHANNEL_STABLE);
+    items[1] = "Beta";
+    if ((k = choose(T(T_SET_CHANNEL), items, 2, cfg.beta)) < 0 || k == cfg.beta)
+        return;
+    if (k && !confirm(T(T_CHANNEL_BETA_ASK), T(T_CHANNEL_BETA_TEXT), T_YES))
+        return;
+    cfg.beta = k;
+    config_set("update", "channel", k ? "beta" : "stable");
+    updateAvailable = 0;   /* what was found before was the other channel's */
+    look_news("");
+    check_updates_now(!k);
 }
 
 /* where to go after IGR: automatic, a program in APPS or the PS2 menu */
@@ -4580,7 +4602,8 @@ static void account_screen(void)
 static void about_screen(void)
 {
     char t[120];
-    snprintf(t, sizeof(t), "SD2Cloud v%s", APP_VERSION);
+    /* with the commit it was built from, when the build was told: it is what tells one beta from another */
+    snprintf(t, sizeof(t), "SD2Cloud v%s%s%s%s", APP_VERSION, APP_COMMIT[0] ? " (" : "", APP_COMMIT, APP_COMMIT[0] ? ")" : "");
     dlg_new(COLOR_TITLE, t);
     dlg_line(FONT_TEXT, COLOR_TEXT, 10, T(T_ABOUT_TEXT));
     dlg_line(FONT_SMALL, COLOR_DIM, 4, T(T_ABOUT_CREDITS));
@@ -4685,7 +4708,10 @@ static void settings_screen(void)
             pick_format();
             break;
         case SET_UPDATES:
-            check_updates_now();
+            check_updates_now(0);
+            break;
+        case SET_CHANNEL:
+            pick_channel();
             break;
         case SET_ACCOUNT:
             account_screen();

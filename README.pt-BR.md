@@ -67,7 +67,9 @@ SD2Cloud ainda não foi testado em um.
 - Inicia outros programas: qualquer ELF escolhido nas pastas do microSD ou de um pendrive USB (X sobre ele em
   **Arquivos**, ou "Executar um ELF..." ao sair) e um aplicativo guardado em um cartão de memória no formato do Save
   Application System ("Iniciar aplicativo" na página dele; o sd2psx é trocado para esse cartão).
-- Atualiza-se pelas releases deste repositório, com verificação pelo SHA-256 publicado no GitHub.
+- Atualiza-se pelas releases deste repositório, com verificação pelo SHA-256 publicado no GitHub. Dois canais,
+  escolhidos nas configurações: **Estável**, as versões lançadas, e **Beta**, uma compilação feita automaticamente a
+  cada alteração, antes dos testes que uma versão recebe (a [pre-release beta](../../releases/tag/beta)).
 - Visual inspirado no PlayStation BB Navigator.
 - Em português e em inglês.
 

@@ -72,6 +72,7 @@ static void on_config(const char *s, const char *k, const char *v, void *u)
         }
     } else if (!strcasecmp(s, "update")) {
         if (!strcasecmp(k, "repo") && *v && !strpbrk(v, " '\"\\")) COPY(cfg.repo, v);
+        else if (!strcasecmp(k, "channel")) cfg.beta = !strcasecmp(v, "beta");
     }
 }
 

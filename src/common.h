@@ -7,6 +7,9 @@
 
 #define APP_NAME    "SD2Cloud"
 #define APP_VERSION "1.5"
+#ifndef APP_COMMIT
+#define APP_COMMIT ""       /* the commit it was built from (7 characters), when the build is told: see the Makefile */
+#endif
 
 /* ------------------------------------------------------------ system.c */
 extern char appDir[200];    /* where the program lives: mmce0:/APPS/SD2Cloud/ (host:APPS/SD2Cloud/ on PCSX2) */
@@ -174,6 +177,8 @@ typedef struct {
     char manual_return[200];
     char manual_name[64];        /* [manual] name: the same, for the program in manual_return */
     char repo[80];               /* [update] repo (owner/name on GitHub) */
+    int beta;                    /* [update] channel = beta: updates come from the "beta" pre-release, rebuilt at every
+                                    change, instead of the latest release */
 } config_t;
 extern config_t cfg;
 extern int configExists;
@@ -351,8 +356,13 @@ extern char googleError[256];               /* why the last request failed, for 
 long github_get(const char *url, buffer_t *b, int follow);
 
 /* ------------------------------------------------------------ update.c (GitHub Releases) */
-int update_check(void);                     /* 1 = there is a newer version (with SD2CLOUD.ELF and GitHub's SHA-256), 0 = not, -1 = no answer */
-const char *update_tag(void);
+/* Asks GitHub for the release of the channel in use: the latest one (stable) or the "beta" pre-release. 1 = it has
+ * something to install (SD2CLOUD.ELF, with GitHub's SHA-256), 0 = not, -1 = no answer. Stable: a newer version, or
+ * this very version with another file (a beta of it is what is installed). Beta: any file other than the one
+ * installed. back = 1 (the beta channel was just left): the stable release counts whenever the file installed is not
+ * its own, even if that one says it is newer */
+int update_check(int back);
+const char *update_tag(void);               /* what was found: "v1.6", or "beta 63cdae2" */
 /* 0 = installed and verified (the app then reopens the new version); -3 = the program is on a memory card with no
  * room for the new one (helperNeedKb, helperFreeKb). progress: how far writing to that card is (elsewhere it isn't
  * called) */
@@ -398,9 +408,10 @@ int helper_uninstall(void);                 /* removes it from mc0: 0 = removed 
 extern int helperNeedKb, helperFreeKb;
 /* the program on a memory card (appOnCard) */
 int card_app_helper(void);                  /* 1 = the IGR helper is in the program's folder, where OPL can run it */
+int card_app_read(buffer_t *b);             /* the program itself, whole, as it is on the card. 0 = read */
 /* A new version written to that folder: the helper (left alone when it is the same) and the program, each one next
  * to the old one, read back and only then in its place; title.cfg gets the version ("1.6") and its date ("October 7,
- * 2026", "" = unknown), and the folder keeps its dates. progress is told how far the writing and the reading back
+ * 2026"; "" = unknown, for either: that line stays as it is), and the folder keeps its dates. progress is told how far the writing and the reading back
  * are. 0 = done; -3 = no room for the new program next to the old one, nothing was touched (helperNeedKb,
  * helperFreeKb); -1 = couldn't write */
 int card_app_update(const buffer_t *app, const buffer_t *helper, const char *version, const char *released,

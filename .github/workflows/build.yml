@@ -2,7 +2,8 @@ name: Build
 
 # Every push and pull request is built, to check that the project compiles. A tag (v1.0, v1.1...) also publishes the
 # release: the zip, the two ELFs attached loose (SD2Cloud's own updater downloads those), the Save Application System
-# package (APP_SD2CLOUD.psu), SHA256SUMS.txt and the notes.
+# package (APP_SD2CLOUD.psu), SHA256SUMS.txt and the notes. A push to main also publishes the same files as the
+# "beta" pre-release, in place of the one before it: SD2Cloud's beta update channel.
 
 on:
   push:
@@ -53,8 +54,9 @@ jobs:
           printf '#define GOOGLE_CLIENT_ID "%s"\n#define GOOGLE_CLIENT_SECRET "%s"\n' \
             "${GOOGLE_CLIENT_ID:-placeholder}" "${GOOGLE_CLIENT_SECRET:-placeholder}" > src/credentials.h
 
+      # the commit goes into the program ("About" shows it): given here, so that git isn't asked inside the container
       - name: Build
-        run: make
+        run: make APP_COMMIT="$(echo "$GITHUB_SHA" | cut -c1-7)"
 
       - name: Package
         run: python3 tools/make_release.py
@@ -90,3 +92,51 @@ jobs:
           gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --verify-tag \
             --title "SD2Cloud ${GITHUB_REF_NAME#v}" --notes-file dist/RELEASE-NOTES.md \
             dist/SD2Cloud-v*.zip dist/SD2CLOUD.ELF dist/SD2CLOUD-IGR.ELF dist/APP_SD2CLOUD.psu dist/SHA256SUMS.txt
+
+  # The beta channel: what was just built from main, as a pre-release under the fixed tag "beta", made again at every
+  # push (the release before it is deleted with its tag, and the new one is created on this commit). SD2Cloud looks at
+  # it only when its settings say "Update channel: Beta". The versions from before that setting ask GitHub for "the
+  # latest release", which is never a pre-release, and compare tags by their numbers, which "beta" doesn't have.
+  beta:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency: beta
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: SD2Cloud
+          path: dist
+
+      - name: Publish the beta
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          # main moved on while this was building: the push that moved it publishes, not this one
+          if [ "$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)" != "$GITHUB_SHA" ]; then
+            echo "main is past $GITHUB_SHA: nothing published"
+            exit 0
+          fi
+          short=$(echo "$GITHUB_SHA" | cut -c1-7)
+          # the zip is named after the version in the source, which the release it came from already has: here it is the beta's
+          mv dist/SD2Cloud-v*.zip dist/SD2Cloud-beta.zip
+          sed -i 's/  SD2Cloud-v.*\.zip$/  SD2Cloud-beta.zip/' dist/SHA256SUMS.txt
+          {
+            printf 'Built automatically from the latest change to `main` ([`%s`](https://github.com/%s/commit/%s)):\n\n' "$short" "$GITHUB_REPOSITORY" "$GITHUB_SHA"
+            printf '> %s\n\n' "$(printf '%s\n' "$MESSAGE" | head -n 1)"
+            printf 'This is the **beta channel**: every change comes out here before it is tested the way a version is, so it may have bugs. The stable version is the release marked "Latest".\n\n'
+            printf 'To get the betas from SD2Cloud itself: Settings > Update channel > Beta. Choosing Stable there again offers the way back.\n\n'
+            printf -- '---\n\n'
+            printf '**Canal beta:** compilado automaticamente a cada alteração, antes dos testes que uma versão recebe; pode ter erros. A versão estável é a release marcada como "Latest". Para receber as betas pelo próprio SD2Cloud: Configurações > Canal de atualização > Beta.\n\n'
+            printf '| File | SHA-256 |\n|---|---|\n'
+            awk '{ printf "| %s | `%s` |\n", $2, $1 }' dist/SHA256SUMS.txt
+          } > beta-notes.md
+          gh release delete beta --repo "$GITHUB_REPOSITORY" --cleanup-tag --yes || true
+          # and a "beta" tag left without its release, which the new one would otherwise be attached to as it is
+          gh api -X DELETE "repos/$GITHUB_REPOSITORY/git/refs/tags/beta" > /dev/null 2>&1 || true
+          gh release create beta --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease --latest=false \
+            --title "SD2Cloud beta ($short)" --notes-file beta-notes.md \
+            dist/SD2Cloud-beta.zip dist/SD2CLOUD.ELF dist/SD2CLOUD-IGR.ELF dist/APP_SD2CLOUD.psu dist/SHA256SUMS.txt

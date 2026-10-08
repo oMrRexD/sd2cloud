@@ -360,6 +360,8 @@ static void own_delete(const char *name)
 
 int card_app_helper(void) { return memcard_ready(appCardPort) == 0 && own_entry(OWN_HELPER, NULL); }
 
+int card_app_read(buffer_t *b) { return memcard_ready(appCardPort) == 0 ? own_read(OWN_APP, b) : -1; }
+
 /* One file of the folder gives way to a new one: mcman can't replace a file in one step, so the new one is written
  * next to it under another name, read back, and takes its name only then (the old one is deleted at that moment) */
 static int own_replace(const char *name, const unsigned char *d, int n)
@@ -384,7 +386,8 @@ static int own_replace(const char *name, const unsigned char *d, int n)
     return 0;
 }
 
-/* title.cfg says which version the folder has and when it came out: the new ones, every other line as it was */
+/* title.cfg says which version the folder has and when it came out: the new ones (each one when it is known: a beta
+ * has a date and no number of its own), every other line as it was */
 static void own_title(const char *version, const char *released)
 {
     buffer_t in = {0}, out = {0};
@@ -399,7 +402,7 @@ static void own_title(const char *version, const char *released)
         const char *nl = memchr(p, '\n', end - p);
         size_t len = nl ? (size_t)(nl - p + 1) : (size_t)(end - p);
         const char *eol = !nl ? "" : (len > 1 && nl[-1] == '\r') ? "\r\n" : "\n", *value = NULL;
-        if (len > 8 && !strncmp(p, "Version=", 8))
+        if (len > 8 && !strncmp(p, "Version=", 8) && version[0])
             value = version;
         else if (len > 8 && !strncmp(p, "Release=", 8) && released[0])
             value = released;

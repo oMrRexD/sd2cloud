@@ -42,6 +42,11 @@ EE_INCS += -Isrc -I. -Ithird_party/qrcodegen -I$(PORTS4096)/include -I$(PS2SDK)/
 EE_LDFLAGS += -L$(PORTS4096)/lib -L$(PS2SDK)/ports/lib -L$(GSKIT)/lib -Wl,--wrap=malloc -Wl,--wrap=memalign
 EE_LIBS = -lcurl -lwolfssl -lfreetype -lpng -lz -lsocket -lps2_drivers -laudsrv -lmc -lelf-loader-nocolour -lpatches -lgskit -ldmakit -ldebug -lcdvd -lpthread -lpthreadglue -lm
 EE_CFLAGS += -Os -Wall -Wno-format-truncation $(EXTRA_CFLAGS)
+# the commit the program is built from, shown in "About": the first 7 characters of its hash (empty when it isn't
+# known). It goes into the program, so two builds only come out the same when they are given the same one: GitHub
+# Actions passes its own, and so must a build made to compare hashes with it
+APP_COMMIT ?= $(shell git rev-parse HEAD 2>/dev/null | cut -c1-7)
+EE_CFLAGS += -DAPP_COMMIT=\"$(APP_COMMIT)\"
 
 .PHONY: all igr clean
 all: $(PORTS4096)/lib/libwolfssl.a $(MMCEMAN) src/credentials.h $(EE_BIN_PACKED)
