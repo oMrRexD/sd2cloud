@@ -23,7 +23,14 @@ fonts = {k: ImageFont.truetype(TTF, px) for k, (px, bold) in SPEC.items()}
 
 
 def measure(font, s):
-    return round(fonts[font].getlength(s) + len(s) * SPEC[font][1] / 64)
+    """as font.c walks a text: the pen in 1/64 pixel, each letter's advance plus the bold, and a word starting on a
+    whole pixel (the pen is rounded up after each space)"""
+    pen = 0
+    for ch in s:
+        pen += round(fonts[font].getlength(ch) * 64) + SPEC[font][1]
+        if ch == " ":
+            pen = (pen + 63) // 64 * 64
+    return (pen + 32) >> 6
 
 
 def count_lines(font, s, width):

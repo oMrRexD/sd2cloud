@@ -245,6 +245,11 @@ static int walk(int id, float x, float y, u64 color, const char *utf8, int draw)
             gsKit_prim_sprite_texture(gs, &a->tex, gx, gy, g->x, g->y, gx + g->w, gy + g->h, g->x + g->w, g->y + g->h, 1, color);
         }
         pen += g->advance;
+        /* a word starts on a whole pixel. The advances have a fraction (the bold added to them), and rounding each
+         * letter's place could take a pixel off the space before a word: of the 4 a 15 px font gives it, enough for
+         * two short words to read as one on a TV */
+        if (c == ' ')
+            pen = (pen + 63) & ~63;
     }
     return (pen + 32) >> 6;
 }
