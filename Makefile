@@ -8,6 +8,7 @@
 # make DEBUG=1  -> dist/SD2CLOUD-DEBUG.ELF: keeps a log (SD2Cloud/debug-log.txt, written when it closes), "(debug)"
 #                 folder on Drive, keeps 3 backups; a script.txt, when there is one, presses the buttons
 # Then python tools/make_release.py packages the release in dist/.
+# make test (or make -C tests, which needs no PS2 toolchain) runs the regression tests: see tests/README.md.
 PORTS4096 ?= ports4096
 MMCEMAN ?= third_party/mmceman/mmceman.irx
 DIST = dist
@@ -52,7 +53,7 @@ EE_CFLAGS += -Os -Wall -Wno-format-truncation $(EXTRA_CFLAGS)
 APP_COMMIT ?= $(shell git rev-parse HEAD 2>/dev/null | cut -c1-7)
 EE_CFLAGS += -DAPP_COMMIT=\"$(APP_COMMIT)\"
 
-.PHONY: all igr clean
+.PHONY: all igr clean test
 all: $(PORTS4096)/lib/libwolfssl.a $(MMCEMAN) src/credentials.h $(EE_BIN_PACKED)
 ifneq ($(DEBUG),1)
 all: igr
@@ -168,6 +169,9 @@ $(OBJ_DIR)/cacert_pem.o: $(OBJ_DIR)/cacert_pem.c
 clean:
 	rm -rf obj obj-debug $(DIST)/SD2CLOUD.ELF $(DIST)/SD2CLOUD-DEBUG.ELF
 	$(MAKE) -C igr clean
+
+test:
+	$(MAKE) -C tests
 
 include $(PS2SDK)/samples/Makefile.pref
 include $(PS2SDK)/samples/Makefile.eeglobal
