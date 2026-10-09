@@ -101,6 +101,7 @@ int ask_connect(void);
 int card_in_use(const card_t *c, int active, int channel);
 int active_card(int *channel);
 void find_active(void);
+int active_sure(char seen[65]);
 int can_insert(const card_t *c);
 int insert_card(const card_t *c);
 extern const card_t *movedOff;

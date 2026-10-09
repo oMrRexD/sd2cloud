@@ -286,9 +286,32 @@ static void apply_done(void)
     ui_unlock();
 }
 
-/* is the device using that card right now? Its file can't be touched then: it is changed through the slot. (The
- * card in use is the one find_active found) */
-static int in_slot(const card_t *c) { return activeCard >= 0 && &cards[activeCard] == c; }
+/* a card's root folder, as it was when the card was last read (read now, for a card that wasn't) */
+static const char *root_of(card_t *c)
+{
+    if (!c->rootSig[0])
+        mcfs_root_signature(c->path, c->rootSig);
+    return c->rootSig;
+}
+
+/* Does another card have the same root folder as that one? (Two cards with nothing in them do.) The card in the
+ * device is told from the others by its root folder: with a twin, which of the two the device is on isn't known.
+ * (A numbered card the sd2psx names by its number) */
+static int has_twin(const card_t *c)
+{
+    card_t *own = &cards[c - cards];
+    int i;
+    if (cardTold && c->type == TYPE_NORMAL)
+        return 0;
+    for (i = 0; i < nCards; i++)
+        if (&cards[i] != c && (!cardTold || cards[i].type != TYPE_NORMAL) && !strcmp(root_of(&cards[i]), root_of(own)))
+            return 1;
+    return 0;
+}
+
+/* is the device using that card right now, for sure? Its file can't be touched then: it is changed through the slot.
+ * (The card in use is the one find_active found, when no other card could be taken for it) */
+static int in_slot(const card_t *c) { return activeCard >= 0 && &cards[activeCard] == c && !has_twin(c); }
 
 #define TPL_LEFT (-100)   /* a card left as it was: the device may be using it, and wasn't moved off it */
 
@@ -318,8 +341,9 @@ static int template_into(const template_t *t, card_t *c, int replace, int show, 
     *put = 0;
     ap.to = c;
     if (!in_slot(c)) {
-        /* (which card the device is using isn't known: it is asked, and moved off this one if it has to be) */
-        if (activeCard < 0 && card_free(c, NULL))
+        /* (the device is asked, and what the PS2 sees in the slot compared with this card: it is moved off this one
+         * if it has to be) */
+        if (card_free(c, NULL))
             return TPL_LEFT;
         r = (replace ? template_update : template_apply)(t, c->path, show ? apply_before : NULL, show ? save_progress : NULL, put);
         cards_recheck(c);
@@ -559,34 +583,53 @@ void templates_startup(void)
         sound_play(SND_BACK);
 }
 
-/* After a game, with nobody at the controller (the automatic sync): the card the game used gets the saves it lacks
- * of its templates, through the slot. Nothing here may hold the way back to OPL: whatever goes wrong is only logged */
+/* After a game, with nobody at the controller (the automatic sync): the game cards about to be sent get the saves
+ * they lack of their templates, each in its own file. The game's card isn't the one in the device by then: OPL has it
+ * back on the BootCard, or on the card from before the game. A card's file is only written when that is sure: the
+ * card the device is on is known, the PS2 sees in the slot the root folder that card's file has, and this card's
+ * file has another. Any doubt leaves the card as it is, for the warning when the program is next opened. Nothing
+ * here may hold the way back to OPL: whatever goes wrong is only logged */
 void templates_after_game(void)
 {
     const template_t *list[TPL_MAX];
-    card_t *c;
-    int count, k, put, total = 0, r = MCFS_OK;
+    char seen[65], file[65];
+    int i, k, n = 0, count, put, total, r, changed = 0;
     if (cfg.no_tpl_after_game || !templates_in_use())
         return;
     templates_scan();
+    for (i = 0; i < nCards; i++)
+        if (cards[i].type == TYPE_GAMEID && is_selected(&cards[i], 0) && templates_of_game(cards[i].folder, list) &&
+            !templates_settled(cards[i].id, cards[i].folder))
+            gameCards[n++] = i;
+    if (!n)
+        return;
     find_active();
-    if (activeCard < 0 || cards[activeCard].type != TYPE_GAMEID)
+    if (!active_sure(seen)) {
+        log_msg("templates: after the game, %d card(s) left as they are: which card the device is on isn't sure", n);
         return;
-    c = &cards[activeCard];
-    if (!(count = templates_of_game(c->folder, list)) || templates_settled(c->id, c->folder))
-        return;
+    }
     message(COLOR_TITLE, T(T_IGR_TITLE), COLOR_DIM, T(T_TPL_APPLYING));
-    for (k = 0; k < count && r == MCFS_OK; k++) {
-        r = template_into(list[k], c, 0, 0, &put);
-        total += put;
+    for (i = 0; i < n; i++) {
+        card_t *c = &cards[gameCards[i]];
+        if (mcfs_root_signature(c->path, file) != 0 || !strcmp(seen, file)) {
+            log_msg("templates: after the game, %s left as it is: it may be the card in the device", c->id);
+            continue;
+        }
+        count = templates_of_game(c->folder, list);
+        for (k = 0, total = 0, r = MCFS_OK; k < count && r == MCFS_OK; k++) {
+            r = template_apply(list[k], c->path, NULL, NULL, &put);
+            total += put;
+        }
+        log_msg("templates: after the game, %s got %d save(s) (%d)", c->id, total, r);
+        if (total)
+            cards_recheck(c);   /* what is sent is the card as it is now */
+        if (r == MCFS_OK) {
+            templates_settle(c->id, c->folder);
+            changed = 1;
+        }
     }
-    log_msg("templates: after the game, %s got %d save(s) (%d)", c->id, total, r);
-    if (r == MCFS_OK) {
-        templates_settle(c->id, c->folder);
+    if (changed)
         templates_save();
-    }
-    if (total)   /* the device writes the card to its file when it goes idle, and the sync that follows reads that file */
-        sleep_ms(cfg.igr_settle * 1000);
 }
 
 /* a template is made the main one, or stops being it */

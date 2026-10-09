@@ -13,8 +13,8 @@ typedef struct {
     char path[200];        /* the .mcd */
     char name[48];         /* channel name from the CardX.ini, if any */
     char game[64];         /* a game card's game, as the sd2psx names it ("" = not a game card, or not in the list) */
-    char rootSig[65];      /* its root folder's signature, from when its index was read: kept only for a device whose
-                              card in use is found by it ("" = not read) */
+    char rootSig[65];      /* its root folder's signature, from when its index was last read ("" = not read): the card
+                              in the device is told from the others by it */
     int type, channel;
     long long size;
     /* computed */

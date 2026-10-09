@@ -208,6 +208,12 @@ void manual(void)
             activeCard = same;
             log_msg("[script] a: %s is taken as the card in use", cards[same].id);
         }
+        /* script "t": the automatic sync's step that puts the templates into the game cards, as after a game (the
+         * sync itself needs a Google account, which PCSX2 has none of) */
+        if (debug_take('t')) {
+            log_msg("[script] t: the templates, as after a game");
+            templates_after_game();
+        }
     }
 #endif
     if (!google_has_access() && !cfg.no_ask_connect && ask_connect()) {

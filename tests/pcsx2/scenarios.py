@@ -4,8 +4,9 @@ Each one: "name"; "what" it tries, in a line; "cards", the cards on the "microSD
 card of fixtures/: "empty", or "game", which has two saves of the game SLUS-21065); "files", other files (path ->
 a file of fixtures/, or bytes); "settings", lines to add to sd2cloud.ini; "script", what is pressed
 (src/platform/debug.c has the letters: X O T Q = cross, circle, triangle, square; U D < > = the arrows; S = START;
-L = SELECT; . = a second's wait; C = stop here; I at the start = started as after IGR); "seconds", how long it may
-take (90).
+L = SELECT; . = a second's wait; C = stop here; I at the start = started as after IGR; t at the start = the templates
+are put into the game cards as after a game, SD2Cloud/active.txt naming the card in the device); "seconds", how long
+it may take (90).
 
 A script ends in C on the screen it should have reached: a scenario that goes somewhere else doesn't get to its C in
 time, or leaves another log.
@@ -58,6 +59,15 @@ SCENARIOS = [
     {"name": "template-update", "what": "the main template updated on the cards it is for",
      "cards": CARDS, "files": dict(TEMPLATE, **{"SD2Cloud/templates/templates.ini": b"[templates]\nmain = Net\n"}),
      "script": "OLXDXTDDDXXXC"},
-    {"name": "template-after-game", "what": "applying the templates after a game turned off",
+    {"name": "template-auto-apply-off", "what": "applying the templates after a game turned off",
      "cards": CARDS, "files": TEMPLATE, "script": "LXDDXC"},
+    # after a game the device is on the BootCard. Both cards have nothing in them, as the BootCard: the second one
+    # can't be told from the card in the device
+    {"name": "template-auto-apply", "what": "after a game, a game card about to be sent gets its templates; one that may be "
+     "the card in the device is left for the warning",
+     "cards": {"BOOT/BootCard-1": "empty", "Card1/Card1-1": "game", "SLUS-21065/SLUS-21065-1": "game",
+               "SLUS-20001/SLUS-20001-1": "empty"},
+     "files": dict(TEMPLATE, **{"SD2Cloud/templates/templates.ini": b"[templates]\nmain = Net\n",
+                                "SD2Cloud/active.txt": b"BOOT/BootCard-1"}),
+     "script": "tOC"},
 ]

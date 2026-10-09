@@ -169,8 +169,11 @@ settings an online game asks for. SELECT, on the main screen, opens the tools; T
 - Overwrite on cards: on the cards a template is for, its items take the place of the ones that differ.
   It is the only thing here that writes over saved data, and it asks first.
 - Auto-apply (the last row of the list, On or Off): with the automatic sync, when a game is left with
-  IGR the card it used gets the items it lacks of its templates, with no question asked, before it is
-  sent. The card the sd2psx is using is changed through the memory card slot, as a game would change it.
+  IGR the game cards about to be sent get the items they lack of their templates, with no question asked,
+  before they are sent. A card is only changed then when it surely isn't the one in the sd2psx (OPL has it
+  back on the BootCard by that time); any other is left for the warning when SD2Cloud is next opened.
+- Applied by hand to the card the sd2psx is using, a template goes in through the memory card slot, as a
+  game would write it.
 A template is a folder of SD2Cloud/templates on the microSD with a .psu file for each item: a .psu put there
 with a PC is part of the template too.
 

@@ -117,6 +117,21 @@ void find_active(void)
     log_msg("%s: the card in it is %s", dev->name, found >= 0 ? cards[found].id : "none of the cards here, or unknown");
 }
 
+/* Is it sure which card the device is on? It is when find_active found one and the root folder the PS2 sees in the
+ * slot (seen) is the one in that card's file: the device has nothing of it left to write, and a card whose file has
+ * another root folder is not the one in the device. For what changes cards' files with nobody watching */
+int active_sure(char seen[65])
+{
+    char file[65];
+    if (activeCard < 0)
+        return 0;
+#ifdef DEBUG_BUILD
+    if (strncmp(sdRoot, "mmce", 4) != 0)   /* PCSX2 has no device: the card active.txt names stands for the one in it */
+        return mcfs_root_signature(cards[activeCard].path, seen) == 0;
+#endif
+    return mc_root_signature(mc_slot(), seen) == 0 && mcfs_root_signature(cards[activeCard].path, file) == 0 && !strcmp(seen, file);
+}
+
 /* can the device be told to take this card? Not a folder with a name of its own: it has no way to be asked for one.
  * The BootCard and a game's card the sd2psx only takes with Autoboot or Game ID on in its settings, which shows by
  * trying. On a device that isn't the sd2psx this is a preview: it takes the same requests, as far as is known */

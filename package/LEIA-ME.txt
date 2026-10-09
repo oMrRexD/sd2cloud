@@ -177,8 +177,11 @@ a primeira.
 - Substituir nos cartões: nos cartões de um template, os itens dele substituem os que forem diferentes. É a
   única coisa aqui que grava por cima de dados salvos, e pergunta antes.
 - Aplicação automática (a última linha da lista, Ativado ou Desativado): com a sincronização automática, ao sair
-  de um jogo pelo IGR o cartão que ele usou recebe os itens que faltam dos templates dele, sem perguntar,
-  antes de ser enviado. O cartão em uso no sd2psx é alterado pelo slot de memory card, como um jogo faria.
+  de um jogo pelo IGR os cartões de jogo que vão ser enviados recebem os itens que faltam dos templates deles,
+  sem perguntar, antes do envio. Nessa hora só é alterado o cartão que com certeza não está no sd2psx (o OPL
+  já voltou para o BootCard); os demais ficam para o aviso da próxima abertura do SD2Cloud.
+- Aplicado manualmente ao cartão em uso no sd2psx, o template é gravado pelo slot de memory card, como um
+  jogo gravaria.
 Um template é uma pasta de SD2Cloud/templates no microSD com um arquivo .psu para cada item: um .psu colocado
 ali pelo PC também faz parte do template.
 
