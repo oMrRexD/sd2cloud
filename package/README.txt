@@ -7,7 +7,8 @@ WARNING: SD2Cloud is at an early stage and has not been widely tested yet. Befor
 importing or restoring saved data with it, back up your memory cards: copy the MemoryCards folder of the microSD
 to a PC.
 
-SD2Cloud runs on the PS2 itself and works with the memory cards stored on the microSD of sd2psx-family devices
+SD2Cloud runs on the PS2 itself and works with the memory cards stored on the MMCE (the sd2psx's microSD, as the
+PS2 names it) of sd2psx-family devices
 running the sd2psXtd firmware (sd2psx, PSXMemCard, PSXMemCard Gen2, PicoMemcard+/Zero). No PC is required.
 
 WHAT IT DOES
@@ -17,28 +18,28 @@ Cloud sync
 - Keeps a history of backups for each card and restores any of them, verified before and after writing.
 Memory card manager
 - Shows the saved data of each card the way the PS2 browser does, with animated 3D icons.
-- Copies, moves and deletes saved data between the cards on the microSD, and uploads a single item to Google
+- Copies, moves and deletes saved data between the cards on the MMCE, and uploads a single item to Google
   Drive as a .psu file. Saved data can also go to a new card of its own game, made on the spot.
 - Organizes the cards in tabs: numbered cards, game (Game ID) cards, in folders named after each game, and
   boot cards.
-- Imports .psu files into any card and exports any item of a card as a .psu file, from and to the microSD or
+- Imports .psu files into any card and exports any item of a card as a .psu file, from and to the MMCE or
   a USB drive (see FILES).
-- Opens memory card files from the microSD or a USB drive (.mcd, a MemCard PRO2's .mc2, PCSX2's .ps2, OPL's
+- Opens memory card files from the MMCE or a USB drive (.mcd, a MemCard PRO2's .mc2, PCSX2's .ps2, OPL's
   virtual memory cards (.bin), or the .zip SD2Cloud itself writes) and installs them as cards of the sd2psx
   (see FILES).
-- Starts other programs: X on an ELF in the folders of the microSD or of a USB drive runs it (also from "Run
+- Starts other programs: X on an ELF in the folders of the MMCE or of a USB drive runs it (also from "Run
   an ELF..." in the list shown when leaving), and an application kept on a memory card with a title.cfg (the
   Save Application System's way) gets "Start application" on its page: the sd2psx is switched to that card
   and the program runs from the memory card slot.
 
 REQUIREMENTS
 - An sd2psx-family device with the sd2psXtd firmware (MMCE support).
-  A MemCard PRO2 is recognized too (its cards are the .mc2 files in the PS2 folder of its microSD), but
+  A MemCard PRO2 is recognized too (its cards are the .mc2 files in the PS2 folder of its MMCE), but
   SD2Cloud has not been tried on one yet: take that as experimental. On it, "Insert this card" is a
   preview, and SD2Cloud never switches cards by itself: to change the card in use, switch to another one first.
 - A way to start SD2Cloud: the Apps tab of OPL, wLaunchELF or any other launcher that can run an ELF. An
   OPL with MMCE support is recommended, such as RiptOPL (https://github.com/NathanNeurotic/Open-PS2-Loader).
-  Without it, OPL does not list the apps on the sd2psx microSD and has no "IGR Bootcard Slot(s)" option: with
+  Without it, OPL does not list the apps on the MMCE and has no "IGR Bootcard Slot(s)" option: with
   Game ID cards, the sd2psx stays on the game's card when you exit with IGR, the PS2 goes back to the browser
   instead of opening SD2Cloud, and the automatic sync does not happen.
 - For the automatic sync after a game: OPL, which starts SD2Cloud through its IGR.
@@ -46,21 +47,21 @@ REQUIREMENTS
   with a cable, and a Google account.
 
 INSTALLATION
-1. Extract this .zip file to the root of the sd2psx microSD. It adds APPS/SD2Cloud (the application) and
+1. Extract this .zip file to the root of the MMCE. It adds APPS/SD2Cloud (the application) and
    SD2Cloud/sd2cloud.ini (the settings; it can be edited on a PC before the first run). The file only has
    the options: each one is explained in sd2cloud.example.ini, next to it.
 2. Open SD2Cloud: from the Apps tab of OPL, or by running APPS/SD2Cloud/SD2CLOUD.ELF with any launcher
    (wLaunchELF, for example). The folder does not have to stay in APPS.
    SD2Cloud can live on a USB drive, an MX4SIO card or the internal HDD (exFAT or APA) instead: put the
-   APPS/SD2Cloud folder there and open SD2Cloud from there once. It records where it is, keeps on the microSD
+   APPS/SD2Cloud folder there and open SD2Cloud from there once. It records where it is, keeps on the MMCE
    (SD2Cloud/drivers) the drivers the SAS package needs to start it from that device, and updates itself
-   there. Its settings and its data are always on the sd2psx microSD.
+   there. Its settings and its data are always on the MMCE.
    On the memory card, the SAS package: when automatic sync is turned on, SD2Cloud puts its SAS (Save
    Application System) package on the memory card in use: the APP_SD2CLOUD folder, with what OPL runs on IGR
-   and a shortcut that opens SD2Cloud from the microSD, with its own 3D icon for the PS2 browser (about
-   240 KB). The program itself stays on the microSD. This .zip also has the package as
+   and a shortcut that opens SD2Cloud from the MMCE, with its own 3D icon for the PS2 browser (about
+   240 KB). The program itself stays on the MMCE. This .zip also has the package as
    Extras/APP_SD2CLOUD.psu, to import into another card by hand (SD2Cloud's own Files tab does that); with
-   no SD2Cloud on the microSD, the shortcut only says so.
+   no SD2Cloud on the MMCE, the shortcut only says so.
 3. Without a connected Google account, SD2Cloud asks whether to connect one now. Choosing "Not now" opens the
    main screen directly; "Don't ask again" (TRIANGLE) does the same and stops the question for good (ask_connect = no in sd2cloud.ini).
    The account can be connected later in Settings (START). To connect, visit
@@ -83,7 +84,7 @@ The cards are grouped into tabs shown above the list: Cards (the numbered cards,
 with custom names), Games (Game ID cards, in folders named after each game: X opens a
 folder, O goes back) and Boot (the BootCard). Press Left and Right, or L1
 and R1, to switch tabs. Tabs without cards are not shown. The last tab, Files, has no cards: it browses the
-microSD and a USB drive for .psu files and memory card files (see FILES).
+MMCE and a USB drive for .psu files and memory card files (see FILES).
 A folder that the sd2psx's .sd2psx/Game2Folder.ini gives to several games (a series that shares one card) is
 shown under those games' names: what they have in common ("Need for Speed"), or the names themselves.
 A game card that file left behind (the sd2psx opens another folder for its game now) has a grey arrow, and its
@@ -92,7 +93,7 @@ options offer to move its saves to the card the sd2psx opens.
   syncs the card; if it is already synced, SD2Cloud says so and lets you sync it again.
 - TRIANGLE opens the selected card's options: "Sync now", "Disable sync" (the card is left out of every sync,
   the automatic one too, until "Enable sync" is picked there; its status is then "Excluded"), "Restore a
-  backup" (see RESTORING) and "Copy to a device": the whole card goes, as a file, to a folder of the microSD or of a USB drive. Pick the device, go to
+  backup" (see RESTORING) and "Copy to a device": the whole card goes, as a file, to a folder of the MMCE or of a USB drive. Pick the device, go to
   the folder and press TRIANGLE; SD2Cloud asks whether the card goes as a .mcd (sd2psx) or a .ps2 (PCSX2) and
   writes it inside a .zip, as the backups on Drive are (a card is mostly empty space, and its .zip takes a
   fraction of the time to write); then it reads the .zip back and compares it. The last one, "Insert into
@@ -104,7 +105,7 @@ options offer to move its saves to the card the sd2psx opens.
   as if it were all on a single card. Each item still belongs to its own card, whose name is at the top of
   the item's page, and what is done to an item is done to that card.
 - START opens the settings (see SETTINGS), and SELECT the tools (see TEMPLATES).
-- X on a saved data item opens its page, with Copy and Move (to another card on the microSD, chosen from the
+- X on a saved data item opens its page, with Copy and Move (to another card on the MMCE, chosen from the
   same tabs as the main screen; the destination's free space is shown, and a card without enough space cannot
   be selected; when the item's name tells its game, the Games tab also has "New card", in that game's folder
   or among the folders while the game has none: an empty 8 MB card is made for the item, as the device itself
@@ -117,7 +118,7 @@ button cancels the upload; cards already uploaded remain on Drive. While several
 about the one on its way: X skips it this time, SQUARE skips it and turns its sync off.
 
 FILES
-The last tab of the main screen, Files, lists the devices whose folders can be browsed: the sd2psx microSD
+The last tab of the main screen, Files, lists the devices whose folders can be browsed: the MMCE
 and a USB drive (FAT32 or exFAT). The USB drivers are loaded only when the USB drive is opened. X opens the
 device, a folder, a .psu file or a memory card file; O goes back one folder; Left and Right move a page at a
 time. Every folder and file is listed, but only those files can be opened: the buttons at the bottom of the
@@ -134,8 +135,8 @@ screen are the ones that do something with the selected entry.
   BASLUS-21065SAVE (2).psu).
 - Memory card files: X on a .mcd, a .mc2 (MemCard PRO2), a .ps2 (PCSX2), a .bin (one of OPL's virtual memory
   cards, VMC) or a .zip written by "Copy to a device" opens the card it holds, shown as the cards of the
-  microSD are. The file is only read. X on an item opens its page, from where it can be copied to a card of
-  the microSD.
+  MMCE are. The file is only read. X on an item opens its page, from where it can be copied to a card of
+  the MMCE.
 - Installing a memory card file: SQUARE, on the file in the list or on the screen of its card, asks where the
   card goes, in the same tabs as the main screen. "New card", at the top of each list, makes a new card: the
   lowest free number in Cards, the next channel of the BootCard in Boot and, in Games, the next channel of
@@ -153,7 +154,7 @@ Names with accented letters may be shown abbreviated, or not open at all (a limi
 PS2 SDK): prefer plain names for the folders you use here.
 
 TEMPLATES (SELECT)
-A template is a set of saved data items you pick, kept on the microSD to be put into cards. The device makes
+A template is a set of saved data items you pick, kept on the MMCE to be put into cards. The device makes
 the card of a new game empty: a template gives it what every card of yours should have, as the network
 settings an online game asks for. SELECT, on the main screen, opens the tools; Templates is the first.
 - New template: its name is typed on a keyboard on the screen (X types, SQUARE erases, START finishes). Then
@@ -184,7 +185,7 @@ settings an online game asks for. SELECT, on the main screen, opens the tools; T
   back on the BootCard by that time); any other is left for the warning when SD2Cloud is next opened.
 - Applied by hand to the card the sd2psx is using, a template goes in through the memory card slot, as a
   game would write it.
-A template is a folder of SD2Cloud/templates on the microSD with a .psu file for each item: a .psu put there
+A template is a folder of SD2Cloud/templates on the MMCE with a .psu file for each item: a .psu put there
 with a PC is part of the template too.
 
 SETTINGS (START)
@@ -196,7 +197,7 @@ SETTINGS (START)
   for the PS2 browser; see AUTOMATIC SYNC). Once it is installed, the same option reinstalls it (or updates
   it) or uninstalls it.
 - IGR path: the program started after the IGR sync. The choices are Automatic (the OPL found on the
-  microSD), the programs in the APPS folder and the PS2 browser.
+  MMCE), the programs in the APPS folder and the PS2 browser.
 - Language and Backups kept per card (3, 5, 10, 20, 50 or no limit): how many backups of each card stay on
   Drive; past that, the oldest is removed.
 - Backup format: .mcd (the sd2psx's own) or .ps2 (the format PCSX2 uses: take the file out of the backup's zip
@@ -218,7 +219,7 @@ AUTOMATIC SYNC AFTER A GAME (IGR)
    game, OPL switches back to the BootCard, where the package is installed.
 From then on, exiting a game with IGR starts SD2Cloud: it uploads the changed cards, shows "Upload complete"
 and returns to OPL. In this mode, cancelling the upload also returns to OPL.
-SD2Cloud can be kept in any folder of the sd2psx microSD: every time it is opened, it records where it is
+SD2Cloud can be kept in any folder of the MMCE: every time it is opened, it records where it is
 in sd2cloud.ini ("app_path"), and the package starts it from there. A folder of APPS that was renamed or
 moved is found by the package as well, even before SD2Cloud is opened from it.
 To uninstall the package, select "SAS package" again and choose "Uninstall"; then change "IGR Path" in OPL.
@@ -230,9 +231,9 @@ APPS/SD2Cloud folder is on one, formatted as FAT32, skip step 1 and set "IGR Pat
 mass:/APPS/SD2Cloud/SD2CLOUD-IGR.ELF
 Nothing is written to the memory card. For this, OPL loads the USB drivers USBD.IRX and USBHDFSD.IRX from
 mc?:/SYS-CONF, where FMCB installs them. With the SAS package on the memory card none of that is needed,
-wherever SD2Cloud is: the package starts it from the microSD, a USB drive, an MX4SIO or the HDD.
+wherever SD2Cloud is: the package starts it from the MMCE, a USB drive, an MX4SIO or the HDD.
 The program opened after IGR is chosen in Settings (START), from the programs in the APPS folder of the
-microSD. If your OPL is on another device, enter its path in sd2cloud.ini, in the [igr] section, starting
+MMCE. If your OPL is on another device, enter its path in sd2cloud.ini, in the [igr] section, starting
 with the device: mc?:/ (memory card), mass:/ (USB), mx4sio:/, ata:/ (internal HDD, exFAT) or
 hdd0:PARTITION:pfs:/ (internal HDD, APA), for example hdd0:__common:pfs:/APPS/OPL/OPNPS2LD.ELF. SD2Cloud loads only the drivers
 of that device, when returning. If the file is not found, it opens the PS2 browser. The "name" line, under
@@ -240,7 +241,7 @@ of that device, when returning. If the file is not found, it opens the PS2 brows
 
 FILE LOCATIONS
 - APPS/SD2Cloud/   the application (updated by SD2Cloud itself; see UPDATING).
-- SD2Cloud/        on the microSD root: sd2cloud.ini (the settings; if deleted, SD2Cloud recreates it),
+- SD2Cloud/        on the MMCE root: sd2cloud.ini (the settings; if deleted, SD2Cloud recreates it),
                    sd2cloud.example.ini (what each setting means; SD2Cloud never reads it),
                    sync-error.txt (what happened in the last automatic sync that failed, if any: worth
                    sending along when reporting a problem),
@@ -268,7 +269,7 @@ SD2Cloud" shows, after the version, the change the program was built from.
 RESTORING
 On the PS2: select the card, press TRIANGLE and choose "Restore a backup"; choose the backup and press X.
 If the card has changed since its last backup, SD2Cloud syncs it first, so no data is lost.
-The backup is then downloaded, verified, written over the card on the microSD and verified again.
+The backup is then downloaded, verified, written over the card on the MMCE and verified again.
 The card currently in use by the sd2psx cannot be restored, because the sd2psx keeps a copy of it in its
 own memory: switch to another card on the sd2psx first.
 On a PC: download the .zip file from Drive and extract the .mcd file. Copy it to the microSD with the PS2

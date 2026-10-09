@@ -7,7 +7,8 @@
 > restaurar dados salvos com ele, faça um backup dos seus cartões de memória: copie a pasta `MemoryCards` do
 > microSD para um PC.
 
-O SD2Cloud roda no próprio PS2 e trabalha com os cartões de memória guardados no microSD dos dispositivos da
+O SD2Cloud roda no próprio PS2 e trabalha com os cartões de memória guardados no MMCE (o microSD do sd2psx, como o
+PS2 o chama) dos dispositivos da
 família sd2psx com o firmware [sd2psXtd](https://github.com/sd2psXtd/firmware) (sd2psx, PSXMemCard, PSXMemCard
 Gen2, PicoMemcard+/Zero), sem necessidade de um PC. O MemCard PRO2 também é reconhecido, de forma experimental: o
 SD2Cloud ainda não foi testado em um.
@@ -42,7 +43,7 @@ SD2Cloud ainda não foi testado em um.
 
 **Gerenciador de cartões de memória**
 - Exibe os dados salvos de cada cartão como o navegador do PS2, com os ícones 3D animados.
-- Copia, move e elimina dados salvos entre os cartões do microSD (o espaço livre do destino é exibido), e envia
+- Copia, move e elimina dados salvos entre os cartões do MMCE (o espaço livre do destino é exibido), e envia
   um item avulso ao Google Drive como arquivo `.psu`. Os dados salvos também podem ir para um cartão novo do
   próprio jogo, criado na hora ("Novo cartão", na aba Jogos): um cartão vazio de 8 MB, como o aparelho cria.
 - Exibe os dados salvos de todos os cartões de jogo em uma só tela (**Todos os saves**, na aba Jogos), como se fossem
@@ -51,15 +52,15 @@ SD2Cloud ainda não foi testado em um.
   e cartões de boot.
 - Marca o cartão que está em uso no sd2psx e pode fazê-lo assumir outro (nas opções do cartão). Para alterar o
   cartão em uso, ele pergunta, troca o sd2psx para outro cartão e volta.
-- Copia um cartão inteiro, como um `.zip` com o `.mcd` ou o `.ps2` dentro, para uma pasta do microSD ou de um
+- Copia um cartão inteiro, como um `.zip` com o `.mcd` ou o `.ps2` dentro, para uma pasta do MMCE ou de um
   pendrive USB (nas opções do cartão).
 - Abre arquivos de cartão de memória na aba **Arquivos** (`.mcd`, o `.mc2` do MemCard PRO2, o `.ps2` do PCSX2, os
-  cartões virtuais do OPL (`.bin`) ou esse `.zip`), copia dados salvos de dentro deles e os instala no microSD: como um cartão novo (numerado, de um
+  cartões virtuais do OPL (`.bin`) ou esse `.zip`), copia dados salvos de dentro deles e os instala no MMCE: como um cartão novo (numerado, de um
   jogo ou mais um canal do BootCard) ou no lugar de um existente.
-- Importa e exporta arquivos `.psu`: a aba **Arquivos** navega pelas pastas do microSD e de um pendrive USB (FAT32
+- Importa e exporta arquivos `.psu`: a aba **Arquivos** navega pelas pastas do MMCE e de um pendrive USB (FAT32
   ou exFAT), instala um `.psu` em qualquer cartão e grava qualquer item de um cartão como `.psu`. O que é gravado
   é lido de volta e comparado.
-- Mantém **templates**: conjuntos de dados salvos que você marca nos seus cartões, guardados no microSD e
+- Mantém **templates**: conjuntos de dados salvos que você marca nos seus cartões, guardados no MMCE e
   aplicados a qualquer cartão de uma vez. O aparelho cria vazio o cartão de um jogo novo; um template dá a ele o
   que todo cartão seu deve ter, como o network settings que um jogo online pede. Dados salvos que o cartão já tem
   nunca são alterados. Um template pode ser o **padrão**, o que todo cartão de jogo deve ter: ele vai para
@@ -70,9 +71,9 @@ SD2Cloud ainda não foi testado em um.
 **E também**
 - Pede confirmação antes de qualquer operação que envia, grava ou elimina dados.
 - Ajustes no próprio console (START), gravados no `sd2cloud.ini`, que também pode ser editado no PC.
-- Retorna ao OPL no microSD, num cartão de memória, no USB, no MX4SIO ou no HD interno (exFAT ou APA), carregando
+- Retorna ao OPL no MMCE, num cartão de memória, no USB, no MX4SIO ou no HD interno (exFAT ou APA), carregando
   somente os drivers desse dispositivo.
-- Inicia outros programas: qualquer ELF escolhido nas pastas do microSD ou de um pendrive USB (X sobre ele em
+- Inicia outros programas: qualquer ELF escolhido nas pastas do MMCE ou de um pendrive USB (X sobre ele em
   **Arquivos**, ou "Executar um ELF..." ao sair) e um aplicativo guardado em um cartão de memória no formato do Save
   Application System ("Iniciar aplicativo" na página dele; o sd2psx é trocado para esse cartão).
 - Atualiza-se pelas releases deste repositório, com verificação pelo SHA-256 publicado no GitHub. Dois canais,
@@ -88,7 +89,7 @@ SD2Cloud ainda não foi testado em um.
   preview nele, e o SD2Cloud nunca troca sozinho: para alterar o cartão em uso, selecione outro antes.
 - Uma forma de abrir o SD2Cloud: a aba Apps do OPL, o wLaunchELF ou qualquer outro programa que abra um ELF.
   Recomenda-se um OPL com suporte a MMCE, como o [RiptOPL](https://github.com/NathanNeurotic/Open-PS2-Loader). Sem esse suporte, o OPL não lista os apps do
-  microSD do sd2psx e não tem a opção **Slot(s) de Bootcard IGR**: com cartões de Game ID, o sd2psx continua no
+  MMCE e não tem a opção **Slot(s) de Bootcard IGR**: com cartões de Game ID, o sd2psx continua no
   cartão do jogo ao sair pelo IGR, o PS2 volta para o navegador em vez de abrir o SD2Cloud, e a sincronização
   automática não acontece.
 - Para a sincronização automática após o jogo: o OPL, que abre o SD2Cloud pelo IGR.
@@ -98,7 +99,7 @@ SD2Cloud ainda não foi testado em um.
 ## Instalação
 
 1. Baixe o `SD2Cloud-vX.Y.zip` da [release mais recente](../../releases/latest).
-2. Extraia na raiz do microSD do sd2psx. Serão criadas as pastas `APPS/SD2Cloud` (o aplicativo) e `SD2Cloud`,
+2. Extraia na raiz do MMCE. Serão criadas as pastas `APPS/SD2Cloud` (o aplicativo) e `SD2Cloud`,
    com o `sd2cloud.ini` (as configurações, explicadas no `sd2cloud.example.ini` ao lado dele).
 3. Abra o SD2Cloud: pela aba Apps do OPL, ou executando `APPS/SD2Cloud/SD2CLOUD.ELF` em qualquer programa que abra
    um ELF (o wLaunchELF, por exemplo). A pasta não precisa ficar em `APPS`.
@@ -107,15 +108,15 @@ SD2Cloud ainda não foi testado em um.
 5. Em seguida, o SD2Cloud oferece a sincronização automática e a sincronização de todos os cartões.
 
 O SD2Cloud também pode ficar em um pendrive USB, em um cartão do MX4SIO ou no HD interno (exFAT ou APA): coloque
-a pasta `APPS/SD2Cloud` lá e abra o SD2Cloud por lá uma vez. Ele registra onde está, guarda no microSD
+a pasta `APPS/SD2Cloud` lá e abra o SD2Cloud por lá uma vez. Ele registra onde está, guarda no MMCE
 (`SD2Cloud/drivers`) os drivers de que o pacote SAS precisa para iniciá-lo nesse dispositivo e se atualiza ali
-mesmo. As configurações e os dados ficam sempre no microSD do sd2psx.
+mesmo. As configurações e os dados ficam sempre no MMCE.
 
 **No cartão de memória: o pacote SAS.** Ao ativar a sincronização automática, o SD2Cloud grava o seu pacote SAS
 (Save Application System) no cartão de memória em uso: a pasta `APP_SD2CLOUD`, com o que o OPL executa no IGR e um
-atalho que abre o SD2Cloud do microSD, com ícone 3D próprio para o browser do PS2 (cerca de 240 KB). O programa em
-si fica no microSD. O zip traz também o pacote como `Extras/APP_SD2CLOUD.psu`, para importar à mão em outro cartão
-(a aba **Arquivos** do próprio SD2Cloud faz isso); sem o SD2Cloud no microSD, o atalho apenas avisa.
+atalho que abre o SD2Cloud do MMCE, com ícone 3D próprio para o browser do PS2 (cerca de 240 KB). O programa em
+si fica no MMCE. O zip traz também o pacote como `Extras/APP_SD2CLOUD.psu`, para importar à mão em outro cartão
+(a aba **Arquivos** do próprio SD2Cloud faz isso); sem o SD2Cloud no MMCE, o atalho apenas avisa.
 
 O [LEIA-ME.txt](package/LEIA-ME.txt) incluído na release explica cada tela em detalhes.
 
@@ -126,7 +127,7 @@ O [LEIA-ME.txt](package/LEIA-ME.txt) incluído na release explica cada tela em d
 | Tela principal | Cima/Baixo: cartão · Esquerda/Direita ou L1/R1: aba · X: abrir o cartão · TRIÂNGULO: opções do cartão (sincronizar agora, restaurar backup, copiar para dispositivo, inserir no sd2psx) · SELECT: ferramentas · START: ajustes · O: sair |
 | Dentro de um cartão | X: abrir um item · QUADRADO: sincronizar este cartão · O: voltar |
 | Página de um item | Copiar · Mover · Eliminar · Enviar ao Drive |
-| Aba Arquivos | X: abrir o dispositivo, uma pasta, um arquivo `.psu` ou um arquivo de cartão de memória · QUADRADO: instalar o `.psu` selecionado em um cartão, ou o arquivo de cartão selecionado no microSD · Esquerda/Direita: uma página acima ou abaixo · O: voltar. Para exportar um item, use o **Copiar** da página dele: os destinos incluem esta aba, e TRIÂNGULO grava o `.psu` na pasta exibida |
+| Aba Arquivos | X: abrir o dispositivo, uma pasta, um arquivo `.psu` ou um arquivo de cartão de memória · QUADRADO: instalar o `.psu` selecionado em um cartão, ou o arquivo de cartão selecionado no MMCE · Esquerda/Direita: uma página acima ou abaixo · O: voltar. Para exportar um item, use o **Copiar** da página dele: os destinos incluem esta aba, e TRIÂNGULO grava o `.psu` na pasta exibida |
 | Ferramentas (SELECT) > Templates | X: um template novo (o nome é digitado; depois os saves são marcados nos cartões: X marca, START conclui) ou um existente · Em um template: X: um save, para removê-lo · TRIÂNGULO (sobre um template da lista, ou com ele aberto): definir como padrão, adicionar saves, aplicar template (a todos os cartões de jogo, aos cartões que você selecionar, ou só atualizando os saves que os cartões de jogo já têm), jogos vinculados, renomear, eliminar |
 | Durante um envio | O: cancelar |
 
@@ -143,7 +144,7 @@ O [LEIA-ME.txt](package/LEIA-ME.txt) incluído na release explica cada tela em d
    o OPL volta para o BootCard, onde o pacote está instalado.
 
 A partir daí, ao sair de um jogo pelo IGR, o SD2Cloud envia os cartões alterados e retorna ao OPL. A mesma opção
-reinstala ou desinstala o pacote. O SD2Cloud pode ficar em qualquer pasta do microSD do sd2psx: quando não
+reinstala ou desinstala o pacote. O SD2Cloud pode ficar em qualquer pasta do MMCE: quando não
 está em `APPS/SD2Cloud`, ele registra onde está no `sd2cloud.ini`, e o pacote o inicia a partir dali (uma pasta
 de `APPS` que foi renomeada também é encontrada).
 
@@ -155,11 +156,11 @@ acontece enquanto não há conta do Google conectada.
 `APPS/SD2Cloud` estiver em um, formatado em FAT32, pule o passo 1 e informe `mass:/APPS/SD2Cloud/SD2CLOUD-IGR.ELF`
 em **Definir saída do IGR**: nada é gravado no cartão de memória. Para isso, o OPL carrega os drivers USB
 `USBD.IRX` e `USBHDFSD.IRX` de `mc?:/SYS-CONF`, onde o FMCB os instala. Com o pacote SAS no cartão de memória nada
-disso é necessário, esteja o SD2Cloud onde estiver: o pacote o inicia do microSD, de um pendrive USB, de um MX4SIO
+disso é necessário, esteja o SD2Cloud onde estiver: o pacote o inicia do MMCE, de um pendrive USB, de um MX4SIO
 ou do HD.
 
 Se o seu OPL
-não estiver no microSD do sd2psx, informe o caminho dele na seção `[igr]` do `sd2cloud.ini`, começando pelo
+não estiver no MMCE, informe o caminho dele na seção `[igr]` do `sd2cloud.ini`, começando pelo
 dispositivo: `mc?:/` (cartão de memória), `mass:/` (USB), `mx4sio:/`, `ata:/` (HD interno exFAT) ou
 `hdd0:PARTIÇÃO:pfs:/` (HD interno APA), por exemplo `hdd0:__common:pfs:/APPS/OPL/OPNPS2LD.ELF`.
 
