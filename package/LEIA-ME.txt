@@ -201,7 +201,7 @@ AJUSTES (START)
   reinstalar (ou atualizar) e desinstalar o pacote.
 - Saída do IGR: o programa iniciado depois da sincronização pelo IGR. As opções são Automático (o OPL
   encontrado no microSD), os programas da pasta APPS e o browser do PS2.
-- Idioma e Backups guardados por cartão (3, 5, 10, 20, 50 ou sem limite): quantos backups de cada cartão
+- Idioma e Backups mantidos por cartão (3, 5, 10, 20, 50 ou sem limite): quantos backups de cada cartão
   ficam no Drive; passando disso, o mais antigo é removido.
 - Formato do backup: .mcd (o do próprio sd2psx) ou .ps2 (o formato usado pelo PCSX2: tire o arquivo do zip do
   backup e coloque na pasta de cartões de memória do PCSX2). Os dois podem ser restaurados, seja qual for a
