@@ -380,3 +380,4 @@ X(T_MOVE_SAVES_ASK, "Move the saves of %s to %s?", "Deseja mover os saves de %s 
 X(T_MOVE_SAVES_NOTE, "The sd2psx uses the folder %s for this game.", "O sd2psx usa a pasta %s para este jogo.")
 X(T_MOVED_N, "Saves moved: %d", "Saves movidos: %d")
 X(T_NOT_MOVED_N, "Saves not moved: %d", "Saves não movidos: %d")
+X(T_HELPER_UPDATING, "Updating the SAS package...", "Atualizando o pacote SAS...")

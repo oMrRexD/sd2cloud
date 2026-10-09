@@ -216,6 +216,7 @@ void manual(void)
         debug_preview(debug_digit());
 #endif
     helperState = helper_status();
+    helper_follow();
     find_active();
 #ifdef DEBUG_BUILD
     {   /* checks the in-use detection on PCSX2: the root signature of the card in slot 1 against each .mcd's */

@@ -345,6 +345,7 @@ extern int circleDown;
 void watch_cancel(void);
 extern int watchOff;
 int confirm_cancel(int title, int text);
+void helper_follow(void);
 extern int skipOffered, skipLatched;
 int confirm_skip(const card_t *c);
 extern const card_t *current;

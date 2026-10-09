@@ -185,7 +185,7 @@ PLACE = {
     "T_TPL_GAMES": ("text", 320, 1), "T_TPL_UPDATE": ("text", 320, 1), "T_TPL_AFTER_GAME": ("text", 236, 1),
     "T_TPL_AFTER_HINT": ("small", 212, 6), "T_TPL_ON": ("text", 200, 1), "T_TPL_OFF": ("text", 200, 1),
     "T_TPL_UPDATE_NOTE": ("text", DIALOG, 4), "T_TPL_ALL_CARDS": ("text", 320, 1), "T_TPL_PICK_CARDS": ("text", 200, 1),
-    "T_TPL_NO_MAIN": ("small", 212, 1), "T_SYNC_DISABLE": ("text", 320, 1), "T_SYNC_ENABLE": ("text", 320, 1),
+    "T_TPL_NO_MAIN": ("small", 212, 1), "T_HELPER_UPDATING": ("text", DIALOG, 1), "T_SYNC_DISABLE": ("text", 320, 1), "T_SYNC_ENABLE": ("text", 320, 1),
     "T_MOVE_SAVES": ("text", 320, 1), "T_CARD_UNUSED": ("small", 244, 1), "T_SKIP_ASK": ("text", WIDE, 1),
     "T_SKIP_TEXT": ("text", WIDE, 1), "T_MOVE_SAVES_ASK": ("text", DIALOG, 2), "T_MOVE_SAVES_NOTE": ("text", DIALOG, 2),
 }

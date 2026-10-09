@@ -138,7 +138,8 @@ The [README.txt](package/README.txt) included in the release explains every scre
 
 From then on, exiting a game with IGR starts SD2Cloud, which uploads the cards that changed and returns to OPL.
 The same option reinstalls or uninstalls the package. SD2Cloud can be kept in any folder of the sd2psx microSD:
-when it is not in `APPS/SD2Cloud`, it records where it is in `sd2cloud.ini`, and the package starts it from there.
+when it is not in `APPS/SD2Cloud`, it records where it is in `sd2cloud.ini`, and the package starts it from there
+(a folder of `APPS` that was renamed is found too).
 
 To pause the sync and keep everything installed, set **Automatic sync** to Off in Settings (START): IGR then goes
 straight to the program opened after it, without starting SD2Cloud. The same happens while no Google account is

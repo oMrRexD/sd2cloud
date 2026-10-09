@@ -8,7 +8,8 @@
  *
  * Where SD2Cloud is: SD2Cloud writes its own path in its settings every time it is opened (the "app_path" line of
  * SD2Cloud/sd2cloud.ini, always at the root of the microSD), so it can be kept in any folder. Without that line, or
- * if nothing is there any more, it is looked for in APPS/SD2Cloud.
+ * if nothing is there any more, it is looked for in APPS/SD2Cloud, and then in every other folder of APPS: a folder
+ * that was renamed, or moved, before SD2Cloud was opened from it once (which only this file would do).
  *
  * It doesn't have to be on the memory card: OPL's IGR also runs an ELF from a USB drive ("mass:"), so with the
  * APPS/SD2Cloud folder copied to one, "Exit to" can point at this file right there. SD2Cloud is then next to it, and
@@ -30,6 +31,7 @@
 #include <strings.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <dirent.h>
 #include <kernel.h>
 #include <sifrpc.h>
 #include <loadfile.h>
@@ -263,6 +265,32 @@ static int on_sd(char *path, const char *root)
     return !strncmp(path, root, strchr(root, ':') - root + 1);
 }
 
+/* SD2Cloud isn't where its settings say, nor in its usual folder: started from any other folder of APPS that has it.
+ * The folders' names are read first, and the folder closed, before any of them is looked into (the sd2psx does one
+ * thing at a time) */
+static void run_found(const char *root)
+{
+    static char names[24][64], path[256];
+    struct dirent *e;
+    DIR *d;
+    int n = 0, i;
+    strcpy(path, root);
+    strcat(path, "APPS");
+    if (!(d = opendir(path)))
+        return;
+    while (n < 24 && (e = readdir(d)) != NULL)
+        if (e->d_name[0] != '.' && strlen(e->d_name) < sizeof(names[0]))
+            strcpy(names[n++], e->d_name);
+    closedir(d);
+    for (i = 0; i < n; i++) {
+        strcpy(path, root);
+        strcat(path, "APPS/");
+        strcat(path, names[i]);
+        strcat(path, "/" ELF);
+        run(path, AS_IGR);
+    }
+}
+
 #ifdef OPEN
 /* The shortcut found no SD2Cloud to open: said on the screen (the SDK's text screen has no accented letters), for long
  * enough to be read, before the PS2 menu */
@@ -270,11 +298,13 @@ static void not_found(void)
 {
     init_scr();
     scr_printf("\n\n\n   SD2Cloud\n\n"
-               "   SD2Cloud was not found on the sd2psx microSD.\n"
-               "   Extract SD2Cloud's .zip file to the root of the microSD:\n"
+               "   SD2CLOUD.ELF was not found on the MMCE (the sd2psx microSD).\n"
+               "   Copy the APPS folder of SD2Cloud's .zip to the MMCE:\n"
+               "   the program goes in APPS/SD2Cloud.\n"
                "   github.com/oMrRexD/sd2cloud\n\n"
-               "   SD2Cloud ausente no microSD do sd2psx.\n"
-               "   Extraia o arquivo .zip do SD2Cloud na raiz do microSD.\n");
+               "   SD2CLOUD.ELF nao encontrado no MMCE (o microSD do sd2psx).\n"
+               "   Copie a pasta APPS do .zip do SD2Cloud para o MMCE:\n"
+               "   o programa fica em APPS/SD2Cloud.\n");
     sleep(12);
 }
 #else
@@ -345,6 +375,8 @@ int main(int argc, char *argv[])
             strcat(path, "APPS/SD2Cloud/" ELF);
             run(path, AS_IGR);
         }
+        for (k = 0; roots[k]; k++)   /* any other folder of APPS */
+            run_found(roots[k]);
 #ifndef OPEN
         if (beside[0])   /* it is on the memory card, then: no use waiting for the microSD to have it */
             break;

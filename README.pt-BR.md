@@ -143,7 +143,8 @@ O [LEIA-ME.txt](package/LEIA-ME.txt) incluído na release explica cada tela em d
 
 A partir daí, ao sair de um jogo pelo IGR, o SD2Cloud envia os cartões alterados e retorna ao OPL. A mesma opção
 reinstala ou desinstala o pacote. O SD2Cloud pode ficar em qualquer pasta do microSD do sd2psx: quando não
-está em `APPS/SD2Cloud`, ele registra onde está no `sd2cloud.ini`, e o pacote o inicia a partir dali.
+está em `APPS/SD2Cloud`, ele registra onde está no `sd2cloud.ini`, e o pacote o inicia a partir dali (uma pasta
+de `APPS` que foi renomeada também é encontrada).
 
 Para pausar a sincronização sem desinstalar nada, deixe **Sincronização automática** como Desativada em
 Ajustes (START): o IGR passa a ir direto para o programa aberto depois dele, sem iniciar o SD2Cloud. O mesmo

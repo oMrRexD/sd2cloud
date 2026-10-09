@@ -231,7 +231,8 @@ SINCRONIZAÇÃO AUTOMÁTICA APÓS O JOGO (IGR)
 A partir daí, ao sair de um jogo pelo IGR, o SD2Cloud envia os cartões alterados, exibe "Envio concluído"
 e retorna ao OPL. Nesse modo, cancelar o envio também retorna ao OPL.
 O SD2Cloud pode ficar em qualquer pasta do microSD do sd2psx: sempre que é aberto, ele registra onde está
-no sd2cloud.ini ("app_path"), e o pacote o inicia a partir dali. Depois de movê-lo, abra-o uma vez.
+no sd2cloud.ini ("app_path"), e o pacote o inicia a partir dali. Uma pasta de APPS que foi renomeada ou
+movida também é encontrada pelo pacote, mesmo antes de o SD2Cloud ser aberto a partir dela.
 Para desinstalar o pacote, selecione "Pacote SAS" novamente e escolha "Desinstalar"; depois,
 altere "Definir saída do IGR" no OPL.
 Para pausar a sincronização sem desinstalar nada, deixe "Sincronização automática" como Desativada em
@@ -267,8 +268,8 @@ O SD2Cloud não procura atualizações sozinho. Nos ajustes (START), a opção "
 consulta o GitHub para saber se há uma versão mais recente e, se houver, oferece a atualização. O aplicativo
 baixa os novos arquivos, verifica-os com o SHA-256 publicado no GitHub, substitui os anteriores e inicia a
 nova versão. As configurações são mantidas.
-Em seguida, atualize também o pacote SAS: nos ajustes, ele aparece como "Desatualizado" quando o que
-está gravado no cartão de memória é diferente.
+O pacote SAS do cartão de memória em uso é atualizado pela nova versão quando ela abre. Um pacote em um
+cartão que não está em uso aparece depois como "Desatualizado" nos ajustes: atualize-o por lá.
 Para atualizar manualmente, copie apenas a pasta APPS/SD2Cloud do novo arquivo .zip (ou não substitua o
 sd2cloud.ini quando o Windows perguntar).
 O canal beta: a opção "Canal de atualização", nos ajustes, escolhe de onde vêm as atualizações. Estável

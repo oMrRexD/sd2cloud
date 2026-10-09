@@ -268,8 +268,32 @@ static int helper_screen(void)
     return 1;
 }
 
-/* updates SD2Cloud: downloads, verifies, replaces and reopens the new version (which offers to update the memory
- * card's helper) */
+/* The program is another build than the last one that ran here (it was updated, or a newer file was put in its
+ * place): the SAS package on the memory card in use, when the card has one of another version, is written again, so
+ * the helper IGR runs is this version's and nobody has to see "Outdated" and do it by hand. Not asked: it is the
+ * program's own package, there because the user installed it. Not the debug build's doing, which doesn't take the
+ * program's place */
+void helper_follow(void)
+{
+#ifndef DEBUG_BUILD
+    char build[40];
+    snprintf(build, sizeof(build), "%s %s", APP_VERSION, APP_COMMIT);
+    if (!strcmp(cfg.app_build, build) || (helperState != HELPER_DIFFERENT && helperState != HELPER_SAME))
+        return;   /* (with no package on this card, the one that has it is still to be seen) */
+    if (helperState == HELPER_DIFFERENT) {
+        int r;
+        message(0, NULL, COLOR_TEXT, T(T_HELPER_UPDATING));
+        r = helper_install();
+        log_msg("SAS package: another build of the program (%s, it was %s), written again: %d", build, cfg.app_build, r);
+        helperState = helper_status();
+    }
+    snprintf(cfg.app_build, sizeof(cfg.app_build), "%s", build);
+    config_set("app", "app_build", build);
+#endif
+}
+
+/* updates SD2Cloud: downloads, verifies, replaces and reopens the new version (which writes the memory card's SAS
+ * package again: helper_follow) */
 static void update_progress(long long done, long long total)
 {
     ui_lock();

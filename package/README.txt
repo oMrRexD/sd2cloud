@@ -218,7 +218,8 @@ AUTOMATIC SYNC AFTER A GAME (IGR)
 From then on, exiting a game with IGR starts SD2Cloud: it uploads the changed cards, shows "Upload complete"
 and returns to OPL. In this mode, cancelling the upload also returns to OPL.
 SD2Cloud can be kept in any folder of the sd2psx microSD: every time it is opened, it records where it is
-in sd2cloud.ini ("app_path"), and the package starts it from there. After moving it, open it once.
+in sd2cloud.ini ("app_path"), and the package starts it from there. A folder of APPS that was renamed or
+moved is found by the package as well, even before SD2Cloud is opened from it.
 To uninstall the package, select "SAS package" again and choose "Uninstall"; then change "IGR Path" in OPL.
 To pause the sync and keep everything installed, set "Automatic sync" to Off in Settings (START): IGR then
 goes straight to the program opened after it, without starting SD2Cloud. The same happens while no Google
@@ -253,8 +254,8 @@ SD2Cloud does not look for updates by itself. In the settings (START), "Check fo
 whether there is a newer version and, if there is one, offers to update. The application downloads the new
 files, verifies them against the SHA-256 published on GitHub, replaces the previous files and starts the new
 version. Your settings are kept.
-Then update the SAS package as well: the settings show it as "Outdated" when what the memory card has is
-different.
+The SAS package on the memory card in use is updated by the new version when it opens. A package on a card
+that isn't in use then shows as "Outdated" in the settings the next time: update it there.
 To update manually, copy only the APPS/SD2Cloud folder from the new .zip file (or do not replace
 sd2cloud.ini when prompted).
 The beta channel: "Update channel" in the settings chooses where the updates come from. Stable is the released
