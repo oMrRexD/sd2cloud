@@ -98,6 +98,25 @@ int confirm_skip(const card_t *c)
 const card_t *current;
 int currentN, totalN;   /* "Uploading currentN of totalN" */
 
+/* A card whose index couldn't be read is tried again, twice, a moment later each time. On a console (10/2026) four
+ * cards in a row were not read, among cards that were, and all of them were whole: a device that was busy for a
+ * moment has answered by then. What fails each time is in the log */
+void cards_retry(void)
+{
+    int i, n, pass;
+    for (pass = 0; pass < 2; pass++) {
+        for (n = i = 0; i < nCards; i++)
+            if (cards[i].included && cards[i].status == ST_ERROR) {
+                if (!n++)
+                    sleep_ms(1200);
+                cards_recheck(&cards[i]);
+            }
+        if (!n)
+            return;
+        log_msg("%d card(s) not read: tried again (%d)", n, pass + 1);
+    }
+}
+
 /* the icon of the card being sent: on a game's card (Game ID), the 3D icon of its newest save; on a card shared by
  * many games (CardN, named folders, BootCard) or when the save's icon can't be read, the SD2PSX memory card */
 static icon_t *cardIcon;

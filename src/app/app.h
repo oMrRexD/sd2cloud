@@ -359,6 +359,7 @@ void tools_screen(void);
 
 /* ------------------------------------------------------------ work.c */
 void checking_progress(int i, int n, const card_t *c);
+void cards_retry(void);
 extern int circleDown;
 void watch_cancel(void);
 extern int watchOff;

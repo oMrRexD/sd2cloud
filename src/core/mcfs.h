@@ -27,6 +27,7 @@ typedef struct {
     unsigned int cluster, count;   /* where the folder is and how many entries it has */
 } mcfs_save_t;
 int mcfs_list_saves(const char *path, mcfs_save_t *list, int max, long long *freeBytes);
+const char *mcfs_last_error(void);         /* why the last card that couldn't be read couldn't, for the log */
 /* the icon.sys and the 3D icon of a save from that list. 0 = ok */
 int mcfs_save_icon(const char *path, const mcfs_save_t *save, buffer_t *iconsys, buffer_t *ico);
 /* Is that save a program to start, the way the Save Application System keeps one: a title.cfg whose "boot" line names

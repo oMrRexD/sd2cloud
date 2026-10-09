@@ -11,12 +11,21 @@ Card1/Card1-1: 2 saves, 8270848 bytes free
 [script] T
 [script] D
 [script] X
+[script] O
+settings: [saves] sort = date_asc (0)
+Card1/Card1-1: 2 saves, 8270848 bytes free
+Card1/Card1-1: the oldest first, from BASLUS-21065BETA
+[script] T
+[script] D
+[script] X
+[script] O
 settings: [saves] sort = name (0)
 Card1/Card1-1: 2 saves, 8270848 bytes free
 Card1/Card1-1: by name, from BASLUS-21065ALPHA
 [script] T
 [script] D
 [script] X
+[script] O
 settings: [saves] sort = date (0)
 Card1/Card1-1: 2 saves, 8270848 bytes free
 (end: capture)

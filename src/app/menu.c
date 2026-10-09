@@ -219,6 +219,7 @@ void manual(void)
         leave(cfg.manual_return);
     }
     cards_check(checking_progress);
+    cards_retry();
 #ifdef DEBUG_BUILD
     if (debug_take('V'))
         debug_preview(debug_digit());

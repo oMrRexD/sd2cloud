@@ -10,6 +10,9 @@
 #define TYPE_BOOT   4
 #define TYPE_NAMED  8
 #define MAX_RULES   64
+#define SORT_NEWEST 0
+#define SORT_OLDEST 1
+#define SORT_NAME   2
 typedef struct {
     char language[8];
     char device[12];             /* [general] device = sd2psx or pro2: which device the microSD is in, when it has the
@@ -40,7 +43,8 @@ typedef struct {
     int no_tpl_after_game;       /* [templates] after_game = no: the automatic sync leaves the game cards as they are,
                                     without putting their templates into them */
     char repo[80];               /* [update] repo (owner/name on GitHub) */
-    int sort_name;               /* [saves] sort = name: a card's saves by name, not the newest first */
+    int sort;                    /* [saves] sort: how a card's saves are listed (SORT_*): date, the newest first; date_asc,
+                                    the oldest first; or name */
     int show_repeated;           /* [saves] repeated = show: on the screen of every game card's saves, the same save
                                     on more than one card is there each time, not once */
     int beta;                    /* [update] channel = beta: updates come from the "beta" pre-release, rebuilt at every

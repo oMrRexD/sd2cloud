@@ -67,13 +67,13 @@ SCENARIOS = [
     # then by name)
     {"name": "all-saves-repeated", "what": "every game card's saves on one screen: the same save on two cards once, then each time, then by name",
      "cards": {"Card1/Card1-1": "empty", "SLUS-21065/SLUS-21065-1": "game", "SLUS-20001/SLUS-20001-1": "game"},
-     "script": ">XTDXTXC"},
+     "script": ">XTDXOTXXOC"},
     # (a save of the same name as one a game card has, saved at another moment, is imported into another game's card:
     # they are two saves, and both are on the screen)
     {"name": "all-saves-progress", "what": "two saves of the same name saved at different moments are both shown",
      "cards": {"Card1/Card1-1": "empty", "SLUS-21065/SLUS-21065-1": "game", "SLUS-20001/SLUS-20001-1": "empty"},
      "files": {"Files/alpha.psu": "alpha-other.psu"}, "script": ">>XXXX>DXXXXOOO<XC"},
-    {"name": "saves-by-name", "what": "a card's saves by name, and by date again", "cards": CARDS, "script": "XTDXTDXC"},
+    {"name": "saves-by-name", "what": "a card's saves the oldest first, by name, and the newest first again: each time the options are closed", "cards": CARDS, "script": "XTDXOTDXOTDXOC"},
     {"name": "igr-no-account", "what": "started as after IGR with no Google account: it leaves at once", "cards": CARDS,
      "script": "I"},
     # the tools (SELECT) and the templates. The keyboard starts on A: DD>> is W. Triangle has a template's options, on

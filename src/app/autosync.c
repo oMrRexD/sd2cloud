@@ -16,6 +16,7 @@ void igr(void)
         leave(cfg.igr_return);
     }
     cards_check(checking_progress);
+    cards_retry();
     templates_after_game();   /* the game cards about to be sent get their templates first: what is sent has them */
     for (i = 0; i < nCards; i++)
         n += is_selected(&cards[i], 0);

@@ -125,7 +125,7 @@ PLACE = {
     "T_SET_SYNC_ALL": ("text", 270, 1), "T_HELPER_TITLE": ("text", 270, 1), "T_SET_IGR_RETURN": ("text", 270, 1),
     "T_IGR_TITLE": ("text", 270, 1), "T_SYNC_ON": ("text", 200, 1), "T_SYNC_OFF": ("text", 200, 1),
     "T_SET_LANGUAGE": ("text", 270, 1), "T_SET_KEEP": ("text", 290, 1), "T_SET_FORMAT": ("text", 270, 1),
-    "T_SET_UPDATES": ("text", 270, 1), "T_SET_DEVICE": ("text", 270, 1), "T_SORT_NAME": ("text", 320, 1), "T_SORT_DATE": ("text", 320, 1), "T_REPEATED_HIDE": ("text", 320, 1), "T_REPEATED_SHOW": ("text", 320, 1), "T_DEVICE_ASK": ("text", 320, 1), "T_SET_ACCOUNT": ("text", 270, 1), "T_SET_ABOUT": ("text", 270, 1),
+    "T_SET_UPDATES": ("text", 270, 1), "T_SET_DEVICE": ("text", 270, 1), "T_SORT_BY": ("text", 140, 1), "T_REPEATED": ("text", 140, 1), "T_SORT_NEWEST": ("text", 170, 1), "T_SORT_OLDEST": ("text", 170, 1), "T_SORT_NAME": ("text", 170, 1), "T_REPEATED_HIDDEN": ("text", 170, 1), "T_REPEATED_SHOWN": ("text", 170, 1), "T_DEVICE_ASK": ("text", 320, 1), "T_SET_ACCOUNT": ("text", 270, 1), "T_SET_ABOUT": ("text", 270, 1),
     "T_MENU_UPDATE": ("text", 440, 1), "T_PENDING_N": ("text", 200, 1), "T_NONE_PENDING": ("text", 200, 1), "T_UPDATE_AVAILABLE": ("text", 200, 1),
     "T_HELPER_NOT_INSTALLED": ("text", 200, 1), "T_ACCOUNT_OFF": ("text", 200, 1),
     "T_SYNC_NOW": ("text", 320, 1), "T_EXIT_TO": ("text", 330, 1), "T_EXIT_BROWSER": ("text", 320, 1), "T_ALL_SYNCED": ("text", DIALOG, 1), "T_AUTO_ASK": ("text", WIDE, 3), "T_AUTO_WHERE": ("small", WIDE, 2),
@@ -224,7 +224,7 @@ LEGENDS = [
     # saves marked for a copy: on a card's saves, and on the list of cards
     (("T_BACK", "T_MARK", "T_PASTE"), False), (("T_BACK", "T_OPEN", "T_PASTE"), False), (("T_BACK", "T_COPY"), False), (("T_BACK", "T_PASTE"), False),
     # a card's saves, with the options of how they are shown
-    (("T_BACK", "T_OPEN", "T_OPTIONS", "T_INSTALL"), False),
+    (("T_BACK", "T_OPEN", "T_OPTIONS", "T_INSTALL"), False), (("T_BACK", "T_TPL_CHANGE"), False),
 ]
 
 

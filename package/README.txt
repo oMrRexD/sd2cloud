@@ -107,8 +107,10 @@ options offer to move its saves to the card the sd2psx opens.
   as if it were all on a single card. Each item still belongs to its own card, whose name is at the top of
   the item's page, and what is done to an item is done to that card. An item that more than one card has (the
   same folder with the same files, byte for byte, as a template put into every card) is shown once.
-- TRIANGLE, with a card's items on screen, has the options: "Sync now", for that card; the items by name (of their game) or by date, the
-  newest first, on every card; and, in "All saves", those duplicates shown or hidden. The settings keep both.
+- TRIANGLE, with a card's items on screen, opens the options: "Sync now", for that card; "Sort by" (the date,
+  descending or ascending, or the name of their game), for every card; and, in "All saves", "Duplicates",
+  hidden or shown. X changes a value, and the items are listed the new way when the options are closed. The
+  settings keep both.
 - START opens the settings (see SETTINGS), and SELECT the tools (see TEMPLATES).
 - X on a saved data item opens its page, with Copy, Move, Delete and Upload to Drive.
 - Copy marks the item (a green tick over its icon) and goes back to the card's items, where X now marks and

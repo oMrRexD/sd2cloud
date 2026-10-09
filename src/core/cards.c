@@ -527,7 +527,7 @@ static void check_one(card_t *c, int *migrated)
     /* (the root folder's signature comes from the same reading: it tells whether a card may be the one in the device) */
     if (mcfs_fingerprint_root(c->path, c->fingerprint, &saves, c->rootSig) != 0) {
         c->status = ST_ERROR;
-        log_msg("%s: couldn't read the index", c->id);
+        log_msg("%s: couldn't read the index: %s", c->id, mcfs_last_error());
         return;
     }
     e = state_card(c->id, 0);

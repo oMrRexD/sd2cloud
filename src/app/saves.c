@@ -302,8 +302,14 @@ static void browser_load(card_t *c, int cursor)
         log_msg("%s: its saves couldn't be read (%d)", c->id, n);
         n = 0;
     }
-    if (cfg.sort_name)
+    if (cfg.sort == SORT_NAME)
         list_by_name(n);
+    else if (cfg.sort == SORT_OLDEST)   /* (it is read the newest first) */
+        for (i = 0; i < n / 2; i++) {
+            mcfs_save_t s = brwList[i];
+            brwList[i] = brwList[n - 1 - i];
+            brwList[n - 1 - i] = s;
+        }
     ui_lock();
     browser_drop_icons();   /* a list read again (after a move or a delete): the old icons go */
     memset(brwSaves, 0, sizeof(save_view_t) * n);
@@ -314,8 +320,8 @@ static void browser_load(card_t *c, int cursor)
     browser_set(c, n, cursor, freeBytes);
     ui_unlock();
     log_msg("%s: %d saves, %lld bytes free", c->id, n, freeBytes);
-    if (cfg.sort_name && n)
-        log_msg("%s: by name, from %s", c->id, brwSaves[0].s.folder);
+    if (cfg.sort != SORT_NEWEST && n)
+        log_msg("%s: %s, from %s", c->id, cfg.sort == SORT_NAME ? "by name" : "the oldest first", brwSaves[0].s.folder);
 }
 
 /* The screen's saves are these n, which aren't read from a card (a template's: brwIcon gives their icons). c = what
@@ -363,6 +369,13 @@ static int newer_all(const void *a, const void *b)
     const all_save_t *x = a, *y = b;
     int r = x->s.when < y->s.when ? 1 : x->s.when > y->s.when ? -1 : strcmp(x->s.folder, y->s.folder);
     return r ? r : x->card < y->card ? -1 : x->card > y->card;
+}
+
+/* the oldest first */
+static int older_all(const void *a, const void *b)
+{
+    const all_save_t *x = a, *y = b;
+    return x->s.when != y->s.when ? (x->s.when < y->s.when ? -1 : 1) : newer_all(a, b);
 }
 
 /* by name; the ones of the same name, the newest first */
@@ -480,10 +493,10 @@ static void all_show(int cursor)
         memcpy(old, brwSaves, sizeof(*old) * was);
     else
         browser_drop_icons();   /* (none to keep, or no memory to: they are read again) */
-    for (i = 0; cfg.sort_name && i < nAll; i++)
+    for (i = 0; cfg.sort == SORT_NAME && i < nAll; i++)
         if (!allSaves[i].key[0])
             sort_key(allSaves[i].s.folder, allSaves[i].key);
-    qsort(allSaves, nAll, sizeof(allSaves[0]), cfg.sort_name ? named_all : newer_all);
+    qsort(allSaves, nAll, sizeof(allSaves[0]), cfg.sort == SORT_NAME ? named_all : cfg.sort == SORT_OLDEST ? older_all : newer_all);
     for (i = 0; i < nAll; i++) {
         const char *folder = allSaves[i].s.folder;
         if (!cfg.show_repeated && allSaves[i].sig) {
@@ -608,31 +621,101 @@ u32 browser_wait(u32 buttons)
     }
 }
 
-/* Triangle on a card's saves: syncing the card (one of the microSD's), and how the saves are shown. The order, the
- * newest first or by name, is every such screen's; the same save on more than one card, once or each time, is of the
- * screen of every game card's. The settings keep both. 0 = nothing; 1 = they are shown another way; 2 = sync it */
+/* -------- triangle on a card's saves: its options, in a box. "Sync now", for a card of the microSD; the order the
+ * saves are in (by date, the newest first or the oldest, or by name), which is every such screen's; and, on the
+ * screen of every game card's, the same save on more than one card shown once or each time. X changes the value of
+ * the row it is on, and nothing on the screen underneath: the saves are shown the new way once, when the box is
+ * closed. The settings keep both */
+
+enum { OPT_SYNC, OPT_SORT, OPT_REPEATED };
+#define OPT_W 380
+static struct {
+    int n, cursor, id[3];
+    int sort, repeated;   /* as the rows say, for now */
+} opt;
+
+static const int sortText[] = {T_SORT_NEWEST, T_SORT_OLDEST, T_SORT_NAME};
+
+static void scene_options(float t)
+{
+    int w = OPT_W, h = 56 + opt.n * 32 + 24, x = (W - w) / 2, y = LOOK_TOP + (LOOK_BOTTOM - LOOK_TOP - h) / 2, i;
+    look_space();
+    look_frame();
+    ui_alpha(look_fade(t));
+    look_panel(x, y, w, h);
+    look_title(W / 2.0f, y + 20, T(T_OPTIONS), 1);
+    for (i = 0; i < opt.n; i++) {   /* what it is on the left, how it is now on the right */
+        const char *label = T(opt.id[i] == OPT_SYNC ? T_SYNC_NOW : opt.id[i] == OPT_SORT ? T_SORT_BY : T_REPEATED);
+        const char *value = opt.id[i] == OPT_SORT ? T(sortText[opt.sort])
+                            : opt.id[i] == OPT_REPEATED ? T(opt.repeated ? T_REPEATED_SHOWN : T_REPEATED_HIDDEN) : "";
+        float ry = y + 56 + i * 32;
+        if (i == opt.cursor) {
+            look_glow_text(FONT_TEXT, x + 30, ry, COLOR_ITEM, COLOR_ITEM_ON, label);
+            ui_text_right(FONT_TEXT, x + w - 30, ry, 0xD8E4F4, value);
+        } else {
+            ui_text(FONT_TEXT, x + 30, ry, COLOR_ITEM, label);
+            ui_text_right(FONT_TEXT, x + w - 30, ry, COLOR_DIM, value);
+        }
+    }
+    {
+        legend_t l[2] = {{BUTTON_CIRCLE, T(T_BACK)}, {BUTTON_CROSS, T(opt.id[opt.cursor] == OPT_SYNC ? T_SELECT : T_TPL_CHANGE)}};
+        look_legend(l, 2, 0);
+    }
+}
+
+/* the box, until it is closed. Returns 1 when the saves are to be shown another way, + 2 when the card is to be
+ * synced */
 static int browser_options(const card_t *c)
 {
-    enum { OPT_SYNC, OPT_SORT, OPT_REPEATED };
-    const char *items[3];
-    int id[3], n = 0, k;
+    static const char *const sortName[] = {"date", "date_asc", "name"};
+    int r = 0;
+    ui_lock();
+    opt.n = opt.cursor = 0;
     if (c != &allGames && c != &fileCard)
-        items[n] = T(T_SYNC_NOW), id[n++] = OPT_SYNC;
-    items[n] = T(cfg.sort_name ? T_SORT_DATE : T_SORT_NAME), id[n++] = OPT_SORT;
+        opt.id[opt.n++] = OPT_SYNC;
+    opt.id[opt.n++] = OPT_SORT;
     if (c == &allGames)
-        items[n] = T(cfg.show_repeated ? T_REPEATED_HIDE : T_REPEATED_SHOW), id[n++] = OPT_REPEATED;
-    if ((k = choose(T(T_OPTIONS), items, n, 0)) < 0)
-        return 0;
-    if (id[k] == OPT_SYNC)
-        return 2;
-    if (id[k] == OPT_SORT) {
-        cfg.sort_name = !cfg.sort_name;
-        config_set("saves", "sort", cfg.sort_name ? "name" : "date");
-    } else {
-        cfg.show_repeated = !cfg.show_repeated;
-        config_set("saves", "repeated", cfg.show_repeated ? "show" : "hide");
+        opt.id[opt.n++] = OPT_REPEATED;
+    opt.sort = cfg.sort;
+    opt.repeated = cfg.show_repeated;
+    ui_unlock();
+    ui_scene(scene_options);
+    for (;;) {
+        u32 b = wait_nav(PAD_UP | PAD_DOWN | PAD_CROSS | PAD_CIRCLE);
+        if (b & PAD_CIRCLE) {
+            sound_play(SND_BACK);
+            break;
+        }
+        if (b & (PAD_UP | PAD_DOWN)) {
+            ui_lock();
+            opt.cursor = (b & PAD_UP) ? (opt.cursor + opt.n - 1) % opt.n : (opt.cursor + 1) % opt.n;
+            ui_unlock();
+            sound_play(SND_MOVE);
+            continue;
+        }
+        sound_play(SND_CONFIRM);
+        if (opt.id[opt.cursor] == OPT_SYNC) {
+            r = 2;
+            break;
+        }
+        ui_lock();
+        if (opt.id[opt.cursor] == OPT_SORT)
+            opt.sort = (opt.sort + 1) % 3;
+        else
+            opt.repeated = !opt.repeated;
+        ui_unlock();
     }
-    return 1;
+    if (opt.sort != cfg.sort) {
+        cfg.sort = opt.sort;
+        config_set("saves", "sort", sortName[cfg.sort]);
+        r |= 1;
+    }
+    if (opt.repeated != cfg.show_repeated) {
+        cfg.show_repeated = opt.repeated;
+        config_set("saves", "repeated", cfg.show_repeated ? "show" : "hide");
+        r |= 1;
+    }
+    return r;
 }
 
 /* a card's saves. &allGames = every game card's, as if they were on one card. While saves are being marked (marks.c)
@@ -704,17 +787,19 @@ void card_screen(card_t *c)
         } else if (b & PAD_TRIANGLE) {
             int k;
             sound_play(SND_CONFIRM);
-            if ((k = browser_options(c)) == 2)
-                sync_card(c);
-            else if (k && all) {   /* shown the other way: every game card's, from what was read */
+            k = browser_options(c);
+            if ((k & 1) && all) {   /* shown another way: every game card's, from what was read */
                 message(0, NULL, COLOR_TEXT, T(T_LOADING));
                 all_sign();
                 ui_lock();
                 all_show(0);
                 ui_unlock();
-                log_msg("every game card: %d saves, %d shown%s", nAll, brw.n, cfg.sort_name ? ", by name" : "");
-            } else if (k)   /* a card's, read again */
+                log_msg("every game card: %d saves, %d shown%s", nAll, brw.n,
+                        cfg.sort == SORT_NAME ? ", by name" : cfg.sort == SORT_OLDEST ? ", the oldest first" : "");
+            } else if (k & 1)   /* a card's, read again */
                 browser_load(c, 0);
+            if (k & 2)
+                sync_card(c);
             ui_scene(scene_browser);
         } else if (b & PAD_SQUARE) {   /* (a card file's saves) */
             sound_play(SND_CONFIRM);

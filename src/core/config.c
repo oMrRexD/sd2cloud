@@ -76,7 +76,7 @@ static void on_config(const char *s, const char *k, const char *v, void *u)
     } else if (!strcasecmp(s, "templates")) {
         if (!strcasecmp(k, "after_game")) cfg.no_tpl_after_game = !strcasecmp(v, "no");
     } else if (!strcasecmp(s, "saves")) {
-        if (!strcasecmp(k, "sort")) cfg.sort_name = !strcasecmp(v, "name");
+        if (!strcasecmp(k, "sort")) cfg.sort = !strcasecmp(v, "name") ? SORT_NAME : !strcasecmp(v, "date_asc") ? SORT_OLDEST : SORT_NEWEST;
         else if (!strcasecmp(k, "repeated")) cfg.show_repeated = !strcasecmp(v, "show");
     } else if (!strcasecmp(s, "update")) {
         if (!strcasecmp(k, "repo") && *v && !strpbrk(v, " '\"\\")) COPY(cfg.repo, v);

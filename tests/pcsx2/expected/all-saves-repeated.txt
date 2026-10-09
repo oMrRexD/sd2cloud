@@ -12,10 +12,13 @@ every game card: 4 saves on 2 cards, 2 shown
 [script] T
 [script] D
 [script] X
+[script] O
 settings: [saves] repeated = show (0)
 every game card: 4 saves, 4 shown
 [script] T
 [script] X
+[script] X
+[script] O
 settings: [saves] sort = name (0)
 every game card: 4 saves, 4 shown, by name
 (end: capture)

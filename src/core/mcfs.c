@@ -86,6 +86,10 @@ void mcfs_image(const char *file, const unsigned char *mem, size_t len)
 static unsigned int le32(const unsigned char *p) { return p[0] | (p[1] << 8) | (p[2] << 16) | ((unsigned int)p[3] << 24); }
 static unsigned int le16(const unsigned char *p) { return p[0] | (p[1] << 8); }
 
+/* why a card couldn't be read, the last time one couldn't: for the log ("" = it could) */
+static char lastError[100];
+const char *mcfs_last_error(void) { return lastError; }
+
 /* n bytes from where the file is, however many reads it takes. 0 = all of them */
 static int read_all(int fd, unsigned char *out, unsigned int n)
 {
@@ -111,8 +115,13 @@ static int read_cluster(mc_t *m, unsigned int n, unsigned char *out)
         memcpy(out, m->mem + (size_t)n * m->csz, m->csz);
         return 0;
     }
-    if (!m->spare)
-        return lseek(m->fd, (long)n * m->csz, SEEK_SET) < 0 || read_all(m->fd, out, m->csz) != 0 ? -1 : 0;
+    if (!m->spare) {
+        if (lseek(m->fd, (long)n * m->csz, SEEK_SET) < 0 || read_all(m->fd, out, m->csz) != 0) {
+            snprintf(lastError, sizeof(lastError), "cluster %u (byte %lu) not read, errno %d", n, (unsigned long)n * m->csz, errno);
+            return -1;
+        }
+        return 0;
+    }
     if (lseek(m->fd, (long)n * pages * stride, SEEK_SET) < 0 || read_all(m->fd, raw, pages * stride) != 0)
         return -1;
     for (p = 0; p < pages; p++)
@@ -173,8 +182,11 @@ static int walk_dir(mc_t *m, unsigned int c0, unsigned int n, int (*cb)(mc_t *m,
         if (k >= n)
             break;
         e = fat(m, c);
-        if (e == 0xFFFFFFFF || !(e & 0x80000000) || ++steps > m->clusters)
+        if (e == 0xFFFFFFFF || !(e & 0x80000000) || ++steps > m->clusters) {
+            if (!lastError[0])
+                snprintf(lastError, sizeof(lastError), "a folder's chain ends at cluster %u (FAT says %08X), %u of %u entries read", c, e, k, n);
             return -1;   /* the folder claims more entries than its chain has */
+        }
         c = e & 0x7FFFFFFF;
     }
     return 0;
@@ -246,6 +258,7 @@ static int mc_open_mode(mc_t *m, const char *path, int flags)
     int image = !strcmp(path, MCFS_IMAGE);
     memset(m, 0, sizeof(*m));
     m->fd = -1;
+    lastError[0] = 0;
     if (image && flags != O_RDONLY)
         return -1;
     if (image && imageMem) {
@@ -256,13 +269,19 @@ static int mc_open_mode(mc_t *m, const char *path, int flags)
         m->memLen = imageLen;
     } else {
         m->fd = open(image ? imageFile : path, flags);
-        if (m->fd < 0)
+        if (m->fd < 0) {
+            snprintf(lastError, sizeof(lastError), "not opened (%d, errno %d)", m->fd, errno);
             return -1;
-        if (read(m->fd, sb, sizeof(sb)) != (int)sizeof(sb))
+        }
+        if ((i = (unsigned int)read(m->fd, sb, sizeof(sb))) != sizeof(sb)) {
+            snprintf(lastError, sizeof(lastError), "its first %u bytes not read (%d, errno %d)", (unsigned)sizeof(sb), (int)i, errno);
             goto bad;
+        }
     }
-    if (memcmp(sb, MAGIC, sizeof(MAGIC) - 1) != 0)
+    if (memcmp(sb, MAGIC, sizeof(MAGIC) - 1) != 0) {
+        snprintf(lastError, sizeof(lastError), "not a PS2 memory card (it starts with %02X %02X %02X %02X)", sb[0], sb[1], sb[2], sb[3]);
         goto bad;
+    }
     m->page = le16(sb + 40);
     m->csz = m->page * le16(sb + 42);   /* page size * pages per cluster */
     m->clusters = le32(sb + 48);
