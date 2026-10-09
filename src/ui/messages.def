@@ -233,8 +233,6 @@ X(T_HELPER_UNINSTALL_ASK, "Uninstall the SAS package?", "Deseja desinstalar o pa
 X(T_HELPER_UNINSTALL_TEXT, "Automatic sync will stop working, and the shortcut leaves the PS2 browser. In OPL, change \"IGR Path\" as well.", "A sincronização automática e o atalho deixarão de funcionar. No OPL, altere também \"Definir saída do IGR\".")
 X(T_HELPER_UNINSTALLED, "SAS package uninstalled.", "Pacote SAS desinstalado.")
 X(T_HELPER_UNINSTALL_ERROR, "Unable to remove the SAS package from the memory card.", "Não foi possível remover o pacote SAS do cartão de memória.")
-X(T_HELPER_ELSEWHERE, "SD2Cloud was opened from another device. To install the SAS package, copy the APPS/SD2Cloud folder to the sd2psx microSD.", "O SD2Cloud foi aberto de outro dispositivo. Para instalar o pacote SAS, copie a pasta APPS/SD2Cloud para o microSD do sd2psx.")
-X(T_HELPER_USB, "On a USB drive, no installation is needed. In OPL, set \"IGR Path\" to:", "Em um dispositivo USB, a instalação não é necessária. No OPL, em \"Definir saída do IGR\", informe:")
 X(T_HELPER_OLD_PATH, "The earlier path (BOOT/SD2CLOUD-IGR.ELF) still works.", "O caminho anterior (BOOT/SD2CLOUD-IGR.ELF) continua válido.")
 X(T_HELPER_ON_CARD, "The SAS package is already on the memory card, next to SD2Cloud. No installation is needed.", "O pacote SAS já está no cartão de memória, junto com o SD2Cloud. A instalação não é necessária.")
 X(T_DEV_SD, "microSD", "microSD")

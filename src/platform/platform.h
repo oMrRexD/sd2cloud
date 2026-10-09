@@ -119,6 +119,7 @@ extern int padOpen;
 
 /* ------------------------------------------------------------ launch.c */
 int open_device(int dev, char *path, size_t size, char *part, size_t partSize);
+int device_has(const char *place);
 
 /* ------------------------------------------------------------ log.c */
 extern int logFd;

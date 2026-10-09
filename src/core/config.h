@@ -30,6 +30,7 @@ typedef struct {
     char igr_auto[200];          /* [app] igr_auto: what "auto" in igr_return led to, for the IGR helper */
     int igr_settle, igr_summary; /* seconds */
     char app_path[260];          /* [app] app_path: where the program is, for the IGR helper (written by the app) */
+    char app_drivers[48];        /* [app] app_drivers: the device and the build whose drivers SD2Cloud/drivers/ holds */
     char app_build[40];          /* [app] app_build: the version and the commit of the program that last ran here */
     char app_version[16];        /* [app] app_version: the version of that one (written by the app) */
     char manual_return[200];

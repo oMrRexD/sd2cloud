@@ -70,11 +70,17 @@ int main(int argc, char *argv[])
         }
     } else
 #endif
-    if (!strncmp(appPath, "mmce", 4) || !strncmp(appPath, "host:", 5)) {
+    if (!strncmp(appPath, "mmce", 4) || !strncmp(appPath, "host:", 5)
+#ifndef DEBUG_BUILD
+        || appElsewhere   /* (on a USB drive, an MX4SIO or the hard disk: with that device's drivers on the microSD) */
+#endif
+        ) {
         if (strcasecmp(cfg.app_path, appPath) != 0) {
             snprintf(cfg.app_path, sizeof(cfg.app_path), "%s", appPath);
             config_set("app", "app_path", appPath);
         }
+        if (appElsewhere)
+            drivers_store(appPath);
         if ((appTookOver || cfg.app_version[0]) && strcmp(cfg.app_version, APP_VERSION) != 0) {
             snprintf(cfg.app_version, sizeof(cfg.app_version), "%s", APP_VERSION);
             config_set("app", "app_version", APP_VERSION);

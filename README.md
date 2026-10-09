@@ -102,9 +102,10 @@ on one yet.
    computer, or scan the QR code, and enter the code shown on the TV.
 5. SD2Cloud then offers to turn on automatic sync and to sync all your cards.
 
-If your OPL does not list the apps on the sd2psx microSD (a build without MMCE support), also copy the
-`APPS/SD2Cloud` folder to the `APPS` folder of your USB drive or MX4SIO card and open SD2Cloud from there. It hands
-over to the copy on the microSD, where the settings and the updates are kept.
+SD2Cloud can live on a USB drive, an MX4SIO card or the internal HDD (exFAT or APA) instead: put the
+`APPS/SD2Cloud` folder there and open SD2Cloud from there once. It records where it is, keeps on the microSD
+(`SD2Cloud/drivers`) the drivers the SAS package needs to start it from that device, and updates itself there. Its
+settings and its data are always on the sd2psx microSD.
 
 **On the memory card: the SAS package.** When automatic sync is turned on, SD2Cloud puts its SAS (Save Application
 System) package on the memory card in use: the `APP_SD2CLOUD` folder, with what OPL runs on IGR and a shortcut that
@@ -148,8 +149,8 @@ connected.
 **Without installing anything (USB drive).** OPL's IGR can also start a program from a USB drive. If the
 `APPS/SD2Cloud` folder is on one, formatted as FAT32, skip step 1 and set **IGR Path** to
 `mass:/APPS/SD2Cloud/SD2CLOUD-IGR.ELF`: nothing is written to the memory card. For this, OPL loads the USB drivers
-`USBD.IRX` and `USBHDFSD.IRX` from `mc?:/SYS-CONF`, where FMCB installs them. The SAS package on the memory card is only
-needed when SD2Cloud is on the sd2psx microSD alone, or on a device OPL's IGR cannot read (MX4SIO, HDD).
+`USBD.IRX` and `USBHDFSD.IRX` from `mc?:/SYS-CONF`, where FMCB installs them. With the SAS package on the memory card
+none of that is needed, wherever SD2Cloud is: the package starts it from the microSD, a USB drive, an MX4SIO or the HDD.
 If your OPL is not on the sd2psx microSD, set its path in the `[igr]` section of `sd2cloud.ini`, starting with
 the device: `mc?:/` (memory card), `mass:/` (USB), `mx4sio:/`, `ata:/` (internal HDD, exFAT) or
 `hdd0:PARTITION:pfs:/` (internal HDD, APA), for example `hdd0:__common:pfs:/APPS/OPL/OPNPS2LD.ELF`.

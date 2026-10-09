@@ -106,9 +106,10 @@ SD2Cloud ainda não foi testado em um.
    celular ou no computador, ou use o QR code, e digite o código exibido na TV.
 5. Em seguida, o SD2Cloud oferece a sincronização automática e a sincronização de todos os cartões.
 
-Se o seu OPL não lista os apps do microSD do sd2psx (versão sem suporte a MMCE), copie também a pasta
-`APPS/SD2Cloud` para a pasta `APPS` do pendrive USB ou do cartão do MX4SIO e abra o SD2Cloud por lá. Ele passa a
-vez para a cópia do microSD, onde ficam as configurações e as atualizações.
+O SD2Cloud também pode ficar em um pendrive USB, em um cartão do MX4SIO ou no HD interno (exFAT ou APA): coloque
+a pasta `APPS/SD2Cloud` lá e abra o SD2Cloud por lá uma vez. Ele registra onde está, guarda no microSD
+(`SD2Cloud/drivers`) os drivers de que o pacote SAS precisa para iniciá-lo nesse dispositivo e se atualiza ali
+mesmo. As configurações e os dados ficam sempre no microSD do sd2psx.
 
 **No cartão de memória: o pacote SAS.** Ao ativar a sincronização automática, o SD2Cloud grava o seu pacote SAS
 (Save Application System) no cartão de memória em uso: a pasta `APP_SD2CLOUD`, com o que o OPL executa no IGR e um
@@ -153,9 +154,9 @@ acontece enquanto não há conta do Google conectada.
 **Sem instalar nada (pendrive USB).** O IGR do OPL também abre programas de um pendrive USB. Se a pasta
 `APPS/SD2Cloud` estiver em um, formatado em FAT32, pule o passo 1 e informe `mass:/APPS/SD2Cloud/SD2CLOUD-IGR.ELF`
 em **Definir saída do IGR**: nada é gravado no cartão de memória. Para isso, o OPL carrega os drivers USB
-`USBD.IRX` e `USBHDFSD.IRX` de `mc?:/SYS-CONF`, onde o FMCB os instala. O pacote SAS no cartão de memória só é
-necessário quando o SD2Cloud está apenas no microSD do sd2psx ou em um dispositivo que o IGR do OPL não lê
-(MX4SIO, HD).
+`USBD.IRX` e `USBHDFSD.IRX` de `mc?:/SYS-CONF`, onde o FMCB os instala. Com o pacote SAS no cartão de memória nada
+disso é necessário, esteja o SD2Cloud onde estiver: o pacote o inicia do microSD, de um pendrive USB, de um MX4SIO
+ou do HD.
 
 Se o seu OPL
 não estiver no microSD do sd2psx, informe o caminho dele na seção `[igr]` do `sd2cloud.ini`, começando pelo

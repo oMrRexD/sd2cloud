@@ -10,7 +10,7 @@ extern char appPath[260];   /* the program itself, as it was started: mmce?:/APP
                                whichever slot the sd2psx is in). Kept in the settings for the IGR helper */
 /* the program was started from another device (USB, MX4SIO...) and there is no SD2Cloud on the microSD to take
  * over: appDir is then where it would be on the microSD (APPS/SD2Cloud), which is where an update installs it */
-extern int appElsewhere;
+extern int appElsewhere;   /* the program is on a device other than the sd2psx and a memory card (USB, MX4SIO, HDD) */
 extern int appTookOver;     /* started by a copy of the program on another device, which handed over to this one */
 /* the program was started from a save folder of a memory card (the Save Application System package) and there is no
  * SD2Cloud on the microSD to take over: that folder (appCardDir, as mcman names it: "/APP_SD2CLOUD") of the card in
@@ -44,6 +44,9 @@ void run_elf(const char *path) __attribute__((noreturn));   /* falls back to the
 /* where a program to open is: the sd2psx (or PCSX2's host:), a memory card, USB, MX4SIO, the HDD exFAT or APA */
 enum { DEV_SD, DEV_MC, DEV_USB, DEV_MX4SIO, DEV_ATA, DEV_HDD };
 int device_of(const char *path);
+#include "files.h"
+void drivers_store(const char *path);       /* that device's drivers, on the microSD for the IGR helper */
+void run_elf_update(const char *path, const buffer_t *app, const buffer_t *igr) __attribute__((noreturn));
 /* the card the sd2psx is emulating right now: its number (0 = BootCard, a game card or a named folder) and channel.
  * -1 = couldn't ask; -2 = not on an MMCE device (testing on PCSX2) */
 int mmce_active_card(int *channel);

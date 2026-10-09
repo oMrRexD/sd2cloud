@@ -90,8 +90,8 @@ static int installed_differs(void)
     int r;
     if (appOnCard)
         r = card_app_read(&b);
-    else if (appElsewhere)
-        return -1;
+    else if (appElsewhere)   /* (its file can't be read from here: by the commit it was built from) */
+        return APP_COMMIT[0] && latest.commit[0] ? strncasecmp(latest.commit, APP_COMMIT, strlen(APP_COMMIT)) != 0 : -1;
     else {
         snprintf(path, sizeof(path), "%s", appPath);
         if ((q = strstr(path, "mmce?:")) != NULL)
@@ -218,6 +218,19 @@ static int install_on_card(void (*progress)(long long done, long long total))
     return r;
 }
 
+/* The program on a USB drive, an MX4SIO or the hard disk: both files are downloaded and checked, and kept. They are
+ * written there on the way out (run_elf_update), when that device's drivers can take the IOP */
+buffer_t updateApp, updateIgr;
+
+static int download_elsewhere(void)
+{
+    buf_free(&updateApp);
+    buf_free(&updateIgr);
+    if (latest.url_igr[0] && download(latest.url_igr, latest.sha_igr, ASSET_IGR, &updateIgr) != 0)
+        return -1;
+    return download(latest.url_app, latest.sha_app, ASSET_APP, &updateApp);
+}
+
 int update_install(void (*progress)(long long done, long long total))
 {
     char c[260];
@@ -226,6 +239,8 @@ int update_install(void (*progress)(long long done, long long total))
         return -1;
     if (appOnCard)
         return install_on_card(progress);
+    if (appElsewhere)
+        return download_elsewhere();
     /* started from another device with no SD2Cloud on the microSD: the update is what puts it there (with the title.cfg
      * that makes OPL list it) */
     ensure_dir(appDir);

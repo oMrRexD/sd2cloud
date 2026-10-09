@@ -11,7 +11,12 @@
  * if nothing is there any more, it is looked for in APPS/SD2Cloud, and then in every other folder of APPS: a folder
  * that was renamed, or moved, before SD2Cloud was opened from it once (which only this file would do).
  *
- * It doesn't have to be on the memory card: OPL's IGR also runs an ELF from a USB drive ("mass:"), so with the
+ * SD2Cloud doesn't have to be on the microSD: on a USB drive, an MX4SIO or the hard disk, its settings (which are
+ * always on the microSD) say so, and SD2Cloud leaves on the microSD the drivers that device needs, which this file
+ * doesn't carry (SD2Cloud/drivers/). They are loaded from there and SD2Cloud is started from the device
+ * (run_elsewhere).
+ *
+ * Nor does this file have to be on the memory card: OPL's IGR also runs an ELF from a USB drive ("mass:"), so with the
  * APPS/SD2Cloud folder copied to one, "Exit to" can point at this file right there. SD2Cloud is then next to it, and
  * is started from there.
  *
@@ -44,6 +49,9 @@
 #include <fileXio_rpc.h>
 #include <ps2_fileXio_driver.h>
 #include <ps2_sio2man_driver.h>
+#ifndef FIO_MT_RDONLY
+#define FIO_MT_RDONLY 0x01   /* (io_common.h's, which only the old port may include) */
+#endif
 #ifdef OPEN
 #include <debug.h>
 #define AS_IGR 0   /* the shortcut: SD2Cloud is opened as the user would open it */
@@ -265,6 +273,105 @@ static int on_sd(char *path, const char *root)
     return !strncmp(path, root, strchr(root, ':') - root + 1);
 }
 
+/* -------- SD2Cloud on a device other than the microSD. Where it is, as its settings have it (the notation of
+ * SD2Cloud's launch.c): usb:/... (or mass:), mx4sio:/..., ata:/... (the hard disk formatted exFAT),
+ * hdd0:PARTITION:pfs:/... (the hard disk formatted APA). The modules each one needs are files of the microSD, put
+ * there by SD2Cloud under their own names, and are loaded in the order SD2Cloud itself loads them */
+static unsigned char module[400 * 1024];
+
+static int load_driver(const char *root, const char *name, int argLen, const char *args)
+{
+    char file[64];
+    int fd, n = 0, got, ret = 0, id;
+    strcpy(file, root);
+    strcat(file, "SD2Cloud/drivers/");
+    strcat(file, name);
+    strcat(file, ".irx");
+    if ((fd = open(file, O_RDONLY)) < 0) {
+        note("open", file, fd);
+        return -1;
+    }
+    while (n < (int)sizeof(module) && (got = read(fd, module + n, sizeof(module) - n)) > 0)
+        n += got;
+    close(fd);
+    id = SifExecModuleBuffer(module, n, argLen, args, &ret);
+    note("module", file, id < 0 ? id : ret);
+    return id < 0 || ret == 1 ? -1 : 0;
+}
+
+static int has_prefix(const char *s, const char *prefix) { return !strncasecmp(s, prefix, strlen(prefix)); }
+
+/* waits for a file to be there (a USB drive, an MX4SIO and the hard disk take a moment); 1 = it is */
+static int wait_for(const char *path, int tenths)
+{
+    int t, fd;
+    for (t = 0; t <= tenths; t++) {
+        if ((fd = open(path, O_RDONLY)) >= 0) {
+            close(fd);
+            return 1;
+        }
+        usleep(100 * 1000);
+    }
+    note("not there:", path, 0);
+    return 0;
+}
+
+static void run_elsewhere(const char *root, const char *where)
+{
+    static const char hddArgs[] = "-o\0" "4\0" "-n\0" "20";
+    static const char pfsArgs[] = "-m\0" "4\0" "-o\0" "10\0" "-n\0" "40";
+    static char path[256], part[80], block[80];
+    static char *args[] = {"-igr", NULL};
+    const char *rest = strchr(where, ':');
+    int usb = has_prefix(where, "mass") || has_prefix(where, "usb"), mx = has_prefix(where, "mx4sio"),
+        ata = has_prefix(where, "ata"), t, r;
+    if (!rest)
+        return;
+    rest++;
+    note("on another device:", where, 0);
+    if (usb || mx || ata) {
+        r = ata ? load_driver(root, "ps2dev9", 0, NULL) : usb ? load_driver(root, "usbd", 0, NULL) : 0;
+        if (r == 0 && (r = load_driver(root, "bdm", 0, NULL)) == 0 && (r = load_driver(root, "bdmfs_fatfs", 0, NULL)) == 0)
+            r = load_driver(root, usb ? "usbmass_bd" : mx ? "mx4sio_bd" : "ata_bd", 0, NULL);
+        if (r != 0 || strlen(rest) + 8 > sizeof(path))
+            return;
+        strcpy(path, "mass0:");   /* the only block device loaded: the first one */
+        strcat(path, rest);
+        if (wait_for(path, 60))
+            run(path, AS_IGR);
+        return;
+    }
+    if (has_prefix(where, "hdd")) {   /* hdd0:PARTITION:pfs:/path, or hdd0:PARTITION/path */
+        const char *end = rest + strcspn(rest, ":/"), *p;
+        size_t n = end - rest;
+        if (!*end || n + 8 > sizeof(block))
+            return;
+        strcpy(block, "hdd0:");
+        strncat(block, rest, n);
+        strcpy(part, block);
+        strcat(part, ":");
+        p = (*end == ':' && has_prefix(end, ":pfs:")) ? end + 5 : end;
+        if (strlen(p) + 8 > sizeof(path) || load_driver(root, "ps2dev9", 0, NULL) != 0 || load_driver(root, "ps2atad", 0, NULL) != 0
+            || load_driver(root, "ps2hdd", sizeof(hddArgs), hddArgs) != 0 || load_driver(root, "ps2fs", sizeof(pfsArgs), pfsArgs) != 0)
+            return;
+        for (t = 0; t < 30 && (r = fileXioMount("pfs0:", block, FIO_MT_RDONLY)) < 0; t++)   /* the drive takes a moment */
+            usleep(100 * 1000);
+        note("mount", block, r);
+        strcpy(path, "pfs0:");
+        if (*p != '/')
+            strcat(path, "/");
+        strcat(path, p);
+        if (!wait_for(path, 0))
+            return;
+        strcpy(path, "pfs:");   /* how the ELF loader wants it */
+        if (*p != '/')
+            strcat(path, "/");
+        strcat(path, p);
+        r = LoadELFFromFileWithPartition(path, part, AS_IGR, args);
+        note("LoadELFFromFileWithPartition", path, r);
+    }
+}
+
 /* SD2Cloud isn't where its settings say, nor in its usual folder: started from any other folder of APPS that has it.
  * The folders' names are read first, and the folder closed, before any of them is looked into (the sd2psx does one
  * thing at a time) */
@@ -337,7 +444,7 @@ static void skip_sync(const char *root)
 int main(int argc, char *argv[])
 {
     static char path[256];
-    int i, k;
+    int i, k, elsewhere = 0;
     SifInitRpc(0);
     note("started as", argc > 0 && argv[0] ? argv[0] : "(nothing)", argc);
 #ifndef OPEN
@@ -366,8 +473,10 @@ int main(int argc, char *argv[])
             skip_sync(roots[k]);
 #endif
             setting(ini, "app", "app_path", path, sizeof(path));   /* where SD2Cloud said it is */
-            on_sd(path, roots[k]);
-            if (path[0])
+            if (path[0] && !on_sd(path, roots[k]) && !elsewhere++) {   /* another device: its drivers, once */
+                run_elsewhere(roots[k], path);
+                save_notes(roots[k]);
+            } else if (path[0])
                 run(path, AS_IGR);
         }
         for (k = 0; roots[k]; k++) {   /* its usual folder */

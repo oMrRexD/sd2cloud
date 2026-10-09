@@ -248,8 +248,6 @@ int helper_status(void)
     helperLegacy = 0;
     if (appOnCard)   /* the helper OPL runs is the one next to the program: there, it is the right one */
         return card_app_helper() ? HELPER_SAME : HELPER_NO_FILE;
-    if (appElsewhere)
-        return HELPER_NO_FILE;
     if (memcard_ready(0) != 0)
         return HELPER_NOT_INSTALLED;
     same = mc_same(CARD_HELPER, card_igr_elf, (int)size_card_igr_elf);
@@ -550,7 +548,7 @@ int helper_present(void)
         return card_app_helper();
     /* the helper only starts SD2Cloud from the microSD: with this copy started from another device and none there,
      * installing it would do nothing */
-    return !appElsewhere;
+    return 1;
 }
 
 /* ------------------------------------------------------------ the program on a memory card

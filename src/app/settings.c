@@ -123,20 +123,6 @@ static const char *helper_result(int r)
     return T(T_HELPER_ERROR);
 }
 
-/* SD2Cloud was started from what looks like a USB drive (OPL's Apps list calls it mass0:, mass1:...): the helper in
- * its folder there, as OPL's "IGR Path" wants it (OPL's IGR calls the USB drive mass:). "" = it wasn't */
-static const char *usb_helper_path(void)
-{
-    static char t[260];
-    const char *p = strchr(appPath, ':'), *slash;
-    t[0] = 0;
-    if (!appElsewhere || !p || (strncasecmp(appPath, "mass", 4) != 0 && strncasecmp(appPath, "usb", 3) != 0))
-        return t;
-    slash = strrchr(++p, '/');
-    snprintf(t, sizeof(t), "mass:%.*sSD2CLOUD-IGR.ELF", slash ? (int)(slash - p + 1) : 0, p);
-    return t;
-}
-
 /* how much of the memory card in use the helper takes, and how much the card has free: said before installing
  * ("" when the helper's file is missing) */
 static const char *helper_space_text(void)
@@ -220,16 +206,7 @@ static int helper_screen(void)
     }
     if (!helper_present()) {
         dlg_new(COLOR_TITLE, T(T_HELPER_TITLE));
-        if (appElsewhere) {
-            /* the memory card's helper only starts SD2Cloud from the microSD; from a USB drive OPL runs the helper in
-             * SD2Cloud's own folder, with nothing to install */
-            dlg_line(FONT_TEXT, COLOR_TEXT, 8, T(T_HELPER_ELSEWHERE));
-            if (usb_helper_path()[0]) {
-                dlg_line(FONT_TEXT, COLOR_TEXT, 2, T(T_HELPER_USB));
-                dlg_line(FONT_TEXT, COLOR_ACCENT, 0, usb_helper_path());
-            }
-        } else
-            dlg_line(FONT_TEXT, COLOR_ERROR, 0, T(T_HELPER_MISSING));
+        dlg_line(FONT_TEXT, COLOR_ERROR, 0, T(T_HELPER_MISSING));
         next.wide = 1;
         dlg_buttons(BUTTON_CIRCLE, T_BACK, 0, 0);
         dlg_show();
@@ -326,6 +303,8 @@ static void update_app(void)
     message(0, NULL, COLOR_OK, T(T_UPDATE_DONE));
     sound_play(SND_CONFIRM);
     sleep_ms(1500);
+    if (appElsewhere)   /* written where it is, and started from there */
+        run_elf_update(appPath, &updateApp, &updateIgr);
     if (appOnCard)
         snprintf(c, sizeof(c), "mc%d:%s/SD2CLOUD.ELF", appCardPort, appCardDir);
     else

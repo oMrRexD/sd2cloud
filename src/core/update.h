@@ -16,5 +16,8 @@ const char *update_tag(void);               /* what was found: "v1.6", or "beta 
  * room for the new one (helperNeedKb, helperFreeKb). progress: how far writing to that card is (elsewhere it isn't
  * called) */
 int update_install(void (*progress)(long long done, long long total));
+/* the program on a USB drive, an MX4SIO or the hard disk: what update_install downloaded, to be written there on
+ * the way out (run_elf_update) */
+extern buffer_t updateApp, updateIgr;
 
 #endif

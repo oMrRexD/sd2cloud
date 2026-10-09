@@ -69,42 +69,55 @@ static void find_sd(const char *a0)
     snprintf(dataDir, sizeof(dataDir), "%sSD2Cloud/", sdRoot);
 }
 
-/* Started from a device other than the sd2psx: the Apps list of an OPL that doesn't read the sd2psx, with the SD2Cloud
- * folder copied to the USB drive or the MX4SIO card (or anywhere else that OPL lists). The SD2Cloud installed on the
- * microSD takes over, so there is a single place for the program, its IGR helper and its updates. Without one there,
- * this copy goes on by itself (it needs nothing from its own folder to work), and what it installs later, an update,
- * goes to the microSD; unless it was started from a memory card, where it stays */
-static void hand_over(int argc, char *argv[])
+/* Started from a device other than the sd2psx: a USB drive, an MX4SIO or the hard disk (the Apps list of an OPL
+ * that doesn't read the sd2psx, or simply where the user keeps it), or a memory card. The program stays where it
+ * is: it tells the settings where (main.c), keeps on the microSD the drivers of that device for the IGR helper
+ * and the shortcut to start it from there (drivers_store), and is updated there. Only its data is always on the
+ * microSD.
+ *
+ * Which device it is, the name it was started under says ("mx4sio:", "ata:", "hdd0:PARTITION:pfs:"), unless it
+ * is the name every block device answers to ("mass0:") or a file system's with no partition in it ("pfs0:").
+ * Then each place that name can be is tried: that device's drivers are loaded, alone, and the program is looked
+ * for under the same path. The settings remember the answer, so it is found out once (at IGR what matters is being
+ * quick) */
+static void locate_self(const char *a0)
 {
-    static char *args[8];
-    char c[260], *q;
-    const char *name;
-    int n = 0, i;
-    /* at IGR what matters is being quick: when the one on the microSD is this same version (it says so in the
-     * settings), loading it would only take time */
-    if (igrMode && !strcmp(cfg.app_version, APP_VERSION)) {
-        appElsewhere = 1;
-        snprintf(appDir, sizeof(appDir), "%sAPPS/SD2Cloud/", sdRoot);
-        return;
-    }
-    snprintf(c, sizeof(c), "%s", cfg.app_path);   /* where the one on the microSD said it is */
-    if ((q = strstr(c, "mmce?:")) != NULL)
-        q[4] = strncmp(sdRoot, "mmce", 4) == 0 ? sdRoot[4] : '0';
-    if (!file_exists(c)) {   /* its usual folder, under the name this copy has */
-        name = strrchr(appPath, '/') ? strrchr(appPath, '/') + 1 : strrchr(appPath, ':') ? strrchr(appPath, ':') + 1 : appPath;
-        snprintf(c, sizeof(c), "%sAPPS/SD2Cloud/%s", sdRoot, name);
-    }
-    if (file_exists(c)) {
-        for (i = 1; i < argc && n < 6; i++)
-            args[n++] = argv[i];
-        args[n++] = "-handover";
-        log_msg("started from %s: handing over to %s", appPath, c);
-        if (logFd >= 0) {
-            close(logFd);
-            logFd = -1;
+    static const char *const block[] = {"usb:", "mx4sio:", "ata:", NULL};
+    static const char *const parts[] = {"hdd0:+OPL:pfs:", "hdd0:__common:pfs:", NULL};
+    const char *const *tries = !strncasecmp(a0, "mass", 4) ? block : !strncasecmp(a0, "pfs", 3) ? parts : NULL;
+    const char *rest = strchr(a0, ':');
+    char c[260];
+    int i, found = 0;
+    rest = rest ? rest + 1 : a0;
+    if (!tries)
+        return;   /* the name says the device: appPath is right as it is */
+    for (i = 0; tries[i]; i++) {   /* what the settings remember, when it is one of them */
+        snprintf(c, sizeof(c), "%s%s", tries[i], rest);
+        if (!strcasecmp(c, cfg.app_path)) {
+            snprintf(appPath, sizeof(appPath), "%s", c);
+            return;
         }
-        LoadELFFromFile(c, n, args);   /* only comes back if it couldn't run it */
     }
+    for (i = 0; tries[i] && !found; i++) {
+        snprintf(c, sizeof(c), "%s%s", tries[i], rest);
+        found = device_has(c);
+    }
+    if (!found)   /* (not likely: it was started from there. The first one, then) */
+        snprintf(c, sizeof(c), "%s%s", tries[0], rest);
+    snprintf(appPath, sizeof(appPath), "%s", c);
+    /* back to what reads the sd2psx, as when the program started */
+    iop_reset();
+    SifExecModuleBuffer(iomanX_irx, size_iomanX_irx, 0, NULL, NULL);
+    SifExecModuleBuffer(fileXio_irx, size_fileXio_irx, 0, NULL, NULL);
+    fileXioExit();
+    fileXioInit();
+    SifExecModuleBuffer(sio2man_irx, size_sio2man_irx, 0, NULL, NULL);
+    SifExecModuleBuffer(mmceman_irx, size_mmceman_irx, 0, NULL, NULL);
+}
+
+static void started_elsewhere(const char *a0)
+{
+    const char *slash;
     /* started from a save folder of a memory card (mc0:/APP_SD2CLOUD/SD2CLOUD.ELF, the Save Application System
      * package): that folder is the program's place, with its IGR helper, and what an update is written to */
     if (!strncmp(appPath, "mc", 2) && (appPath[2] == '0' || appPath[2] == '1') && appPath[3] == ':') {
@@ -117,7 +130,10 @@ static void hand_over(int argc, char *argv[])
         }
     }
     appElsewhere = 1;
-    snprintf(appDir, sizeof(appDir), "%sAPPS/SD2Cloud/", sdRoot);
+    if (strncmp(a0, "host:", 5) != 0)   /* (PCSX2 has none of those devices to try) */
+        locate_self(appPath);
+    slash = strrchr(appPath, '/');
+    snprintf(appDir, sizeof(appDir), "%.*s", slash ? (int)(slash - appPath + 1) : 0, appPath);
 }
 
 void system_init(int argc, char *argv[])
@@ -179,14 +195,14 @@ void system_init(int argc, char *argv[])
     find_device();
     config_read();
     if (strncmp(appPath, "mmce", 4) != 0 && strncmp(appPath, "host:", 5) != 0)
-        hand_over(argc, argv);
+        started_elsewhere(a0);
     if (init_joystick_driver(false) == JOYSTICK_INIT_STATUS_OK)
         padOpen = padPortOpen(0, 0, padArea);
 #ifdef DEBUG_BUILD
     script_read();
 #endif
     log_msg(APP_NAME " " APP_VERSION " -- program in %s (%s), data in %s, %s%s%s%s", appDir, appPath, dataDir, igrMode ? "IGR" : "manual",
-            appTookOver ? ", took over from a copy on another device" : "", appElsewhere ? ", started from another device" : "",
+            appTookOver ? ", took over from a copy on another device" : "", appElsewhere ? ", on another device" : "",
             appOnCard ? ", on a memory card" : "");
 #ifdef DEBUG_BUILD
     rescue_init();

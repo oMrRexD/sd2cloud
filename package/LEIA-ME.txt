@@ -54,9 +54,10 @@ INSTALAÇÃO
    fica ao lado dele.
 2. Abra o SD2Cloud: pela aba Apps do OPL, ou executando APPS/SD2Cloud/SD2CLOUD.ELF em qualquer programa
    que abra um ELF (o wLaunchELF, por exemplo). A pasta não precisa ficar em APPS.
-   Se o seu OPL não lista os apps do microSD do sd2psx (versão sem suporte a MMCE), copie também a pasta
-   APPS/SD2Cloud para a pasta APPS do pendrive USB ou do cartão do MX4SIO e abra o SD2Cloud por lá. Ele
-   passa a vez para a cópia do microSD, onde ficam as configurações e as atualizações.
+   O SD2Cloud também pode ficar em um pendrive USB, em um cartão do MX4SIO ou no HD interno (exFAT ou APA):
+   coloque a pasta APPS/SD2Cloud lá e abra o SD2Cloud por lá uma vez. Ele registra onde está, guarda no
+   microSD (SD2Cloud/drivers) os drivers de que o pacote SAS precisa para iniciá-lo nesse dispositivo e se
+   atualiza ali mesmo. As configurações e os dados ficam sempre no microSD do sd2psx.
    No cartão de memória, o pacote SAS: ao ativar a sincronização automática, o SD2Cloud grava o seu pacote
    SAS (Save Application System) no cartão de memória em uso: a pasta APP_SD2CLOUD, com o que o OPL executa
    no IGR e um atalho que abre o SD2Cloud do microSD, com ícone 3D próprio para o browser do PS2 (cerca de
@@ -242,8 +243,8 @@ Sem instalar nada (pendrive USB): o IGR do OPL também abre programas de um pend
 APPS/SD2Cloud estiver em um, formatado em FAT32, pule o passo 1 e informe em "Definir saída do IGR":
 mass:/APPS/SD2Cloud/SD2CLOUD-IGR.ELF
 Nada é gravado no cartão de memória. Para isso, o OPL carrega os drivers USB USBD.IRX e USBHDFSD.IRX de
-mc?:/SYS-CONF, onde o FMCB os instala. O pacote SAS no cartão de memória só é necessário quando o SD2Cloud
-está apenas no microSD do sd2psx ou em um dispositivo que o IGR do OPL não lê (MX4SIO, HD).
+mc?:/SYS-CONF, onde o FMCB os instala. Com o pacote SAS no cartão de memória nada disso é necessário, esteja
+o SD2Cloud onde estiver: o pacote o inicia do microSD, de um pendrive USB, de um MX4SIO ou do HD.
 O programa aberto depois do IGR é escolhido em Ajustes (START), entre os programas da pasta APPS do
 microSD. Se o seu OPL fica em outro dispositivo, informe o caminho no sd2cloud.ini, na seção [igr],
 começando pelo dispositivo: mc?:/ (cartão de memória), mass:/ (USB), mx4sio:/, ata:/ (HD interno exFAT) ou
