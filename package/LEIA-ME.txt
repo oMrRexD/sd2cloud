@@ -117,7 +117,9 @@ cinza, e as opções dele oferecem mover os saves para o cartão que o sd2psx ab
 - Copiar seleciona o item (um visto verde sobre o ícone) e volta para os itens do cartão, onde X passa a
   selecionar e desmarcar outros; O sai do cartão para a lista de cartões, para selecionar itens de outros
   cartões também. A seleção se mantém de um cartão para outro, e a quantidade aparece na tela. START (Colar)
-  pede então o destino de todos: um cartão do MMCE, escolhido nas mesmas abas da tela principal
+  cola todos no cartão em que é pressionado: o que está sob o cursor na lista de cartões, ou o que está
+  aberto. Pressionado no cartão de onde todos vieram, ele pede o destino: um cartão do MMCE, escolhido nas
+  mesmas abas da tela principal
   (o espaço livre do cartão de destino é exibido e um cartão sem espaço suficiente não pode ser escolhido;
   quando os itens são todos de um mesmo jogo, a aba Jogos traz também "Novo cartão", na pasta desse jogo ou
   entre as pastas enquanto o jogo não tem uma: um cartão vazio de 8 MB é criado para eles, como o aparelho

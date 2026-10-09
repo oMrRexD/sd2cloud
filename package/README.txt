@@ -108,7 +108,9 @@ options offer to move its saves to the card the sd2psx opens.
 - X on a saved data item opens its page, with Copy, Move, Delete and Upload to Drive.
 - Copy marks the item (a green tick over its icon) and goes back to the card's items, where X now marks and
   unmarks others; O leaves the card for the list of cards, to mark items on other cards too. The marks stay
-  from card to card, and their count is on screen. START (Paste) then asks where they all go: a card on
+  from card to card, and their count is on screen. START (Paste) pastes them all into the card it is
+  pressed on: the one under the cursor in the list of cards, or the one that is open. Pressed on the card they
+  all came from, it asks where they go instead: a card on
   the MMCE, chosen from the same tabs as the main screen (the destination's free space is shown, and a card
   without enough space cannot be selected; when the items are all of one game, the Games tab also has "New
   card", in that game's folder or among the folders while the game has none: an empty 8 MB card is made for

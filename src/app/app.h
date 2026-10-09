@@ -262,6 +262,8 @@ struct marks_s {
     int on;                /* the screens of saves are marking */
     int copy;              /* what for: 1 = a save's "Copy" (START is "Paste"); 0 = a template (START is "Done") */
     int n, done;           /* how many are marked; START ended it, on a screen of saves */
+    card_t *into;          /* the card START was pressed on (the one whose saves were open, or the one under the
+                              cursor in the list of cards; NULL = none): a copy pastes the marked saves into it */
     struct {
         card_t *card;
         mcfs_save_t s;     /* the save, as its card lists it */
@@ -277,7 +279,7 @@ void mark_show(const card_t *to, int i, int text);
 void mark_show_done(void);
 void marks_report(int copied, int failed);
 int copy_start(const save_view_t *v);
-int copy_marked(void);
+int copy_marked(card_t *into);
 int copy_leave(const card_t *c);
 
 /* ------------------------------------------------------------ menu.c */

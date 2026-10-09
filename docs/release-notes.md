@@ -4,7 +4,7 @@
 
 ### What's new in 1.6
 - **Templates.** Tools (SELECT) > Templates: sets of saves kept on the MMCE, made by selecting saves on your cards, to put into other cards (the network settings every game's card should have, for example). A template can be applied to all game cards, to the cards you select, or only to update the saves the cards already have. One template can be the default: SD2Cloud tells when a game card lacks it, and "Auto-apply" puts it into a game's card when the game is left, with the automatic sync. "Linked games" gives a game templates of its own.
-- **Copy several saves at once.** "Copy" on a save's page now selects it: X selects others on the same card, O leaves the card to select saves on other cards too, and START pastes them all into a card, a new card of their game, or a folder of the MMCE or of a USB drive (as `.psu` files).
+- **Copy several saves at once.** "Copy" on a save's page now selects it: X selects others on the same card, O leaves the card to select saves on other cards too, and START pastes them all into the card under the cursor, or into the card that is open. Pressed on the card they came from, START asks where they go: another card, a new card of their game, or a folder of the MMCE or of a USB drive (as `.psu` files).
 - **SD2Cloud outside the sd2psx.** The program can also be installed on a USB drive, an MX4SIO or the internal HDD (exFAT or APA): the shortcut and the IGR helper on the memory card open it from there, and its settings and data stay on the MMCE. Tested on a console with a USB drive and an MX4SIO; the internal HDD, and updating the program in place on these devices, have not been tested on a console yet.
 - **SAS package.** It finds SD2Cloud in any folder of `APPS` (a renamed folder no longer breaks the shortcut and IGR), and it is updated together with the program.
 - **Sync per card.** A card's options (TRIANGLE) have "Disable sync" and "Enable sync", for any card. While several cards are sent, SQUARE skips the one on its way, this time or for good.
@@ -52,7 +52,7 @@ SD2Cloud runs on the PS2 itself and works with the memory cards on the microSD o
 
 **Novidades da 1.6**
 - Templates (Ferramentas, no SELECT): conjuntos de saves guardados no MMCE para aplicar aos cartões, com template padrão, aplicação automática ao sair do jogo e jogos vinculados.
-- Copiar vários saves de uma vez: "Copiar" seleciona o save, X seleciona outros (em mais de um cartão) e START cola todos em um cartão, em um cartão novo ou em uma pasta.
+- Copiar vários saves de uma vez: "Copiar" seleciona o save, X seleciona outros (em mais de um cartão) e START cola todos no cartão sob o cursor ou no cartão aberto (no cartão de origem, pergunta o destino: outro cartão, um cartão novo ou uma pasta).
 - O programa pode ficar em um pendrive USB, em um MX4SIO ou no HD interno; o atalho e o IGR o abrem de lá. Testado em console com pendrive e MX4SIO; o HD interno e a atualização do programa nesses dispositivos ainda não.
 - Pacote SAS: encontra o SD2Cloud em qualquer pasta de `APPS` e é atualizado junto com o programa.
 - Sincronização por cartão: "Desativar sincronização" nas opções do cartão; QUADRADO pula um cartão durante o envio.

@@ -435,7 +435,7 @@ void card_screen(card_t *c)
             else if ((b & PAD_START) && marks.n && mine) {
                 sound_play(SND_CONFIRM);
                 transferDest = NULL;
-                if (copy_marked()) {   /* copied: this is a card's saves again, with the card they went to read again */
+                if (copy_marked(all ? NULL : c)) {   /* copied: this is a card's saves again, with the card they went to read again */
                     marks_reset();
                     mine = 0;
                     if (all && transferDest && transferDest->type == TYPE_GAMEID)
@@ -444,6 +444,7 @@ void card_screen(card_t *c)
                 ui_scene(scene_browser);
             } else if ((b & PAD_START) && marks.n) {
                 sound_play(SND_CONFIRM);
+                marks.into = all ? NULL : c;
                 marks.done = 1;
                 browser_close();
                 return;
