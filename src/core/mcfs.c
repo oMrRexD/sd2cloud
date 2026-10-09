@@ -1294,6 +1294,18 @@ int mcfs_psu_info(const char *psu, mcfs_psu_t *info, buffer_t *iconsys, buffer_t
     return r;
 }
 
+int mcfs_psu_files(const char *psu, mcfs_psu_cb cb, void *u)
+{
+    int r = read_psu(psu, &srcSave), i;
+    if (r == MCFS_OK)
+        r = cb(srcSave.root, NULL, 0, u);
+    for (i = 2; r == 0 && i < srcSave.n; i++)
+        if (!(le16(srcSave.ent[i]) & DF_DIRECTORY))
+            r = cb(srcSave.ent[i], srcSave.data[i].data, (unsigned int)srcSave.data[i].len, u);
+    save_free(&srcSave);
+    return r;
+}
+
 int mcfs_import_psu(const char *psu, const char *to, mcfs_step_cb progress)
 {
     u64 start = now_ms();

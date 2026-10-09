@@ -33,6 +33,8 @@ typedef struct {
     char app_version[16];        /* [app] app_version: the version of that one (written by the app) */
     char manual_return[200];
     char manual_name[64];        /* [manual] name: the same, for the program in manual_return */
+    int no_tpl_after_game;       /* [templates] after_game = no: the automatic sync leaves the game's card as it is,
+                                    without putting its templates into it */
     char repo[80];               /* [update] repo (owner/name on GitHub) */
     int beta;                    /* [update] channel = beta: updates come from the "beta" pre-release, rebuilt at every
                                     change, instead of the latest release */

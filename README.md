@@ -58,9 +58,10 @@ on one yet.
 - Keeps **templates**: sets of saved data you mark on your cards, kept on the microSD and put into any card in one
   go. The device makes the card of a new game empty; a template gives it what every card of yours should have, as
   the network settings an online game asks for. Saved data the card already has is never touched. One template can
-  be the **main** one, the one every game card should have: it goes into all of them at once, and when SD2Cloud
-  opens and finds a game card without it (the card of a new game), it says so and offers to put it there. They
-  are in **Tools** (SELECT).
+  be the **default** one, the one every game card should have: it goes into all of them at once, and when SD2Cloud
+  opens and finds a game card without it (the card of a new game), it says so and offers to put it there. A
+  template can also be only some games'. With the automatic sync, the card a game used gets its templates by
+  itself when the game is left. They are in **Tools** (SELECT).
 
 **Also**
 - Asks for confirmation before anything that uploads, writes or deletes data.
@@ -121,7 +122,7 @@ The [README.txt](package/README.txt) included in the release explains every scre
 | Inside a card | X: open a save · SQUARE: sync this card · O: back |
 | A save's page | Copy · Move · Delete · Upload to Drive |
 | Files tab | X: open the device, a folder, a `.psu` file or a memory card file · SQUARE: install the selected `.psu` in a card, or the selected memory card file on the microSD · Left/Right: a page up or down · O: back. To export a save, use **Copy** on its page: the destinations include this tab, and TRIANGLE writes the `.psu` into the folder shown |
-| Tools (SELECT) > Templates | X: a new template (its name is typed; then its saves are marked on the cards: X marks, START finishes) or an existing one · In a template: X: a save, to remove it · TRIANGLE: apply to a card, apply to the game cards, make main, add saves, rename, delete |
+| Tools (SELECT) > Templates | X: a new template (its name is typed; then its saves are marked on the cards: X marks, START finishes) or an existing one · In a template: X: a save, to remove it · TRIANGLE: apply to a card, apply to all game cards, set as default, linked games, overwrite on cards, add saves, rename, delete |
 | During an upload | O: cancel |
 
 ## Automatic sync after a game (IGR)

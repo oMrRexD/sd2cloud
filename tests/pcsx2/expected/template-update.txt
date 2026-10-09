@@ -8,9 +8,20 @@ SLUS-21065/SLUS-21065-1: 2 folders, fingerprint 64fbc81ffd3ff7a8, new
 3 card(s) seen for the first time: fingerprint kept as the reference (0)
 templates: 1, the main one is Net
 templates: 1 game card(s) lack saves of their templates
+[script] O
+[script] L
+[script] X
+templates: 1, the main one is Net
+[script] D
+[script] X
+[script] T
+[script] D
+[script] D
+[script] D
+[script] X
 [script] X
 mcfs: import of host:SD2Cloud/templates/Net/save.psu: 0, 50 reads and 8 writes of the card in N ms
-templates: Net into host:MemoryCards/PS2/SLUS-21065/SLUS-21065-1.mcd: 1 save(s) put, 0
+templates: Net updated on host:MemoryCards/PS2/SLUS-21065/SLUS-21065-1.mcd: 1 save(s) written, 0
 SLUS-21065/SLUS-21065-1: 3 folders, fingerprint 66d01eff66ad7094, changed
 [script] X
 (end: capture)

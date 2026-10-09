@@ -61,7 +61,7 @@ def fill(s, id_):
                              "T_CONFIRM_EXPORT", "T_TPL_REMOVE_ASK"):
         s = s.replace("%s", LONG_SAVE, 1).replace("%s", LONG_CARD)
     if "%s" in s and id_ in ("T_TPL_CREATE_ASK", "T_TPL_CREATED", "T_TPL_DELETE_ASK", "T_TPL_ADD_ASK", "T_TPL_APPLY_ASK",
-                             "T_TPL_MAIN_NOW", "T_TPL_GAMES_ASK", "T_TPL_WARN"):
+                             "T_TPL_MAIN_NOW", "T_TPL_GAMES_ASK", "T_TPL_UPDATE_ASK"):
         s = s.replace("%s", LONG_TEMPLATE, 1).replace("%s", LONG_CARD)
     if id_ == "T_TPL_SUMMARY":
         s = s.replace("%d", "32", 1)   # saves, then KB
@@ -69,7 +69,7 @@ def fill(s, id_):
         if id_ in ("T_HIST_TITLE", "T_RESTORE_TITLE", "T_RESTORE_IN_USE", "T_RESTORING", "T_CARD_IN_USE", "T_DONE_COPY",
                    "T_DONE_MOVE", "T_DELETE_TEXT", "T_ERR_EXISTS", "T_ERR_FULL", "T_ERR_MC_CHECK", "T_DONE_IMPORT",
                    "T_SWITCH_ASK", "T_INSERT_DONE", "T_INSERT_FAILED", "T_SWITCH_BACK_FAILED", "T_INSTALL_REPLACE_ASK",
-                   "T_INSTALLING", "T_TPL_NOTHING", "T_TPL_NO_ROOM", "T_TPL_APPLIED", "T_TPL_APPLIED_FULL"):
+                   "T_INSTALLING", "T_TPL_NOTHING", "T_TPL_APPLIED", "T_TPL_APPLIED_FULL"):
             s = s.replace("%s", LONG_CARD)
         elif id_ in ("T_CARD_LAST", "T_RESTORE_FROM"):
             s = s.replace("%s", LONG_DATE)
@@ -77,7 +77,7 @@ def fill(s, id_):
             s = s.replace("%s", LONG_FILE)
         else:
             s = s.replace("%s", "v10.10" if "SD2Cloud" in s else "999 MB")
-    if id_ in ("T_HELPER_SPACE", "T_HELPER_SPACE_NEED", "T_HELPER_FULL", "T_FREE_KB", "T_SAVE_KB", "T_TPL_SUMMARY", "T_TPL_NO_ROOM"):
+    if id_ in ("T_HELPER_SPACE", "T_HELPER_SPACE_NEED", "T_HELPER_FULL", "T_FREE_KB", "T_SAVE_KB", "T_TPL_SUMMARY"):
         s = s.replace("%d", "8192")   # KB of a memory card
     return s.replace("%lld", "99999999").replace("%d", "99")
 
@@ -182,6 +182,9 @@ PLACE = {
     "T_TPL_APPLYING": ("text", 296, 1), "T_TPL_RENAMING": ("text", DIALOG, 1),
     "T_TPL_APPLY_GAMES": ("text", 320, 1), "T_TPL_MAKE_MAIN": ("text", 320, 1), "T_TPL_UNMAKE_MAIN": ("text", 320, 1),
     "T_TPL_MAIN": ("small", 100, 1), "T_TPL_CHECKING": ("text", DIALOG, 1), "T_TPL_WARN": ("text", WIDE, 2),
+    "T_TPL_GAMES": ("text", 320, 1), "T_TPL_UPDATE": ("text", 320, 1), "T_TPL_AFTER_GAME": ("text", 236, 1),
+    "T_TPL_AFTER_HINT": ("small", 212, 6), "T_TPL_ON": ("text", 200, 1), "T_TPL_OFF": ("text", 200, 1),
+    "T_TPL_UPDATE_NOTE": ("text", DIALOG, 4),
 }
 PARAGRAPH = ("text", DIALOG, 3)     # error messages and the rest: up to 3 lines in a box
 # what only an sd2psx is ever told (being moved to another card, its boot cards, one more channel for a folder): not
@@ -210,6 +213,7 @@ LEGENDS = [
     (("T_BACK", "T_OPEN", "T_FINISH"), False), (("T_BACK", "T_MARK_DROP_YES"), False), (("T_BACK", "T_TPL_CREATE"), False),
     (("T_BACK", "T_TPL_REMOVE_YES"), False), (("T_BACK", "T_TPL_APPLY"), False), (("T_BACK", "T_TPL_ADD"), False),
     (("T_BACK", "T_REPLACE", "T_TPL_KEEP"), False), (("T_LATER", "T_TPL_APPLY", "T_TPL_NO_WARN"), False),
+    (("T_BACK", "T_MARK"), False), (("T_BACK", "T_TPL_UPDATE_YES"), False), (("T_BACK", "T_TPL_CHANGE"), False),
 ]
 
 

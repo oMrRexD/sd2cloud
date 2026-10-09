@@ -53,16 +53,27 @@ int template_lacking(const template_t *t, const char *card, unsigned char lacks[
 int template_apply(const template_t *t, const char *card, int (*before)(const template_t *t, int i), mcfs_step_cb progress,
                    int *put);
 
-/* The main template is the one every game card should have. What is settled about a card is remembered with it, in
- * templates.ini: the card was given the main template as it is now, or the user asked not to be told that it lacks
- * it. Only a card that isn't settled is looked into again; and a template that gets other saves is another one,
- * for that: its signature tells */
+/* the same, and a save the card has that isn't the template's own takes the template's place (one that is the same
+ * is left alone): the only thing that writes over a save. put = how many were written */
+int template_update(const template_t *t, const char *card, int (*before)(const template_t *t, int i), mcfs_step_cb progress,
+                    int *put);
+
+/* Which cards a template is for. The main template is the one every game card should have; any template can also be
+ * a game's: the one the cards of that game's folder should have. What is settled about a card is remembered too, in
+ * templates.ini: it was given its templates as they are now, or the user asked not to be told that it lacks them.
+ * Only a card that isn't settled is looked into again; templates that get other saves are other ones, for that
+ * (their signature tells) */
 extern char tplMain[TPL_NAME + 1];                 /* the main template's name ("" = there is none) */
-int templates_main_set(void);                      /* reads templates.ini alone: is there a main template? */
+int templates_in_use(void);                        /* reads templates.ini alone: is any template for some card? */
 template_t *template_main(void);                   /* NULL = none (or its folder is gone) */
 void template_set_main(const template_t *t);       /* NULL = none */
-int template_settled(const template_t *t, const char *cardId);
-void template_settle(const template_t *t, const char *cardId);
-int templates_save(void);                          /* templates.ini written with what those two changed. 0 = written */
+int template_has_game(const template_t *t, const char *game);   /* game = its cards' folder (SLUS-21065) */
+void template_set_game(const template_t *t, const char *game, int on);
+int template_games(const template_t *t);           /* how many games it is for */
+/* the templates the cards of a game should have: the main one first, then that game's. Returns how many */
+int templates_of_game(const char *game, const template_t *list[TPL_MAX]);
+int templates_settled(const char *cardId, const char *game);
+void templates_settle(const char *cardId, const char *game);
+int templates_save(void);                          /* templates.ini written with what those changed. 0 = written */
 
 #endif

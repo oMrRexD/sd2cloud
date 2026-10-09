@@ -6,8 +6,18 @@ Card1/Card1-1: 2 folders, fingerprint 64fbc81ffd3ff7a8, new
 Card2/Card2-1: 0 folders, fingerprint e3b0c44298fc1c14, new
 SLUS-21065/SLUS-21065-1: 2 folders, fingerprint 64fbc81ffd3ff7a8, new
 3 card(s) seen for the first time: fingerprint kept as the reference (0)
-templates: 1, the main one is Net
-templates: 1 game card(s) lack saves of their templates
+[script] L
+[script] X
+templates: 1
+[script] D
+[script] X
+[script] T
+[script] D
+[script] D
+[script] D
+[script] X
+[script] X
+[script] O
 [script] X
 mcfs: import of host:SD2Cloud/templates/Net/save.psu: 0, 50 reads and 8 writes of the card in N ms
 templates: Net into host:MemoryCards/PS2/SLUS-21065/SLUS-21065-1.mcd: 1 save(s) put, 0
@@ -22,4 +32,4 @@ d83cf930174ccff3568478ce3ed5e7052a7c69e2c2514d54afc3374e13574343  MemoryCards/PS
 17df2e2a16cbab4cb8357fe9a735f1765b89ed8fcaf21c00a1634ed98fb36c3e  SD2Cloud/sd2cloud.ini
 5d80b04c692d54f468ed80c2ad845b735c3fe68663e8b45858780407f59b0673  SD2Cloud/state-debug.ini
 5e170332411d9de2bcd59d95368b891283906ad7624cd0d77c81685f7ed42ba4  SD2Cloud/templates/Net/save.psu
-65151725d6f4a2eb1f13ff3190abf3110e42a1588456c3cfcbfe0e8f99068358  SD2Cloud/templates/templates.ini
+2c3c997c215cf46d97c1746b07c2414abdaf1f676c3ee8a622f3c386ca6d3515  SD2Cloud/templates/templates.ini

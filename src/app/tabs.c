@@ -37,7 +37,7 @@ void draw_card_picture(const card_t *c, icon_t *ic, float t)
 }
 
 static float rowsDx;   /* the rows are drawn this far to the side (a folder's cards sliding into the list) */
-static int rowsWide;   /* and their text may be this wide (0 = as usual): the folders' names are longer than a card's */
+int rowsWide;          /* and their text may be this wide (0 = as usual): the folders' names are longer than a card's */
 
 /* the rows of a list: scrolls with the cursor, arrows when there's more */
 void list_rows(int n, int cursor, int top, const char *(*text)(int i, char *buf), u32 (*dot)(int i))

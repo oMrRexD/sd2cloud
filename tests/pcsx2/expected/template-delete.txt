@@ -17,6 +17,7 @@ templates: 1
 [script] D
 [script] D
 [script] D
+[script] D
 [script] X
 [script] X
 templates: Net deleted

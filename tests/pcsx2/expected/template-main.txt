@@ -20,7 +20,6 @@ templates: Net is now the main one
 [script] X
 mcfs: import of host:SD2Cloud/templates/Net/save.psu: 0, 50 reads and 8 writes of the card in N ms
 templates: Net into host:MemoryCards/PS2/SLUS-21065/SLUS-21065-1.mcd: 1 save(s) put, 0
-template Net into SLUS-21065/SLUS-21065-1: 1 save(s), 0
 SLUS-21065/SLUS-21065-1: 3 folders, fingerprint 66d01eff66ad7094, changed
 [script] X
 (end: capture)
@@ -32,4 +31,4 @@ d83cf930174ccff3568478ce3ed5e7052a7c69e2c2514d54afc3374e13574343  MemoryCards/PS
 17df2e2a16cbab4cb8357fe9a735f1765b89ed8fcaf21c00a1634ed98fb36c3e  SD2Cloud/sd2cloud.ini
 5d80b04c692d54f468ed80c2ad845b735c3fe68663e8b45858780407f59b0673  SD2Cloud/state-debug.ini
 5e170332411d9de2bcd59d95368b891283906ad7624cd0d77c81685f7ed42ba4  SD2Cloud/templates/Net/save.psu
-aba1b6555085f14654a98a97e2da96a2ab9c6f13fdcc7a8a5e421d1270522e42  SD2Cloud/templates/templates.ini
+65151725d6f4a2eb1f13ff3190abf3110e42a1588456c3cfcbfe0e8f99068358  SD2Cloud/templates/templates.ini

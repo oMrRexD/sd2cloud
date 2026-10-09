@@ -286,36 +286,36 @@ static void main_template(void)
     CHECK_INT(template_add(t, CARD_A, NET), MCFS_OK);
 
     /* there is none until one is made it, and that is kept on the microSD */
-    CHECK_INT(templates_main_set(), 0);
+    CHECK_INT(templates_in_use(), 0);
     CHECK(template_main() == NULL);
     template_set_main(t);
     CHECK(template_main() == t);
     CHECK_INT(templates_save(), 0);
-    CHECK_INT(templates_main_set(), 1);
+    CHECK_INT(templates_in_use(), 1);
     CHECK_STR(tplMain, "Online");
 
     /* a card is settled with the template as it is, and that is kept too */
-    CHECK_INT(template_settled(t, card), 0);
-    template_settle(t, card);
-    CHECK_INT(template_settled(t, card), 1);
-    CHECK_INT(template_settled(t, "Card1/Card1-1"), 0);
+    CHECK_INT(templates_settled(card, "SLUS-21065"), 0);
+    templates_settle(card, "SLUS-21065");
+    CHECK_INT(templates_settled(card, "SLUS-21065"), 1);
+    CHECK_INT(templates_settled("Card1/Card1-1", "Card1"), 0);
     CHECK_INT(templates_save(), 0);
     CHECK_INT(templates_scan(), 1);
     t = template_main();
     CHECK(t != NULL && !strcmp(t->name, "Online"));
     if (!t)
         return;
-    CHECK_INT(template_settled(t, card), 1);
-    CHECK_INT(template_settled(t, "Card1/Card1-1"), 0);
+    CHECK_INT(templates_settled(card, "SLUS-21065"), 1);
+    CHECK_INT(templates_settled("Card1/Card1-1", "Card1"), 0);
 
     /* with another save it is another template, for that: the card isn't settled any more */
     CHECK_INT(template_add(t, CARD_A, GAME), MCFS_OK);
-    CHECK_INT(template_settled(t, card), 0);
-    template_settle(t, card);
-    CHECK_INT(template_settled(t, card), 1);
+    CHECK_INT(templates_settled(card, "SLUS-21065"), 0);
+    templates_settle(card, "SLUS-21065");
+    CHECK_INT(templates_settled(card, "SLUS-21065"), 1);
     CHECK_INT(template_remove(t, template_find_save(t, GAME)), 0);
-    CHECK_INT(template_settled(t, card), 0);
-    template_settle(t, card);
+    CHECK_INT(templates_settled(card, "SLUS-21065"), 0);
+    templates_settle(card, "SLUS-21065");
 
     /* renamed, it is still the main one, and the cards are as settled as they were; deleted, there is none */
     t = template_rename(t, "Network");
@@ -327,12 +327,110 @@ static void main_template(void)
     CHECK(t != NULL);
     if (!t)
         return;
-    CHECK_INT(template_settled(t, card), 1);
+    CHECK_INT(templates_settled(card, "SLUS-21065"), 1);
     CHECK_INT(template_delete(t), 0);
     CHECK(template_main() == NULL);
-    CHECK_INT(templates_main_set(), 0);
+    CHECK_INT(templates_in_use(), 0);
     /* (templates.ini is no template) */
     CHECK_INT(templates_scan(), 0);
+}
+
+static int nPieces, firstIsFolder;
+static unsigned int bytesSeen;
+
+static int piece(const unsigned char *entry, const unsigned char *data, unsigned int len, void *u)
+{
+    (void)u;
+    if (!nPieces)
+        firstIsFolder = !data && (entry[0] & 0x20);
+    else
+        bytesSeen += len;
+    nPieces++;
+    return 0;
+}
+
+static void games_and_update(void)
+{
+    static const char *const card = "SLUS-21065/SLUS-21065-1";
+    const template_t *list[TPL_MAX];
+    template_t *a, *b;
+    char fp[65], fp2[65];
+    int put = -1;
+    new_card(CARD_A);
+    new_card(CARD_B);
+    put_save(CARD_A, NET, 1);
+    put_save(CARD_A, GAME, 2);
+    CHECK_INT(templates_scan(), 0);
+    CHECK(template_new("Online") != NULL && template_new("Racing") != NULL);
+    a = template_find("Online");
+    b = template_find("Racing");
+    CHECK_INT(template_add(a, CARD_A, NET), MCFS_OK);
+    CHECK_INT(template_add(b, CARD_A, GAME), MCFS_OK);
+
+    /* a template is for the games it is told, and that is kept on the microSD */
+    CHECK_INT(templates_in_use(), 0);
+    CHECK_INT(template_has_game(b, "SLUS-21065"), 0);
+    template_set_game(b, "SLUS-21065", 1);
+    template_set_game(b, "SLES-50000", 1);
+    template_set_game(b, "SLUS-21065", 1);
+    CHECK_INT(template_games(b), 2);
+    CHECK_INT(template_has_game(b, "SLUS-21065"), 1);
+    template_set_game(b, "SLES-50000", 0);
+    CHECK_INT(template_games(b), 1);
+    CHECK_INT(template_has_game(b, "SLES-50000"), 0);
+    template_set_main(a);
+    CHECK_INT(templates_of_game("SLUS-21065", list), 2);
+    CHECK(list[0] == a && list[1] == b);
+    CHECK_INT(templates_of_game("SLUS-00001", list), 1);
+    CHECK_INT(templates_save(), 0);
+    CHECK_INT(templates_in_use(), 1);
+    CHECK_INT(templates_scan(), 2);
+    a = template_find("Online");
+    b = template_find("Racing");
+    CHECK_INT(template_has_game(b, "SLUS-21065"), 1);
+    CHECK_INT(template_games(b), 1);
+    CHECK_INT(template_games(a), 0);
+
+    /* a card is settled with all the templates of its game: one more, or one less, and it isn't */
+    templates_settle(card, "SLUS-21065");
+    CHECK_INT(templates_settled(card, "SLUS-21065"), 1);
+    template_set_game(b, "SLUS-21065", 0);
+    CHECK_INT(templates_settled(card, "SLUS-21065"), 0);
+    template_set_game(b, "SLUS-21065", 1);
+    CHECK_INT(templates_settled(card, "SLUS-21065"), 1);
+
+    /* renamed, its games stay with it */
+    b = template_rename(b, "Speed");
+    CHECK(b != NULL && template_has_game(b, "SLUS-21065"));
+    CHECK_INT(templates_scan(), 2);
+    CHECK_INT(template_has_game(template_find("Speed"), "SLUS-21065"), 1);
+
+    /* updated on a card: a save of the card's own gives way to the template's, and the template's own is left */
+    a = template_find("Online");
+    put_save(CARD_B, NET, 77);
+    CHECK(!save_is(CARD_B, NET, ROOT "Online/" NET ".psu"));
+    CHECK_INT(template_update(a, CARD_B, NULL, NULL, &put), MCFS_OK);
+    CHECK_INT(put, 1);
+    CHECK(save_is(CARD_B, NET, ROOT "Online/" NET ".psu"));
+    CHECK_INT(mcfs_fingerprint(CARD_B, fp, NULL), 0);
+    CHECK_INT(template_update(a, CARD_B, NULL, NULL, &put), MCFS_OK);
+    CHECK_INT(put, 0);
+    CHECK_INT(mcfs_fingerprint(CARD_B, fp2, NULL), 0);
+    CHECK_STR(fp2, fp);
+
+    /* deleted, a template is for no game */
+    CHECK_INT(template_delete(template_find("Speed")), 0);
+    CHECK_INT(templates_scan(), 1);
+    CHECK_INT(templates_of_game("SLUS-21065", list), 1);
+
+    /* a .psu handed out piece by piece: its folder, then its files */
+    make_psu("p.psu", NET, SIZES, 2, 5);
+    nPieces = 0, bytesSeen = 0;
+    CHECK_INT(mcfs_psu_files("p.psu", piece, NULL), 0);
+    CHECK_INT(nPieces, 3);
+    CHECK(firstIsFolder);
+    CHECK_INT(bytesSeen, 3700);
+    CHECK_INT(mcfs_psu_files("none.psu", piece, NULL), MCFS_ERR_IO);
 }
 
 void suite_templates(void)
@@ -341,4 +439,5 @@ void suite_templates(void)
     RUN(template_into_cards);
     RUN(templates_renamed_and_deleted);
     RUN(main_template);
+    RUN(games_and_update);
 }

@@ -154,15 +154,23 @@ settings an online game asks for. SELECT, on the main screen, opens the tools; T
   stay from card to card, and their count is at the top. START ends the marking, and the items are copied to
   the template.
 - X on a template opens it, shown as a card is. X on an item removes it from the template. TRIANGLE has the
-  rest: Apply to a card, Apply to the game cards, Make main, Add saves (marked the same way; an item the
+  rest: Apply to a card, Apply to all game cards, Set as default, Add saves (marked the same way; an item the
   template already has can be replaced by the one marked), Rename and Delete template.
 - Apply to a card puts into the card the items it lacks. An item the card already has is never touched, and
-  a card without enough space is left as it is. Apply to the game cards does that to every game card that
+  a card without enough space is left as it is. Apply to all game cards does that to every game card that
   lacks items of the template, one after the other, and says how many got them.
-- Make main: the main template is the one every game card should have (a yellow light marks it in the
+- Set as default: the default template is the one every game card should have (a yellow light marks it in the
   list). When SD2Cloud opens and a game card lacks it, as the card of a new game does, SD2Cloud says which
   and waits for an answer: X applies it, O leaves it for later, SQUARE stops the warning for those cards. A
-  card is asked about once; it is asked about again only when the main template gets other items.
+  card is asked about once; it is asked about again only when its templates get other items.
+- Linked games: a template that isn't the main one can be made some games': X marks and unmarks
+  each game (a green light). The cards of those games are then treated as the default template treats every
+  game card.
+- Overwrite on cards: on the cards a template is for, its items take the place of the ones that differ.
+  It is the only thing here that writes over saved data, and it asks first.
+- Auto-apply (the last row of the list, On or Off): with the automatic sync, when a game is left with
+  IGR the card it used gets the items it lacks of its templates, with no question asked, before it is
+  sent. The card the sd2psx is using is changed through the memory card slot, as a game would change it.
 A template is a folder of SD2Cloud/templates on the microSD with a .psu file for each item: a .psu put there
 with a PC is part of the template too.
 

@@ -118,9 +118,11 @@ The code is shaped by what an sd2psx can and can't do. Breaking one of these cor
 
 On the microSD: `SD2Cloud/sd2cloud.ini` (the settings, the user's file), `SD2Cloud/state.ini` (what was backed up),
 `SD2Cloud/token.dat` (the access to Google), `SD2Cloud/templates/` (a folder for each template, a `.psu` for each
-of its saves, and `templates.ini`: which one is the main template and which cards are settled with it), the cards
+of its saves, and `templates.ini`: which one is the default template, which games each one is for and which cards are settled),
+the cards
 themselves under `MemoryCards/PS2/`, and whatever the user exports. On the memory card in use, only when the automatic sync is turned on: the `APP_SD2CLOUD` save folder (the
 SAS package: the IGR helper and a shortcut), written by `platform/helper.c` through the PS2's own memory card driver.
+The same driver is how a template gets into the card the device is using, whose file can't be touched.
 
 ## The debug build
 

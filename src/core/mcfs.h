@@ -59,6 +59,11 @@ typedef struct {
 } mcfs_psu_t;
 int mcfs_psu_info(const char *psu, mcfs_psu_t *info, buffer_t *iconsys, buffer_t *ico);
 int mcfs_import_psu(const char *psu, const char *to, mcfs_step_cb progress);
+/* what a .psu holds, handed out piece by piece: first its folder (the folder's own 512-byte entry, as a card has it;
+ * data NULL), then each of its files (its entry and its bytes). The callback stops it by answering != 0. Returns
+ * MCFS_OK, MCFS_ERR_* for a file that isn't a .psu, or what the callback answered */
+typedef int (*mcfs_psu_cb)(const unsigned char *entry, const unsigned char *data, unsigned int len, void *u);
+int mcfs_psu_files(const char *psu, mcfs_psu_cb cb, void *u);
 /* A card that isn't a .mcd of the microSD: a file of a folder (a .mcd, a MemCard PRO2's .mc2, or a .ps2, which has
  * the ECC bytes after each page), or a card held in memory (mem != NULL, len bytes; file is not used then). The
  * functions that only read a card take MCFS_IMAGE as its path from then on; it is never written to */

@@ -16,6 +16,14 @@ extern int helperLegacy;
 const char *helper_path(void);              /* the helper on the card, for OPL: "/APP_SD2CLOUD/IGR.ELF" */
 const char *helper_place(void);             /* where it is installed: "/APP_SD2CLOUD" */
 int mc_root_signature(int port, char hex[65]);   /* mcfs_root_signature of the card in that slot, through mcman */
+/* The card in a slot changed as a game changes it, through mcman: what there is for the card the device is using,
+ * which it keeps in its own memory and whose file can't be touched. A save folder: is it there (1, 0; -1 = the card
+ * can't be asked), deleted (0 = gone), and put there from a .psu, each file read back and with the dates it had
+ * (MCFS_OK, or MCFS_ERR_*: EXISTS = the card has that folder, FULL = no room; nothing of it is left then) */
+int mc_slot(void);                               /* the slot the device is in */
+int mc_has_folder(int port, const char *folder);
+int mc_delete_save(int port, const char *folder);
+int mc_put_save(int port, const char *psu);
 int mc_card_state(int port);                     /* 0 = the card in that slot is the one it was when last asked */
 int helper_present(void);                   /* it can be installed (always, unless the program can't be found by it) */
 int helper_install(void);                   /* writes it to mc0: 0 = ok, -1 = couldn't write, -3 = not enough room

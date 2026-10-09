@@ -18,7 +18,6 @@ templates: 1
 [script] X
 mcfs: import of host:SD2Cloud/templates/Net/save.psu: 0, 48 reads and 8 writes of the card in N ms
 templates: Net into host:MemoryCards/PS2/Card2/Card2-1.mcd: 1 save(s) put, 0
-template Net into Card2/Card2-1: 1 save(s), 0
 Card2/Card2-1: 1 folders, fingerprint ca650e8e4cb77f49, changed
 [script] X
 (end: capture)

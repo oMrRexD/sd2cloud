@@ -193,11 +193,21 @@ void manual(void)
 #ifdef DEBUG_BUILD
     {   /* checks the in-use detection on PCSX2: the root signature of the card in slot 1 against each .mcd's */
         char seen[65], file[65];
+        int same = -1;
         if (mc_root_signature(0, seen) == 0)
             for (i = 0; i < nCards; i++)
-                if (mcfs_root_signature(cards[i].path, file) == 0)
+                if (mcfs_root_signature(cards[i].path, file) == 0) {
                     log_msg("root signature: slot 1 %.16s, %s %.16s%s%s", seen, cards[i].id, file, strcmp(seen, file) ? "" : "  <- same card",
                             cards[i].rootSig[0] && strcmp(cards[i].rootSig, file) ? "  (NOT the one read with its index)" : "");
+                    if (!strcmp(seen, file))
+                        same = i;
+                }
+        /* script "a": that card is taken as the one the device is using (PCSX2 has no device to say so): what is
+         * done to it then goes through the slot, as on a console */
+        if (same >= 0 && debug_take('a')) {
+            activeCard = same;
+            log_msg("[script] a: %s is taken as the card in use", cards[same].id);
+        }
     }
 #endif
     if (!google_has_access() && !cfg.no_ask_connect && ask_connect()) {

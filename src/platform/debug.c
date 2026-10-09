@@ -17,7 +17,8 @@
  * finds no cable, "n" = it gets no address from the router, "u" = the network starts as it used to, without the heap
  * it takes being zeroed (see __wrap_malloc). While a card file is installed: "z" = the file can't be read, halfway
  * through, once; "k" = circle halfway through the writing. "M" and "e" capture a new card being made and a card being
- * copied to a device, halfway through. For the rescue (at the end of this file): "@<seconds>" at the very
+ * copied to a device, halfway through. "a" right after the cards are checked: the card that is the same as the one
+ * in slot 1 is taken as the card in use (PCSX2 has no device to say so), and is changed through the slot. For the rescue (at the end of this file): "@<seconds>" at the very
  * start is the test's time limit, "Y" hangs and "Z" crashes, to try it. */
 char script[256];
 int scriptPos, hasScript;

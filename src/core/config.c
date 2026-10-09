@@ -70,6 +70,8 @@ static void on_config(const char *s, const char *k, const char *v, void *u)
             COPY(cfg.manual_name, v);
             utf8_fix(cfg.manual_name, sizeof(cfg.manual_name));
         }
+    } else if (!strcasecmp(s, "templates")) {
+        if (!strcasecmp(k, "after_game")) cfg.no_tpl_after_game = !strcasecmp(v, "no");
     } else if (!strcasecmp(s, "update")) {
         if (!strcasecmp(k, "repo") && *v && !strpbrk(v, " '\"\\")) COPY(cfg.repo, v);
         else if (!strcasecmp(k, "channel")) cfg.beta = !strcasecmp(v, "beta");

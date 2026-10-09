@@ -315,6 +315,7 @@ void offer_auto_sync(void);
 /* ------------------------------------------------------------ tabs.c */
 int card_number(const card_t *c);
 void draw_card_picture(const card_t *c, icon_t *ic, float t);
+extern int rowsWide;
 void list_rows(int n, int cursor, int top, const char *(*text)(int i, char *buf), u32 (*dot)(int i));
 void scroll_to(int cursor, int *top);
 extern const int deviceText[FDEVS];
@@ -332,6 +333,7 @@ void tabs_draw(const tabs_t *g, int dots);
 
 /* ------------------------------------------------------------ tools.c */
 void templates_startup(void);
+void templates_after_game(void);
 void tools_screen(void);
 
 /* ------------------------------------------------------------ work.c */

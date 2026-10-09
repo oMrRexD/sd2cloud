@@ -18,11 +18,18 @@ static void root_dir(char *out, size_t size) { snprintf(out, size, "%stemplates/
  *
  *   [templates]
  *   main = <the main template's name>
+ *   [games]
+ *   <a template's name> = <the games it is for: their cards' folders, with commas>
  *   [cards]
- *   <card id> = <signature of the main template the card is settled with>
+ *   <card id> = <signature of the templates the card is settled with>
  */
 
+#define GAMES_LEN 1024   /* a template's games, as that list */
 char tplMain[TPL_NAME + 1];
+static struct {
+    char name[TPL_NAME + 1], games[GAMES_LEN];
+} links[TPL_MAX];
+static int nLinks;
 static struct {
     char id[96], sig[9];
 } settled[MAX_CARDS];
@@ -35,7 +42,11 @@ static void on_setting(const char *section, const char *key, const char *value, 
     (void)u;
     if (!strcmp(section, "templates") && !strcmp(key, "main"))
         snprintf(tplMain, sizeof(tplMain), "%s", value);
-    else if (!strcmp(section, "cards") && nSettled < MAX_CARDS && value[0]) {
+    else if (!strcmp(section, "games") && nLinks < TPL_MAX && value[0] && strlen(key) <= TPL_NAME) {
+        snprintf(links[nLinks].name, sizeof(links[0].name), "%s", key);
+        snprintf(links[nLinks].games, sizeof(links[0].games), "%s", value);
+        nLinks++;
+    } else if (!strcmp(section, "cards") && nSettled < MAX_CARDS && value[0]) {
         snprintf(settled[nSettled].id, sizeof(settled[0].id), "%s", key);
         snprintf(settled[nSettled].sig, sizeof(settled[0].sig), "%s", value);
         nSettled++;
@@ -46,25 +57,93 @@ static void read_settings(void)
 {
     char path[80];
     tplMain[0] = 0;
-    nSettled = 0;
+    nLinks = nSettled = 0;
     ini_path(path, sizeof(path));
     ini_read(path, on_setting, NULL);
 }
 
-int templates_main_set(void)
+int templates_in_use(void)
 {
     read_settings();
-    return tplMain[0] != 0;
+    return tplMain[0] != 0 || nLinks > 0;
+}
+
+/* a template's games, as their list ("" when it has none: the place for one is made when make is set) */
+static char *games_of(const char *name, int make)
+{
+    int i;
+    for (i = 0; i < nLinks; i++)
+        if (!strcasecmp(links[i].name, name))
+            return links[i].games;
+    if (!make || nLinks == TPL_MAX)
+        return NULL;
+    snprintf(links[nLinks].name, sizeof(links[0].name), "%s", name);
+    links[nLinks].games[0] = 0;
+    return links[nLinks++].games;
+}
+
+int template_has_game(const template_t *t, const char *game)
+{
+    const char *g = games_of(t->name, 0);
+    return g && list_has(g, game);
+}
+
+int template_games(const template_t *t)
+{
+    const char *g = games_of(t->name, 0);
+    int n = g && g[0] ? 1 : 0;
+    for (; g && *g; g++)
+        n += *g == ',';
+    return n;
+}
+
+void template_set_game(const template_t *t, const char *game, int on)
+{
+    char *g = games_of(t->name, on), out[GAMES_LEN] = "", *p, *save = NULL;
+    if (!g || on == template_has_game(t, game))
+        return;
+    if (on) {
+        if (strlen(g) + strlen(game) + 3 < GAMES_LEN)
+            snprintf(g + strlen(g), GAMES_LEN - strlen(g), "%s%s", g[0] ? ", " : "", game);
+        return;
+    }
+    for (p = strtok_r(g, ",", &save); p; p = strtok_r(NULL, ",", &save)) {   /* the list again, without that one */
+        while (*p == ' ')
+            p++;
+        if (strcasecmp(p, game))
+            snprintf(out + strlen(out), sizeof(out) - strlen(out), "%s%s", out[0] ? ", " : "", p);
+    }
+    snprintf(g, GAMES_LEN, "%s", out);
+}
+
+int templates_of_game(const char *game, const template_t *list[TPL_MAX])
+{
+    const template_t *m = template_main();
+    int i, n = 0;
+    if (m)
+        list[n++] = m;
+    for (i = 0; i < nTemplates; i++)
+        if (&templates[i] != m && template_has_game(&templates[i], game))
+            list[n++] = &templates[i];
+    return n;
 }
 
 int templates_save(void)
 {
     buffer_t b = {0};
-    char path[80], line[160], dir[64];
+    char path[80], line[GAMES_LEN + 64], dir[64];
     int i, r;
-    snprintf(line, sizeof(line), "; What SD2Cloud keeps about its templates. It writes this file itself.\n[templates]\nmain = %s\n\n[cards]\n",
+    snprintf(line, sizeof(line), "; What SD2Cloud keeps about its templates. It writes this file itself.\n[templates]\nmain = %s\n\n[games]\n",
              tplMain);
     r = buf_append(&b, line, strlen(line));
+    for (i = 0; i < nLinks && r == 0; i++) {
+        if (!links[i].games[0])
+            continue;
+        snprintf(line, sizeof(line), "%s = %s\n", links[i].name, links[i].games);
+        r = buf_append(&b, line, strlen(line));
+    }
+    if (r == 0)
+        r = buf_append(&b, "\n[cards]\n", 9);
     for (i = 0; i < nSettled && r == 0; i++) {
         snprintf(line, sizeof(line), "%s = %s\n", settled[i].id, settled[i].sig);
         r = buf_append(&b, line, strlen(line));
@@ -84,36 +163,39 @@ void template_set_main(const template_t *t) { snprintf(tplMain, sizeof(tplMain),
 
 static int by_text(const void *a, const void *b) { return strcmp(*(const char *const *)a, *(const char *const *)b); }
 
-/* of a template's saves: the folders they are of, whatever their order. Eight characters are plenty to tell two
- * templates of one user apart */
-static void signature(const template_t *t, char sig[9])
+/* of the saves a game's cards should have: the folders they are of, of all its templates, whatever their order.
+ * Eight characters are plenty to tell apart the templates one user makes */
+static void signature(const char *game, char sig[9])
 {
-    const char *names[TPL_SAVES];
+    static const char *names[TPL_MAX * TPL_SAVES];
+    const template_t *list[TPL_MAX];
     buffer_t b = {0};
     char hex[65] = "";
-    int i;
-    for (i = 0; i < t->n; i++)
-        names[i] = t->saves[i].folder;
-    qsort(names, t->n, sizeof(names[0]), by_text);
-    for (i = 0; i < t->n; i++)
-        buf_append(&b, names[i], strlen(names[i]) + 1);
+    int i, k, n = 0, count = templates_of_game(game, list);
+    for (k = 0; k < count; k++)
+        for (i = 0; i < list[k]->n; i++)
+            names[n++] = list[k]->saves[i].folder;
+    qsort(names, n, sizeof(names[0]), by_text);
+    for (i = 0; i < n; i++)
+        if (!i || strcmp(names[i], names[i - 1]))
+            buf_append(&b, names[i], strlen(names[i]) + 1);
     sha256_hex(b.data ? b.data : (const unsigned char *)"", b.len, hex);
     buf_free(&b);
     snprintf(sig, 9, "%.8s", hex);
 }
 
-int template_settled(const template_t *t, const char *cardId)
+int templates_settled(const char *cardId, const char *game)
 {
     char sig[9];
     int i;
-    signature(t, sig);
+    signature(game, sig);
     for (i = 0; i < nSettled; i++)
         if (!strcmp(settled[i].id, cardId))
             return !strcmp(settled[i].sig, sig);
     return 0;
 }
 
-void template_settle(const template_t *t, const char *cardId)
+void templates_settle(const char *cardId, const char *game)
 {
     int i;
     for (i = 0; i < nSettled && strcmp(settled[i].id, cardId); i++)
@@ -122,7 +204,7 @@ void template_settle(const template_t *t, const char *cardId)
         return;
     if (i == nSettled)
         snprintf(settled[nSettled++].id, sizeof(settled[0].id), "%s", cardId);
-    signature(t, settled[i].sig);
+    signature(game, settled[i].sig);
 }
 
 void template_path(const template_t *t, int i, char *out, size_t size)
@@ -353,9 +435,15 @@ int template_delete(template_t *t)
         return -1;
     }
     log_msg("templates: %s deleted", t->name);
-    if (!strcasecmp(tplMain, t->name)) {   /* (the main one: there is none from now on) */
-        tplMain[0] = 0;
-        templates_save();
+    {   /* what it was for goes with it */
+        char *g = games_of(t->name, 0);
+        int was = !strcasecmp(tplMain, t->name) || (g && g[0]);
+        if (!strcasecmp(tplMain, t->name))
+            tplMain[0] = 0;
+        if (g)
+            g[0] = 0;
+        if (was)
+            templates_save();
     }
     memmove(&templates[k], &templates[k + 1], sizeof(templates[0]) * (nTemplates - k - 1));
     nTemplates--;
@@ -402,9 +490,17 @@ template_t *template_rename(template_t *t, const char *name)
         return NULL;
     }
     sum(fresh);
-    if (!strcasecmp(tplMain, old.name)) {   /* (the main one stays the main one) */
-        template_set_main(fresh);
-        templates_save();
+    {   /* what it was for stays with it */
+        int was = !strcasecmp(tplMain, old.name);
+        if (was)
+            template_set_main(fresh);
+        for (i = 0; i < nLinks; i++)
+            if (!strcasecmp(links[i].name, old.name)) {
+                snprintf(links[i].name, sizeof(links[0].name), "%s", name);
+                was = 1;
+            }
+        if (was)
+            templates_save();
     }
     if (delete_folder(&old) != 0)
         log_msg("templates: the folder of %s is still there", old.name);
@@ -463,5 +559,73 @@ int template_apply(const template_t *t, const char *card, int (*before)(const te
     if (put)
         *put = n;
     log_msg("templates: %s into %s: %d save(s) put, %d", t->name, card, n, r);
+    return r;
+}
+
+static unsigned int le32(const unsigned char *p) { return p[0] | (p[1] << 8) | (p[2] << 16) | ((unsigned int)p[3] << 24); }
+
+/* Do two .psu hold the same save: the same files, by name and in the same order, with the same bytes? Their dates
+ * don't count: a save that was put into a card through the slot has the dates the PS2 gave its folder then */
+static int same_save(const buffer_t *a, const buffer_t *b)
+{
+    size_t off = 512;
+    unsigned int n, i;
+    if (a->len != b->len || a->len < 512 * 3)
+        return 0;
+    n = le32(a->data + 4);
+    if (n != le32(b->data + 4) || memcmp(a->data + 64, b->data + 64, 32))
+        return 0;
+    for (i = 0; i < n && off + 512 <= a->len; i++) {
+        const unsigned char *x = a->data + off, *y = b->data + off;
+        unsigned int len = le32(x + 4);
+        if (memcmp(x + 64, y + 64, 32) || ((x[0] ^ y[0]) & 0x20))
+            return 0;
+        off += 512;
+        if (x[0] & 0x20)   /* ("." and "..": nothing of them is the save's) */
+            continue;
+        if (le32(y + 4) != len || off + len > a->len || memcmp(a->data + off, b->data + off, len))
+            return 0;
+        off += (len + 1023) / 1024 * 1024;
+    }
+    return i == n;
+}
+
+int template_update(const template_t *t, const char *card, int (*before)(const template_t *t, int i), mcfs_step_cb progress,
+                    int *put)
+{
+    unsigned char lacks[TPL_SAVES];
+    char path[400];
+    int i, r = MCFS_OK, n = 0;
+    if (put)
+        *put = 0;
+    if (template_lacking(t, card, lacks, NULL, NULL) < 0)
+        return MCFS_ERR_IO;
+    for (i = 0; i < t->n && r == MCFS_OK; i++) {
+        template_path(t, i, path, sizeof(path));
+        if (!lacks[i]) {   /* the card has one: left alone when it is the template's own, file by file */
+            buffer_t mine = {0}, its = {0};
+            int readable = file_read(path, &mine) == 0 && mine.len > 0;
+            int same = readable && mcfs_export_psu(card, t->saves[i].folder, &its) == MCFS_OK && same_save(&mine, &its);
+            buf_free(&mine);
+            buf_free(&its);
+            if (same)
+                continue;
+            if (!readable) {   /* (the card's save isn't deleted for one that can't be read) */
+                r = MCFS_ERR_IO;
+                break;
+            }
+        }
+        if (before && before(t, i)) {
+            r = MCFS_ERR_CANCELLED;
+            break;
+        }
+        if (!lacks[i] && (r = mcfs_delete_save(card, t->saves[i].folder)) != MCFS_OK)
+            break;
+        if ((r = mcfs_import_psu(path, card, progress)) == MCFS_OK)
+            n++;
+    }
+    if (put)
+        *put = n;
+    log_msg("templates: %s updated on %s: %d save(s) written, %d", t->name, card, n, r);
     return r;
 }

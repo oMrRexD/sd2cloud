@@ -338,6 +338,125 @@ int helper_space(void)
     return 0;
 }
 
+/* ------------------------------------------------------------ a save, into the card in a slot */
+
+int mc_slot(void) { return strncmp(sdRoot, "mmce", 4) ? 0 : sdRoot[4] - '0'; }
+
+int mc_has_folder(int port, const char *folder)
+{
+    static sceMcTblGetDir e[1];
+    char path[48];
+    int r;
+    if (memcard_ready(port) != 0)
+        return -1;
+    snprintf(path, sizeof(path), "/%.32s", folder);
+    mcGetDir(port, 0, path, 0, 1, e);
+    r = mc_wait();
+    return r == 1 ? 1 : r == 0 || r == -4 ? 0 : -1;   /* (-4: no such entry) */
+}
+
+int mc_delete_save(int port, const char *folder)
+{
+    static sceMcTblGetDir list[64];
+    char path[100];
+    int n, i, pass;
+    for (pass = 0; pass < 8; pass++) {   /* (a folder with more files than the list holds takes more than one pass) */
+        int files = 0;
+        snprintf(path, sizeof(path), "/%.32s/*", folder);
+        mcGetDir(port, 0, path, 0, 64, list);
+        n = mc_wait();
+        for (i = 0; i < n; i++) {
+            const char *name = (const char *)list[i].EntryName;
+            if (!strcmp(name, ".") || !strcmp(name, ".."))
+                continue;
+            snprintf(path, sizeof(path), "/%.32s/%.32s", folder, name);
+            mcDelete(port, 0, path);
+            mc_wait();
+            files++;
+        }
+        if (!files)
+            break;
+    }
+    snprintf(path, sizeof(path), "/%.32s", folder);
+    mcDelete(port, 0, path);
+    log_msg("slot: %s deleted (%d)", path, mc_wait());
+    return mc_has_folder(port, folder) == 0 ? 0 : -1;
+}
+
+typedef struct {
+    int port, files;
+    char folder[40];
+    unsigned char root[64];   /* the folder's own entry: its mode and its dates */
+} put_t;
+
+static void entry_info(const unsigned char *entry, sceMcTblGetDir *info)
+{
+    memset(info, 0, sizeof(*info));
+    memcpy(&info->_Create, entry + 8, 8);    /* (the dates are kept on a card the way mcman takes them) */
+    memcpy(&info->_Modify, entry + 24, 8);
+    info->AttrFile = entry[0] | entry[1] << 8;
+}
+
+/* (mcfs_psu_files) the save's folder is made, then each file is written, read back and given its dates */
+static int put_piece(const unsigned char *entry, const unsigned char *data, unsigned int len, void *u)
+{
+    static sceMcTblGetDir info;
+    put_t *p = u;
+    char path[80];
+    int r;
+    if (!data && ((entry[0] | entry[1] << 8) & 0x0020)) {
+        memcpy(p->root, entry, sizeof(p->root));
+        snprintf(p->folder, sizeof(p->folder), "/%.32s", (const char *)entry + 64);
+        mcMkDir(p->port, 0, p->folder);
+        r = mc_wait();
+        log_msg("slot: folder %s made (%d)", p->folder, r);
+        return r == 0 ? 0 : MCFS_ERR_IO;
+    }
+    snprintf(path, sizeof(path), "%s/%.32s", p->folder, (const char *)entry + 64);
+    if (mc_write_file(p->port, path, data, (int)len) != 0)
+        return MCFS_ERR_IO;
+    entry_info(entry, &info);
+    mcSetFileInfo(p->port, 0, path, &info, sceMcFileInfoCreate | sceMcFileInfoModify | sceMcFileInfoAttr);
+    mc_wait();
+    p->files++;
+    return 0;
+}
+
+int mc_put_save(int port, const char *psu)
+{
+    static sceMcTblGetDir info;
+    put_t p;
+    mcfs_psu_t what;
+    buffer_t a = {0}, b = {0};
+    int r, type = 0, freeKb = 0, format = 0;
+    if (memcard_ready(port) != 0)
+        return MCFS_ERR_IO;
+    r = mcfs_psu_info(psu, &what, &a, &b);
+    buf_free(&a);
+    buf_free(&b);
+    if (r != MCFS_OK)
+        return r;
+    if ((r = mc_has_folder(port, what.folder)) != 0)
+        return r < 0 ? MCFS_ERR_IO : MCFS_ERR_EXISTS;
+    mcGetInfo(port, 0, &type, &freeKb, &format);
+    mc_wait();
+    if (freeKb < (int)((what.bytes + 1023) / 1024) + what.files + 3)   /* (each file's last cluster, and the folder's own) */
+        return MCFS_ERR_FULL;
+    memset(&p, 0, sizeof(p));
+    p.port = port;
+    if ((r = mcfs_psu_files(psu, put_piece, &p)) != 0) {
+        if (p.folder[0])
+            mc_delete_save(port, p.folder + 1);   /* half a save is no save */
+        return r;
+    }
+    /* the folder's own dates last: writing its files changed them */
+    entry_info(p.root, &info);
+    mcSetFileInfo(port, 0, p.folder, &info, sceMcFileInfoCreate | sceMcFileInfoModify | sceMcFileInfoAttr);
+    mc_wait();
+    log_msg("slot: %s put into the card in slot %d, %d file(s)", p.folder, port + 1, p.files);
+    return MCFS_OK;
+}
+
 /* everything the folder has, deleted: its own files from an earlier version, or the whole program the package of
  * version 1.5 kept there */
 static void folder_clear(void)
