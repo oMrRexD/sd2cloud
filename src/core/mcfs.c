@@ -15,6 +15,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <errno.h>
 #include <wolfssl/options.h>
 #include <wolfssl/wolfcrypt/sha256.h>
 #include "common.h"
