@@ -85,10 +85,13 @@ and R1, to switch tabs. Tabs without cards are not shown. The last tab, Files, h
 microSD and a USB drive for .psu files and memory card files (see FILES).
 A folder that the sd2psx's .sd2psx/Game2Folder.ini gives to several games (a series that shares one card) is
 shown under those games' names: what they have in common ("Need for Speed"), or the names themselves.
+A game card that file left behind (the sd2psx opens another folder for its game now) has a grey arrow, and its
+options offer to move its saves to the card the sd2psx opens.
 - X opens the card: its saved data, displayed as in the PS2 browser, the newest first. On that screen, SQUARE
   syncs the card; if it is already synced, SD2Cloud says so and lets you sync it again.
-- TRIANGLE opens the selected card's options: "Sync now", "Restore a backup" (see RESTORING) and "Copy to a
-  device": the whole card goes, as a file, to a folder of the microSD or of a USB drive. Pick the device, go to
+- TRIANGLE opens the selected card's options: "Sync now", "Disable sync" (the card is left out of every sync,
+  the automatic one too, until "Enable sync" is picked there; its status is then "Excluded"), "Restore a
+  backup" (see RESTORING) and "Copy to a device": the whole card goes, as a file, to a folder of the microSD or of a USB drive. Pick the device, go to
   the folder and press TRIANGLE; SD2Cloud asks whether the card goes as a .mcd (sd2psx) or a .ps2 (PCSX2) and
   writes it inside a .zip, as the backups on Drive are (a card is mostly empty space, and its .zip takes a
   fraction of the time to write); then it reads the .zip back and compares it. The last one, "Insert into
@@ -109,7 +112,8 @@ shown under those games' names: what they have in common ("Need for Speed"), or 
   another card, makes the change and switches back; only for a folder with a name of its own the card has to
   be switched on the sd2psx beforehand.
 Every operation that uploads, writes or deletes data asks for confirmation first. During a sync, the O
-button cancels the upload; cards already uploaded remain on Drive.
+button cancels the upload; cards already uploaded remain on Drive. While several cards are sent, SQUARE asks
+about the one on its way: X skips it this time, SQUARE skips it and turns its sync off.
 
 FILES
 The last tab of the main screen, Files, lists the devices whose folders can be browsed: the sd2psx microSD

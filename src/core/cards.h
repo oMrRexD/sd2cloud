@@ -13,6 +13,8 @@ typedef struct {
     char path[200];        /* the .mcd */
     char name[48];         /* channel name from the CardX.ini, if any */
     char game[64];         /* a game card's game, as the sd2psx names it ("" = not a game card, or not in the list) */
+    char moved[48];        /* the folder Game2Folder.ini gives this card's game now, when that is another one: the
+                              device no longer opens this card for the game ("" = it does) */
     char rootSig[65];      /* its root folder's signature, from when its index was last read ("" = not read): the card
                               in the device is told from the others by it */
     int type, channel;
@@ -46,5 +48,9 @@ int max_channels_set(const char *folder, int n);   /* the sd2psx goes up to that
 /* fingerprint of each included card's index; progress(i, n) before each card */
 void cards_check(void (*progress)(int i, int n, const card_t *c));
 void cards_recheck(card_t *c);              /* one card again (after a save was copied in or out) */
+/* The user turns a card's sync on or off, whatever the settings said of it: kept in them ([cards] exclude, which
+ * leaves a card out whatever else they say, and include, which takes one in). A card whose whole folder was left
+ * out comes back alone: the folder's other cards stay out, each by its own name. 0 = done and written */
+int card_set_included(card_t *c, int on);
 
 #endif

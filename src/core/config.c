@@ -248,6 +248,30 @@ int list_has(const char *list, const char *id)
     return 0;
 }
 
+int list_add(char *list, size_t size, const char *id)
+{
+    if (list_has(list, id))
+        return 0;
+    if (strlen(list) + strlen(id) + 3 > size)
+        return -1;
+    snprintf(list + strlen(list), size - strlen(list), "%s%s", list[0] ? ", " : "", id);
+    return 0;
+}
+
+void list_remove(char *list, size_t size, const char *id)
+{
+    char copy[1024], *p, *save;
+    const char *base = strchr(id, '/');
+    base = base ? base + 1 : id;
+    COPY(copy, list);
+    list[0] = 0;
+    for (p = strtok_r(copy, ",", &save); p; p = strtok_r(NULL, ",", &save)) {
+        trim(p);
+        if (*p && strcasecmp(p, id) != 0 && strcasecmp(p, base) != 0)
+            snprintf(list + strlen(list), size - strlen(list), "%s%s", list[0] ? ", " : "", p);
+    }
+}
+
 int config_keep(const char *id)
 {
     int i, found = -1;

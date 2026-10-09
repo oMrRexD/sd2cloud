@@ -46,5 +46,9 @@ void config_write_template(void);           /* writes the sd2cloud.ini with ever
 int config_set(const char *section, const char *key, const char *value);   /* one setting, in place */
 int config_keep(const char *id);
 int list_has(const char *list, const char *id);   /* does "a, b, c" contain id? */
+/* such a list with one more card (0 = it is there, -1 = no room for it), and without the rules that are that very
+ * card: its whole id, or its file's name (a rule for its whole folder stays; given a folder, that rule goes) */
+int list_add(char *list, size_t size, const char *id);
+void list_remove(char *list, size_t size, const char *id);
 
 #endif

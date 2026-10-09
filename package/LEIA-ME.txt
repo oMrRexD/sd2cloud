@@ -89,11 +89,15 @@ exibidas. A última aba, Arquivos, não tem cartões: ela percorre o microSD e u
 arquivos .psu e de arquivos de cartão de memória (veja ARQUIVOS).
 Uma pasta que o .sd2psx/Game2Folder.ini do sd2psx dá a vários jogos (uma série que divide um cartão) aparece
 com o nome desses jogos: o trecho em comum ("Need for Speed") ou os próprios nomes.
+Um cartão de jogo que esse arquivo deixou para trás (o sd2psx agora abre outra pasta para o jogo) tem a seta
+cinza, e as opções dele oferecem mover os saves para o cartão que o sd2psx abre.
 - X abre o cartão: os dados salvos, exibidos como no navegador do PS2, do mais novo ao mais antigo. Nessa
   tela, QUADRADO sincroniza o cartão; se ele já estiver sincronizado, o SD2Cloud avisa e permite sincronizar
   novamente.
-- TRIÂNGULO abre as opções do cartão selecionado: "Sincronizar agora", "Restaurar backup" (veja
-  RESTAURAÇÃO) e "Copiar para dispositivo": o cartão inteiro vai, como arquivo, para uma pasta do microSD ou de
+- TRIÂNGULO abre as opções do cartão selecionado: "Sincronizar agora", "Desativar sincronização" (o cartão
+  fica fora de toda sincronização, inclusive da automática, até que "Ativar sincronização" seja escolhido
+  ali; o status dele passa a ser "Não incluído"), "Restaurar backup" (veja RESTAURAÇÃO) e "Copiar para
+  dispositivo": o cartão inteiro vai, como arquivo, para uma pasta do microSD ou de
   um pendrive USB. Escolha o dispositivo, vá até a pasta e pressione TRIÂNGULO; o SD2Cloud pergunta se o cartão
   vai como .mcd (sd2psx) ou .ps2 (PCSX2) e o grava dentro de um .zip, como os backups do Drive (um cartão é
   quase todo espaço vazio, e o .zip leva uma fração do tempo para gravar); depois lê o .zip de volta e
@@ -115,7 +119,9 @@ com o nome desses jogos: o trecho em comum ("Need for Speed") ou os próprios no
   sd2psx, o SD2Cloud pergunta antes, troca o sd2psx para outro cartão, faz a alteração e volta; só para uma
   pasta com nome personalizado é preciso trocar o cartão no próprio sd2psx antes.
 Toda operação que envia, grava ou elimina dados pede confirmação antes de começar. Durante uma
-sincronização, o botão O permite cancelar o envio; os cartões já enviados permanecem no Drive.
+sincronização, o botão O permite cancelar o envio; os cartões já enviados permanecem no Drive. Quando vários
+cartões são enviados, QUADRADO pergunta sobre o que está sendo enviado: X o pula desta vez, QUADRADO o pula e
+desativa a sincronização dele.
 
 ARQUIVOS
 A última aba da tela principal, Arquivos, lista os dispositivos cujas pastas podem ser percorridas: o microSD

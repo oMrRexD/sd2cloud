@@ -376,7 +376,9 @@ void tabs_draw(const tabs_t *g, int dots)
                 ui_rect(x + 2, y - 6, 11, 14, 0x6E9AE0, 0x80);
                 ui_rect(x + 4, y + 1, 7, 4, 0x16223C, 0x58);     /* the label's place on the one in front */
             } else if (folders) {   /* a game's folder: a small arrow, as the tabs have (it opens) */
-                ui_triangle(x + 5, y - 6, x + 5, y + 6, x + 14, y, 0x6E9AE0, 0x80);
+                /* (grey, when the device opens another folder for that game now) */
+                ui_triangle(x + 5, y - 6, x + 5, y + 6, x + 14, y,
+                            cards[g->games[g->first[k - tabs_lead(g)]]].moved[0] ? 0x5A6478 : 0x6E9AE0, 0x80);
                 for (i = g->first[k - tabs_lead(g)]; i < g->first[k - tabs_lead(g) + 1]; i++)
                     here |= g->games[i] == activeCard;
                 x -= 22;   /* the mark of the card in use goes before the folder */

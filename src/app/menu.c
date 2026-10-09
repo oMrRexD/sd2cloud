@@ -5,23 +5,44 @@
 
 static void card_options(card_t *c)
 {
-    static const char *items[4], *devices[FDEVS];
-    int k = 0, d;
+    enum { OPT_SYNC, OPT_INCLUDED, OPT_RESTORE, OPT_DEVICE, OPT_MOVE, OPT_INSERT, OPTS };
+    static const char *devices[FDEVS];
+    static char move[96];
+    const char *items[OPTS];
+    int id[OPTS], n, k = 0, d;
     for (;;) {   /* circle in what comes next comes back here; circle here goes back to the main screen */
-        items[0] = T(T_SYNC_NOW);
-        items[1] = T(T_RESTORE_BACKUP);
-        items[2] = T(T_COPY_DEVICE);
-        /* only a card the device can be told to take, and isn't on already */
-        items[3] = T(dev->sd2psx ? T_INSERT : T_INSERT_PREVIEW);
-        if ((k = choose(c->base, items, can_insert(c) && c != (activeCard >= 0 ? &cards[activeCard] : NULL) ? 4 : 3, k)) < 0)
+        n = 0;
+        items[n] = T(T_SYNC_NOW), id[n++] = OPT_SYNC;
+        items[n] = T(c->included ? T_SYNC_DISABLE : T_SYNC_ENABLE), id[n++] = OPT_INCLUDED;
+        items[n] = T(T_RESTORE_BACKUP), id[n++] = OPT_RESTORE;
+        items[n] = T(T_COPY_DEVICE), id[n++] = OPT_DEVICE;
+        if (c->moved[0]) {   /* the device opens another folder for its game now: its saves can go there */
+            char to[64];
+            snprintf(to, sizeof(to), "%.44s-%d", c->moved, c->channel);
+            snprintf(move, sizeof(move), T(T_MOVE_SAVES), to);
+            items[n] = move, id[n++] = OPT_MOVE;
+        } else if (can_insert(c) && c != (activeCard >= 0 ? &cards[activeCard] : NULL))
+            /* only a card the device can be told to take, and isn't on already */
+            items[n] = T(dev->sd2psx ? T_INSERT : T_INSERT_PREVIEW), id[n++] = OPT_INSERT;
+        if ((k = choose(c->base, items, n, k < n ? k : 0)) < 0)
             return;
-        if (k == 0) {
+        switch (id[k]) {
+        case OPT_SYNC:
             if (sync_card(c))
                 return;   /* synced: back to the main screen, where its new status shows */
-        } else if (k == 3) {
+            break;
+        case OPT_INCLUDED:   /* its sync off, or on again: back to the main screen, where its status says so */
+            message(0, NULL, COLOR_TEXT, T(T_LOADING));
+            if (card_set_included(c, !c->included) != 0)
+                message_wait(0, NULL, COLOR_ERROR, T(T_ERR_EXPORT));
+            return;
+        case OPT_INSERT:
             insert_option(c);
             return;   /* back to the main screen, where the card in the sd2psx is marked */
-        } else if (k == 2) {   /* the whole card, as a file, to a folder of the microSD or of a USB drive */
+        case OPT_MOVE:
+            card_move_saves(c);
+            return;
+        case OPT_DEVICE:   /* the whole card, as a file, to a folder of the microSD or of a USB drive */
             for (d = 0; d < FDEVS; d++)
                 devices[d] = T(deviceText[d]);
             if ((d = choose(T(T_COPY_DEVICE), devices, FDEVS, 0)) >= 0) {
@@ -29,13 +50,15 @@ static void card_options(card_t *c)
                 files_screen(d);
                 fbCard = NULL;
             }
-        } else {
+            break;
+        default: {
             icon_t *ic = newest_icon(c);
             history_screen(c, ic);
             ui_scene(scene_frame);
             ui_lock();
             icon_free(ic);
             ui_unlock();
+        }
         }
     }
 }
@@ -105,13 +128,17 @@ static void scene_menu(float t)
         else
             ui_text_fit(FONT_TEXT, CARD_CX - (LOOK_CARD_W + 56) / 2, 82, LOOK_CARD_W + 56, 0x7E8AA0, name);
         draw_card_picture(c, menu.iconCard == menu.g.idx[menu.g.cursor] ? menu.icon : NULL, ui_clock());
+        if (c->moved[0])   /* (the device opens another folder for this game now) */
+            ui_text_center(FONT_SMALL, CARD_CX, CARD_Y + LOOK_CARD_H + 4, COLOR_WARN, T(T_CARD_UNUSED));
         return;
     }
     ui_text_center(FONT_TEXT, CARD_CX, 82, 0x7E8AA0, c->name[0] ? c->name : c->base);
     draw_card_picture(c, menu.iconCard == menu.g.idx[menu.g.cursor] ? menu.icon : NULL, ui_clock());
     ui_text_center(FONT_TEXT, CARD_CX, CARD_Y + LOOK_CARD_H + 2, status_color(c), status_text(c));
     last_backup(c, s, sizeof(s));
-    if (s[0]) {
+    if (c->moved[0])
+        ui_text_center(FONT_SMALL, CARD_CX, CARD_Y + LOOK_CARD_H + 24, COLOR_WARN, T(T_CARD_UNUSED));
+    else if (s[0]) {
         char l[96];
         snprintf(l, sizeof(l), T(T_CARD_LAST), s);
         ui_text_center(FONT_SMALL, CARD_CX, CARD_Y + LOOK_CARD_H + 24, COLOR_DIM, l);
@@ -210,6 +237,9 @@ void manual(void)
         }
         /* script "t": the automatic sync's step that puts the templates into the game cards, as after a game (the
          * sync itself needs a Google account, which PCSX2 has none of) */
+        /* script "j": the question square brings up while cards are sent (the sync needs a Google account) */
+        if (nCards && debug_take('j'))
+            log_msg("[script] j: skip? %d", confirm_skip(&cards[0]));
         if (debug_take('t')) {
             log_msg("[script] t: the templates, as after a game");
             templates_after_game();

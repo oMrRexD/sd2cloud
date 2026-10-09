@@ -339,3 +339,54 @@ int save_screen(card_t *c, int i)
     }
     return 0;
 }
+
+/* A card the device no longer opens for its game (Game2Folder.ini gives the game another folder): its saves go to
+ * the card of that folder, on the same channel, which is made now if it isn't there. A save that card already has
+ * of the same name stays where it is. How many went is said at the end */
+void card_move_saves(card_t *c)
+{
+    static mcfs_save_t list[MCFS_MAX_SAVES];
+    char name[64], t[300], note[200];
+    card_t *to;
+    int i, n, moved = 0, r;
+    snprintf(name, sizeof(name), "%.44s-%d", c->moved, c->channel);
+    snprintf(t, sizeof(t), T(T_MOVE_SAVES_ASK), c->base, name);
+    snprintf(note, sizeof(note), T(T_MOVE_SAVES_NOTE), c->moved);
+    if (!confirm(t, note, T_MOVE))
+        return;
+    if ((n = mcfs_list_saves(c->path, list, MCFS_MAX_SAVES, NULL)) < 0) {
+        message_wait(0, NULL, COLOR_ERROR, T(T_CARD_UNREADABLE));
+        return;
+    }
+    if (!(to = dest_card(c->moved, c->channel)))
+        return;
+    if (card_free(to, c) || card_free(c, to)) {
+        card_back();
+        return;
+    }
+    card_work(c, 1, T(T_WORKING_MOVE), 1);
+    for (i = 0; i < n; i++) {
+        upload_screen(i, n);
+        if ((r = mcfs_copy_save(c->path, list[i].folder, to->path, NULL)) == MCFS_OK)
+            r = mcfs_delete_save(c->path, list[i].folder);
+        log_msg("move %s from %s to %s: %d", list[i].folder, c->id, to->id, r);
+        moved += r == MCFS_OK;
+        if (r == MCFS_ERR_FULL)   /* (no room for the next ones either) */
+            break;
+    }
+    upload_screen(n, n);
+    card_work_done();
+    cards_recheck(to);
+    cards_recheck(c);
+    card_back();
+    snprintf(t, sizeof(t), T(T_MOVED_N), moved);
+    dlg_new(moved < n ? COLOR_WARN : COLOR_OK, t);
+    if (moved < n) {
+        snprintf(note, sizeof(note), T(T_NOT_MOVED_N), n - moved);
+        dlg_line(FONT_SMALL, COLOR_WARN, 0, note);
+    }
+    dlg_buttons(BUTTON_CROSS, T_BACK, 0, 0);
+    dlg_show();
+    wait_button(PAD_CROSS | PAD_CIRCLE, 0);
+    sound_play(SND_BACK);
+}

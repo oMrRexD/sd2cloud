@@ -20,7 +20,8 @@
  * copied to a device, halfway through. "a" right after the cards are checked: the card that is the same as the one
  * in slot 1 is taken as the card in use (PCSX2 has no device to say so), and is changed through the slot; "t" there:
  * the templates are put into the game cards as the automatic sync does after a game (the card active.txt names, in
- * the data folder, stands for the one in the device). For the rescue (at the end of this file): "@<seconds>" at the very
+ * the data folder, stands for the one in the device); "j" there: the question that square brings up while cards are
+ * sent. For the rescue (at the end of this file): "@<seconds>" at the very
  * start is the test's time limit, "Y" hangs and "Z" crashes, to try it. */
 char script[256];
 int scriptPos, hasScript;

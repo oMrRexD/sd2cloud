@@ -25,13 +25,21 @@ void checking_progress(int i, int n, const card_t *c)
  * the user wants to cancel. Only the press counts, not the button held down: the circle that answered "keep going"
  * may still be held when the upload resumes. The question itself waits for the next progress update */
 int circleDown;
+/* and square, while cards are sent one after the other (skipOffered): the one on its way is left out of it. The
+ * same way: only the press counts, and the question waits for the next progress update */
+int skipOffered, skipLatched;
+static int squareDown;
 
 void watch_cancel(void)
 {
-    int down = (pad_buttons() & PAD_CIRCLE) != 0;
+    u32 pad = pad_buttons();
+    int down = (pad & PAD_CIRCLE) != 0, square = (pad & PAD_SQUARE) != 0;
     if (down && !circleDown)
         cancelLatched = 1;
     circleDown = down;
+    if (skipOffered && square && !squareDown)
+        skipLatched = 1;
+    squareDown = square;
 #ifdef DEBUG_BUILD
     if (debug_take('K'))
         cancelLatched = 1;
@@ -57,6 +65,32 @@ int confirm_cancel(int title, int text)
     log_msg("cancel? %s", yes ? "yes" : "no, keep going");
     watchOff--;
     return yes;
+}
+
+/* Square while cards are sent: is the card on its way left out? 0 = no, keep going; 1 = of this sync; 2 = of this
+ * one and of every other from now on (its sync is turned off) */
+int confirm_skip(const card_t *c)
+{
+    char t[200];
+    u32 b;
+    int r;
+    watchOff++;
+    sound_play(SND_BACK);
+    snprintf(t, sizeof(t), T(T_SKIP_ASK), c->base);
+    dlg_new(COLOR_WARN, t);
+    dlg_line(FONT_TEXT, COLOR_TEXT, 0, T(T_SKIP_TEXT));
+    dlg_buttons(BUTTON_CIRCLE, T_CANCEL_NO, BUTTON_CROSS, T_SKIP);
+    dlg_button(BUTTON_SQUARE, T_SYNC_DISABLE);
+    next.wide = 1;
+    dlg_show();
+    b = wait_button(PAD_CROSS | PAD_CIRCLE | PAD_SQUARE, 0);
+    r = (b & PAD_CIRCLE) ? 0 : (b & PAD_SQUARE) ? 2 : (b & PAD_CROSS) ? 1 : 0;
+    sound_play(r ? SND_CONFIRM : SND_BACK);
+    skipLatched = cancelLatched = 0;
+    circleDown = squareDown = 1;   /* (the button that answered counts again only after being released) */
+    log_msg("skip %s? %s", c->id, r == 2 ? "yes, and no more sync for it" : r ? "yes" : "no, keep going");
+    watchOff--;
+    return r;
 }
 
 /* ------------------------------------------------------------ backup */
@@ -129,8 +163,8 @@ void scene_upload(float t)
         ui_text_right(FONT_SMALL, x + w, y + 12, COLOR_DIM, s);
     }
     if (!workFixed) {
-        legend_t l = {BUTTON_CIRCLE, T(T_CANCEL)};
-        look_legend(&l, 1, 0);
+        legend_t l[2] = {{BUTTON_CIRCLE, T(T_CANCEL)}, {BUTTON_SQUARE, T(T_SKIP)}};
+        look_legend(l, skipOffered ? 2 : 1, 0);
     }
 }
 

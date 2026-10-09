@@ -118,6 +118,28 @@ static void settings_choose_the_cards(void)
         CHECK_INT(c->status, ST_CHANGED);
     }
 
+    /* the user turns a card's sync off and on: kept in the settings, and read from them again */
+    c = card("Card1/Card1-1");
+    CHECK_INT(card_set_included(c, 0), 0);
+    CHECK(!c->included);
+    config_read();
+    CHECK_INT(cards_scan(), 3);
+    CHECK(!card("Card1/Card1-1")->included && card("BOOT/BootCard-1")->included);
+    CHECK_INT(card_set_included(card("Card1/Card1-1"), 1), 0);
+    CHECK(card("Card1/Card1-1")->included && strlen(card("Card1/Card1-1")->fingerprint) == 64);
+    /* a card the settings left out with its whole folder comes back alone; one of a kind they don't take is taken */
+    put_card("Card2", "Card2-2.mcd");
+    t_text("sd/SD2Cloud/sd2cloud.ini", "[cards]\ntypes = normal\nexclude = Card2\n");
+    config_read();
+    CHECK_INT(cards_scan(), 4);
+    CHECK(!card("Card2/Card2-1")->included && !card("Card2/Card2-2")->included && !card("BOOT/BootCard-1")->included);
+    CHECK_INT(card_set_included(card("Card2/Card2-2"), 1), 0);
+    CHECK_INT(card_set_included(card("BOOT/BootCard-1"), 1), 0);
+    config_read();
+    CHECK_INT(cards_scan(), 4);
+    CHECK(!card("Card2/Card2-1")->included && card("Card2/Card2-2")->included && card("BOOT/BootCard-1")->included);
+    CHECK(card("Card1/Card1-1")->included);
+
     /* how many channels a folder has: 8, until its .ini says otherwise */
     CHECK_INT(max_channels("Card1"), 8);
     CHECK_INT(max_channels_set("Card1", 9), 0);
@@ -146,7 +168,7 @@ static void group_folders_are_named(void)
            "SLUS-39998=MCCG-10004\nSLUS-39999=MCCG-10004\n"
            "SLPM-30031=MCCG-10005\nSLES-30032=MCCG-10005\n"
            "SLUS-30041=MCCG-10006\nSLUS-30042=MCCG-10006\n"
-           "SLES-30012=Fighters\n");
+           "SLES-30012=Fighters\nSLUS-21065=MCCG-19999\n");
     config_read();
     state_read();
     CHECK_INT(cards_scan(), 9);
@@ -185,11 +207,15 @@ static void group_folders_are_named(void)
     CHECK(c != NULL && c->type == TYPE_GAMEID);
     if (c)
         CHECK_STR(c->game, "Zombie Hunters");
-    /* and a game's own folder keeps the game's name */
+    /* and a game's own folder keeps the game's name; but the list gives that game another folder now: the device
+     * no longer opens this card for it */
     c = card("SLUS-21065/SLUS-21065-1");
     CHECK(c != NULL);
-    if (c)
+    if (c) {
         CHECK_STR(c->game, "A Game For The Tests");
+        CHECK_STR(c->moved, "MCCG-19999");
+    }
+    CHECK_STR(card("MCCG-10001/MCCG-10001-1")->moved, "");
 }
 
 void suite_cards(void)

@@ -150,7 +150,12 @@ static void on_group_id(const char *s, const char *k, const char *v, void *u)
 {
     int i;
     (void)u;
-    if (strcasecmp(s, "PS2") != 0 || !is_game_id(k) || nGroupIds == GROUP_IDS)
+    if (strcasecmp(s, "PS2") != 0 || !is_game_id(k))
+        return;
+    for (i = 0; i < nCards; i++)   /* a card in that game's own folder: the device has another one for the game now */
+        if (cards[i].type == TYPE_GAMEID && strcasecmp(v, k) != 0 && !strcasecmp(cards[i].folder, k))
+            snprintf(cards[i].moved, sizeof(cards[i].moved), "%s", v);
+    if (nGroupIds == GROUP_IDS)
         return;
     for (i = 0; i < nGroups; i++)
         if (!strcasecmp(groups[i].folder, v)) {
@@ -246,14 +251,18 @@ static void group_label(const group_t *g, char *out, size_t size)
         snprintf(out + strlen(out), size - strlen(out), "...");
 }
 
-/* the game cards the list of games has no name for: named as their group, when Game2Folder.ini has them as one */
+/* The game cards the list of games has no name for: named as their group, when Game2Folder.ini has them as one.
+ * And, from the same reading, the cards that file left behind: the ones in a game's own folder, when it gives the
+ * game another folder (moved) */
 static void group_names(void)
 {
     const char *p = (const char *)asset_gamenames_txt, *end = p + size_asset_gamenames_txt, *tab, *nl;
     char path[64];
-    int i, k, pass;
+    int i, k, pass, ids = 0;
     nGroups = nGroupIds = 0;
     for (i = 0; i < nCards; i++) {
+        cards[i].moved[0] = 0;
+        ids |= cards[i].type == TYPE_GAMEID && is_game_id(cards[i].folder);
         if (cards[i].type != TYPE_GAMEID || cards[i].game[0])
             continue;
         for (k = 0; k < nGroups && strcasecmp(groups[k].folder, cards[i].folder); k++)
@@ -263,7 +272,7 @@ static void group_names(void)
             groups[nGroups++].folder = cards[i].folder;
         }
     }
-    if (!nGroups || !dev->sd2psx)
+    if ((!nGroups && !ids) || !dev->sd2psx)
         return;
     memset(groupKey, 0, sizeof(groupKey));
     snprintf(path, sizeof(path), "%s.sd2psx/Game2Folder.ini", sdRoot);
@@ -430,9 +439,18 @@ static void fill_cards(const char *base, const char *folder, int first)
         ini_read(path, on_channel, &r);
 }
 
+/* is that card part of the sync, by the settings? One in exclude never is; one in include is; any other is by its
+ * kind, unless only the listed ones are (mode = list) */
+static int wanted(const card_t *c)
+{
+    if (list_has(cfg.exclude, c->id))
+        return 0;
+    return list_has(cfg.include, c->id) || (!cfg.list_mode && (cfg.types & c->type));
+}
+
 static void set_included(card_t *c)
 {
-    c->included = cfg.list_mode ? list_has(cfg.include, c->id) : ((cfg.types & c->type) && !list_has(cfg.exclude, c->id));
+    c->included = wanted(c);
     c->status = ST_NEW;
 }
 
@@ -553,4 +571,41 @@ void cards_recheck(card_t *c)
     check_one(c, &migrated);
     if (migrated)
         state_write();
+}
+
+int card_set_included(card_t *c, int on)
+{
+    char include[sizeof(cfg.include)], exclude[sizeof(cfg.exclude)];
+    int i, r = 0;
+    snprintf(include, sizeof(include), "%s", cfg.include);
+    snprintf(exclude, sizeof(exclude), "%s", cfg.exclude);
+    if (!on) {
+        list_remove(cfg.include, sizeof(cfg.include), c->id);
+        if (wanted(c))
+            r = list_add(cfg.exclude, sizeof(cfg.exclude), c->id);
+    } else {
+        list_remove(cfg.exclude, sizeof(cfg.exclude), c->id);
+        if (list_has(cfg.exclude, c->id)) {   /* its whole folder is left out: the other cards of it stay out */
+            list_remove(cfg.exclude, sizeof(cfg.exclude), c->folder);
+            for (i = 0; i < nCards && r == 0; i++)
+                if (&cards[i] != c && !strcmp(cards[i].folder, c->folder))
+                    r = list_add(cfg.exclude, sizeof(cfg.exclude), cards[i].id);
+        }
+        if (r == 0 && !wanted(c))
+            r = list_add(cfg.include, sizeof(cfg.include), c->id);
+    }
+    if (r == 0 && strcmp(include, cfg.include) != 0)
+        r = config_set("cards", "include", cfg.include);
+    if (r == 0 && strcmp(exclude, cfg.exclude) != 0)
+        r = config_set("cards", "exclude", cfg.exclude);
+    log_msg("%s: %s the sync by the user (%d)", c->id, on ? "part of" : "left out of", r);
+    if (r != 0) {   /* nothing is taken as changed */
+        snprintf(cfg.include, sizeof(cfg.include), "%s", include);
+        snprintf(cfg.exclude, sizeof(cfg.exclude), "%s", exclude);
+        return -1;
+    }
+    c->included = wanted(c);
+    if (c->included)   /* (a card left out of the sync was never read) */
+        cards_recheck(c);
+    return 0;
 }

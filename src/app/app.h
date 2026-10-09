@@ -183,6 +183,7 @@ void dest_new_name(void);
 int ask_more_channels(int max);
 extern int cardsUnsorted;
 card_t *dest_real(card_t *to);
+card_t *dest_card(const char *folder, int channel);
 
 /* ------------------------------------------------------------ dialog.c */
 extern dialog_t dlg, next;
@@ -261,6 +262,7 @@ void manual(void);
 /* ------------------------------------------------------------ save.c */
 extern const int psuOptions[];
 void op_result(int r, int okText, const card_t *other);
+void card_move_saves(card_t *c);
 void save_name(const save_view_t *v, char *out, size_t size);
 void save_page(save_view_t *v, const char *where, long long bytes, const int *options, int n);
 int save_page_choice(void);
@@ -343,6 +345,8 @@ extern int circleDown;
 void watch_cancel(void);
 extern int watchOff;
 int confirm_cancel(int title, int text);
+extern int skipOffered, skipLatched;
+int confirm_skip(const card_t *c);
 extern const card_t *current;
 extern int currentN, totalN;
 extern u64 iconStart;

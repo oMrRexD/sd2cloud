@@ -2,6 +2,8 @@
  * limit are deleted; what was done is said at the end. */
 #include "app.h"
 
+static int backupSkip;   /* the user gave up the card on its way (confirm_skip's answer) */
+
 int on_progress(long long done, long long total)
 {
     watch_cancel();
@@ -12,6 +14,8 @@ int on_progress(long long done, long long total)
             return 1;
         }
     }
+    if (skipLatched && current && (backupSkip = confirm_skip(current)) != 0)
+        return 1;
     upload_screen(done, total);
 #ifdef DEBUG_BUILD
     if (done * 2 >= total && done > 0 && debug_take('E'))
@@ -120,6 +124,8 @@ void run_backup(int mode, int rotate)
     for (i = 0, totalN = 0; i < nCards; i++)
         totalN += is_selected(&cards[i], mode);
     currentN = 0;
+    skipLatched = backupSkip = 0;
+    skipOffered = mode != 3;   /* (a card synced by itself is given up with circle) */
     for (i = 0; i < nCards && !backupCancelled; i++) {
         card_t *c = &cards[i];
         card_state_t *e;
@@ -152,6 +158,13 @@ void run_backup(int mode, int rotate)
                 log_msg("%s: upload cancelled", c->id);
                 break;
             }
+            if (backupSkip) {   /* left out by the user: of this sync, or of every one from now on */
+                add_result(COLOR_DIM, "%s: %s", c->base, T(T_UPLOAD_SKIPPED));
+                if (backupSkip == 2)
+                    card_set_included(c, 0);
+                backupSkip = 0;
+                continue;
+            }
             add_result(COLOR_ERROR, "%s: %s (%s)", c->base, T(T_UPLOAD_FAILED), googleError);
             failed++;
             continue;
@@ -172,6 +185,7 @@ void run_backup(int mode, int rotate)
         if (rotate)
             delete_old(c, folderId, id);
     }
+    skipOffered = 0;
     state_write();
 }
 

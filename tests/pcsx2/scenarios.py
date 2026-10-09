@@ -27,7 +27,7 @@ SCENARIOS = [
     {"name": "psu-import", "what": "a .psu file imported into a card", "cards": CARDS, "files": {"Files/save.psu": "save.psu"},
      "script": ">>XXXXXXXC"},
     {"name": "psu-export", "what": "a save exported as a .psu file", "cards": CARDS, "script": "XXX>>XTXXC"},
-    {"name": "card-to-zip", "what": "a whole card copied to a folder, in a .zip", "cards": CARDS, "script": "TDDXXTXXXC"},
+    {"name": "card-to-zip", "what": "a whole card copied to a folder, in a .zip", "cards": CARDS, "script": "TDDDXXTXXXC"},
     {"name": "card-file-new", "what": "a card file installed as a new card", "cards": CARDS,
      "files": {"Files/card.mcd": "game.mcd"}, "script": ">>XXQXXXC"},
     {"name": "card-file-replace", "what": "a card file installed over a card", "cards": CARDS,
@@ -36,6 +36,14 @@ SCENARIOS = [
      "files": {"Files/card.mcd": "game.mcd"}, "script": ">>XXXX.OOC"},
     {"name": "settings", "what": "settings changed (how many backups are kept, their format, the language) and About",
      "cards": CARDS, "script": "SDDDDDXDXDXDXUUXDXDDDDDDXOOC"},
+    {"name": "card-sync-toggle", "what": "a card's sync turned off in its options, and on again", "cards": CARDS,
+     "script": "TDXTDXC"},
+    # (the device has another folder for that game now, by its Game2Folder.ini: the card of the game's own folder was
+    # left behind. Its two saves go to the card of the folder the device opens, which is made for them)
+    {"name": "card-move-saves", "what": "the saves of a card the device no longer opens for its game, moved to the one it does",
+     "cards": {"Card1/Card1-1": "game", "SLUS-21065/SLUS-21065-1": "game"},
+     "files": {".sd2psx/Game2Folder.ini": b"[PS2]\nSLUS-21065=MCCG-10045\nSLUS-21267=MCCG-10045\n"},
+     "script": ">DXTDDDDXXXC"},
     {"name": "igr-no-account", "what": "started as after IGR with no Google account: it leaves at once", "cards": CARDS,
      "script": "I"},
     # the tools (SELECT) and the templates. The keyboard starts on A: DD>> is W. Triangle has a template's options, on
