@@ -204,6 +204,14 @@ static void cards_resort(void)
 void manual(void)
 {
     int n, r, i;
+    /* a microSD with the cards of both devices: which one it is in is asked once. And what the settings say gives way
+     * to a microSD that has only one device's cards, or to a device that tells which it is */
+    if (deviceBoth && !cfg.device[0])
+        pick_device(1);
+    else if (!deviceBoth && cfg.device[0] && strcasecmp(cfg.device, dev->sd2psx ? "sd2psx" : "pro2") != 0) {
+        snprintf(cfg.device, sizeof(cfg.device), "%s", dev->sd2psx ? "sd2psx" : "pro2");
+        config_set("general", "device", cfg.device);
+    }
     message(0, NULL, COLOR_TEXT, T(T_SEARCHING));
     n = cards_scan();
     if (n < 0) {

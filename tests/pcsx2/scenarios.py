@@ -31,13 +31,13 @@ SCENARIOS = [
     {"name": "save-paste-inside", "what": "a save marked on a card, pasted with another card's saves open", "cards": CARDS,
      "script": "XXXODXSXXC"},
     {"name": "save-export-many", "what": "two saves marked on a card, exported together as .psu files", "cards": CARDS,
-     "script": "XXX>XS>>XTXXC"},
+     "script": "XXX>XS>>XSXXC"},
     {"name": "save-move", "what": "a save moved to another card", "cards": CARDS, "script": "XXDXXXXC"},
     {"name": "save-delete", "what": "a save deleted", "cards": CARDS, "script": "XXDDXXXC"},
     {"name": "save-new-card", "what": "a save copied to a new card of its game", "cards": CARDS, "script": "XXXS>XXXC"},
     {"name": "psu-import", "what": "a .psu file imported into a card", "cards": CARDS, "files": {"Files/save.psu": "save.psu"},
      "script": ">>XXXXXXXC"},
-    {"name": "psu-export", "what": "a save exported as a .psu file", "cards": CARDS, "script": "XXXS>>XTXXC"},
+    {"name": "psu-export", "what": "a save exported as a .psu file", "cards": CARDS, "script": "XXXS>>XSXXC"},
     {"name": "card-to-zip", "what": "a whole card copied to a folder, in a .zip", "cards": CARDS, "script": "TDDDXXTXXXC"},
     {"name": "card-file-new", "what": "a card file installed as a new card", "cards": CARDS,
      "files": {"Files/card.mcd": "game.mcd"}, "script": ">>XXQXXXC"},
@@ -57,6 +57,16 @@ SCENARIOS = [
      "cards": {"Card1/Card1-1": "game", "SLUS-21065/SLUS-21065-1": "game"},
      "files": {".sd2psx/Game2Folder.ini": b"[PS2]\nSLUS-21065=MCCG-10045\nSLUS-21267=MCCG-10045\n"},
      "script": ">DXTDDDDXXXC"},
+    {"name": "save-export-list", "what": "a save marked on a card, exported from the Files group of the list of cards",
+     "cards": CARDS, "script": "XXXO>>XSXXC"},
+    # (a microSD that was in both devices has MemoryCards/PS2 and the MemCard PRO2's own PS2: which device it is in is
+    # asked once. Told it is the MemCard PRO2, its card is the one listed; told in the settings it is the sd2psx, the three)
+    {"name": "device-both", "what": "a microSD with both devices' cards: which device it is in is asked, and changed in the settings",
+     "cards": CARDS, "files": {"PS2/MemoryCard1/MemoryCard1-1.mc2": "game.mcd"}, "script": "DXXSDDDDXUXC"},
+    # (two game cards with the same two saves, one of which a template has: that one is on the screen once)
+    {"name": "all-saves-template", "what": "every game card's saves on one screen, a template's save only once",
+     "cards": {"Card1/Card1-1": "empty", "SLUS-21065/SLUS-21065-1": "game", "SLUS-20001/SLUS-20001-1": "game"},
+     "files": {"SD2Cloud/templates/Net/alpha.psu": "alpha-other.psu"}, "script": ">XC"},
     {"name": "igr-no-account", "what": "started as after IGR with no Google account: it leaves at once", "cards": CARDS,
      "script": "I"},
     # the tools (SELECT) and the templates. The keyboard starts on A: DD>> is W. Triangle has a template's options, on

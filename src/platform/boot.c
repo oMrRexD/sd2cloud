@@ -195,8 +195,8 @@ void system_init(int argc, char *argv[])
     if (strncmp(a0, "host:", 5) == 0)
         logFd = open("host:log.txt", O_WRONLY | O_CREAT | O_TRUNC, 0666);
     find_sd(a0);
-    find_device();
     config_read();
+    find_device();
     if (strncmp(appPath, "mmce", 4) != 0 && strncmp(appPath, "host:", 5) != 0)
         started_elsewhere(a0);
     if (init_joystick_driver(false) == JOYSTICK_INIT_STATUS_OK)

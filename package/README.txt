@@ -37,6 +37,8 @@ REQUIREMENTS
   A MemCard PRO2 is recognized too (its cards are the .mc2 files in the PS2 folder of its MMCE), but
   SD2Cloud has not been tried on one yet: take that as experimental. On it, "Insert this card" is a
   preview, and SD2Cloud never switches cards by itself: to change the card in use, switch to another one first.
+  A microSD that was used in both devices has the cards of both: SD2Cloud then asks, once, which device it is
+  in, and "Device", in the settings, changes the answer.
 - A way to start SD2Cloud: the Apps tab of OPL, wLaunchELF or any other launcher that can run an ELF. An
   OPL with MMCE support is recommended, such as RiptOPL (https://github.com/NathanNeurotic/Open-PS2-Loader).
   Without it, OPL does not list the apps on the MMCE and has no "IGR Bootcard Slot(s)" option: with
@@ -135,7 +137,7 @@ screen are the ones that do something with the selected entry.
   with the same name, or without enough space, is left as it is: delete or move that item first.
   SQUARE on the file, in the list, goes straight to the card, without opening the page.
 - Exporting: Copy, on an item's page (X on it, in a card), also lists the Files tab among the destinations of
-  the marked items; pick the device, go to the folder where the files should go and press TRIANGLE. Each file
+  the marked items, and the list of cards they are marked on has that tab too; pick the device, go to the folder where the files should go and press START. Each file
   gets its item's folder name (BASLUS-21065SAVE.psu, for example), is read back and compared. When a file
   with that name is already there, SD2Cloud asks: X replaces it, SQUARE keeps both (the new one gets a
   number: BASLUS-21065SAVE (2).psu).

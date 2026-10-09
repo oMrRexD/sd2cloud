@@ -29,6 +29,14 @@ void i18n_device(const char *name)
     static const char old[] = "sd2psx";
     const char *const *table[2] = {english, portuguese};
     int k, id;
+    for (k = 0; k < 2; k++)   /* (the ones of the device before) */
+        for (id = 1; id < T_COUNT; id++) {
+            free((char *)renamed[k][id]);
+            renamed[k][id] = NULL;
+        }
+    otherDevice = 0;
+    if (!strcmp(name, old))
+        return;
     for (k = 0; k < 2; k++)
         for (id = 1; id < T_COUNT; id++) {
             const char *s = table[k][id], *p;

@@ -108,6 +108,9 @@ int main(int argc, char *argv[])
         google_forget();
         state_read();
         i18n_select(cfg.language);
+        ui_lock();
+        i18n_device(dev->name);   /* (it may be another device, or the user said it is) */
+        ui_unlock();
         if (!configExists)
             config_write_template();
         log_msg("read again: %s, %s", dev->name, google_has_access() ? "with a Google account" : "no Google account");

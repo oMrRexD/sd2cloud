@@ -125,7 +125,7 @@ PLACE = {
     "T_SET_SYNC_ALL": ("text", 270, 1), "T_HELPER_TITLE": ("text", 270, 1), "T_SET_IGR_RETURN": ("text", 270, 1),
     "T_IGR_TITLE": ("text", 270, 1), "T_SYNC_ON": ("text", 200, 1), "T_SYNC_OFF": ("text", 200, 1),
     "T_SET_LANGUAGE": ("text", 270, 1), "T_SET_KEEP": ("text", 290, 1), "T_SET_FORMAT": ("text", 270, 1),
-    "T_SET_UPDATES": ("text", 270, 1), "T_SET_ACCOUNT": ("text", 270, 1), "T_SET_ABOUT": ("text", 270, 1),
+    "T_SET_UPDATES": ("text", 270, 1), "T_SET_DEVICE": ("text", 270, 1), "T_DEVICE_ASK": ("text", 320, 1), "T_SET_ACCOUNT": ("text", 270, 1), "T_SET_ABOUT": ("text", 270, 1),
     "T_MENU_UPDATE": ("text", 440, 1), "T_PENDING_N": ("text", 200, 1), "T_NONE_PENDING": ("text", 200, 1), "T_UPDATE_AVAILABLE": ("text", 200, 1),
     "T_HELPER_NOT_INSTALLED": ("text", 200, 1), "T_ACCOUNT_OFF": ("text", 200, 1),
     "T_SYNC_NOW": ("text", 320, 1), "T_EXIT_TO": ("text", 330, 1), "T_EXIT_BROWSER": ("text", 320, 1), "T_ALL_SYNCED": ("text", DIALOG, 1), "T_AUTO_ASK": ("text", WIDE, 3), "T_AUTO_WHERE": ("small", WIDE, 2),
@@ -222,7 +222,7 @@ LEGENDS = [
     (("T_BACK", "T_MARK", "T_TPL_APPLY"), False), (("T_BACK", "T_OPEN", "T_OPTIONS"), False),
     (("T_CANCEL", "T_SKIP"), False), (("T_CANCEL_NO", "T_SKIP", "T_SYNC_DISABLE"), False), (("T_BACK", "T_MOVE"), False),
     # saves marked for a copy: on a card's saves, and on the list of cards
-    (("T_BACK", "T_MARK", "T_PASTE"), False), (("T_BACK", "T_OPEN", "T_PASTE"), False), (("T_BACK", "T_COPY"), False),
+    (("T_BACK", "T_MARK", "T_PASTE"), False), (("T_BACK", "T_OPEN", "T_PASTE"), False), (("T_BACK", "T_COPY"), False), (("T_BACK", "T_PASTE"), False),
 ]
 
 

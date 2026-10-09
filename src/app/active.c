@@ -497,6 +497,13 @@ void device_lost(void)
     if (d)
         closedir(d);
     log_msg("the microSD %s after %d ms", d ? "answers" : "still doesn't answer", i * 500);
+    reload_all();
+}
+
+/* Everything that came from the microSD is let go of and read again from the start (main.c, at reloadPoint): the
+ * device was taken out and is back, maybe with another microSD; or the user said which device it is in */
+void reload_all(void)
+{
     /* what was open of the microSD that was there */
     browser_close();
     psu_close();

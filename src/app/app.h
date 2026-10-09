@@ -115,6 +115,7 @@ extern u64 debugGone;
 #endif
 void device_watch(void);
 void device_lost(void) __attribute__((noreturn));
+void reload_all(void) __attribute__((noreturn));
 
 /* ------------------------------------------------------------ autosync.c */
 void igr(void);
@@ -133,7 +134,7 @@ int sync_card(card_t *c);
 
 /* ------------------------------------------------------------ browse.c */
 struct fbGive_s {
-    card_t *c;         /* a save's "Copy" picked a device: triangle in files_screen writes there what was marked */
+    card_t *c;         /* a save's "Copy" picked a device: START in files_screen writes there what was marked */
     save_view_t *v;    /* the save, when one is marked (NULL = the marked saves, however many) */
     int done;          /* written */
 };
@@ -330,6 +331,7 @@ void card_screen(card_t *c);
 void exit_menu(void);
 void settings_screen(void);
 void offer_auto_sync(void);
+void pick_device(int startup);
 
 /* ------------------------------------------------------------ tabs.c */
 int card_number(const card_t *c);

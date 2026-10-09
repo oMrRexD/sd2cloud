@@ -12,6 +12,8 @@
 #define MAX_RULES   64
 typedef struct {
     char language[8];
+    char device[12];             /* [general] device = sd2psx or pro2: which device the microSD is in, when it has the
+                                    cards of both and the device doesn't tell ("" = not asked yet) */
     char drive_folder[64];
     int no_ask_connect;          /* [general] ask_connect = no: don't offer to connect a Google account at startup */
     int list_mode;               /* 0 = auto, 1 = only the cards in include */

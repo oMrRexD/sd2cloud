@@ -9,7 +9,7 @@ static void helper_install_now(int doneTitle);
  * sd2cloud.ini at once */
 
 
-enum { SET_SYNC_ALL, SET_AUTO_SYNC, SET_HELPER, SET_IGR_RETURN, SET_LANGUAGE, SET_KEEP, SET_FORMAT, SET_UPDATES,
+enum { SET_SYNC_ALL, SET_AUTO_SYNC, SET_HELPER, SET_IGR_RETURN, SET_DEVICE, SET_LANGUAGE, SET_KEEP, SET_FORMAT, SET_UPDATES,
        SET_CHANNEL, SET_ACCOUNT, SET_ABOUT, SET_MAX };
 #define SET_X      80     /* the labels; the values end at SET_RIGHT */
 #define SET_RIGHT  560
@@ -45,6 +45,8 @@ static void build_settings(void)
                                                 : helperState == HELPER_NOT_INSTALLED ? T_HELPER_NOT_INSTALLED : T_HELPER_NA));
     target_name(cfg.igr_return, v, sizeof(v));
     set_item(&i, SET_IGR_RETURN, T(T_SET_IGR_RETURN), v);
+    if (deviceBoth)   /* (a microSD with the cards of both devices: which one it is in is the user's to say) */
+        set_item(&i, SET_DEVICE, T(T_SET_DEVICE), dev->name);
     set_item(&i, SET_LANGUAGE, T(T_SET_LANGUAGE), !strcmp(cfg.language, "pt") ? "Português" : !strcmp(cfg.language, "en") ? "English"
                                                                                     : T(T_AUTO));
     snprintf(v, sizeof(v), "%d", cfg.keep);
@@ -70,7 +72,7 @@ static void scene_settings(float t)
     ui_alpha(look_fade(t));
     look_title(W / 2.0f, 88, T(T_SETTINGS), 1);
     for (i = 0; i < st.n; i++) {
-        float y = SET_Y0 + i * SET_ROW;
+        float y = SET_Y0 + i * (st.n > 11 ? SET_ROW - 2 : SET_ROW);   /* (one more row than usual: closer together) */
         if (i == st.cursor) {
             look_glow_text(FONT_TEXT, SET_X, y, COLOR_ITEM, COLOR_ITEM_ON, st.label[i]);
             ui_text_right(FONT_TEXT, SET_RIGHT, y, 0xD8E4F4, st.value[i]);
@@ -369,6 +371,28 @@ static void check_updates_now(int back)
     update_app();
 }
 
+/* Which device the microSD is in, when it has the cards of an sd2psx and those of a MemCard PRO2 (it was in both) and
+ * the device didn't say which it is. startup = asked when the program opens, before the cards are looked for: what
+ * was picked is used at once, and where it can be changed is said (circle leaves it for the next time). From the
+ * settings, everything that came from the microSD is read again as that device's */
+void pick_device(int startup)
+{
+    static const char *const items[2] = {"sd2psx", "MemCard PRO2"};
+    int now = !dev->sd2psx, k = choose(T(startup ? T_DEVICE_ASK : T_SET_DEVICE), items, 2, now);
+    if (k < 0 || (!startup && k == now))
+        return;
+    snprintf(cfg.device, sizeof(cfg.device), "%s", k ? "pro2" : "sd2psx");
+    config_set("general", "device", cfg.device);
+    log_msg("device: the user says it is %s", items[k]);
+    if (!startup)
+        reload_all();
+    system_reload();
+    ui_lock();
+    i18n_device(dev->name);
+    ui_unlock();
+    message_wait(0, NULL, COLOR_TEXT, T(T_DEVICE_NOTE));
+}
+
 /* where the updates come from: the releases (stable) or the build made from every change (beta, after saying what
  * that means). The channel chosen is looked at right away; leaving the beta, that is the way back to the stable
  * version */
@@ -617,6 +641,9 @@ void settings_screen(void)
             break;
         case SET_IGR_RETURN:
             pick_return();
+            break;
+        case SET_DEVICE:
+            pick_device(0);
             break;
         case SET_LANGUAGE:
             pick_language();

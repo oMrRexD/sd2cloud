@@ -10,7 +10,7 @@ SLUS-21065/SLUS-21065-1: 2 folders, fingerprint 64fbc81ffd3ff7a8, new
 Card1/Card1-1: 2 saves, 8270848 bytes free
 [script] X
 [script] X
-[script] S
+[script] O
 [script] >
 [script] >
 [script] X

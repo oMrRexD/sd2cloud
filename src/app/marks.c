@@ -82,6 +82,8 @@ static void scene_mark(float t)
     look_title(CARD_CX, 82, mk.title, 1);
     snprintf(s, sizeof(s), T(T_MARKED_N), marks.n);
     ui_text_center(FONT_TEXT, CARD_CX, CARD_Y + LOOK_CARD_H + 2, marks.n ? COLOR_OK : COLOR_DIM, s);
+    if (mk.g.tab == TAB_FILES)   /* a device: the marked saves can go to a folder of it */
+        return;
     if (mk.g.n && mk.g.idx[mk.g.cursor] < 0) {   /* "All saves": the game cards together */
         look_card(CARD_X, CARD_Y, NULL, T(T_TAB_GAMES));
         return;
@@ -89,6 +91,8 @@ static void scene_mark(float t)
     if ((c = tabs_card(&mk.g)) != NULL)
         draw_card_picture(c, mk.iconCard == mk.g.idx[mk.g.cursor] ? mk.icon : NULL, ui_clock());
 }
+
+static int copy_to_device(int device);
 
 /* the selected game card's icon, read when the cursor rests a moment */
 static void mark_icon(void)
@@ -106,14 +110,15 @@ static void mark_icon(void)
 }
 
 /* The list, until START with something marked (1) or circle with the marks let go of (0). at = the card it opens on
- * (&allGames = "All saves"; NULL = the first one) */
+ * (&allGames = "All saves"; NULL = the first one). For a copy the list has the Files group too: X or START on a
+ * device opens its folders, where START writes the marked saves as .psu files (2 = that was done) */
 static int mark_cards(const card_t *at)
 {
     int r = -1;
     ui_lock();
     marks.done = 0;
     marks.into = NULL;
-    tabs_init(&mk.g, NULL, 0);
+    tabs_init(&mk.g, NULL, marks.copy);
     mk.g.all = 1;
     tabs_show(&mk.g, mk.g.tab);
     if (at == &allGames)
@@ -144,6 +149,10 @@ static int mark_cards(const card_t *at)
             sound_play(SND_BACK);
             if (!marks.n || confirm(T(T_MARK_DROP), NULL, T_MARK_DROP_YES))
                 r = 0;
+        } else if (mk.g.tab == TAB_FILES) {
+            sound_play(marks.n ? SND_CONFIRM : SND_BACK);
+            if (marks.n && copy_to_device(mk.g.cursor))
+                r = 2;
         } else if (b & PAD_START) {
             sound_play(marks.n ? SND_CONFIRM : SND_BACK);
             if (marks.n) {   /* (on a card: that is the card a copy pastes them into) */
@@ -287,6 +296,19 @@ int copy_start(const save_view_t *v)
     return 1;
 }
 
+/* The marked saves to a folder of a device (FDEV_*), as .psu files: its folders are browsed, and START there
+ * writes them into the one shown. 1 = written: the copy is over. 0 = the user came back: the marks stay */
+static int copy_to_device(int device)
+{
+    fbGive.c = marks.save[0].card;
+    fbGive.v = marks.n == 1 ? mark_view(0) : NULL;   /* (one save is asked about by its name) */
+    fbGive.done = 0;
+    files_screen(device);
+    fbGive.c = NULL;
+    mark_show_done();
+    return fbGive.done;
+}
+
 /* START with saves marked for a copy ("Paste"). into = the card it was pressed on: the one whose saves were open,
  * or the one under the cursor in the list of cards. That card takes them, when it lacks at least one of them; with
  * no such card (START on the card they all are on, on every game card's saves, on a card file's) where they go is
@@ -336,17 +358,8 @@ int copy_marked(card_t *into)
         /* they can also go to a folder of the microSD or of a USB drive, as .psu files (not from a card file: the
          * folders are already being browsed, on the screen underneath) */
         destFiles = marks.save[0].card != &fileCard;
-        if (!(to = choose_dest(from, T_COPY_TO, need, game))) {
-            if (destDevice < 0)
-                return 0;
-            fbGive.c = marks.save[0].card;
-            fbGive.v = marks.n == 1 ? mark_view(0) : NULL;   /* (one save is asked about by its name) */
-            fbGive.done = 0;
-            files_screen(destDevice);
-            fbGive.c = NULL;
-            mark_show_done();
-            return fbGive.done;
-        }
+        if (!(to = choose_dest(from, T_COPY_TO, need, game)))
+            return destDevice >= 0 && copy_to_device(destDevice);
     }
     for (i = 0; i < marks.n; i++)   /* how many go: the ones that card doesn't have already */
         if (marks.save[i].card != to) {
@@ -404,8 +417,8 @@ int copy_leave(const card_t *c)
 {
     if (marks.n && c != &fileCard) {
         browser_close();
-        while (mark_cards(c) && !copy_marked(marks.into))
-            ;   /* (back from picking where to: the cards again) */
+        while (mark_cards(c) == 1 && !copy_marked(marks.into))
+            ;   /* (back from where they were to go: the cards again. 0 = let go of, 2 = written to a folder) */
         marks_reset();
         return 1;
     }

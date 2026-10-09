@@ -219,7 +219,9 @@ static void scene_files(float t)
         int n = 1;
         if (e && fb_opens(e))
             l[n].button = BUTTON_CROSS, l[n++].text = T(fb_opens(&fb.list[fb.cursor]) == FB_ELF ? T_RUN : T_OPEN);
-        if (fbCard || fbGive.c)   /* a card or a save is on its way to the folder shown */
+        if (fbGive.c)   /* saves marked for a copy are on their way to the folder shown: START pastes them, as on a card */
+            l[n].button = BUTTON_START, l[n++].text = T(T_PASTE);
+        else if (fbCard)   /* a whole card is */
             l[n].button = BUTTON_TRIANGLE, l[n++].text = T(T_EXPORT);
         else if (e && !e->dir && is_psu(e->name))   /* what the selected file is good for */
             l[n].button = BUTTON_SQUARE, l[n++].text = T(T_INSTALL_SAVE);
@@ -493,7 +495,7 @@ void files_screen(int dev)
     for (;;) {
         u32 b;
         ui_scene(scene_files);
-        b = wait_nav(PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT | PAD_CROSS | PAD_CIRCLE | PAD_TRIANGLE | PAD_SQUARE);
+        b = wait_nav(PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT | PAD_CROSS | PAD_CIRCLE | PAD_TRIANGLE | PAD_SQUARE | (fbGive.c ? PAD_START : 0));
         if (b & (PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT)) {   /* left and right: a screenful at a time */
             int k = fb.cursor;
             if (!fb.n)
@@ -562,7 +564,7 @@ void files_screen(int dev)
             sound_play(SND_CONFIRM);
             if (export_card(fbCard))
                 return;
-        } else if ((b & PAD_TRIANGLE) && !fb.error && fbGive.c) {   /* from a save's "Copy": into this folder */
+        } else if ((b & PAD_START) && !fb.error && fbGive.c) {   /* "Paste", from a save's "Copy": into this folder */
             sound_play(SND_CONFIRM);
             if (fbGive.v ? export_save(fbGive.c, fbGive.v) : export_marked()) {
                 fbGive.done = 1;

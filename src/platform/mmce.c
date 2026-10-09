@@ -85,16 +85,21 @@ static const device_t devMcp2 = {"MemCard PRO2", "PRO2", "PS2", ".mc2", "MemoryC
 const device_t *dev = &devSd2psx;
 int cardTold = 1;
 int devicePings;
+int deviceBoth;
 
 /* which one answers in the microSD's slot: the ping gives the protocol's version, the product (1 = SD2PSX, 2 = MemCard
  * PRO2, 3 and 4 = the PicoMemcards) and its revision. One that doesn't answer is a MemCard PRO2 when its firmware's
  * file is on the microSD. And whatever it answers, the microSD itself tells: one with no MemoryCards/PS2 and with the
- * MemCard PRO2's own /PS2 is a MemCard PRO2's (a real one, 10/2026, was taken for an sd2psx and its cards not found) */
+ * MemCard PRO2's own /PS2 is a MemCard PRO2's (a real one, 10/2026, was taken for an sd2psx and its cards not found).
+ * A microSD that was in both devices has both folders (another real MemCard PRO2, 10/2026, was taken for an sd2psx
+ * that way): which one it is in now the user says, once, and the settings keep (read before this) */
 void find_device(void)
 {
     char c[64];
     int r = mmce_devctl(MMCE_CMD_PING, NULL, 0), product = r >= 0 ? (r >> 8) & 0xFF : 0;
+    int sd2 = has_dir(sdRoot, "MemoryCards/PS2"), pro = has_dir(sdRoot, "PS2");
     dev = &devSd2psx;
+    deviceBoth = 0;
 #ifdef DEBUG_BUILD
     {   /* PCSX2 has no device: product.txt in the data folder says which one to be */
         buffer_t b = {0};
@@ -105,8 +110,13 @@ void find_device(void)
     }
 #endif
     snprintf(c, sizeof(c), "%smcp2.bin", sdRoot);
-    if (product == 2 || (r < 0 && r != -2 && file_exists(c)) || (!has_dir(sdRoot, "MemoryCards/PS2") && has_dir(sdRoot, "PS2")))
+    if (product == 2 || (r < 0 && r != -2 && file_exists(c)) || (!sd2 && pro))
         dev = &devMcp2;
+    else if (sd2 && pro) {
+        deviceBoth = 1;
+        if (!strcasecmp(cfg.device, "pro2"))
+            dev = &devMcp2;
+    }
     cardTold = dev->sd2psx;
     devicePings = r >= 0;
 #ifdef DEBUG_BUILD
@@ -114,12 +124,13 @@ void find_device(void)
     if (file_exists(c))
         cardTold = 0;
 #endif
-    log_msg("device: %s (ping %d: protocol %d, product %d, revision %d)", dev->name, r, r >= 0 ? (r >> 16) & 0xFF : 0, product,
-            r >= 0 ? r & 0xFF : 0);
+    log_msg("device: %s (ping %d: protocol %d, product %d, revision %d)%s", dev->name, r, r >= 0 ? (r >> 16) & 0xFF : 0, product,
+            r >= 0 ? r & 0xFF : 0, !deviceBoth ? "" : cfg.device[0] ? ", as the settings say: the microSD has both devices' cards"
+                                                                   : ", for now: the microSD has both devices' cards");
 }
 
 void system_reload(void)
 {
-    find_device();
     config_read();
+    find_device();
 }

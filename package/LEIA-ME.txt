@@ -39,6 +39,8 @@ REQUISITOS
   O MemCard PRO2 também é reconhecido (os cartões dele são os arquivos .mc2 da pasta PS2 do MMCE), mas o
   SD2Cloud ainda não foi testado em um: considere isso experimental. Nele, "Inserir este cartão" é um
   preview, e o SD2Cloud nunca troca de cartão sozinho: para alterar o cartão em uso, selecione outro antes.
+  Um microSD que foi usado nos dois dispositivos tem os cartões dos dois: o SD2Cloud pergunta, uma vez, em
+  qual deles o microSD está, e "Dispositivo", nos ajustes, altera a resposta.
 - Uma forma de abrir o SD2Cloud: a aba Apps do OPL, o wLaunchELF ou qualquer outro programa que abra um
   ELF. Recomenda-se um OPL com suporte a MMCE, como o RiptOPL (https://github.com/NathanNeurotic/Open-PS2-Loader).
   Sem esse suporte, o OPL não lista os apps do MMCE e não tem a opção "Slot(s) de Bootcard
@@ -147,7 +149,7 @@ com o item selecionado.
   item antes. QUADRADO no arquivo, na lista, vai direto para a escolha do cartão, sem abrir a página.
 - Exportar: o Copiar da página de um item (X nele, dentro de um cartão) também lista a aba Arquivos entre os
   destinos dos itens selecionados; escolha o dispositivo, vá até a pasta onde os arquivos devem ficar e
-  pressione TRIÂNGULO. Cada arquivo recebe o nome da pasta do item (BASLUS-21065SAVE.psu, por exemplo), é
+  pressione START (a lista de cartões em que os itens são selecionados também tem essa aba). Cada arquivo recebe o nome da pasta do item (BASLUS-21065SAVE.psu, por exemplo), é
   lido de volta e comparado. Quando já existe um arquivo com esse nome, o SD2Cloud pergunta: X substitui,
   QUADRADO mantém os dois (o novo recebe um número: BASLUS-21065SAVE (2).psu).
 - Arquivos de cartão de memória: X em um .mcd, um .mc2 (MemCard PRO2), um .ps2 (PCSX2), um .bin (um cartão

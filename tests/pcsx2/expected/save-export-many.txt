@@ -19,7 +19,7 @@ Card1/Card1-1: 2 saves, 8270848 bytes free
 files: host:: 4 entries
   0: MemoryCards/ (0 bytes)
   1: SD2Cloud/ (0 bytes)
-[script] T
+[script] S
 [script] X
 export BASLUS-21065ALPHA of Card1/Card1-1 to host:BASLUS-21065ALPHA.psu (6656 bytes): 0, written and read back
 export BASLUS-21065BETA of Card1/Card1-1 to host:BASLUS-21065BETA.psu (43008 bytes): 0, written and read back

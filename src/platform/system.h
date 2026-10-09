@@ -77,6 +77,9 @@ extern const device_t *dev;
 /* 1 = the number and channel the device gives for its card are known to mean what the sd2psx's do. Else (a device
  * SD2Cloud was never tried on) the card in use is only told by the root folder the PS2 sees in the slot */
 extern int cardTold;
+/* the microSD has the cards of an sd2psx and those of a MemCard PRO2, and the device didn't say which of the two it
+ * is: the settings do ([general] device), once the user was asked */
+extern int deviceBoth;
 /* a USB drive (mass0:), for the file browser: loads its drivers the first time, then waits up to ms for the drive.
  * 0 = it's there */
 int usb_open(int ms);

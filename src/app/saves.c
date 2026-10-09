@@ -291,32 +291,93 @@ void browser_fill(card_t *c, const mcfs_save_t *list, int n, int cursor)
     ui_unlock();
 }
 
-/* the newest first, whichever card each is on; two of the same moment, by name */
-static int newer_view(const void *a, const void *b)
+/* -------- every game card's saves on one screen ("All saves")
+ *
+ * The saves as the cards have them are kept apart (allSaves); what the screen shows of them is made from that: the
+ * newest first, whichever card each is on, and a save that a template has only once, the newest of it. Put into
+ * every game card, as a template is, it would be all over the screen. */
+
+typedef struct {
+    mcfs_save_t s;
+    card_t *card;
+} all_save_t;
+static all_save_t *allSaves;   /* BRW_MAX of them */
+static int nAll;
+
+/* the newest first; two of the same moment, by name */
+static int newer_all(const void *a, const void *b)
 {
-    const save_view_t *x = a, *y = b;
+    const all_save_t *x = a, *y = b;
     return x->s.when < y->s.when ? 1 : x->s.when > y->s.when ? -1 : strcmp(x->s.folder, y->s.folder);
 }
 
-/* a card's saves onto the end of the n the screen has, for the screen of every game card's (with ui_lock held: the
- * list is brwList, read before). Returns how many there are then */
-static int browser_append(card_t *c, int n, int count)
+static int of_a_template(const char *folder)
 {
     int i;
-    for (i = 0; i < count && n < BRW_MAX; i++, n++) {
-        memset(&brwSaves[n], 0, sizeof(brwSaves[0]));
-        brwSaves[n].s = brwList[i];
-        brwSaves[n].card = c;
+    for (i = 0; i < nTemplates; i++)
+        if (template_find_save(&templates[i], folder) >= 0)
+            return 1;
+    return 0;
+}
+
+/* a card's saves (brwList, read before) onto the end of allSaves */
+static void all_append(card_t *c, int count)
+{
+    int i;
+    for (i = 0; i < count && nAll < BRW_MAX; i++, nAll++) {
+        allSaves[nAll].s = brwList[i];
+        allSaves[nAll].card = c;
     }
-    return n;
+}
+
+/* the screen's saves, made from allSaves, with the cursor there (with ui_lock held). An icon the screen had read
+ * stays with its save; the icons of the saves that are no longer there go */
+static void all_show(int cursor)
+{
+    save_view_t *old = NULL;
+    int i, k, n = 0, was = brw.n;
+    if (was && (old = malloc(sizeof(*old) * was)) != NULL)
+        memcpy(old, brwSaves, sizeof(*old) * was);
+    else
+        browser_drop_icons();   /* (none to keep, or no memory to: they are read again) */
+    qsort(allSaves, nAll, sizeof(allSaves[0]), newer_all);
+    for (i = 0; i < nAll; i++) {
+        const char *folder = allSaves[i].s.folder;
+        if (of_a_template(folder)) {
+            for (k = 0; k < n && strcmp(brwSaves[k].s.folder, folder) != 0; k++)
+                ;
+            if (k < n)   /* (a newer one of it is there already) */
+                continue;
+        }
+        memset(&brwSaves[n], 0, sizeof(brwSaves[0]));
+        brwSaves[n].s = allSaves[i].s;
+        brwSaves[n].card = allSaves[i].card;
+        for (k = 0; old && k < was; k++)
+            if (old[k].tried && old[k].card == allSaves[i].card && !strcmp(old[k].s.folder, folder)) {
+                brwSaves[n].icon = old[k].icon;
+                brwSaves[n].tried = 1;
+                memcpy(brwSaves[n].line1, old[k].line1, sizeof(old[k].line1));
+                memcpy(brwSaves[n].line2, old[k].line2, sizeof(old[k].line2));
+                old[k].icon = NULL;
+                old[k].tried = 0;
+                break;
+            }
+        n++;
+    }
+    for (k = 0; old && k < was; k++)
+        icon_free(old[k].icon);
+    free(old);
+    browser_set(&allGames, n, cursor, -1);
 }
 
 /* every game card's saves as those of one card. Each card's list is read in turn (a moment each on the sd2psx): a
  * bar meanwhile */
 static void browser_load_all(void)
 {
-    int i, n = 0, count, k = 0, total = 0;
+    int i, count, k = 0, total = 0;
     if (!brwSaves && !(brwSaves = calloc(BRW_MAX, sizeof(save_view_t))))
+        return;
+    if (!allSaves && !(allSaves = calloc(BRW_MAX, sizeof(all_save_t))))
         return;
     for (i = 0; i < nCards; i++)
         total += cards[i].type == TYPE_GAMEID;
@@ -324,26 +385,30 @@ static void browser_load_all(void)
     dlg_line(FONT_TEXT, COLOR_TEXT, 0, T(T_LOADING));
     dlg_bar(0, NULL);
     dlg_show();
+    /* which saves are a template's (not while saves are being marked for a template: its screens hold on to the
+     * templates as they were read) */
+    if (!marks.on || marks.copy)
+        templates_scan();
     ui_lock();
     browser_drop_icons();
     snprintf(allGames.base, sizeof(allGames.base), "%s", T(T_TAB_GAMES));
     snprintf(allGames.id, sizeof(allGames.id), "every game card");
     allGames.type = TYPE_GAMEID;
     ui_unlock();
+    nAll = 0;
     for (i = 0; i < nCards; i++) {
         if (cards[i].type != TYPE_GAMEID)
             continue;
         count = mcfs_list_saves(cards[i].path, brwList, MCFS_MAX_SAVES, NULL);
-        n = browser_append(&cards[i], n, count < 0 ? 0 : count);   /* (nothing draws them yet: brw.n is 0) */
+        all_append(&cards[i], count < 0 ? 0 : count);   /* (nothing draws them yet: brw.n is 0) */
         ui_lock();
         dlg.permille = total ? ++k * 1000 / total : 1000;
         ui_unlock();
     }
-    qsort(brwSaves, n, sizeof(brwSaves[0]), newer_view);
     ui_lock();
-    browser_set(&allGames, n, 0, -1);
+    all_show(0);
     ui_unlock();
-    log_msg("every game card: %d saves on %d cards", n, total);
+    log_msg("every game card: %d saves on %d cards, %d shown", nAll, total, brw.n);
 }
 
 /* on that screen, the saves of one card again (one was copied to it, moved or deleted): the others stay as they are,
@@ -353,17 +418,14 @@ static void browser_refresh(card_t *c)
     int count = mcfs_list_saves(c->path, brwList, MCFS_MAX_SAVES, NULL), i, k = 0;
     ui_scene(scene_frame);   /* nothing of the list on screen while it changes */
     ui_lock();
-    for (i = 0; i < brw.n; i++) {
-        if (brw.saves[i].card == c)
-            icon_free(brw.saves[i].icon);
-        else
-            brw.saves[k++] = brw.saves[i];
-    }
-    k = browser_append(c, k, count < 0 ? 0 : count);
-    qsort(brwSaves, k, sizeof(brwSaves[0]), newer_view);
-    browser_set(&allGames, k, brw.cursor, -1);
+    for (i = 0; i < nAll; i++)
+        if (allSaves[i].card != c)
+            allSaves[k++] = allSaves[i];
+    nAll = k;
+    all_append(c, count < 0 ? 0 : count);
+    all_show(brw.cursor);
     ui_unlock();
-    log_msg("every game card: %s read again, %d saves in all", c->id, k);
+    log_msg("every game card: %s read again, %d saves in all, %d shown", c->id, nAll, brw.n);
 }
 
 /* Waits on the screen of saves for one of those buttons. Meanwhile the icons are read, one by one while nobody
