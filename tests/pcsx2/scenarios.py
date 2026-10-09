@@ -20,13 +20,16 @@ TEMPLATE = {"SD2Cloud/templates/Net/save.psu": "save.psu"}
 SCENARIOS = [
     {"name": "main-screen", "what": "the cards are found, read and listed", "cards": dict(CARDS, **{"BOOT/BootCard-1": "empty"}),
      "script": "C"},
-    # "Copy" on a save's page marks it; START says where it goes (S). Others can be marked first, there and on the
-    # other cards, which are listed when that card's saves are left (O)
+    # "Copy" on a save's page marks it. Others can be marked, there and on the other cards, which are listed when
+    # that card's saves are left (O). START (S) pastes them into the card it is pressed on: the one under the cursor
+    # in that list, or the one whose saves are open. On the card they are all on, it asks where they go
     {"name": "save-copy", "what": "a save copied to another card", "cards": CARDS, "script": "XXXSXXXC"},
     {"name": "save-copy-many", "what": "saves marked on two cards, copied together to a third", "cards": CARDS,
-     "script": "XXXO>XX>XSDXXXC"},
-    {"name": "save-copy-list", "what": "a save marked on a card, pasted from the list of cards", "cards": CARDS,
-     "script": "XXXOSXXXC"},
+     "script": "XXXO>XX>XO<DSXXC"},
+    {"name": "save-copy-list", "what": "a save marked on a card, pasted on another card of the list", "cards": CARDS,
+     "script": "XXXODSXXC"},
+    {"name": "save-paste-inside", "what": "a save marked on a card, pasted with another card's saves open", "cards": CARDS,
+     "script": "XXXODXSXXC"},
     {"name": "save-export-many", "what": "two saves marked on a card, exported together as .psu files", "cards": CARDS,
      "script": "XXX>XS>>XTXXC"},
     {"name": "save-move", "what": "a save moved to another card", "cards": CARDS, "script": "XXDXXXXC"},

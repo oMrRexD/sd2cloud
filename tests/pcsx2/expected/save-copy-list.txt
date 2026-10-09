@@ -11,8 +11,8 @@ Card1/Card1-1: 2 saves, 8270848 bytes free
 [script] X
 [script] X
 [script] O
+[script] D
 [script] S
-[script] X
 [script] X
 mcfs: copy of BASLUS-21065ALPHA: 0, 54 reads and 7 writes of the cards in N ms
 copy BASLUS-21065ALPHA from Card1/Card1-1 to Card2/Card2-1: 0
