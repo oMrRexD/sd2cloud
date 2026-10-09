@@ -91,8 +91,8 @@ A folder that the sd2psx's .sd2psx/Game2Folder.ini gives to several games (a ser
 shown under those games' names: what they have in common ("Need for Speed"), or the names themselves.
 A game card that file left behind (the sd2psx opens another folder for its game now) has a grey arrow, and its
 options offer to move its saves to the card the sd2psx opens.
-- X opens the card: its saved data, displayed as in the PS2 browser, the newest first. On that screen, SQUARE
-  syncs the card; if it is already synced, SD2Cloud says so and lets you sync it again.
+- X opens the card: its saved data, displayed as in the PS2 browser, the newest first. On that screen,
+  TRIANGLE has "Sync now"; if the card is already synced, SD2Cloud says so and lets you sync it again.
 - TRIANGLE opens the selected card's options: "Sync now", "Disable sync" (the card is left out of every sync,
   the automatic one too, until "Enable sync" is picked there; its status is then "Excluded"), "Restore a
   backup" (see RESTORING) and "Copy to a device": the whole card goes, as a file, to a folder of the MMCE or of a USB drive. Pick the device, go to
@@ -105,7 +105,10 @@ options offer to move its saves to the card the sd2psx opens.
   small card marks the one the sd2psx is using.
 - The Games tab starts with "All saves": the saved data of every game card on one screen, the newest first,
   as if it were all on a single card. Each item still belongs to its own card, whose name is at the top of
-  the item's page, and what is done to an item is done to that card.
+  the item's page, and what is done to an item is done to that card. An item that more than one card has (the
+  same folder with the same files, byte for byte, as a template put into every card) is shown once.
+- TRIANGLE, with a card's items on screen, has the options: "Sync now", for that card; the items by name (of their game) or by date, the
+  newest first, on every card; and, in "All saves", those duplicates shown or hidden. The settings keep both.
 - START opens the settings (see SETTINGS), and SELECT the tools (see TEMPLATES).
 - X on a saved data item opens its page, with Copy, Move, Delete and Upload to Drive.
 - Copy marks the item (a green tick over its icon) and goes back to the card's items, where X now marks and

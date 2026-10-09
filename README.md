@@ -122,7 +122,7 @@ The [README.txt](package/README.txt) included in the release explains every scre
 | Screen | Buttons |
 |---|---|
 | Main screen | Up/Down: card · Left/Right or L1/R1: tab · X: open the card · TRIANGLE: card options (sync now, restore a backup, copy to a device, insert into the sd2psx) · SELECT: tools · START: settings · O: exit |
-| Inside a card | X: open a save · SQUARE: sync this card · O: back |
+| Inside a card | X: open a save · TRIANGLE: options (sync this card; the saves by name or by date; in All saves, duplicates shown or hidden) · O: back |
 | A save's page | Copy · Move · Delete · Upload to Drive |
 | After Copy | The save is selected, and so can others be: X selects or deselects a save · O: leave the card, to select saves on other cards too · START: paste them all into the card under the cursor, or into the card that is open; on a device of the Files tab, X opens its folders and START pastes them there as `.psu` files (on the card they came from, START asks where to: another card, a new card of their game, or a folder) |
 | Files tab | X: open the device, a folder, a `.psu` file or a memory card file · SQUARE: install the selected `.psu` in a card, or the selected memory card file on the MMCE · Left/Right: a page up or down · O: back. To export saves, use **Copy** on a save's page: this tab is among the places they can be pasted to, and START writes each `.psu` into the folder shown |

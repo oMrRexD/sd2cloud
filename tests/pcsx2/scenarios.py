@@ -63,10 +63,17 @@ SCENARIOS = [
     # asked once. Told it is the MemCard PRO2, its card is the one listed; told in the settings it is the sd2psx, the three)
     {"name": "device-both", "what": "a microSD with both devices' cards: which device it is in is asked, and changed in the settings",
      "cards": CARDS, "files": {"PS2/MemoryCard1/MemoryCard1-1.mc2": "game.mcd"}, "script": "DXXSDDDDXUXC"},
-    # (two game cards with the same two saves, one of which a template has: that one is on the screen once)
-    {"name": "all-saves-template", "what": "every game card's saves on one screen, a template's save only once",
+    # (two game cards with the same two saves: each is on the screen once, until the options say to show them all;
+    # then by name)
+    {"name": "all-saves-repeated", "what": "every game card's saves on one screen: the same save on two cards once, then each time, then by name",
      "cards": {"Card1/Card1-1": "empty", "SLUS-21065/SLUS-21065-1": "game", "SLUS-20001/SLUS-20001-1": "game"},
-     "files": {"SD2Cloud/templates/Net/alpha.psu": "alpha-other.psu"}, "script": ">XC"},
+     "script": ">XTDXTXC"},
+    # (a save of the same name as one a game card has, saved at another moment, is imported into another game's card:
+    # they are two saves, and both are on the screen)
+    {"name": "all-saves-progress", "what": "two saves of the same name saved at different moments are both shown",
+     "cards": {"Card1/Card1-1": "empty", "SLUS-21065/SLUS-21065-1": "game", "SLUS-20001/SLUS-20001-1": "empty"},
+     "files": {"Files/alpha.psu": "alpha-other.psu"}, "script": ">>XXXX>DXXXXOOO<XC"},
+    {"name": "saves-by-name", "what": "a card's saves by name, and by date again", "cards": CARDS, "script": "XTDXTDXC"},
     {"name": "igr-no-account", "what": "started as after IGR with no Google account: it leaves at once", "cards": CARDS,
      "script": "I"},
     # the tools (SELECT) and the templates. The keyboard starts on A: DD>> is W. Triangle has a template's options, on

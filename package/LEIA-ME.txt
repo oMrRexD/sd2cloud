@@ -96,8 +96,8 @@ com o nome desses jogos: o trecho em comum ("Need for Speed") ou os próprios no
 Um cartão de jogo que esse arquivo deixou para trás (o sd2psx agora abre outra pasta para o jogo) tem a seta
 cinza, e as opções dele oferecem mover os saves para o cartão que o sd2psx abre.
 - X abre o cartão: os dados salvos, exibidos como no navegador do PS2, do mais novo ao mais antigo. Nessa
-  tela, QUADRADO sincroniza o cartão; se ele já estiver sincronizado, o SD2Cloud avisa e permite sincronizar
-  novamente.
+  tela, TRIÂNGULO traz "Sincronizar agora"; se o cartão já estiver sincronizado, o SD2Cloud avisa e permite
+  sincronizar novamente.
 - TRIÂNGULO abre as opções do cartão selecionado: "Sincronizar agora", "Desativar sincronização" (o cartão
   fica fora de toda sincronização, inclusive da automática, até que "Ativar sincronização" seja escolhido
   ali; o status dele passa a ser "Não incluído"), "Restaurar backup" (veja RESTAURAÇÃO) e "Copiar para
@@ -112,7 +112,12 @@ cinza, e as opções dele oferecem mover os saves para o cartão que o sd2psx ab
   no sd2psx.
 - A aba Jogos começa com "Todos os saves": os dados salvos de todos os cartões de jogo em uma só tela, do
   mais novo ao mais antigo, como se estivessem em um único cartão. Cada item continua no cartão dele, cujo
-  nome aparece no topo da página do item, e o que se faz com um item é feito nesse cartão.
+  nome aparece no topo da página do item, e o que se faz com um item é feito nesse cartão. Um item que mais de
+  um cartão tem (a mesma pasta com os mesmos arquivos, byte a byte, como um template aplicado a todos os
+  cartões) aparece uma vez só.
+- TRIÂNGULO, com os itens de um cartão na tela, traz as opções: "Sincronizar agora", para esse cartão; os itens por nome (do jogo) ou por data, do
+  mais novo ao mais antigo, em qualquer cartão; e, em "Todos os saves", esses repetidos exibidos ou ocultos.
+  As duas escolhas ficam gravadas nos ajustes.
 - START abre os ajustes (veja AJUSTES), e SELECT as ferramentas (veja TEMPLATES).
 - X em um item de dados salvos abre a página do item, com as opções Copiar, Mover, Eliminar e Enviar ao
   Drive.

@@ -126,7 +126,7 @@ O [LEIA-ME.txt](package/LEIA-ME.txt) incluído na release explica cada tela em d
 | Tela | Botões |
 |---|---|
 | Tela principal | Cima/Baixo: cartão · Esquerda/Direita ou L1/R1: aba · X: abrir o cartão · TRIÂNGULO: opções do cartão (sincronizar agora, restaurar backup, copiar para dispositivo, inserir no sd2psx) · SELECT: ferramentas · START: ajustes · O: sair |
-| Dentro de um cartão | X: abrir um item · QUADRADO: sincronizar este cartão · O: voltar |
+| Dentro de um cartão | X: abrir um item · TRIÂNGULO: opções (sincronizar este cartão; os itens por nome ou por data; em Todos os saves, repetidos ocultos ou exibidos) · O: voltar |
 | Página de um item | Copiar · Mover · Eliminar · Enviar ao Drive |
 | Depois de Copiar | O item fica selecionado, e outros também podem ficar: X seleciona ou desmarca um item · O: sair do cartão, para selecionar itens de outros cartões também · START: colar todos no cartão sob o cursor, ou no cartão que está aberto; em um dispositivo da aba Arquivos, X abre as pastas e START cola todos ali como arquivos `.psu` (no cartão de onde vieram, START pergunta o destino: outro cartão, um cartão novo do jogo deles, ou uma pasta) |
 | Aba Arquivos | X: abrir o dispositivo, uma pasta, um arquivo `.psu` ou um arquivo de cartão de memória · QUADRADO: instalar o `.psu` selecionado em um cartão, ou o arquivo de cartão selecionado no MMCE · Esquerda/Direita: uma página acima ou abaixo · O: voltar. Para exportar itens, use o **Copiar** da página de um deles: esta aba está entre os lugares onde eles podem ser colados, e START grava cada `.psu` na pasta exibida |

@@ -40,6 +40,9 @@ typedef struct {
     int no_tpl_after_game;       /* [templates] after_game = no: the automatic sync leaves the game cards as they are,
                                     without putting their templates into them */
     char repo[80];               /* [update] repo (owner/name on GitHub) */
+    int sort_name;               /* [saves] sort = name: a card's saves by name, not the newest first */
+    int show_repeated;           /* [saves] repeated = show: on the screen of every game card's saves, the same save
+                                    on more than one card is there each time, not once */
     int beta;                    /* [update] channel = beta: updates come from the "beta" pre-release, rebuilt at every
                                     change, instead of the latest release */
 } config_t;

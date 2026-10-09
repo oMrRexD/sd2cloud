@@ -148,9 +148,9 @@ static void scene_browser(float t)
     } else if (brw.nLegend)
         look_legend(brw.legend, brw.nLegend, 0);
     else {
-        legend_t l[3] = {{BUTTON_CIRCLE, T(T_BACK)}, {BUTTON_CROSS, T(T_OPEN)},
-                         {BUTTON_SQUARE, T(brw.card == &fileCard ? T_INSTALL : T_SYNC)}};
-        look_legend(l, brw.card == &allGames ? 2 : 3, 0);   /* (no one card to sync there) */
+        legend_t l[4] = {{BUTTON_CIRCLE, T(T_BACK)}, {BUTTON_CROSS, T(T_OPEN)}, {BUTTON_TRIANGLE, T(T_OPTIONS)},
+                         {BUTTON_SQUARE, T(T_INSTALL)}};
+        look_legend(l, brw.card == &fileCard ? 4 : 3, 0);   /* (a card file is installed with square, as in the list of files) */
     }
 }
 
@@ -248,6 +248,48 @@ static void browser_drop_icons(void)
     brw.n = 0;
 }
 
+/* What a save is sorted by, by name: its game's name (by the ID in its folder's name, when the list of games has
+ * it), then its folder; one that tells no game, its folder alone. (The title on screen is in its icon.sys, which is
+ * only read for the saves the screen is showing) */
+#define SORT_KEY 72
+static void sort_key(const char *folder, char out[SORT_KEY])
+{
+    static char lastId[12], lastName[96];   /* (a card's saves are mostly of one game) */
+    char id[12];
+    if (save_game_id(folder, id)) {
+        if (strcmp(id, lastId) != 0) {
+            snprintf(lastId, sizeof(lastId), "%s", id);
+            if (!game_title(id, lastName, sizeof(lastName)))
+                lastName[0] = 0;
+        }
+        if (lastName[0]) {
+            snprintf(out, SORT_KEY, "%s %s", lastName, folder);
+            return;
+        }
+    }
+    snprintf(out, SORT_KEY, "%s", folder);
+}
+
+/* a card's list (brwList, the newest first, as it is read) by name: the ones of the same name stay as they were */
+static void list_by_name(int n)
+{
+    static char key[MCFS_MAX_SAVES][SORT_KEY];
+    char t[SORT_KEY];
+    int i, k;
+    for (i = 0; i < n; i++)
+        sort_key(brwList[i].folder, key[i]);
+    for (i = 1; i < n; i++) {   /* (few of them: each one into its place) */
+        mcfs_save_t s = brwList[i];
+        memcpy(t, key[i], SORT_KEY);
+        for (k = i; k > 0 && strcasecmp(key[k - 1], t) > 0; k--) {
+            brwList[k] = brwList[k - 1];
+            memcpy(key[k], key[k - 1], SORT_KEY);
+        }
+        brwList[k] = s;
+        memcpy(key[k], t, SORT_KEY);
+    }
+}
+
 static void browser_load(card_t *c, int cursor)
 {
     long long freeBytes = -1;
@@ -260,6 +302,8 @@ static void browser_load(card_t *c, int cursor)
         log_msg("%s: its saves couldn't be read (%d)", c->id, n);
         n = 0;
     }
+    if (cfg.sort_name)
+        list_by_name(n);
     ui_lock();
     browser_drop_icons();   /* a list read again (after a move or a delete): the old icons go */
     memset(brwSaves, 0, sizeof(save_view_t) * n);
@@ -270,6 +314,8 @@ static void browser_load(card_t *c, int cursor)
     browser_set(c, n, cursor, freeBytes);
     ui_unlock();
     log_msg("%s: %d saves, %lld bytes free", c->id, n, freeBytes);
+    if (cfg.sort_name && n)
+        log_msg("%s: by name, from %s", c->id, brwSaves[0].s.folder);
 }
 
 /* The screen's saves are these n, which aren't read from a card (a template's: brwIcon gives their icons). c = what
@@ -293,31 +339,38 @@ void browser_fill(card_t *c, const mcfs_save_t *list, int n, int cursor)
 
 /* -------- every game card's saves on one screen ("All saves")
  *
- * The saves as the cards have them are kept apart (allSaves); what the screen shows of them is made from that: the
- * newest first, whichever card each is on, and a save that a template has only once, the newest of it. Put into
- * every game card, as a template is, it would be all over the screen. */
+ * The saves as the cards have them are kept apart (allSaves); what the screen shows of them is made from that, in
+ * the order the settings say (the newest first, or by name), whichever card each is on. The same save on more than
+ * one card is there once, unless the settings say otherwise: the same folder with the same files, byte for byte,
+ * which is what a copy of a save is (a template put into every game card would be all over the screen). Two saves of
+ * the same name with anything different in them are different saves, a game's progress on two cards, and both are
+ * there; so is one whose files couldn't be read. Dates don't tell: a console whose clock stands still gives every
+ * save the same one. */
 
 typedef struct {
     mcfs_save_t s;
     card_t *card;
+    char key[SORT_KEY];        /* what it is sorted by, by name ("" = not found out yet) */
+    unsigned long long sig;    /* what tells it from another save of its folder (mcfs_save_signatures; 0 = not read) */
+    int asked, seen;           /* that was asked for; (all_sign) it was looked at, this time around */
 } all_save_t;
 static all_save_t *allSaves;   /* BRW_MAX of them */
 static int nAll;
 
-/* the newest first; two of the same moment, by name */
+/* the newest first; two of the same moment, by name, and the same save on two cards, by card */
 static int newer_all(const void *a, const void *b)
 {
     const all_save_t *x = a, *y = b;
-    return x->s.when < y->s.when ? 1 : x->s.when > y->s.when ? -1 : strcmp(x->s.folder, y->s.folder);
+    int r = x->s.when < y->s.when ? 1 : x->s.when > y->s.when ? -1 : strcmp(x->s.folder, y->s.folder);
+    return r ? r : x->card < y->card ? -1 : x->card > y->card;
 }
 
-static int of_a_template(const char *folder)
+/* by name; the ones of the same name, the newest first */
+static int named_all(const void *a, const void *b)
 {
-    int i;
-    for (i = 0; i < nTemplates; i++)
-        if (template_find_save(&templates[i], folder) >= 0)
-            return 1;
-    return 0;
+    const all_save_t *x = a, *y = b;
+    int r = strcasecmp(x->key, y->key);
+    return r ? r : newer_all(a, b);
 }
 
 /* a card's saves (brwList, read before) onto the end of allSaves */
@@ -327,9 +380,96 @@ static void all_append(card_t *c, int count)
     for (i = 0; i < count && nAll < BRW_MAX; i++, nAll++) {
         allSaves[nAll].s = brwList[i];
         allSaves[nAll].card = c;
+        allSaves[nAll].key[0] = 0;
+        allSaves[nAll].sig = 0;
+        allSaves[nAll].asked = 0;
     }
 }
 
+/* What was found out of a save's files (all_sign), kept while the program is open: every game card's saves are
+ * looked at again each time their screen opens, and a save of a card that didn't change since (its fingerprint
+ * tells) isn't read again for it */
+#define KEPT_MAX 512
+static struct {
+    const card_t *card;
+    char print[17], folder[33];
+    unsigned long long when, sig;
+} *kept;
+static int nKept, keptNext;
+
+static int kept_find(const card_t *c, const mcfs_save_t *s)
+{
+    int i;
+    for (i = 0; kept && c->fingerprint[0] && i < nKept; i++)
+        if (kept[i].card == c && kept[i].when == s->when && !strncmp(kept[i].print, c->fingerprint, 16) && !strcmp(kept[i].folder, s->folder))
+            return i;
+    return -1;
+}
+
+static void kept_add(const card_t *c, const mcfs_save_t *s, unsigned long long sig)
+{
+    int i;
+    if (!sig || !c->fingerprint[0] || (!kept && !(kept = calloc(KEPT_MAX, sizeof(kept[0])))))
+        return;
+    for (i = 0; i < nKept && !(kept[i].card == c && !strcmp(kept[i].folder, s->folder)); i++)
+        ;
+    if (i == nKept && nKept < KEPT_MAX)
+        nKept++;
+    else if (i == nKept)   /* (full: the oldest ones give way) */
+        i = keptNext++ % KEPT_MAX;
+    kept[i].card = c;
+    snprintf(kept[i].print, sizeof(kept[i].print), "%.16s", c->fingerprint);
+    snprintf(kept[i].folder, sizeof(kept[i].folder), "%s", s->folder);
+    kept[i].when = s->when;
+    kept[i].sig = sig;
+}
+
+/* Before the same save on more than one card is shown once: the saves that may be such (the same folder, the same
+ * date, on different cards) are told apart by what is in their files, read now, a card at a time (not with ui_lock
+ * held). One that was read before isn't read again */
+static void all_sign(void)
+{
+    static mcfs_save_t list[MCFS_MAX_SAVES];
+    static unsigned long long sig[MCFS_MAX_SAVES];
+    static int which[MCFS_MAX_SAVES];
+    int i, j, k, n;
+    if (cfg.show_repeated)
+        return;
+    for (i = 0; i < nAll; i++)
+        allSaves[i].seen = 0;
+    for (i = 0; i < nAll; i++) {
+        card_t *c = allSaves[i].card;
+        if (allSaves[i].seen)
+            continue;
+        for (n = 0, k = i; k < nAll; k++) {   /* this card's, from here on */
+            if (allSaves[k].card != c)
+                continue;
+            allSaves[k].seen = 1;
+            if (allSaves[k].asked || n == MCFS_MAX_SAVES)
+                continue;
+            for (j = 0; j < nAll; j++)
+                if (allSaves[j].card != c && allSaves[j].s.when == allSaves[k].s.when && !strcmp(allSaves[j].s.folder, allSaves[k].s.folder))
+                    break;
+            if (j == nAll)
+                continue;
+            if ((j = kept_find(c, &allSaves[k].s)) >= 0) {
+                allSaves[k].sig = kept[j].sig;
+                allSaves[k].asked = 1;
+                continue;
+            }
+            list[n] = allSaves[k].s;
+            which[n++] = k;
+        }
+        if (!n)
+            continue;
+        mcfs_save_signatures(c->path, list, n, sig);
+        for (k = 0; k < n; k++) {
+            allSaves[which[k]].sig = sig[k];
+            allSaves[which[k]].asked = 1;
+            kept_add(c, &list[k], sig[k]);
+        }
+    }
+}
 /* the screen's saves, made from allSaves, with the cursor there (with ui_lock held). An icon the screen had read
  * stays with its save; the icons of the saves that are no longer there go */
 static void all_show(int cursor)
@@ -340,13 +480,17 @@ static void all_show(int cursor)
         memcpy(old, brwSaves, sizeof(*old) * was);
     else
         browser_drop_icons();   /* (none to keep, or no memory to: they are read again) */
-    qsort(allSaves, nAll, sizeof(allSaves[0]), newer_all);
+    for (i = 0; cfg.sort_name && i < nAll; i++)
+        if (!allSaves[i].key[0])
+            sort_key(allSaves[i].s.folder, allSaves[i].key);
+    qsort(allSaves, nAll, sizeof(allSaves[0]), cfg.sort_name ? named_all : newer_all);
     for (i = 0; i < nAll; i++) {
         const char *folder = allSaves[i].s.folder;
-        if (of_a_template(folder)) {
-            for (k = 0; k < n && strcmp(brwSaves[k].s.folder, folder) != 0; k++)
+        if (!cfg.show_repeated && allSaves[i].sig) {
+            for (k = 0; k < i && (allSaves[k].sig != allSaves[i].sig || allSaves[k].s.when != allSaves[i].s.when ||
+                                  strcmp(allSaves[k].s.folder, folder) != 0); k++)
                 ;
-            if (k < n)   /* (a newer one of it is there already) */
+            if (k < i)   /* (that very save is there already, from another card) */
                 continue;
         }
         memset(&brwSaves[n], 0, sizeof(brwSaves[0]));
@@ -385,10 +529,6 @@ static void browser_load_all(void)
     dlg_line(FONT_TEXT, COLOR_TEXT, 0, T(T_LOADING));
     dlg_bar(0, NULL);
     dlg_show();
-    /* which saves are a template's (not while saves are being marked for a template: its screens hold on to the
-     * templates as they were read) */
-    if (!marks.on || marks.copy)
-        templates_scan();
     ui_lock();
     browser_drop_icons();
     snprintf(allGames.base, sizeof(allGames.base), "%s", T(T_TAB_GAMES));
@@ -405,6 +545,7 @@ static void browser_load_all(void)
         dlg.permille = total ? ++k * 1000 / total : 1000;
         ui_unlock();
     }
+    all_sign();
     ui_lock();
     all_show(0);
     ui_unlock();
@@ -423,6 +564,9 @@ static void browser_refresh(card_t *c)
             allSaves[k++] = allSaves[i];
     nAll = k;
     all_append(c, count < 0 ? 0 : count);
+    ui_unlock();
+    all_sign();
+    ui_lock();
     all_show(brw.cursor);
     ui_unlock();
     log_msg("every game card: %s read again, %d saves in all, %d shown", c->id, nAll, brw.n);
@@ -464,6 +608,33 @@ u32 browser_wait(u32 buttons)
     }
 }
 
+/* Triangle on a card's saves: syncing the card (one of the microSD's), and how the saves are shown. The order, the
+ * newest first or by name, is every such screen's; the same save on more than one card, once or each time, is of the
+ * screen of every game card's. The settings keep both. 0 = nothing; 1 = they are shown another way; 2 = sync it */
+static int browser_options(const card_t *c)
+{
+    enum { OPT_SYNC, OPT_SORT, OPT_REPEATED };
+    const char *items[3];
+    int id[3], n = 0, k;
+    if (c != &allGames && c != &fileCard)
+        items[n] = T(T_SYNC_NOW), id[n++] = OPT_SYNC;
+    items[n] = T(cfg.sort_name ? T_SORT_DATE : T_SORT_NAME), id[n++] = OPT_SORT;
+    if (c == &allGames)
+        items[n] = T(cfg.show_repeated ? T_REPEATED_HIDE : T_REPEATED_SHOW), id[n++] = OPT_REPEATED;
+    if ((k = choose(T(T_OPTIONS), items, n, 0)) < 0)
+        return 0;
+    if (id[k] == OPT_SYNC)
+        return 2;
+    if (id[k] == OPT_SORT) {
+        cfg.sort_name = !cfg.sort_name;
+        config_set("saves", "sort", cfg.sort_name ? "name" : "date");
+    } else {
+        cfg.show_repeated = !cfg.show_repeated;
+        config_set("saves", "repeated", cfg.show_repeated ? "show" : "hide");
+    }
+    return 1;
+}
+
 /* a card's saves. &allGames = every game card's, as if they were on one card. While saves are being marked (marks.c)
  * X marks and unmarks the one under the cursor and START ends the marking: for a template, back in the list of cards
  * this was opened from; for a copy that began here (a save's "Copy"), on to where the marked saves go */
@@ -479,7 +650,7 @@ void card_screen(card_t *c)
         browser_load(c, 0);
     ui_scene(scene_browser);
     for (;;) {
-        u32 b = browser_wait(PAD_CROSS | PAD_CIRCLE | (marks.on ? PAD_START : all ? 0 : PAD_SQUARE));
+        u32 b = browser_wait(PAD_CROSS | PAD_CIRCLE | (marks.on ? PAD_START : PAD_TRIANGLE | (c == &fileCard ? PAD_SQUARE : 0)));
         int n = brw.n;
         if (b & PAD_CIRCLE) {
             sound_play(SND_BACK);
@@ -530,12 +701,24 @@ void card_screen(card_t *c)
             } else if (changed)
                 browser_load(c, brw.cursor);
             ui_scene(scene_browser);
-        } else if (b & PAD_SQUARE) {
+        } else if (b & PAD_TRIANGLE) {
+            int k;
             sound_play(SND_CONFIRM);
-            if (c == &fileCard)
-                install_card();
-            else
+            if ((k = browser_options(c)) == 2)
                 sync_card(c);
+            else if (k && all) {   /* shown the other way: every game card's, from what was read */
+                message(0, NULL, COLOR_TEXT, T(T_LOADING));
+                all_sign();
+                ui_lock();
+                all_show(0);
+                ui_unlock();
+                log_msg("every game card: %d saves, %d shown%s", nAll, brw.n, cfg.sort_name ? ", by name" : "");
+            } else if (k)   /* a card's, read again */
+                browser_load(c, 0);
+            ui_scene(scene_browser);
+        } else if (b & PAD_SQUARE) {   /* (a card file's saves) */
+            sound_play(SND_CONFIRM);
+            install_card();
             ui_scene(scene_browser);
         }
     }

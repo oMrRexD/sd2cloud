@@ -32,6 +32,11 @@ int mcfs_save_icon(const char *path, const mcfs_save_t *save, buffer_t *iconsys,
 /* Is that save a program to start, the way the Save Application System keeps one: a title.cfg whose "boot" line names
  * a file of the same folder? 1 = yes, and boot is that file's name as the folder has it */
 int mcfs_save_app(const char *path, const mcfs_save_t *save, char *boot, size_t size);
+/* What tells each of those saves of a card (as mcfs_list_saves gave them) from another save of the same folder: its
+ * files' names and what is in them, in one number. A copy of a save has the same one; a save a game wrote again
+ * doesn't, whatever its dates say (a console whose clock stands still dates every save the same). Every file is
+ * read for it. sig[i] = 0: that save couldn't be read. Returns 0 when the card was opened */
+int mcfs_save_signatures(const char *path, const mcfs_save_t *saves, int n, unsigned long long *sig);
 /* changing a card (a .mcd that the sd2psx is NOT using right now): copy a save to another card (read back and
  * compared), delete a save, export a save as a .psu, import one from a .psu file (also read back and compared).
  * 0 = ok, else MCFS_ERR_* (BAD = the file isn't a .psu this can use) */

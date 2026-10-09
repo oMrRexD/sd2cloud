@@ -581,6 +581,61 @@ int mcfs_save_app(const char *path, const mcfs_save_t *s, char *boot, size_t siz
     return boot[0] != 0;
 }
 
+typedef struct {
+    unsigned long long sum;
+    int n, bad;
+} signature_t;
+
+/* (each file's name, size and contents, hashed into one number; the files' numbers are added up, so that their
+ * order in the folder doesn't matter) */
+static int on_signature(mc_t *m, const unsigned char *e, void *u)
+{
+    signature_t *g = u;
+    unsigned char h[WC_SHA256_DIGEST_SIZE];
+    wc_Sha256 sha;
+    buffer_t b = {0};
+    unsigned long long v = 0;
+    unsigned int length = le32(e + 4);
+    int i;
+    if (!is_live(e) || g->bad)
+        return 0;
+    wc_InitSha256(&sha);
+    wc_Sha256Update(&sha, e + 64, strnlen((const char *)e + 64, 32));
+    if (!(le16(e) & DF_DIRECTORY)) {
+        wc_Sha256Update(&sha, e + 4, 4);
+        if (length && (read_chain(m, le32(e + 16), length, &b) != 0 || b.len != length))
+            g->bad = 1;   /* (a file that can't be read: the save is told from none) */
+        else if (length)
+            wc_Sha256Update(&sha, b.data, b.len);
+        buf_free(&b);
+    }
+    wc_Sha256Final(&sha, h);
+    for (i = 0; i < 8; i++)
+        v = v << 8 | h[i];
+    g->sum += v;
+    g->n++;
+    return 0;
+}
+
+int mcfs_save_signatures(const char *path, const mcfs_save_t *saves, int n, unsigned long long *sig)
+{
+    int i;
+    for (i = 0; i < n; i++)
+        sig[i] = 0;
+    if (mc_open(&mc, path) < 0)
+        return -1;
+    for (i = 0; i < n; i++) {
+        signature_t g = {0, 0, 0};
+        if (walk_dir(&mc, saves[i].cluster, saves[i].count, on_signature, &g) == 0 && !g.bad) {
+            sig[i] = g.sum + (unsigned long long)g.n;
+            if (!sig[i])
+                sig[i] = 1;
+        }
+    }
+    mc_close();
+    return 0;
+}
+
 int mcfs_save_icon(const char *path, const mcfs_save_t *s, buffer_t *iconsys, buffer_t *ico)
 {
     int r;
