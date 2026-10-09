@@ -1,4 +1,10 @@
-# SD2Cloud
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/logo/pt-BR/dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="docs/logo/pt-BR/light.png">
+    <img src="docs/logo/pt-BR/light.png" width="400" alt="SD2Cloud">
+  </picture>
+</h1>
 
 **Gerencie e proteja os cartões de memória do seu sd2psx, direto no PS2.**
 

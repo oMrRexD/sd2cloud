@@ -1,4 +1,10 @@
-# SD2Cloud
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/logo/dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="docs/logo/light.png">
+    <img src="docs/logo/light.png" width="400" alt="SD2Cloud">
+  </picture>
+</h1>
 
 **Manage and back up your sd2psx memory cards, right on your PS2.**
 

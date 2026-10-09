@@ -5,10 +5,14 @@ with a cloud standing out of it, and the app's name in its own font.
 Writes package/art/SD2CLOUD.ELF_COV.png and package/art/SD2CLOUD.ELF_LGO.png: OPL looks for an app's art in the ART
 folder of the device, by the name of the ELF the app's title.cfg starts, and tools/make_release.py puts them there in
 the zip. That name leaves room for one language only, so the same two files with the line under the name in
-Portuguese are written to package/art/pt-BR, and the zip has them aside, to copy over the others. They are kept in
-the repository, so this only runs when the art changes (it needs Pillow and numpy).
+Portuguese are written to package/art/pt-BR, and the zip has them aside, to copy over the others.
 
-usage: python tools/make_opl_art.py [<out folder>]
+The same logo, larger, is the one at the top of the README: docs/logo/dark.png and docs/logo/light.png, for the page
+it is shown on, and docs/logo/pt-BR for the README in Portuguese.
+
+All of them are kept in the repository, so this only runs when the art changes (it needs Pillow and numpy).
+
+usage: python tools/make_opl_art.py [<a folder to write everything to instead, to look at>]
 """
 import pathlib
 import sys
@@ -23,6 +27,7 @@ NAME = "SD2Cloud"
 LINES = {"": "cloud backup", "pt-BR": "backup na nuvem"}     # the line under the name, by the folder it is written to
 E = 6                            # everything is drawn this many times larger, then scaled down
 PALE = (178, 206, 255)           # the line under the name
+INK = {"dark": ((255, 255, 255), PALE), "light": ((22, 32, 76), (56, 96, 196))}     # the name and its line, by the page
 
 
 def grid(w, h):
@@ -184,29 +189,47 @@ def cover(line):
     return c.convert("RGB").resize((W, H), Image.LANCZOS)
 
 
-def logo(line):
+def logo(line, page="dark", scale=1):
+    """the logo, scale times 300x125. On a light page the name is dark, and the card, which is translucent, stands on
+    a dark shape of its own"""
     W, H = 300, 125
+    ink, pale = INK[page]
     c = Image.new("RGBA", (W * E, H * E), (0, 0, 0, 0))
     ct = card(78)
-    c.alpha_composite(ct, (round(52 * E - ct.width / 2), round(64 * E - ct.height / 2)))
+    at = (round(52 * E - ct.width / 2), round(64 * E - ct.height / 2))
+    if page == "light":
+        c.paste((10, 16, 44, 255), at, ct.getchannel("A").point(lambda v: 255 if v > 90 else 0))
+    c.alpha_composite(ct, at)
     c.alpha_composite(cloud(W, H, 52, 50, 56))
     x, size = 108, 38
     while ImageFont.truetype(TTF, round(size * E)).getlength(NAME) / E > W - x - 6:      # the name fits to the right
         size -= 0.5
-    name = text(W, H, NAME, size, x, 51, (255, 255, 255), "lm")
-    c.alpha_composite(faded(blur(name, 2.5), 0.6))
+    name = text(W, H, NAME, size, x, 51, ink, "lm")
+    if page == "dark":
+        c.alpha_composite(faded(blur(name, 2.5), 0.6))
     c.alpha_composite(name)
-    c.alpha_composite(text(W, H, line, 17, x + 2, 83, PALE, "lm"))
-    return c.resize((W, H), Image.LANCZOS)
+    c.alpha_composite(text(W, H, line, 17, x + 2, 83, pale, "lm"))
+    return c.resize((W * scale, H * scale), Image.LANCZOS)
+
+
+def page_logos(line):
+    """the logo for the top of the README, three times larger and cut to what is drawn: for a dark page and a light one"""
+    both = {page: logo(line, page, 3) for page in INK}
+    box = both["dark"].getchannel("A").point(lambda v: 255 if v > 8 else 0).getbbox()
+    return {page: im.crop(box) for page, im in both.items()}
 
 
 def main():
     out = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "package" / "art"
+    top = out / "logo" if len(sys.argv) > 1 else ROOT / "docs" / "logo"
     for folder, line in LINES.items():
         (out / folder).mkdir(parents=True, exist_ok=True)
-        for suffix, im in (("COV", cover(line)), ("LGO", logo(line))):
-            im.save(out / folder / f"{ELF}_{suffix}.png", optimize=True)
-            print(f"{out / folder / (ELF + '_' + suffix + '.png')}: {im.width}x{im.height}")
+        (top / folder).mkdir(parents=True, exist_ok=True)
+        made = [(out / folder / f"{ELF}_COV.png", cover(line)), (out / folder / f"{ELF}_LGO.png", logo(line))]
+        made += [(top / folder / f"{page}.png", im) for page, im in page_logos(line).items()]
+        for path, im in made:
+            im.save(path, optimize=True)
+            print(f"{path}: {im.width}x{im.height}")
 
 
 if __name__ == "__main__":
