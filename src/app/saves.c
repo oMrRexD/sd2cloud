@@ -20,51 +20,9 @@ card_t allGames;
 /* the card a save was last copied or moved to (save_transfer): on that screen it shows there right away */
 card_t *transferDest;
 char cardFileName[256];     /* and its name, which may tell which game the card is of */
-/* Saves being marked, on whichever cards, for what comes next (a template is made of them): while that is on, X on
- * this screen marks and unmarks the save under the cursor instead of opening it, and START ends the marking */
-struct marks_s marks;
 /* where a save's icon comes from when the saves on screen aren't a card's (NULL = they are): a template's, each in
  * its .psu file */
 int (*brwIcon)(const save_view_t *v, buffer_t *iconsys, buffer_t *ico);
-
-/* which mark that save has (-1 = none) */
-int marked(const card_t *c, const char *folder)
-{
-    int i;
-    for (i = 0; i < marks.n; i++)
-        if (marks.save[i].card == c && !strcmp(marks.save[i].folder, folder))
-            return i;
-    return -1;
-}
-
-/* X while marking. A template has one save of each folder: marking one unmarks the one of that folder on another
- * card. 0 = no more can be marked */
-static int mark_toggle(const save_view_t *v)
-{
-    int k = marked(v->card, v->s.folder), i, ok = 1;
-    ui_lock();
-    if (k < 0)
-        for (i = 0; i < marks.n; i++)
-            if (!strcmp(marks.save[i].folder, v->s.folder))
-                k = i;
-    if (k >= 0) {
-        int same = marks.save[k].card == v->card;
-        memmove(&marks.save[k], &marks.save[k + 1], sizeof(marks.save[0]) * (marks.n - k - 1));
-        marks.n--;
-        if (same)
-            k = -2;   /* (unmarked, and that is all) */
-    }
-    if (k != -2) {
-        if (marks.n < MARKS_MAX) {
-            marks.save[marks.n].card = v->card;
-            snprintf(marks.save[marks.n].folder, sizeof(marks.save[0].folder), "%s", v->s.folder);
-            marks.n++;
-        } else
-            ok = 0;
-    }
-    ui_unlock();
-    return ok;
-}
 
 /* A save's title, in its two lines, from its icon.sys. One written in Japanese comes empty (the font here has no
  * letters for it): the game's name takes its place, when the ID in the folder's name is one the sd2psx's list has,
@@ -183,8 +141,9 @@ static void scene_browser(float t)
         look_arrow(W / 2.0f, 92, 0, 0x3A5AE0);
     if (last < brw.n)
         look_arrow(W / 2.0f, 340, 1, 0x3A5AE0);
-    if (marks.on) {
-        legend_t l[3] = {{BUTTON_CIRCLE, T(T_BACK)}, {BUTTON_CROSS, T(T_MARK)}, {BUTTON_START, T(T_FINISH)}};
+    if (marks.on) {   /* (START says what the marking is for) */
+        legend_t l[3] = {{BUTTON_CIRCLE, T(T_BACK)}, {BUTTON_CROSS, T(T_MARK)},
+                         {BUTTON_START, T(marks.copy ? T_PASTE : T_FINISH)}};
         look_legend(l, 3, 0);
     } else if (brw.nLegend)
         look_legend(brw.legend, brw.nLegend, 0);
@@ -443,10 +402,12 @@ u32 browser_wait(u32 buttons)
     }
 }
 
-/* a card's saves. &allGames = every game card's, as if they were on one card */
+/* a card's saves. &allGames = every game card's, as if they were on one card. While saves are being marked (marks.c)
+ * X marks and unmarks the one under the cursor and START ends the marking: for a template, back in the list of cards
+ * this was opened from; for a copy that began here (a save's "Copy"), on to where the marked saves go */
 void card_screen(card_t *c)
 {
-    int all = c == &allGames;
+    int all = c == &allGames, mine = 0;   /* mine = the marking going on began on this screen: a copy */
     brw.n = 0;
     brw.note[0] = 0;
     brw.emptyText = brw.nLegend = 0;
@@ -460,13 +421,28 @@ void card_screen(card_t *c)
         int n = brw.n;
         if (b & PAD_CIRCLE) {
             sound_play(SND_BACK);
+            if (mine && !copy_leave(c)) {   /* (the screen stays: marking still, or with nothing marked any more) */
+                mine = marks.on;
+                ui_scene(scene_browser);
+                continue;
+            }
             browser_close();
             return;
         }
         if (marks.on) {   /* X marks and unmarks, START ends the marking (with something marked) */
             if ((b & PAD_CROSS) && n)
                 sound_play(mark_toggle(&brw.saves[brw.cursor]) ? SND_CONFIRM : SND_BACK);
-            else if ((b & PAD_START) && marks.n) {
+            else if ((b & PAD_START) && marks.n && mine) {
+                sound_play(SND_CONFIRM);
+                transferDest = NULL;
+                if (copy_marked()) {   /* copied: this is a card's saves again, with the card they went to read again */
+                    marks_reset();
+                    mine = 0;
+                    if (all && transferDest && transferDest->type == TYPE_GAMEID)
+                        browser_refresh(transferDest);
+                }
+                ui_scene(scene_browser);
+            } else if ((b & PAD_START) && marks.n) {
                 sound_play(SND_CONFIRM);
                 marks.done = 1;
                 browser_close();
@@ -481,7 +457,9 @@ void card_screen(card_t *c)
             sound_play(SND_CONFIRM);
             transferDest = NULL;
             changed = save_screen(on, brw.cursor);
-            if (all) {   /* only the cards that changed are read again */
+            if (marks.on)   /* "Copy": the save is marked, and so can others be, here and on the other cards */
+                mine = 1;
+            else if (all) {   /* only the cards that changed are read again */
                 if (changed)
                     browser_refresh(on);
                 if (transferDest && transferDest->type == TYPE_GAMEID)

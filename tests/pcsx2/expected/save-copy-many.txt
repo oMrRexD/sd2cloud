@@ -10,23 +10,28 @@ SLUS-21065/SLUS-21065-1: 2 folders, fingerprint 64fbc81ffd3ff7a8, new
 Card1/Card1-1: 2 saves, 8270848 bytes free
 [script] X
 [script] X
+[script] O
+[script] >
+[script] X
+[script] X
+SLUS-21065/SLUS-21065-1: 2 saves, 8270848 bytes free
+[script] >
+[script] X
 [script] S
-[script] >
-[script] >
+[script] D
 [script] X
-files: host:: 4 entries
-  0: MemoryCards/ (0 bytes)
-  1: SD2Cloud/ (0 bytes)
-[script] T
 [script] X
-export BASLUS-21065ALPHA of Card1/Card1-1 to host:BASLUS-21065ALPHA.psu (6656 bytes): 0, written and read back
+mcfs: copy of BASLUS-21065ALPHA: 0, 54 reads and 7 writes of the cards in N ms
+copy BASLUS-21065ALPHA from Card1/Card1-1 to Card2/Card2-1: 0
+mcfs: copy of BASLUS-21065BETA: 0, 55 reads and 6 writes of the cards in N ms
+copy BASLUS-21065BETA from SLUS-21065/SLUS-21065-1 to Card2/Card2-1: 0
+Card2/Card2-1: 2 folders, fingerprint 64fbc81ffd3ff7a8, changed
 [script] X
 (end: capture)
 
 # files
-b44df2d8481d5fbe8aefebf6c7a86f628b19dc53c6a48a16838f75d346acad26  BASLUS-21065ALPHA.psu
 e67be4206c58f05d290d04e24ef9bd240e0a329b479dd8d202f12d40f464d347  MemoryCards/PS2/Card1/Card1-1.mcd
-9b26f87a6ae6b13ddf74cec52f77df98dccf3447dd4041c66394f113efddc738  MemoryCards/PS2/Card2/Card2-1.mcd
+e67be4206c58f05d290d04e24ef9bd240e0a329b479dd8d202f12d40f464d347  MemoryCards/PS2/Card2/Card2-1.mcd
 e67be4206c58f05d290d04e24ef9bd240e0a329b479dd8d202f12d40f464d347  MemoryCards/PS2/SLUS-21065/SLUS-21065-1.mcd
 17df2e2a16cbab4cb8357fe9a735f1765b89ed8fcaf21c00a1634ed98fb36c3e  SD2Cloud/sd2cloud.ini
 5d80b04c692d54f468ed80c2ad845b735c3fe68663e8b45858780407f59b0673  SD2Cloud/state-debug.ini

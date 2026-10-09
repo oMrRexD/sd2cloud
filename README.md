@@ -41,7 +41,8 @@ on one yet.
 **Memory card manager**
 - Shows the saved data of each card the way the PS2 browser does, with animated 3D icons.
 - Copies, moves and deletes saved data between the cards on the MMCE (the destination's free space is shown),
-  and uploads a single item to Google Drive as a `.psu` file. Saved data can also go to a new card of its own game,
+  and uploads a single item to Google Drive as a `.psu` file. Several saves can be copied at once, selected on
+  one card or on more than one. Saved data can also go to a new card of its own game,
   made on the spot ("New card", in the Games tab): an empty 8 MB card, as the device itself makes them.
 - Shows the saved data of every game card on one screen (**All saves**, in the Games tab), as if it were a single card.
 - Organizes the cards in tabs: numbered cards, game (Game ID) cards, in folders named after each game, and boot
@@ -123,7 +124,8 @@ The [README.txt](package/README.txt) included in the release explains every scre
 | Main screen | Up/Down: card · Left/Right or L1/R1: tab · X: open the card · TRIANGLE: card options (sync now, restore a backup, copy to a device, insert into the sd2psx) · SELECT: tools · START: settings · O: exit |
 | Inside a card | X: open a save · SQUARE: sync this card · O: back |
 | A save's page | Copy · Move · Delete · Upload to Drive |
-| Files tab | X: open the device, a folder, a `.psu` file or a memory card file · SQUARE: install the selected `.psu` in a card, or the selected memory card file on the MMCE · Left/Right: a page up or down · O: back. To export a save, use **Copy** on its page: the destinations include this tab, and TRIANGLE writes the `.psu` into the folder shown |
+| After Copy | The save is selected, and so can others be: X selects or deselects a save · O: leave the card, to select saves on other cards too · START: paste them all (a card, a new card of their game, or a folder of the Files tab) |
+| Files tab | X: open the device, a folder, a `.psu` file or a memory card file · SQUARE: install the selected `.psu` in a card, or the selected memory card file on the MMCE · Left/Right: a page up or down · O: back. To export saves, use **Copy** on a save's page: the destinations include this tab, and TRIANGLE writes each `.psu` into the folder shown |
 | Tools (SELECT) > Templates | X: a new template (its name is typed; then its saves are marked on the cards: X marks, START finishes) or an existing one · In a template: X: a save, to remove it · TRIANGLE (on a template of the list, or with it open): set as default, add saves, apply template (to all game cards, to the cards you select, or only updating the saves the game cards already have), linked games, rename, delete |
 | During an upload | O: cancel |
 

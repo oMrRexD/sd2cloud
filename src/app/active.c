@@ -504,6 +504,7 @@ void device_lost(void)
     message(0, NULL, COLOR_TEXT, T(T_LOADING));
     fbCard = NULL;
     fbGive.c = NULL;
+    marks_reset();
     fbExit = 0;
     fbPick = 0;
     movedOff = NULL;

@@ -69,7 +69,8 @@ def fill(s, id_):
         if id_ in ("T_HIST_TITLE", "T_RESTORE_TITLE", "T_RESTORE_IN_USE", "T_RESTORING", "T_CARD_IN_USE", "T_DONE_COPY",
                    "T_DONE_MOVE", "T_DELETE_TEXT", "T_ERR_EXISTS", "T_ERR_FULL", "T_ERR_MC_CHECK", "T_DONE_IMPORT",
                    "T_SWITCH_ASK", "T_INSERT_DONE", "T_INSERT_FAILED", "T_SWITCH_BACK_FAILED", "T_INSTALL_REPLACE_ASK",
-                   "T_INSTALLING", "T_SKIP_ASK", "T_MOVE_SAVES", "T_MOVE_SAVES_ASK", "T_MOVE_SAVES_NOTE"):
+                   "T_INSTALLING", "T_SKIP_ASK", "T_MOVE_SAVES", "T_MOVE_SAVES_ASK", "T_MOVE_SAVES_NOTE",
+                   "T_CONFIRM_COPY_N"):
             s = s.replace("%s", LONG_CARD)
         elif id_ in ("T_CARD_LAST", "T_RESTORE_FROM"):
             s = s.replace("%s", LONG_DATE)
@@ -159,7 +160,8 @@ PLACE = {
     "T_CONFIRM_IMPORT": ("text", DIALOG, 3), "T_CONFIRM_EXPORT": ("text", DIALOG, 3), "T_EXPORT_FILE": ("text", DIALOG, 2),
     "T_DONE_IMPORT": ("text", DIALOG, 1), "T_DONE_EXPORT": ("text", DIALOG, 2), "T_LOADING": ("text", DIALOG, 1),
     "T_USB_SEARCHING": ("text", DIALOG, 1), "T_WORKING_IMPORT": ("text", DIALOG, 1), "T_WORKING_EXPORT": ("text", DIALOG, 1),
-    "T_DELETE_ASK": ("text", DIALOG, 3), "T_CONFIRM_COPY": ("text", DIALOG, 3),
+    "T_DELETE_ASK": ("text", DIALOG, 3), "T_CONFIRM_COPY": ("text", DIALOG, 3), "T_CONFIRM_COPY_N": ("text", DIALOG, 2),
+    "T_CONFIRM_EXPORT_N": ("text", DIALOG, 2),
     "T_CONFIRM_MOVE": ("text", DIALOG, 3), "T_CONFIRM_CLOUD": ("text", DIALOG, 3), "T_CLOUD_DONE": ("text", DIALOG, 1), "T_DONE_DELETE": ("text", DIALOG, 1),
     # installing a card file: "New card" at the top of each list of cards and the title over the big card; the
     # questions (a wide box) and the bar's box; the list of games the file may be of
@@ -219,6 +221,8 @@ LEGENDS = [
     (("T_BACK", "T_MARK"), False), (("T_BACK", "T_TPL_UPDATE_YES"), False), (("T_BACK", "T_TPL_CHANGE"), False),
     (("T_BACK", "T_MARK", "T_TPL_APPLY"), False), (("T_BACK", "T_OPEN", "T_OPTIONS"), False),
     (("T_CANCEL", "T_SKIP"), False), (("T_CANCEL_NO", "T_SKIP", "T_SYNC_DISABLE"), False), (("T_BACK", "T_MOVE"), False),
+    # saves marked for a copy: on a card's saves, and on the list of cards
+    (("T_BACK", "T_MARK", "T_PASTE"), False), (("T_BACK", "T_OPEN", "T_PASTE"), False), (("T_BACK", "T_COPY"), False),
 ]
 
 

@@ -105,14 +105,18 @@ options offer to move its saves to the card the sd2psx opens.
   as if it were all on a single card. Each item still belongs to its own card, whose name is at the top of
   the item's page, and what is done to an item is done to that card.
 - START opens the settings (see SETTINGS), and SELECT the tools (see TEMPLATES).
-- X on a saved data item opens its page, with Copy and Move (to another card on the MMCE, chosen from the
-  same tabs as the main screen; the destination's free space is shown, and a card without enough space cannot
-  be selected; when the item's name tells its game, the Games tab also has "New card", in that game's folder
-  or among the folders while the game has none: an empty 8 MB card is made for the item, as the device itself
-  makes them), Delete and Upload to Drive (that item only, in .psu format, in a "Saves" folder next to the
-  card's backups). To change the card the sd2psx is using, SD2Cloud asks first, then switches the sd2psx to
-  another card, makes the change and switches back; only for a folder with a name of its own the card has to
-  be switched on the sd2psx beforehand.
+- X on a saved data item opens its page, with Copy, Move, Delete and Upload to Drive.
+- Copy marks the item (a green tick over its icon) and goes back to the card's items, where X now marks and
+  unmarks others; O leaves the card for the list of cards, to mark items on other cards too. The marks stay
+  from card to card, and their count is on screen. START (Paste) then asks where they all go: a card on
+  the MMCE, chosen from the same tabs as the main screen (the destination's free space is shown, and a card
+  without enough space cannot be selected; when the items are all of one game, the Games tab also has "New
+  card", in that game's folder or among the folders while the game has none: an empty 8 MB card is made for
+  them, as the device itself makes them), or a folder of a device (see FILES).
+- Move takes the item to another card, chosen the same way. Upload to Drive sends that item only, in .psu
+  format, to a "Saves" folder next to the card's backups. To change the card the sd2psx is using, SD2Cloud
+  asks first, then switches the sd2psx to another card, makes the change and switches back; only for a folder
+  with a name of its own the card has to be switched on the sd2psx beforehand.
 Every operation that uploads, writes or deletes data asks for confirmation first. During a sync, the O
 button cancels the upload; cards already uploaded remain on Drive. While several cards are sent, SQUARE asks
 about the one on its way: X skips it this time, SQUARE skips it and turns its sync off.
@@ -128,15 +132,15 @@ screen are the ones that do something with the selected entry.
   before the card is touched, and what is written is read back and compared. A card that already has data
   with the same name, or without enough space, is left as it is: delete or move that item first.
   SQUARE on the file, in the list, goes straight to the card, without opening the page.
-- Exporting: on an item's page (X on it, in a card), Copy also lists the Files tab among the destinations;
-  pick the device, go to the folder where the file should go and press TRIANGLE. The file gets the item's
-  folder name (BASLUS-21065SAVE.psu, for example), is read back and compared. When a file with that name is
-  already there, SD2Cloud asks: X replaces it, SQUARE keeps both (the new one gets a number:
-  BASLUS-21065SAVE (2).psu).
+- Exporting: Copy, on an item's page (X on it, in a card), also lists the Files tab among the destinations of
+  the marked items; pick the device, go to the folder where the files should go and press TRIANGLE. Each file
+  gets its item's folder name (BASLUS-21065SAVE.psu, for example), is read back and compared. When a file
+  with that name is already there, SD2Cloud asks: X replaces it, SQUARE keeps both (the new one gets a
+  number: BASLUS-21065SAVE (2).psu).
 - Memory card files: X on a .mcd, a .mc2 (MemCard PRO2), a .ps2 (PCSX2), a .bin (one of OPL's virtual memory
   cards, VMC) or a .zip written by "Copy to a device" opens the card it holds, shown as the cards of the
   MMCE are. The file is only read. X on an item opens its page, from where it can be copied to a card of
-  the MMCE.
+  the MMCE, alone or with other items of that file (Copy marks it, START pastes them into a card).
 - Installing a memory card file: SQUARE, on the file in the list or on the screen of its card, asks where the
   card goes, in the same tabs as the main screen. "New card", at the top of each list, makes a new card: the
   lowest free number in Cards, the next channel of the BootCard in Boot and, in Games, the next channel of

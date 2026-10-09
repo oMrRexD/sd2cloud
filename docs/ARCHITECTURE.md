@@ -33,6 +33,7 @@ a PC's compiler. `src/app` is the only place that knows the screens; it calls do
 | `menu.c` | The main screen: the cards in their groups, the selected one big on the right |
 | `tabs.c` | The groups themselves (numbered cards, games, boot cards, files) and the big card's picture |
 | `saves.c`, `save.c` | One card's saves, as the PS2 browser shows them; one save's page and what is done with it |
+| `marks.c` | Saves marked on the cards, whichever cards they are on: for a template, or to be copied together to a card or a folder |
 | `dest.c` | Where a save goes: a card picked among the others, or a new card made on the spot |
 | `browse.c` | The Files group: folders of the microSD and of a USB drive, `.psu` files, exporting |
 | `install.c` | A memory card file looked into, and installed as a card |

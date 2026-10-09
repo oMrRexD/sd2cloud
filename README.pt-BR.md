@@ -44,7 +44,8 @@ SD2Cloud ainda não foi testado em um.
 **Gerenciador de cartões de memória**
 - Exibe os dados salvos de cada cartão como o navegador do PS2, com os ícones 3D animados.
 - Copia, move e elimina dados salvos entre os cartões do MMCE (o espaço livre do destino é exibido), e envia
-  um item avulso ao Google Drive como arquivo `.psu`. Os dados salvos também podem ir para um cartão novo do
+  um item avulso ao Google Drive como arquivo `.psu`. Vários itens podem ser copiados de uma vez, selecionados
+  em um cartão ou em mais de um. Os dados salvos também podem ir para um cartão novo do
   próprio jogo, criado na hora ("Novo cartão", na aba Jogos): um cartão vazio de 8 MB, como o aparelho cria.
 - Exibe os dados salvos de todos os cartões de jogo em uma só tela (**Todos os saves**, na aba Jogos), como se fossem
   um único cartão.
@@ -127,7 +128,8 @@ O [LEIA-ME.txt](package/LEIA-ME.txt) incluído na release explica cada tela em d
 | Tela principal | Cima/Baixo: cartão · Esquerda/Direita ou L1/R1: aba · X: abrir o cartão · TRIÂNGULO: opções do cartão (sincronizar agora, restaurar backup, copiar para dispositivo, inserir no sd2psx) · SELECT: ferramentas · START: ajustes · O: sair |
 | Dentro de um cartão | X: abrir um item · QUADRADO: sincronizar este cartão · O: voltar |
 | Página de um item | Copiar · Mover · Eliminar · Enviar ao Drive |
-| Aba Arquivos | X: abrir o dispositivo, uma pasta, um arquivo `.psu` ou um arquivo de cartão de memória · QUADRADO: instalar o `.psu` selecionado em um cartão, ou o arquivo de cartão selecionado no MMCE · Esquerda/Direita: uma página acima ou abaixo · O: voltar. Para exportar um item, use o **Copiar** da página dele: os destinos incluem esta aba, e TRIÂNGULO grava o `.psu` na pasta exibida |
+| Depois de Copiar | O item fica selecionado, e outros também podem ficar: X seleciona ou desmarca um item · O: sair do cartão, para selecionar itens de outros cartões também · START: colar todos (em um cartão, em um cartão novo do jogo deles, ou em uma pasta da aba Arquivos) |
+| Aba Arquivos | X: abrir o dispositivo, uma pasta, um arquivo `.psu` ou um arquivo de cartão de memória · QUADRADO: instalar o `.psu` selecionado em um cartão, ou o arquivo de cartão selecionado no MMCE · Esquerda/Direita: uma página acima ou abaixo · O: voltar. Para exportar itens, use o **Copiar** da página de um deles: os destinos incluem esta aba, e TRIÂNGULO grava cada `.psu` na pasta exibida |
 | Ferramentas (SELECT) > Templates | X: um template novo (o nome é digitado; depois os saves são marcados nos cartões: X marca, START conclui) ou um existente · Em um template: X: um save, para removê-lo · TRIÂNGULO (sobre um template da lista, ou com ele aberto): definir como padrão, adicionar saves, aplicar template (a todos os cartões de jogo, aos cartões que você selecionar, ou só atualizando os saves que os cartões de jogo já têm), jogos vinculados, renomear, eliminar |
 | Durante um envio | O: cancelar |
 

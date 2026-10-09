@@ -1,5 +1,5 @@
-/* SD2Cloud -- one save: its page, and what is done with it (copied or moved to another card, deleted, sent to
- * Drive, started when it is a program). */
+/* SD2Cloud -- one save: its page, and what is done with it (marked to be copied, moved to another card, deleted, sent
+ * to Drive, started when it is a program). */
 #include "app.h"
 
 /* "Start application", on a save that is a program: it runs from the memory card slot, in its own folder, as when it
@@ -102,66 +102,46 @@ void save_name(const save_view_t *v, char *out, size_t size)
         snprintf(out, size, "%s", v->s.folder);
 }
 
-/* copy or move the save to another card. 1 = the card it was on changed (moved) */
-static int save_transfer(card_t *c, save_view_t *v, int move)
+/* move the save to another card. 1 = it went: the card it was on changed */
+static int save_move(card_t *c, save_view_t *v)
 {
     card_t *to;
-    char game[12];
+    char game[12], name[100], t[200];
     long long bytes = 0;
     int files = 0, r;
     save_game_id(v->s.folder, game);   /* (a save that tells its game can always go to a new card of that game) */
-    if (nCards < 2 && move && !game[0]) {
+    if (nCards < 2 && !game[0]) {
         message_wait(0, NULL, COLOR_WARN, T(T_NO_OTHER_CARDS));
         return 0;
     }
-    if (!nCards && !game[0]) {   /* a save of a card file, with no card on the microSD to copy it to */
-        message_wait(0, NULL, COLOR_WARN, T(T_NO_CARDS_SD));
-        return 0;
-    }
     mcfs_save_info(c->path, v->s.folder, &bytes, &files);
-    /* a copy can also go to a folder of the microSD or of a USB drive, as a .psu (not from a card file: the folders
-     * are already being browsed, on the screen underneath) */
-    destFiles = !move && c != &fileCard;
-    if (!(to = choose_dest(c, move ? T_MOVE_TO : T_COPY_TO, bytes, v->s.folder))) {
-        if (destDevice >= 0) {
-            fbGive.c = c;
-            fbGive.v = v;
-            files_screen(destDevice);
-            fbGive.c = NULL;
-        }
+    if (!(to = choose_dest(c, T_MOVE_TO, bytes, v->s.folder)))
         return 0;
-    }
-    {
-        char name[100], t[200];
-        save_name(v, name, sizeof(name));
-        snprintf(t, sizeof(t), T(move ? T_CONFIRM_MOVE : T_CONFIRM_COPY), name, to->base);
-        if (!confirm(t, to == &destNew ? T(T_NEWCARD_NOTE) : NULL, move ? T_MOVE : T_COPY))
-            return 0;
-    }
-    if (!(to = dest_real(to)))
+    save_name(v, name, sizeof(name));
+    snprintf(t, sizeof(t), T(T_CONFIRM_MOVE), name, to->base);
+    if (!confirm(t, to == &destNew ? T(T_NEWCARD_NOTE) : NULL, T_MOVE) || !(to = dest_real(to)))
         return 0;
-    if (card_free(to, c) || (move && card_free(c, to))) {
+    if (card_free(to, c) || card_free(c, to)) {
         card_back();
         return 0;
     }
-    save_into(to, v, move ? T_WORKING_MOVE : T_WORKING_COPY);
+    save_into(to, v, T_WORKING_MOVE);
     r = mcfs_copy_save(c->path, v->s.folder, to->path, save_progress);
-    if (r == MCFS_OK && move) {
+    if (r == MCFS_OK) {
         save_into_fixed();
         r = mcfs_delete_save(c->path, v->s.folder);
     }
     save_into_done();
-    log_msg("%s %s from %s to %s: %d", move ? "move" : "copy", v->s.folder, c->id, to->id, r);
+    log_msg("move %s from %s to %s: %d", v->s.folder, c->id, to->id, r);
     if (r == MCFS_OK)
         transferDest = to;
     cards_recheck(to);
-    if (move)
-        cards_recheck(c);
+    cards_recheck(c);
     card_back();
     if (r == MCFS_ERR_CANCELLED)
         return 0;   /* given up, and said so already: back to the save's page */
-    op_result(r, move ? T_DONE_MOVE : T_DONE_COPY, to);
-    return r == MCFS_OK && move;
+    op_result(r, T_DONE_MOVE, to);
+    return r == MCFS_OK;
 }
 
 /* 1 = deleted */
@@ -321,11 +301,12 @@ int save_screen(card_t *c, int i)
         case T_START_APP:
             start_app(c, v->s.folder, boot);
             break;
-        case T_COPY:
-            save_transfer(c, v, 0);
+        case T_COPY:   /* marked (marks.c): the screen of saves goes on from here, to mark others and say where to */
+            if (copy_start(v))
+                return 0;
             break;
         case T_MOVE:
-            if (save_transfer(c, v, 1))
+            if (save_move(c, v))
                 return 1;
             break;
         case T_DELETE:

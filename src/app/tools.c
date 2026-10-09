@@ -34,109 +34,9 @@ static int ask_name(char name[TPL_NAME + 1], const template_t *self)
     }
 }
 
-/* ------------------------------------------------------------ marking saves
+/* ------------------------------------------------------------ the marked saves
  *
- * The cards, in their groups as on the main screen; X opens one, and there X marks and unmarks a save (saves.c).
- * The marks stay from card to card. START, here or on a card, ends it. */
-
-static struct {
-    tabs_t g;
-    char title[80];
-    icon_t *icon;     /* the selected game card's icon, once read */
-    int iconCard;
-} mk = {.iconCard = -1};
-
-static void scene_mark(float t)
-{
-    char s[64];
-    const card_t *c;
-    look_space();
-    look_frame();
-    ui_alpha(look_fade(t));
-    tabs_draw(&mk.g, 0);
-    {
-        legend_t l[3] = {{BUTTON_CIRCLE, T(T_BACK)}, {BUTTON_CROSS, T(T_OPEN)}, {BUTTON_START, T(T_FINISH)}};
-        look_legend(l, 3, 0);
-    }
-    look_title(CARD_CX, 82, mk.title, 1);
-    snprintf(s, sizeof(s), T(T_MARKED_N), marks.n);
-    ui_text_center(FONT_TEXT, CARD_CX, CARD_Y + LOOK_CARD_H + 2, marks.n ? COLOR_OK : COLOR_DIM, s);
-    if (mk.g.n && mk.g.idx[mk.g.cursor] < 0) {   /* "All saves": the game cards together */
-        look_card(CARD_X, CARD_Y, NULL, T(T_TAB_GAMES));
-        return;
-    }
-    if ((c = tabs_card(&mk.g)) != NULL)
-        draw_card_picture(c, mk.iconCard == mk.g.idx[mk.g.cursor] ? mk.icon : NULL, ui_clock());
-}
-
-/* the selected game card's icon, read when the cursor rests a moment */
-static void mark_icon(void)
-{
-    card_t *c = tabs_card(&mk.g);
-    icon_t *ic;
-    if (!c || mk.iconCard == mk.g.idx[mk.g.cursor])
-        return;
-    ic = newest_icon(c);
-    ui_lock();
-    icon_free(mk.icon);
-    mk.icon = ic;
-    mk.iconCard = mk.g.idx[mk.g.cursor];
-    ui_unlock();
-}
-
-/* 1 = saves were marked (marks) and START ended it; 0 = circle, and nothing is marked */
-static int mark_saves(void)
-{
-    int r = -1;
-    brwIcon = NULL;   /* (the cards' saves have their own icons: not the ones of a template that is open) */
-    ui_lock();
-    memset(&marks, 0, sizeof(marks));
-    marks.on = 1;
-    tabs_init(&mk.g, NULL, 0);
-    mk.g.all = 1;
-    tabs_show(&mk.g, mk.g.tab);
-    snprintf(mk.title, sizeof(mk.title), "%s", T(T_TPL_MARK_TITLE));
-    mk.icon = NULL;
-    mk.iconCard = -1;
-    ui_unlock();
-    while (r < 0) {
-        u32 keys = PAD_UP | PAD_DOWN | TAB_KEYS | PAD_CROSS | PAD_CIRCLE | PAD_START, b;
-        ui_scene(scene_mark);
-        if (!(b = wait_nav_ms(keys, 250))) {
-            mark_icon();
-            b = wait_nav(keys);
-        }
-        if (tabs_nav(&mk.g, b) || tabs_folder_nav(&mk.g, b))
-            continue;
-        if (b & PAD_CIRCLE) {
-            sound_play(SND_BACK);
-            if (!marks.n || confirm(T(T_MARK_DROP), NULL, T_MARK_DROP_YES))
-                r = 0;
-        } else if (b & PAD_START) {
-            sound_play(marks.n ? SND_CONFIRM : SND_BACK);
-            if (marks.n)
-                r = 1;
-        } else if ((b & PAD_CROSS) && mk.g.n) {
-            card_t *c = mk.g.idx[mk.g.cursor] < 0 ? &allGames : tabs_card(&mk.g);
-            if (c) {
-                sound_play(SND_CONFIRM);
-                card_screen(c);
-                if (marks.done)
-                    r = 1;
-            }
-        }
-    }
-    ui_scene(scene_frame);   /* off the screen before the icon goes */
-    ui_lock();
-    marks.on = 0;
-    if (!r)
-        marks.n = 0;
-    icon_free(mk.icon);
-    mk.icon = NULL;
-    mk.iconCard = -1;
-    ui_unlock();
-    return r;
-}
+ * A template is made of saves marked on the cards (mark_saves, in marks.c). */
 
 /* The marked saves into a template, each as a .psu written and read back (one the template has of the same folder
  * is replaced: replace = 0 leaves those out). Returns how many went in; failed = how many couldn't be copied */
@@ -146,7 +46,7 @@ static int marks_into(template_t *t, int replace, int *failed)
     *failed = 0;
     card_work(marks.save[0].card, 0, T(T_TPL_COPYING), 1);
     for (i = 0; i < marks.n; i++) {
-        if (!replace && template_find_save(t, marks.save[i].folder) >= 0)
+        if (!replace && template_find_save(t, marks.save[i].s.folder) >= 0)
             continue;
         ui_lock();
         current = marks.save[i].card;
@@ -154,7 +54,7 @@ static int marks_into(template_t *t, int replace, int *failed)
         totalN = marks.n;
         ui_unlock();
         upload_screen(i, marks.n);
-        if (template_add(t, marks.save[i].card->path, marks.save[i].folder) == MCFS_OK)
+        if (template_add(t, marks.save[i].card->path, marks.save[i].s.folder) == MCFS_OK)
             n++;
         else
             (*failed)++;
@@ -841,7 +741,7 @@ static void template_add_saves(template_t *t)
     if (!mark_saves())
         return;
     for (i = 0; i < marks.n; i++)
-        taken += template_find_save(t, marks.save[i].folder) >= 0;
+        taken += template_find_save(t, marks.save[i].s.folder) >= 0;
     fresh = marks.n - taken;
     if (taken) {   /* saves the template has: the marked ones take their place, or stay out */
         u32 b;

@@ -112,12 +112,18 @@ cinza, e as opções dele oferecem mover os saves para o cartão que o sd2psx ab
   mais novo ao mais antigo, como se estivessem em um único cartão. Cada item continua no cartão dele, cujo
   nome aparece no topo da página do item, e o que se faz com um item é feito nesse cartão.
 - START abre os ajustes (veja AJUSTES), e SELECT as ferramentas (veja TEMPLATES).
-- X em um item de dados salvos abre a página do item, com as opções Copiar e Mover (para outro cartão do
-  MMCE, escolhido nas mesmas abas da tela principal; o espaço livre do cartão de destino é exibido e um
-  cartão sem espaço suficiente não pode ser escolhido; quando o nome do item indica o jogo, a aba Jogos traz
-  também "Novo cartão", na pasta desse jogo ou entre as pastas enquanto o jogo não tem uma: um cartão vazio
-  de 8 MB é criado para o item, como o aparelho cria), Eliminar e Enviar ao Drive (apenas esse item, em
-  formato .psu, na pasta "Saves" ao lado dos backups do cartão). Para alterar o cartão que está em uso no
+- X em um item de dados salvos abre a página do item, com as opções Copiar, Mover, Eliminar e Enviar ao
+  Drive.
+- Copiar seleciona o item (um visto verde sobre o ícone) e volta para os itens do cartão, onde X passa a
+  selecionar e desmarcar outros; O sai do cartão para a lista de cartões, para selecionar itens de outros
+  cartões também. A seleção se mantém de um cartão para outro, e a quantidade aparece na tela. START (Colar)
+  pede então o destino de todos: um cartão do MMCE, escolhido nas mesmas abas da tela principal
+  (o espaço livre do cartão de destino é exibido e um cartão sem espaço suficiente não pode ser escolhido;
+  quando os itens são todos de um mesmo jogo, a aba Jogos traz também "Novo cartão", na pasta desse jogo ou
+  entre as pastas enquanto o jogo não tem uma: um cartão vazio de 8 MB é criado para eles, como o aparelho
+  cria), ou uma pasta de um dispositivo (veja ARQUIVOS).
+- Mover leva o item para outro cartão, escolhido da mesma forma. Enviar ao Drive envia apenas esse item, em
+  formato .psu, para a pasta "Saves" ao lado dos backups do cartão. Para alterar o cartão que está em uso no
   sd2psx, o SD2Cloud pergunta antes, troca o sd2psx para outro cartão, faz a alteração e volta; só para uma
   pasta com nome personalizado é preciso trocar o cartão no próprio sd2psx antes.
 Toda operação que envia, grava ou elimina dados pede confirmação antes de começar. Durante uma
@@ -137,15 +143,16 @@ com o item selecionado.
   verificado por inteiro antes de o cartão ser alterado, e o que é gravado é lido de volta e comparado. Um
   cartão que já tem dados com o mesmo nome, ou sem espaço suficiente, fica como está: elimine ou mova esse
   item antes. QUADRADO no arquivo, na lista, vai direto para a escolha do cartão, sem abrir a página.
-- Exportar: na página de um item (X nele, dentro de um cartão), Copiar também lista a aba Arquivos entre os
-  destinos; escolha o dispositivo, vá até a pasta onde o arquivo deve ficar e pressione TRIÂNGULO. O arquivo
-  recebe o nome da pasta do item (BASLUS-21065SAVE.psu, por exemplo), é lido de volta e comparado. Quando já
-  existe um arquivo com esse nome, o SD2Cloud pergunta: X substitui, QUADRADO mantém os dois (o novo recebe
-  um número: BASLUS-21065SAVE (2).psu).
+- Exportar: o Copiar da página de um item (X nele, dentro de um cartão) também lista a aba Arquivos entre os
+  destinos dos itens selecionados; escolha o dispositivo, vá até a pasta onde os arquivos devem ficar e
+  pressione TRIÂNGULO. Cada arquivo recebe o nome da pasta do item (BASLUS-21065SAVE.psu, por exemplo), é
+  lido de volta e comparado. Quando já existe um arquivo com esse nome, o SD2Cloud pergunta: X substitui,
+  QUADRADO mantém os dois (o novo recebe um número: BASLUS-21065SAVE (2).psu).
 - Arquivos de cartão de memória: X em um .mcd, um .mc2 (MemCard PRO2), um .ps2 (PCSX2), um .bin (um cartão
   virtual do OPL, VMC) ou um .zip gravado pelo "Copiar para dispositivo" abre o cartão que ele contém,
   exibido como os cartões do MMCE. O arquivo é apenas lido. X em um item abre a página dele, de onde ele
-  pode ser copiado para um cartão do MMCE.
+  pode ser copiado para um cartão do MMCE, sozinho ou com outros itens desse arquivo (Copiar seleciona o
+  item, START cola todos em um cartão).
 - Instalar um arquivo de cartão: QUADRADO, no arquivo na lista ou na tela do cartão dele, pergunta para onde
   o cartão vai, nas mesmas abas da tela principal. "Novo cartão", no topo de cada lista, cria um cartão novo:
   o menor número livre em Cartões, o próximo canal do BootCard em Boot e, em Jogos, o próximo canal da pasta

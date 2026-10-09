@@ -133,8 +133,9 @@ int sync_card(card_t *c);
 
 /* ------------------------------------------------------------ browse.c */
 struct fbGive_s {
-    card_t *c;
-    save_view_t *v;
+    card_t *c;         /* a save's "Copy" picked a device: triangle in files_screen writes there what was marked */
+    save_view_t *v;    /* the save, when one is marked (NULL = the marked saves, however many) */
+    int done;          /* written */
 };
 extern struct fbGive_s fbGive;
 extern card_t *fbCard;
@@ -255,6 +256,30 @@ extern icon_t *cubeIcon;
 extern int activeCard;
 extern u64 watchNext;
 
+/* ------------------------------------------------------------ marks.c */
+#define MARKS_MAX TPL_SAVES
+struct marks_s {
+    int on;                /* the screens of saves are marking */
+    int copy;              /* what for: 1 = a save's "Copy" (START is "Paste"); 0 = a template (START is "Done") */
+    int n, done;           /* how many are marked; START ended it, on a screen of saves */
+    struct {
+        card_t *card;
+        mcfs_save_t s;     /* the save, as its card lists it */
+    } save[MARKS_MAX];
+};
+extern struct marks_s marks;
+int marked(const card_t *c, const char *folder);
+int mark_toggle(const save_view_t *v);
+void marks_reset(void);
+int mark_saves(void);
+save_view_t *mark_view(int i);
+void mark_show(const card_t *to, int i, int text);
+void mark_show_done(void);
+void marks_report(int copied, int failed);
+int copy_start(const save_view_t *v);
+int copy_marked(void);
+int copy_leave(const card_t *c);
+
 /* ------------------------------------------------------------ menu.c */
 void menu_refresh(void);
 void manual(void);
@@ -284,17 +309,6 @@ struct brw_s {
     int nLegend;
 };
 extern struct brw_s brw;
-#define MARKS_MAX TPL_SAVES
-struct marks_s {
-    int on;                /* the screens of saves are marking */
-    int n, done;           /* how many are marked; START ended it */
-    struct {
-        card_t *card;
-        char folder[33];
-    } save[MARKS_MAX];
-};
-extern struct marks_s marks;
-int marked(const card_t *c, const char *folder);
 extern int (*brwIcon)(const save_view_t *v, buffer_t *iconsys, buffer_t *ico);
 void browser_scene(void);
 void browser_fill(card_t *c, const mcfs_save_t *list, int n, int cursor);

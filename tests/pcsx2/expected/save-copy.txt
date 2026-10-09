@@ -10,6 +10,7 @@ SLUS-21065/SLUS-21065-1: 2 folders, fingerprint 64fbc81ffd3ff7a8, new
 Card1/Card1-1: 2 saves, 8270848 bytes free
 [script] X
 [script] X
+[script] S
 [script] X
 [script] X
 mcfs: copy of BASLUS-21065ALPHA: 0, 54 reads and 7 writes of the cards in N ms

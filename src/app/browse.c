@@ -346,45 +346,89 @@ static int ask_existing(char *file, size_t size)
     return 0;
 }
 
-/* a save of a card as a .psu file in the folder shown, read back and compared. 1 = written (file = its name: the
- * save's folder, with a number after it when one of that name is there and is kept) */
-static int export_save(card_t *c, save_view_t *v, char file[48])
+/* the name a save's .psu file has: the save's folder */
+static void export_name(const char *folder, char file[48])
 {
-    char name[160], path[460], t[300];
-    buffer_t psu = {0};
-    int r, ok = 0;
     size_t i;
-    snprintf(file, 48, "%s.psu", v->s.folder);
+    snprintf(file, 48, "%s.psu", folder);
     for (i = 0; file[i]; i++)   /* what a file's name can't have on FAT */
         if ((unsigned char)file[i] < 0x20 || strchr("\\/:*?\"<>|", file[i]))
             file[i] = '_';
+}
+
+/* 1 = the folder shown has no file of that name, or the user said what becomes of the one it has (it is replaced,
+ * or kept: file then has a number after the name); 0 = circle */
+static int export_free(char file[48])
+{
+    char path[460];
     snprintf(path, sizeof(path), "%s%s", fb.dir, file);
-    save_name(v, name, sizeof(name));
-    snprintf(t, sizeof(t), T(T_CONFIRM_EXPORT), name);
-    snprintf(name, sizeof(name), T(T_EXPORT_FILE), file);
-    if (!confirm(t, name, T_EXPORT))
-        return 0;
-    if (file_exists(path)) {
-        if (!ask_existing(file, 48))
-            return 0;
-        snprintf(path, sizeof(path), "%s%s", fb.dir, file);
-    }
-    save_into(c, v, T_WORKING_EXPORT);   /* (the card it comes from, here) */
+    return !file_exists(path) || ask_existing(file, 48);
+}
+
+/* a save of a card written as that file of the folder shown, read back and compared, under the screen of a save on
+ * its way (the caller's). 1 = written */
+static int export_write(const card_t *c, const char *folder, const char *file)
+{
+    char path[460];
+    buffer_t psu = {0};
+    int r, ok = 0;
+    snprintf(path, sizeof(path), "%s%s", fb.dir, file);
     save_into_fixed();
-    r = mcfs_export_psu(c->path, v->s.folder, &psu);
+    r = mcfs_export_psu(c->path, folder, &psu);
     upload_screen(400, 1000);   /* read; to be written and read back */
     if (r == MCFS_OK && !(ok = file_write_checked(path, psu.data, psu.len)))
         unlink(path);   /* half a file, or one that reads back different, is no use to anyone */
-    save_into_done();
-    log_msg("export %s of %s to %s (%u bytes): %d, %s", v->s.folder, c->id, path, (unsigned)psu.len, r,
+    log_msg("export %s of %s to %s (%u bytes): %d, %s", folder, c->id, path, (unsigned)psu.len, r,
             ok ? "written and read back" : "not written");
     buf_free(&psu);
+    return ok;
+}
+
+/* a save of a card as a .psu file in the folder shown. 1 = written */
+static int export_save(card_t *c, save_view_t *v)
+{
+    char name[160], file[48], t[300];
+    int ok;
+    export_name(v->s.folder, file);
+    save_name(v, name, sizeof(name));
+    snprintf(t, sizeof(t), T(T_CONFIRM_EXPORT), name);
+    snprintf(name, sizeof(name), T(T_EXPORT_FILE), file);
+    if (!confirm(t, name, T_EXPORT) || !export_free(file))
+        return 0;
+    save_into(c, v, T_WORKING_EXPORT);   /* (the card it comes from, here) */
+    ok = export_write(c, v->s.folder, file);
+    save_into_done();
     if (ok) {
         snprintf(t, sizeof(t), T(T_DONE_EXPORT), file);
         message_wait(0, NULL, COLOR_OK, t);
     } else
         message_wait(0, NULL, COLOR_ERROR, T(T_ERR_EXPORT));
     return ok;
+}
+
+/* the marked saves (marks.c: a save's "Copy", with a device picked as where they go), each as a .psu file in the
+ * folder shown. One whose file is there already, and isn't to take its place or stay beside it, is left out.
+ * 1 = done, and said: how many were written */
+static int export_marked(void)
+{
+    char file[48], t[300];
+    int i, n = 0;
+    snprintf(t, sizeof(t), T(T_CONFIRM_EXPORT_N), marks.n);
+    if (!confirm(t, NULL, T_EXPORT))
+        return 0;
+    for (i = 0; i < marks.n; i++) {
+        export_name(marks.save[i].s.folder, file);
+        if (!export_free(file))
+            continue;
+        mark_show(NULL, i, T_WORKING_EXPORT);
+        n += export_write(marks.save[i].card, marks.save[i].s.folder, file);
+    }
+    mark_show_done();
+    if (n)
+        marks_report(n, marks.n - n);
+    else
+        message_wait(0, NULL, COLOR_ERROR, T(T_ERR_EXPORT));
+    return 1;
 }
 
 static int card_export_progress(long long done, long long total)
@@ -518,11 +562,12 @@ void files_screen(int dev)
             sound_play(SND_CONFIRM);
             if (export_card(fbCard))
                 return;
-        } else if ((b & PAD_TRIANGLE) && !fb.error && fbGive.c) {   /* from a save's "Copy": it goes into this folder */
-            char file[48];
+        } else if ((b & PAD_TRIANGLE) && !fb.error && fbGive.c) {   /* from a save's "Copy": into this folder */
             sound_play(SND_CONFIRM);
-            if (export_save(fbGive.c, fbGive.v, file))
-                return;   /* back to the save's page */
+            if (fbGive.v ? export_save(fbGive.c, fbGive.v) : export_marked()) {
+                fbGive.done = 1;
+                return;   /* back to the saves they are of */
+            }
         }
     }
 }
