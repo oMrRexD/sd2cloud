@@ -4,7 +4,9 @@ with a cloud standing out of it, and the app's name in its own font.
 
 Writes package/art/SD2CLOUD.ELF_COV.png and package/art/SD2CLOUD.ELF_LGO.png: OPL looks for an app's art in the ART
 folder of the device, by the name of the ELF the app's title.cfg starts, and tools/make_release.py puts them there in
-the zip. They are kept in the repository, so this only runs when the art changes (it needs Pillow and numpy).
+the zip. That name leaves room for one language only, so the same two files with the line under the name in
+Portuguese are written to package/art/pt-BR, and the zip has them aside, to copy over the others. They are kept in
+the repository, so this only runs when the art changes (it needs Pillow and numpy).
 
 usage: python tools/make_opl_art.py [<out folder>]
 """
@@ -18,7 +20,7 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 TTF = str(ROOT / "third_party/varelaround/VarelaRound-Regular.ttf")
 ELF = "SD2CLOUD.ELF"             # the name OPL looks the art up by: the "boot" of APPS/SD2Cloud/title.cfg
 NAME = "SD2Cloud"
-LINE = "cloud backup"            # the line under the name
+LINES = {"": "cloud backup", "pt-BR": "backup na nuvem"}     # the line under the name, by the folder it is written to
 E = 6                            # everything is drawn this many times larger, then scaled down
 PALE = (178, 206, 255)           # the line under the name
 
@@ -160,7 +162,7 @@ def cloud(W, H, cx, cy, w):
     return out
 
 
-def cover():
+def cover(line):
     W, H = 140, 200
     c = nebula(W, H)
     X, Y = grid(W, H)
@@ -178,11 +180,11 @@ def cover():
     name = text(W, H, NAME, 23, 70, 157, (255, 255, 255))
     c.alpha_composite(faded(blur(name, 2.2), 0.55))
     c.alpha_composite(name)
-    c.alpha_composite(text(W, H, LINE, 10, 70, 177, PALE))
+    c.alpha_composite(text(W, H, line, 10, 70, 177, PALE))
     return c.convert("RGB").resize((W, H), Image.LANCZOS)
 
 
-def logo():
+def logo(line):
     W, H = 300, 125
     c = Image.new("RGBA", (W * E, H * E), (0, 0, 0, 0))
     ct = card(78)
@@ -194,16 +196,17 @@ def logo():
     name = text(W, H, NAME, size, x, 51, (255, 255, 255), "lm")
     c.alpha_composite(faded(blur(name, 2.5), 0.6))
     c.alpha_composite(name)
-    c.alpha_composite(text(W, H, LINE, 17, x + 2, 83, PALE, "lm"))
+    c.alpha_composite(text(W, H, line, 17, x + 2, 83, PALE, "lm"))
     return c.resize((W, H), Image.LANCZOS)
 
 
 def main():
     out = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "package" / "art"
-    out.mkdir(parents=True, exist_ok=True)
-    for suffix, im in (("COV", cover()), ("LGO", logo())):
-        im.save(out / f"{ELF}_{suffix}.png", optimize=True)
-        print(f"{out / (ELF + '_' + suffix + '.png')}: {im.width}x{im.height}")
+    for folder, line in LINES.items():
+        (out / folder).mkdir(parents=True, exist_ok=True)
+        for suffix, im in (("COV", cover(line)), ("LGO", logo(line))):
+            im.save(out / folder / f"{ELF}_{suffix}.png", optimize=True)
+            print(f"{out / folder / (ELF + '_' + suffix + '.png')}: {im.width}x{im.height}")
 
 
 if __name__ == "__main__":

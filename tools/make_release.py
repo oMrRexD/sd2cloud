@@ -90,6 +90,9 @@ def main():
         # the art OPL looks for in the device's ART folder, by the name of the ELF that title.cfg starts
         ("ART/SD2CLOUD.ELF_COV.png", (PKG / "art" / "SD2CLOUD.ELF_COV.png").read_bytes()),
         ("ART/SD2CLOUD.ELF_LGO.png", (PKG / "art" / "SD2CLOUD.ELF_LGO.png").read_bytes()),
+        # the same two with their line in Portuguese, to copy over them
+        ("Extras/ART pt-BR/SD2CLOUD.ELF_COV.png", (PKG / "art" / "pt-BR" / "SD2CLOUD.ELF_COV.png").read_bytes()),
+        ("Extras/ART pt-BR/SD2CLOUD.ELF_LGO.png", (PKG / "art" / "pt-BR" / "SD2CLOUD.ELF_LGO.png").read_bytes()),
         # what SD2Cloud itself writes to the memory card, for whoever wants to import it into a card by hand
         (f"Extras/{SAS}.psu", package),
     ]
