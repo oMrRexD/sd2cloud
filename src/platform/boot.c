@@ -75,8 +75,9 @@ static void find_sd(const char *a0)
  * and the shortcut to start it from there (drivers_store), and is updated there. Only its data is always on the
  * microSD.
  *
- * Which device it is, the name it was started under says ("mx4sio:", "ata:", "hdd0:PARTITION:pfs:"), unless it
- * is the name every block device answers to ("mass0:") or a file system's with no partition in it ("pfs0:").
+ * Which device it is, the name it was started under says ("usb:", "mx4sio:", "ata:", "hdd0:PARTITION:pfs:"),
+ * unless it is the name every block device answers to ("mass0:", or whatever else a launcher calls one) or a file
+ * system's with no partition in it ("pfs0:").
  * Then each place that name can be is tried: that device's drivers are loaded, alone, and the program is looked
  * for under the same path. The settings remember the answer, so it is found out once (at IGR what matters is being
  * quick) */
@@ -84,7 +85,9 @@ static void locate_self(const char *a0)
 {
     static const char *const block[] = {"usb:", "mx4sio:", "ata:", NULL};
     static const char *const parts[] = {"hdd0:+OPL:pfs:", "hdd0:__common:pfs:", NULL};
-    const char *const *tries = !strncasecmp(a0, "mass", 4) ? block : !strncasecmp(a0, "pfs", 3) ? parts : NULL;
+    const char *const *tries = !strncasecmp(a0, "pfs", 3) ? parts
+                               : !strncasecmp(a0, "hdd", 3) || !strncasecmp(a0, "usb", 3) || !strncasecmp(a0, "mx4sio", 6)
+                                 || !strncasecmp(a0, "ata", 3) ? NULL : block;
     const char *rest = strchr(a0, ':');
     char c[260];
     int i, found = 0;
@@ -92,18 +95,18 @@ static void locate_self(const char *a0)
     if (!tries)
         return;   /* the name says the device: appPath is right as it is */
     for (i = 0; tries[i]; i++) {   /* what the settings remember, when it is one of them */
-        snprintf(c, sizeof(c), "%s%s", tries[i], rest);
+        snprintf(c, sizeof(c), "%s%s%s", tries[i], rest[0] == '/' ? "" : "/", rest);
         if (!strcasecmp(c, cfg.app_path)) {
             snprintf(appPath, sizeof(appPath), "%s", c);
             return;
         }
     }
     for (i = 0; tries[i] && !found; i++) {
-        snprintf(c, sizeof(c), "%s%s", tries[i], rest);
+        snprintf(c, sizeof(c), "%s%s%s", tries[i], rest[0] == '/' ? "" : "/", rest);
         found = device_has(c);
     }
     if (!found)   /* (not likely: it was started from there. The first one, then) */
-        snprintf(c, sizeof(c), "%s%s", tries[0], rest);
+        snprintf(c, sizeof(c), "%s%s%s", tries[0], rest[0] == '/' ? "" : "/", rest);
     snprintf(appPath, sizeof(appPath), "%s", c);
     /* back to what reads the sd2psx, as when the program started */
     iop_reset();

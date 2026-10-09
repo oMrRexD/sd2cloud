@@ -525,7 +525,8 @@ static void about_screen(void)
     dlg_line(FONT_SMALL, COLOR_DIM, 10, T(T_ABOUT_LICENSES));
     dlg_line(FONT_TEXT, COLOR_TEXT, 2, T(T_ABOUT_AUTHOR));
     snprintf(t, sizeof(t), "github.com/%s", cfg.repo);
-    dlg_line(FONT_SMALL, COLOR_ACCENT, 0, t);
+    dlg_line(FONT_SMALL, COLOR_ACCENT, 6, t);
+    dlg_line(FONT_SMALL, COLOR_DIM, 0, appPath);   /* where the program is, as the IGR helper is told */
     dlg_buttons(BUTTON_CIRCLE, T_BACK, 0, 0);
     next.wide = 1;
     dlg_show();

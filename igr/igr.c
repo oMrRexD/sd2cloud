@@ -79,9 +79,15 @@ static const char *const roots[] = {"mmce0:/", "mmce1:/",
 #endif
                                     NULL};
 
+/* What was tried, step by step. The debug build always writes it to the microSD (igr-log.txt in the data folder);
+ * the program only when SD2Cloud is on another device and couldn't be started from there, which is when somebody
+ * will want to know why (the shortcut shows it on the screen as well) */
+static char tried[1400];
 #ifdef DEBUG_BUILD
-/* what was tried, written to the microSD once it can be reached (igr-log.txt in the data folder) */
-static char tried[600];
+static int keepNotes = 1;
+#else
+static int keepNotes;
+#endif
 static void note(const char *what, const char *path, int r)
 {
     char n[16], *p = n + sizeof(n) - 1;
@@ -106,6 +112,8 @@ static void save_notes(const char *root)
 {
     char file[48];
     int fd;
+    if (!keepNotes)
+        return;
     strcpy(file, root);
     strcat(file, "SD2Cloud/igr-log.txt");
     if ((fd = open(file, O_WRONLY | O_CREAT | O_TRUNC, 0666)) >= 0) {
@@ -113,10 +121,6 @@ static void save_notes(const char *root)
         close(fd);
     }
 }
-#else
-#define note(what, path, r)
-#define save_notes(root)
-#endif
 
 /* igr = 1: SD2Cloud, told that it was IGR that started it; 0 = any other program */
 static void run(const char *path, int igr)
@@ -277,7 +281,7 @@ static int on_sd(char *path, const char *root)
  * SD2Cloud's launch.c): usb:/... (or mass:), mx4sio:/..., ata:/... (the hard disk formatted exFAT),
  * hdd0:PARTITION:pfs:/... (the hard disk formatted APA). The modules each one needs are files of the microSD, put
  * there by SD2Cloud under their own names, and are loaded in the order SD2Cloud itself loads them */
-static unsigned char module[400 * 1024];
+static unsigned char module[400 * 1024] __attribute__((aligned(64)));   /* (as the IOP's loader takes one: by DMA) */
 
 static int load_driver(const char *root, const char *name, int argLen, const char *args)
 {
@@ -337,7 +341,7 @@ static void run_elsewhere(const char *root, const char *where)
             return;
         strcpy(path, "mass0:");   /* the only block device loaded: the first one */
         strcat(path, rest);
-        if (wait_for(path, 60))
+        if (wait_for(path, 100))
             run(path, AS_IGR);
         return;
     }
@@ -401,9 +405,17 @@ static void run_found(const char *root)
 #ifdef OPEN
 /* The shortcut found no SD2Cloud to open: said on the screen (the SDK's text screen has no accented letters), for long
  * enough to be read, before the PS2 menu */
-static void not_found(void)
+static void not_found(const char *where)
 {
     init_scr();
+    if (where[0]) {   /* it is on another device, and couldn't be started from there: what was tried */
+        scr_printf("\n\n   SD2Cloud\n\n"
+                   "   SD2Cloud could not be started from where it is:\n"
+                   "   SD2Cloud nao pode ser iniciado de onde esta:\n"
+                   "   %s\n\n%s", where, tried);
+        sleep(40);
+        return;
+    }
     scr_printf("\n\n\n   SD2Cloud\n\n"
                "   SD2CLOUD.ELF was not found on the MMCE (the sd2psx microSD).\n"
                "   Copy the APPS folder of SD2Cloud's .zip to the MMCE:\n"
@@ -443,7 +455,7 @@ static void skip_sync(const char *root)
 
 int main(int argc, char *argv[])
 {
-    static char path[256];
+    static char path[256], where[256];
     int i, k, elsewhere = 0;
     SifInitRpc(0);
     note("started as", argc > 0 && argv[0] ? argv[0] : "(nothing)", argc);
@@ -474,7 +486,9 @@ int main(int argc, char *argv[])
 #endif
             setting(ini, "app", "app_path", path, sizeof(path));   /* where SD2Cloud said it is */
             if (path[0] && !on_sd(path, roots[k]) && !elsewhere++) {   /* another device: its drivers, once */
+                strcpy(where, path);
                 run_elsewhere(roots[k], path);
+                keepNotes = 1;   /* (it didn't start: why is kept) */
                 save_notes(roots[k]);
             } else if (path[0])
                 run(path, AS_IGR);
@@ -493,8 +507,9 @@ int main(int argc, char *argv[])
         usleep(300 * 1000);
     }
 #ifdef OPEN
-    not_found();
+    not_found(where);
 #else
+    (void)where;
     if (beside[0])
         run_beside();
 #endif
