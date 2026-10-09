@@ -72,7 +72,7 @@ static void on_game2folder(const char *s, const char *k, const char *v, void *u)
 {
     (void)k;
     (void)u;
-    if (strcasecmp(s, "PS2") == 0 && *v && strlen(mapped) + strlen(v) + 2 < sizeof(mapped)) {
+    if (strcasecmp(s, "PS2") == 0 && *v && !list_has(mapped, v) && strlen(mapped) + strlen(v) + 2 < sizeof(mapped)) {
         strcat(mapped, v);
         strcat(mapped, ",");
     }
@@ -115,9 +115,179 @@ static int compare(const void *a, const void *b)
 
 /* The game of each game card. The sd2psx names a game's folder by its ID and shows the game's name on its own
  * screen, from a list in its firmware; the same list is embedded here (assets/gamenames.txt, one "ID<TAB>name" per
- * line: tools/make_gamenames.py). A folder that isn't an ID in it (one mapped in Game2Folder.ini) keeps no name */
+ * line: tools/make_gamenames.py). A folder that isn't an ID in it is named as the group of games Game2Folder.ini
+ * gives it to (group_names, below), or keeps no name */
 extern unsigned char asset_gamenames_txt[];
 extern unsigned int size_asset_gamenames_txt;
+
+/* -------- A folder Game2Folder.ini gives to several games (a series whose games read each other's saves: the list
+ * most people use, SD2PSX-VMC-Groups, has over a hundred of them, "MCCG-10045" and so on) is no game's ID, and the
+ * list of games has no name for it. It is named after the games it is for: what their names all start with, when
+ * that is more than a word ("Need for Speed"); else the names one after the other, when that is short ("Zombie
+ * Zone, Zombie Hunters"); else the one word they start with ("Tekken"); else as many of the names as fit, and
+ * "...". The games of America and of Europe come first: the same game has another name in Japan */
+#define GROUP_MAX   48    /* folders like that among the cards */
+#define GROUP_IDS   512   /* the IDs Game2Folder.ini gives them, all together */
+#define GROUP_NAMES 8     /* the names kept of each one's games */
+#define GROUP_SHORT 40    /* names one after the other are short up to this many characters */
+
+typedef struct {
+    const char *folder;
+    char names[GROUP_NAMES][64], prefix[64];   /* its games, each name once; what all of them start with */
+    int n, more;                               /* names kept, and whether its games have others */
+} group_t;
+static group_t groups[GROUP_MAX];
+static struct {
+    char id[11];
+    unsigned char group;
+} groupIds[GROUP_IDS];
+static unsigned char groupKey[1000];   /* is an ID that ends in these three digits one of groupIds? */
+static int nGroups, nGroupIds;
+
+static int id_key(const char *id) { return (id[7] - '0') * 100 + (id[8] - '0') * 10 + (id[9] - '0'); }
+
+static void on_group_id(const char *s, const char *k, const char *v, void *u)
+{
+    int i;
+    (void)u;
+    if (strcasecmp(s, "PS2") != 0 || !is_game_id(k) || nGroupIds == GROUP_IDS)
+        return;
+    for (i = 0; i < nGroups; i++)
+        if (!strcasecmp(groups[i].folder, v)) {
+            snprintf(groupIds[nGroupIds].id, sizeof(groupIds[0].id), "%s", k);
+            groupIds[nGroupIds++].group = i;
+            groupKey[id_key(k)] = 1;
+            return;
+        }
+}
+
+static int word_char(char c) { return isalnum((unsigned char)c) || ((unsigned char)c & 0x80); }
+
+/* one more game of a group: its name without what tells an edition of it apart ("[Black Edition]"), once */
+static void group_add(group_t *g, const char *name, int len)
+{
+    char n[64], *cut;
+    size_t same;
+    int i;
+    snprintf(n, sizeof(n), "%.*s", len, name);
+    if ((cut = strstr(n, " [")) != NULL)
+        *cut = 0;
+    utf8_fix(n, sizeof(n));
+    for (i = 0; i < g->n; i++)
+        if (!strcasecmp(g->names[i], n))
+            return;
+    if (!g->n)
+        snprintf(g->prefix, sizeof(g->prefix), "%s", n);
+    if (g->n < GROUP_NAMES)
+        snprintf(g->names[g->n++], sizeof(g->names[0]), "%s", n);
+    else
+        g->more = 1;
+    /* what they all start with: up to where this one goes another way, and never to the middle of a word or of a
+     * letter of more than one byte */
+    for (same = 0; g->prefix[same] && g->prefix[same] == n[same]; same++)
+        ;
+    while (same > 0 && ((unsigned char)g->prefix[same] & 0xC0) == 0x80)
+        same--;
+    if (same > 0 && word_char(g->prefix[same - 1]) && (word_char(g->prefix[same]) || word_char(n[same])))
+        while (same > 0 && word_char(g->prefix[same - 1]))
+            same--;
+    g->prefix[same] = 0;
+}
+
+/* What the names of a group all start with, as a name of its own: without what joined it to the rest (" - ") and
+ * without a word that only leads to the rest ("Avatar - The"). Returns how many words are left of it */
+static int group_prefix(const group_t *g, char *out, size_t size)
+{
+    static const char *const leads[] = {"the", "of", "and", "a", "an", "to", "no", "vol.", "vol", NULL};
+    size_t p = strlen(g->prefix), w;
+    int i, words = 0;
+    snprintf(out, size, "%s", g->prefix);
+    for (;;) {
+        while (p > 0 && strchr(" -:,&(/", out[p - 1]))
+            p--;
+        out[p] = 0;
+        for (w = p; w > 0 && out[w - 1] != ' '; w--)
+            ;
+        for (i = 0; leads[i] && strcasecmp(out + w, leads[i]); i++)
+            ;
+        if (!leads[i] || !p)
+            break;
+        p = w;
+    }
+    for (w = 0; w < p; w++)
+        words += out[w] != ' ' && (!w || out[w - 1] == ' ');
+    return words;
+}
+
+static void group_label(const group_t *g, char *out, size_t size)
+{
+    char all[GROUP_NAMES * 66], start[64];
+    int i, words = group_prefix(g, start, sizeof(start));
+    all[0] = 0;
+    for (i = 0; i < g->n; i++)
+        snprintf(all + strlen(all), sizeof(all) - strlen(all), "%s%s", i ? ", " : "", g->names[i]);
+    if (g->n == 1 && !g->more)
+        snprintf(out, size, "%s", g->names[0]);
+    else if (words >= 2)
+        snprintf(out, size, "%s", start);
+    else if (!g->more && strlen(all) <= GROUP_SHORT)
+        snprintf(out, size, "%s", all);
+    else if (strlen(start) >= 4)
+        snprintf(out, size, "%s", start);
+    else
+        out[0] = 0;
+    if (out[0])
+        return;
+    for (i = 0; i < g->n && strlen(out) + (i ? 2 : 0) + strlen(g->names[i]) + 4 <= size; i++)
+        snprintf(out + strlen(out), size - strlen(out), "%s%s", i ? ", " : "", g->names[i]);
+    if (!i)
+        snprintf(out, size - 3, "%s", g->names[0]);
+    if (i < g->n || g->more)
+        snprintf(out + strlen(out), size - strlen(out), "...");
+}
+
+/* the game cards the list of games has no name for: named as their group, when Game2Folder.ini has them as one */
+static void group_names(void)
+{
+    const char *p = (const char *)asset_gamenames_txt, *end = p + size_asset_gamenames_txt, *tab, *nl;
+    char path[64];
+    int i, k, pass;
+    nGroups = nGroupIds = 0;
+    for (i = 0; i < nCards; i++) {
+        if (cards[i].type != TYPE_GAMEID || cards[i].game[0])
+            continue;
+        for (k = 0; k < nGroups && strcasecmp(groups[k].folder, cards[i].folder); k++)
+            ;
+        if (k == nGroups && nGroups < GROUP_MAX) {
+            memset(&groups[k], 0, sizeof(groups[0]));
+            groups[nGroups++].folder = cards[i].folder;
+        }
+    }
+    if (!nGroups || !dev->sd2psx)
+        return;
+    memset(groupKey, 0, sizeof(groupKey));
+    snprintf(path, sizeof(path), "%s.sd2psx/Game2Folder.ini", sdRoot);
+    ini_read(path, on_group_id, NULL);
+    if (!nGroupIds)
+        return;
+    for (pass = 0; pass < 2; pass++)   /* (SLUS, SCES and the like first) */
+        for (p = (const char *)asset_gamenames_txt; p < end && (tab = memchr(p, '\t', end - p)) != NULL; p = nl + 1) {
+            if (!(nl = memchr(tab, '\n', end - tab)))
+                nl = end;
+            if (tab - p != 10 || (p[2] == 'U' || p[2] == 'E') == pass || !isdigit((unsigned char)p[7]) ||
+                !isdigit((unsigned char)p[8]) || !isdigit((unsigned char)p[9]) || !groupKey[id_key(p)])
+                continue;
+            for (k = 0; k < nGroupIds; k++)
+                if (!strncasecmp(groupIds[k].id, p, 10))
+                    group_add(&groups[groupIds[k].group], tab + 1, (int)(nl - tab - 1));
+        }
+    for (i = 0; i < nCards; i++)
+        for (k = 0; k < nGroups && cards[i].type == TYPE_GAMEID && !cards[i].game[0]; k++)
+            if (groups[k].n && !strcasecmp(groups[k].folder, cards[i].folder)) {
+                group_label(&groups[k], cards[i].game, sizeof(cards[i].game));
+                break;
+            }
+}
 
 static void game_names(void)
 {
@@ -136,6 +306,8 @@ static void game_names(void)
             utf8_fix(c->game, sizeof(c->game));
         }
     }
+    if (any)
+        group_names();
 }
 
 int game_title(const char *id, char *out, size_t size)

@@ -418,7 +418,17 @@ int ui_text_shadow(int font, float x, float y, u32 color, const char *utf8)
     return ui_text(font, x, y, color, utf8);
 }
 
-/* lays a text out in lines of at most width; draw = draw them (else only count). Returns the number of lines */
+/* a line of a text laid out: from x on, or (draw 2) with its middle at x */
+static void put_line(int font, float x, float y, u32 color, const char *line, int draw)
+{
+    if (draw == 2)
+        ui_text_center(font, x, y, color, line);
+    else if (draw)
+        ui_text(font, x, y, color, line);
+}
+
+/* lays a text out in lines of at most width; draw = draw them (1 = from x on, 2 = each one with its middle at x;
+ * else only count). Returns the number of lines */
 static int lay_out(int font, float x, float y, int width, u32 color, const char *text, int draw)
 {
     char line[256], word[128];
@@ -431,16 +441,14 @@ static int lay_out(int font, float x, float y, int width, u32 color, const char 
         snprintf(word, sizeof(word), "%.*s", (int)n, p);
         snprintf(test, sizeof(test), "%s%s%s", line, line[0] ? " " : "", word);
         if (line[0] && ui_measure(font, test) > width) {
-            if (draw)
-                ui_text(font, x, y + lines * lh, color, line);
+            put_line(font, x, y + lines * lh, color, line, draw);
             lines++;
             snprintf(line, sizeof(line), "%s", word);
         } else
             snprintf(line, sizeof(line), "%s", test);
         p += n;
         if (*p == '\n') {   /* a line break in the text itself */
-            if (draw)
-                ui_text(font, x, y + lines * lh, color, line);
+            put_line(font, x, y + lines * lh, color, line, draw);
             lines++;
             line[0] = 0;
             p++;
@@ -450,8 +458,7 @@ static int lay_out(int font, float x, float y, int width, u32 color, const char 
             p++;
     }
     if (line[0]) {
-        if (draw)
-            ui_text(font, x, y + lines * lh, color, line);
+        put_line(font, x, y + lines * lh, color, line, draw);
         lines++;
     }
     return lines;
@@ -460,6 +467,11 @@ static int lay_out(int font, float x, float y, int width, u32 color, const char 
 int ui_paragraph(int font, float x, float y, int width, u32 color, const char *utf8)
 {
     return (int)y + lay_out(font, x, y, width, color, utf8, 1) * (ui_line_height(font) + 2);
+}
+
+int ui_paragraph_center(int font, float cx, float y, int width, u32 color, const char *utf8)
+{
+    return (int)y + lay_out(font, cx, y, width, color, utf8, 2) * (ui_line_height(font) + 2);
 }
 
 int ui_paragraph_height(int font, int width, const char *utf8)

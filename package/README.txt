@@ -83,6 +83,8 @@ with custom names), Games (Game ID cards, in folders named after each game: X op
 folder, O goes back) and Boot (the BootCard). Press Left and Right, or L1
 and R1, to switch tabs. Tabs without cards are not shown. The last tab, Files, has no cards: it browses the
 microSD and a USB drive for .psu files and memory card files (see FILES).
+A folder that the sd2psx's .sd2psx/Game2Folder.ini gives to several games (a series that shares one card) is
+shown under those games' names: what they have in common ("Need for Speed"), or the names themselves.
 - X opens the card: its saved data, displayed as in the PS2 browser, the newest first. On that screen, SQUARE
   syncs the card; if it is already synced, SD2Cloud says so and lets you sync it again.
 - TRIANGLE opens the selected card's options: "Sync now", "Restore a backup" (see RESTORING) and "Copy to a
@@ -153,12 +155,17 @@ settings an online game asks for. SELECT, on the main screen, opens the tools; T
   the cards are shown as on the main screen: X opens one, and inside it X marks and unmarks an item. The marks
   stay from card to card, and their count is at the top. START ends the marking, and the items are copied to
   the template.
-- X on a template opens it, shown as a card is. X on an item removes it from the template. TRIANGLE has the
-  rest: Apply to a card, Apply to all game cards, Set as default, Add saves (marked the same way; an item the
-  template already has can be replaced by the one marked), Rename and Delete template.
-- Apply to a card puts into the card the items it lacks. An item the card already has is never touched, and
-  a card without enough space is left as it is. Apply to all game cards does that to every game card that
-  lacks items of the template, one after the other, and says how many got them.
+- X on a template opens it, shown as a card is. X on an item removes it from the template. TRIANGLE, on a
+  template of the list or with it open, has the rest: Set as default, Add saves (marked the same way; an
+  item the template already has can be replaced by the one marked), Apply template, Linked games, Rename
+  and Delete template.
+- Apply template puts into cards the items they lack: an item a card already has is never touched, and a
+  card without enough space is left as it is. All game cards: every game card that lacks items of the
+  template gets them, one after the other, and SD2Cloud says how many did. Select cards: the same, for the
+  cards you mark, game cards or not (X marks and unmarks, START applies). Update existing saves is the one
+  that replaces: on the game cards, the items of the template that a card already has in another version
+  give way to the template's. No other item of the card is changed, an item the card lacks is not added,
+  and it asks first.
 - Set as default: the default template is the one every game card should have (a yellow light marks it in the
   list). When SD2Cloud opens and a game card lacks it, as the card of a new game does, SD2Cloud says which
   and waits for an answer: X applies it, O leaves it for later, SQUARE stops the warning for those cards. A
@@ -166,8 +173,6 @@ settings an online game asks for. SELECT, on the main screen, opens the tools; T
 - Linked games: a template that isn't the main one can be made some games': X marks and unmarks
   each game (a green light). The cards of those games are then treated as the default template treats every
   game card.
-- Overwrite on cards: on the cards a template is for, its items take the place of the ones that differ.
-  It is the only thing here that writes over saved data, and it asks first.
 - Auto-apply (the last row of the list, On or Off): with the automatic sync, when a game is left with
   IGR the game cards about to be sent get the items they lack of their templates, with no question asked,
   before they are sent. A card is only changed then when it surely isn't the one in the sd2psx (OPL has it

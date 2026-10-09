@@ -38,16 +38,17 @@ SCENARIOS = [
      "cards": CARDS, "script": "SDDDDDXDXDXDXUUXDXDDDDDDXOOC"},
     {"name": "igr-no-account", "what": "started as after IGR with no Google account: it leaves at once", "cards": CARDS,
      "script": "I"},
-    # the tools (SELECT) and the templates. The keyboard starts on A: DD>> is W
+    # the tools (SELECT) and the templates. The keyboard starts on A: DD>> is W. Triangle has a template's options, on
+    # the list (LXDT) or with the template open (LXDXT)
     {"name": "template-create", "what": "a template made of two saves marked on a card, under the name it is offered",
      "cards": CARDS, "script": "LXXSXX>XSXXC"},
-    {"name": "template-apply", "what": "a template put into a card that lacks its save", "cards": CARDS, "files": TEMPLATE,
-     "script": "LXDXTXDXXXC"},
+    {"name": "template-apply", "what": "a template put into a card that isn't a game's, marked in the list of cards", "cards": CARDS, "files": TEMPLATE,
+     "script": "LXDTDDXDXDDXSXXC"},
     {"name": "template-edit", "what": "a template renamed (a letter erased, another typed), given a save and rid of one",
-     "cards": CARDS, "files": TEMPLATE, "script": "LXDXTDDDDDXQDD>>XSTDDDDXXXSXXXXXC"},
-    {"name": "template-delete", "what": "a template deleted", "cards": CARDS, "files": TEMPLATE, "script": "LXDXTDDDDDDXXC"},
+     "cards": CARDS, "files": TEMPLATE, "script": "LXDXTDDDDXQDD>>XSTDXXXSXXXXXC"},
+    {"name": "template-delete", "what": "a template deleted", "cards": CARDS, "files": TEMPLATE, "script": "LXDXTDDDDDXXC"},
     {"name": "template-main", "what": "a template made the main one, and put into the game card that lacks it",
-     "cards": CARDS, "files": TEMPLATE, "script": "LXDXTDDXXXXC"},
+     "cards": CARDS, "files": TEMPLATE, "script": "LXDXTXXXXC"},
     {"name": "template-warning", "what": "the program opens with a main template a game card lacks: said, and put into it",
      "cards": CARDS, "files": dict(TEMPLATE, **{"SD2Cloud/templates/templates.ini": b"[templates]\nmain = Net\n"}),
      "script": "XXC"},
@@ -56,9 +57,11 @@ SCENARIOS = [
      "script": "QC"},
     {"name": "template-games", "what": "a template made a game's, and put into that game's card",
      "cards": CARDS, "files": TEMPLATE, "script": "LXDXTDDDXXOXXC"},
-    {"name": "template-update", "what": "the main template updated on the cards it is for",
-     "cards": CARDS, "files": dict(TEMPLATE, **{"SD2Cloud/templates/templates.ini": b"[templates]\nmain = Net\n"}),
-     "script": "OLXDXTDDDXXXC"},
+    # (the template's save is another version of one the game card has; Card1-1 has it too, and is no game card)
+    {"name": "template-update", "what": "a save of a template that a game card has in another version, updated there",
+     "cards": CARDS, "files": {"SD2Cloud/templates/Net/alpha.psu": "alpha-other.psu"}, "script": "LXDTDDXDDXXXC"},
+    {"name": "template-pick-cards", "what": "a template put into the game cards marked one by one",
+     "cards": dict(CARDS, **{"SLUS-20001/SLUS-20001-1": "empty"}), "files": TEMPLATE, "script": "LXDTDDXDXXSXXC"},
     {"name": "template-auto-apply-off", "what": "applying the templates after a game turned off",
      "cards": CARDS, "files": TEMPLATE, "script": "LXDDXC"},
     # after a game the device is on the BootCard. Both cards have nothing in them, as the BootCard: the second one

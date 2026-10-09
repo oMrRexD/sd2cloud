@@ -126,7 +126,7 @@ O [LEIA-ME.txt](package/LEIA-ME.txt) incluído na release explica cada tela em d
 | Dentro de um cartão | X: abrir um item · QUADRADO: sincronizar este cartão · O: voltar |
 | Página de um item | Copiar · Mover · Eliminar · Enviar ao Drive |
 | Aba Arquivos | X: abrir o dispositivo, uma pasta, um arquivo `.psu` ou um arquivo de cartão de memória · QUADRADO: instalar o `.psu` selecionado em um cartão, ou o arquivo de cartão selecionado no microSD · Esquerda/Direita: uma página acima ou abaixo · O: voltar. Para exportar um item, use o **Copiar** da página dele: os destinos incluem esta aba, e TRIÂNGULO grava o `.psu` na pasta exibida |
-| Ferramentas (SELECT) > Templates | X: um template novo (o nome é digitado; depois os saves são marcados nos cartões: X marca, START conclui) ou um existente · Em um template: X: um save, para removê-lo · TRIÂNGULO: aplicar a um cartão, aplicar a todos os cartões de jogo, definir como padrão, jogos vinculados, substituir nos cartões, adicionar saves, renomear, eliminar |
+| Ferramentas (SELECT) > Templates | X: um template novo (o nome é digitado; depois os saves são marcados nos cartões: X marca, START conclui) ou um existente · Em um template: X: um save, para removê-lo · TRIÂNGULO (sobre um template da lista, ou com ele aberto): definir como padrão, adicionar saves, aplicar template (a todos os cartões de jogo, aos cartões que você selecionar, ou só atualizando os saves que os cartões de jogo já têm), jogos vinculados, renomear, eliminar |
 | Durante um envio | O: cancelar |
 
 ## Sincronização automática após o jogo (IGR)

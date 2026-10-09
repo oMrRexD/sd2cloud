@@ -124,8 +124,77 @@ static void settings_choose_the_cards(void)
     CHECK_INT(max_channels("Card1"), 9);
 }
 
+/* a folder Game2Folder.ini gives to several games is a game card, named after those games */
+static void group_folders_are_named(void)
+{
+    card_t *c;
+    put_card("MCCG-10001", "MCCG-10001-1.mcd");
+    put_card("MCCG-10001", "MCCG-10001-2.mcd");
+    put_card("MCCG-10002", "MCCG-10002-1.mcd");
+    put_card("MCCG-10003", "MCCG-10003-1.mcd");
+    put_card("MCCG-10004", "MCCG-10004-1.mcd");
+    put_card("MCCG-10005", "MCCG-10005-1.mcd");
+    put_card("MCCG-10006", "MCCG-10006-1.mcd");
+    put_card("Fighters", "Fighters-1.mcd");
+    put_card("SLUS-21065", "SLUS-21065-1.mcd");
+    t_mkdir("sd/.sd2psx");
+    t_text("sd/.sd2psx/Game2Folder.ini",
+           "# a list of groups\n[PS1]\nSLUS-30011=MCCG-10001\n[PS2]\n"
+           "SLES-30001=MCCG-10001\nSLUS-30001=MCCG-10001\nSLUS-30002=MCCG-10001\nSLUS-30003=MCCG-10001\n"
+           "SLES-30011=MCCG-10002\nSLES-30012=MCCG-10002\n"
+           "SLUS-30021=MCCG-10003\nSLUS-30022=MCCG-10003\nSLUS-30023=MCCG-10003\nSLUS-30024=MCCG-10003\n"
+           "SLUS-39998=MCCG-10004\nSLUS-39999=MCCG-10004\n"
+           "SLPM-30031=MCCG-10005\nSLES-30032=MCCG-10005\n"
+           "SLUS-30041=MCCG-10006\nSLUS-30042=MCCG-10006\n"
+           "SLES-30012=Fighters\n");
+    config_read();
+    state_read();
+    CHECK_INT(cards_scan(), 9);
+    /* what its games' names all start with, when that is more than a word */
+    c = card("MCCG-10001/MCCG-10001-2");
+    CHECK(c != NULL && c->type == TYPE_GAMEID);
+    if (c)
+        CHECK_STR(c->game, "Racing Series");
+    /* the names themselves, when that is short */
+    c = card("MCCG-10002/MCCG-10002-1");
+    CHECK(c != NULL);
+    if (c)
+        CHECK_STR(c->game, "Zombie Zone, Zombie Hunters");
+    /* as many of them as fit, when they have nothing in common (and an edition isn't part of a name) */
+    c = card("MCCG-10003/MCCG-10003-1");
+    CHECK(c != NULL);
+    if (c)
+        CHECK_STR(c->game, "Burnout 3 - Takedown, NFL Street 2, Black...");
+    /* games the list doesn't know: no name */
+    c = card("MCCG-10004/MCCG-10004-1");
+    CHECK(c != NULL && c->type == TYPE_GAMEID);
+    if (c)
+        CHECK_STR(c->game, "");
+    /* a game of America or of Europe before one of Japan, whatever the order of the list */
+    c = card("MCCG-10005/MCCG-10005-1");
+    CHECK(c != NULL);
+    if (c)
+        CHECK_STR(c->game, "Zombie Zone Deluxe, Oneechanbara");
+    /* the one word they start with, when the names are too long to say: not the word that only leads to the rest */
+    c = card("MCCG-10006/MCCG-10006-1");
+    CHECK(c != NULL);
+    if (c)
+        CHECK_STR(c->game, "Avatar");
+    /* a folder with a name of its own that a game is given is a game card too, with that game's name */
+    c = card("Fighters/Fighters-1");
+    CHECK(c != NULL && c->type == TYPE_GAMEID);
+    if (c)
+        CHECK_STR(c->game, "Zombie Hunters");
+    /* and a game's own folder keeps the game's name */
+    c = card("SLUS-21065/SLUS-21065-1");
+    CHECK(c != NULL);
+    if (c)
+        CHECK_STR(c->game, "A Game For The Tests");
+}
+
 void suite_cards(void)
 {
     RUN(cards_are_listed);
+    RUN(group_folders_are_named);
     RUN(settings_choose_the_cards);
 }

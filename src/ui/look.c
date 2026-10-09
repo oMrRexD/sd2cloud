@@ -112,8 +112,10 @@ void look_frame(void)
 
 void look_legend(const legend_t *items, int n, int apart)
 {
-    /* (five of them only fit the line closer together: what tells the two groups is then a wider gap between them) */
-    const int size = 20, gap = n > 4 ? 18 : 26, wide = n > 4 ? 34 : 70, y = LOOK_BOTTOM + 11;
+    /* (five of them only fit the line closer together: what tells the two groups is then a wider gap between them.
+     * The ones that stand apart are always that close to each other: they stay where they are, whatever the others
+     * are and however many) */
+    const int size = 20, tight = 18, gap = n > 4 ? tight : 26, wide = n > 4 ? 34 : 70, y = LOOK_BOTTOM + 11;
     float x = LOOK_LINE_X1 - 8;
     int i;
     for (i = n - 1; i >= 0; i--) {
@@ -122,7 +124,7 @@ void look_legend(const legend_t *items, int n, int apart)
         ui_text(FONT_TEXT, x, y, 0xE6E8EC, items[i].text);
         x -= size + 6;
         ui_button(items[i].button, x, y + 1, size);
-        x -= (apart && i == n - apart) ? wide : gap;
+        x -= (apart && i == n - apart) ? wide : (apart && i > n - apart) ? tight : gap;
     }
 }
 

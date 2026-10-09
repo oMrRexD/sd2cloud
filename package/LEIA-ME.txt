@@ -87,6 +87,8 @@ X abre uma pasta, O volta) e Boot (o BootCard). Use os
 direcionais para a esquerda e para a direita, ou L1 e R1, para trocar de aba. Abas sem cartões não são
 exibidas. A última aba, Arquivos, não tem cartões: ela percorre o microSD e um pendrive USB em busca de
 arquivos .psu e de arquivos de cartão de memória (veja ARQUIVOS).
+Uma pasta que o .sd2psx/Game2Folder.ini do sd2psx dá a vários jogos (uma série que divide um cartão) aparece
+com o nome desses jogos: o trecho em comum ("Need for Speed") ou os próprios nomes.
 - X abre o cartão: os dados salvos, exibidos como no navegador do PS2, do mais novo ao mais antigo. Nessa
   tela, QUADRADO sincroniza o cartão; se ele já estiver sincronizado, o SD2Cloud avisa e permite sincronizar
   novamente.
@@ -161,12 +163,17 @@ a primeira.
   seguida os cartões aparecem como na tela principal: X abre um deles e, dentro dele, X marca e desmarca um
   item. As marcas continuam de um cartão para outro, e a contagem fica no alto. START encerra a marcação, e os
   itens são copiados para o template.
-- X em um template o abre, exibido como um cartão. X em um item o remove do template. TRIÂNGULO traz o
-  restante: Aplicar a um cartão, Aplicar a todos os cartões de jogo, Definir como padrão, Adicionar saves (marcados do
-  mesmo jeito; um item que o template já tem pode ser substituído pelo marcado), Renomear e Eliminar template.
-- Aplicar a um cartão coloca no cartão os itens que faltam nele. Um item que o cartão já tem nunca é
-  alterado, e um cartão sem espaço suficiente fica como está. Aplicar a todos os cartões de jogo faz isso com todo
-  cartão de jogo em que faltam itens do template, um depois do outro, e informa quantos os receberam.
+- X em um template o abre, exibido como um cartão. X em um item o remove do template. TRIÂNGULO, sobre um
+  template da lista ou com ele aberto, traz o restante: Definir como padrão, Adicionar saves (marcados do
+  mesmo jeito; um item que o template já tem pode ser substituído pelo marcado), Aplicar template, Jogos
+  vinculados, Renomear e Eliminar template.
+- Aplicar template coloca nos cartões os itens que faltam neles: um item que o cartão já tem nunca é
+  alterado, e um cartão sem espaço suficiente fica como está. Todos os cartões de jogo: todo cartão de jogo
+  em que faltam itens do template os recebe, um depois do outro, e o SD2Cloud informa quantos receberam.
+  Selecionar cartões: o mesmo, para os cartões que você marcar, de jogo ou não (X marca e desmarca, START
+  aplica). Atualizar saves existentes é o único modo que substitui: nos cartões de jogo, os itens do
+  template que o cartão já tem em outra versão dão lugar aos do template. Nenhum outro item do cartão é
+  alterado, um item que falta no cartão não é adicionado, e o SD2Cloud pergunta antes.
 - Definir como padrão: o template padrão é o que todo cartão de jogo deve ter (uma luz amarela o marca na
   lista). Quando o SD2Cloud abre e falta ele em um cartão de jogo, como no cartão de um jogo novo, o SD2Cloud
   diz em qual e espera a resposta: X aplica, O deixa para depois, QUADRADO deixa de avisar sobre esses
@@ -174,8 +181,6 @@ a primeira.
 - Jogos vinculados: um template que não é o principal pode ser de alguns jogos: X marca e desmarca cada
   jogo (uma luz verde). Os cartões desses jogos passam a ser tratados como o template padrão trata todo
   cartão de jogo.
-- Substituir nos cartões: nos cartões de um template, os itens dele substituem os que forem diferentes. É a
-  única coisa aqui que grava por cima de dados salvos, e pergunta antes.
 - Aplicação automática (a última linha da lista, Ativado ou Desativado): com a sincronização automática, ao sair
   de um jogo pelo IGR os cartões de jogo que vão ser enviados recebem os itens que faltam dos templates deles,
   sem perguntar, antes do envio. Nessa hora só é alterado o cartão que com certeza não está no sd2psx (o OPL

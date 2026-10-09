@@ -75,7 +75,15 @@ int google_download(const char *id, int (*sink)(const unsigned char *d, size_t n
 }
 
 /* the files the build embeds in the program: here, just enough of each */
-unsigned char asset_gamenames_txt[] = "SLUS-21065\tA Game For The Tests\nSLES-50000\tAnother Game\n";
+unsigned char asset_gamenames_txt[] = "SLUS-21065\tA Game For The Tests\nSLES-50000\tAnother Game\n"
+    /* three series, for the folders Game2Folder.ini gives to more than one game */
+    "SLES-30001\tRacing Series - First Lap\nSLUS-30001\tRacing Series - First Lap\n"
+    "SLUS-30002\tRacing Series - Second Lap [Gold Edition]\nSLUS-30003\tRacing Series - The Third Lap Of Them All\n"
+    "SLES-30011\tZombie Zone\nSLES-30012\tZombie Hunters\n"
+    "SLUS-30021\tBurnout 3 - Takedown\nSLUS-30022\tNFL Street 2\nSLUS-30023\tBlack [Review]\n"
+    "SLUS-30024\tA Game With A Name That Goes On And On\n"
+    "SLPM-30031\tOneechanbara\nSLES-30032\tZombie Zone Deluxe\n"
+    "SLUS-30041\tAvatar - The Last One\nSLUS-30042\tAvatar - The Legend That Goes On And On And On\n";
 unsigned int size_asset_gamenames_txt = sizeof(asset_gamenames_txt) - 1;
 unsigned char ini_default[] = "; SD2Cloud settings\n[general]\nlanguage = auto\n\n[igr]\nreturn = auto\n";
 unsigned int size_ini_default = sizeof(ini_default) - 1;

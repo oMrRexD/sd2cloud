@@ -6,31 +6,30 @@ Card1/Card1-1: 2 folders, fingerprint 64fbc81ffd3ff7a8, new
 Card2/Card2-1: 0 folders, fingerprint e3b0c44298fc1c14, new
 SLUS-21065/SLUS-21065-1: 2 folders, fingerprint 64fbc81ffd3ff7a8, new
 3 card(s) seen for the first time: fingerprint kept as the reference (0)
-templates: 1, the main one is Net
-templates: 1 game card(s) lack saves of their templates
-[script] O
 [script] L
 [script] X
-templates: 1, the main one is Net
+templates: 1
 [script] D
-[script] X
 [script] T
 [script] D
 [script] D
+[script] X
+[script] D
 [script] D
 [script] X
 [script] X
-mcfs: import of host:SD2Cloud/templates/Net/save.psu: 0, 50 reads and 8 writes of the card in N ms
+mcfs: BASLUS-21065ALPHA deleted: 0, 6 reads and 2 writes of the card in N ms
+mcfs: import of host:SD2Cloud/templates/Net/alpha.psu: 0, 46 reads and 5 writes of the card in N ms
 templates: Net updated on host:MemoryCards/PS2/SLUS-21065/SLUS-21065-1.mcd: 1 save(s) written, 0
-SLUS-21065/SLUS-21065-1: 3 folders, fingerprint 66d01eff66ad7094, changed
+SLUS-21065/SLUS-21065-1: 2 folders, fingerprint 64fbc81ffd3ff7a8, no backup
 [script] X
 (end: capture)
 
 # files
 e67be4206c58f05d290d04e24ef9bd240e0a329b479dd8d202f12d40f464d347  MemoryCards/PS2/Card1/Card1-1.mcd
 9b26f87a6ae6b13ddf74cec52f77df98dccf3447dd4041c66394f113efddc738  MemoryCards/PS2/Card2/Card2-1.mcd
-d83cf930174ccff3568478ce3ed5e7052a7c69e2c2514d54afc3374e13574343  MemoryCards/PS2/SLUS-21065/SLUS-21065-1.mcd
+c4e7659d91ba9d22db50e579248a85bf3f8e9fd0601e4f50b7ae15e2df880e4e  MemoryCards/PS2/SLUS-21065/SLUS-21065-1.mcd
 17df2e2a16cbab4cb8357fe9a735f1765b89ed8fcaf21c00a1634ed98fb36c3e  SD2Cloud/sd2cloud.ini
 5d80b04c692d54f468ed80c2ad845b735c3fe68663e8b45858780407f59b0673  SD2Cloud/state-debug.ini
-5e170332411d9de2bcd59d95368b891283906ad7624cd0d77c81685f7ed42ba4  SD2Cloud/templates/Net/save.psu
-65151725d6f4a2eb1f13ff3190abf3110e42a1588456c3cfcbfe0e8f99068358  SD2Cloud/templates/templates.ini
+1caf03aed1dcfb3226e0009d3a41be56a1745ed1669e1e6f15ef0b1c005160e5  SD2Cloud/templates/Net/alpha.psu
+ff85ce49e8465bf4bde7d3ea6d3a9c123cc01f078276fc18ea786860abc92e40  SD2Cloud/templates/templates.ini

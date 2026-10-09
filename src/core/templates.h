@@ -53,8 +53,9 @@ int template_lacking(const template_t *t, const char *card, unsigned char lacks[
 int template_apply(const template_t *t, const char *card, int (*before)(const template_t *t, int i), mcfs_step_cb progress,
                    int *put);
 
-/* the same, and a save the card has that isn't the template's own takes the template's place (one that is the same
- * is left alone): the only thing that writes over a save. put = how many were written */
+/* The saves of the template that the card already has, in another version, give way to the template's (one that is
+ * the same is left alone, and one the card lacks isn't put there): the only thing that writes over a save, and never
+ * over one that isn't the template's. put = how many were written */
 int template_update(const template_t *t, const char *card, int (*before)(const template_t *t, int i), mcfs_step_cb progress,
                     int *put);
 

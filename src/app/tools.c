@@ -88,6 +88,7 @@ static void mark_icon(void)
 static int mark_saves(void)
 {
     int r = -1;
+    brwIcon = NULL;   /* (the cards' saves have their own icons: not the ones of a template that is open) */
     ui_lock();
     memset(&marks, 0, sizeof(marks));
     marks.on = 1;
@@ -331,8 +332,8 @@ static int card_lacks(const card_t *c, const template_t *t)
     return n;
 }
 
-/* A template into a card: the saves the card lacks and, with replace, the template's in place of the ones the card
- * has that differ. In the card's file; or, for the card the device is using, through the slot, as a game would
+/* A template into a card: the saves the card lacks or, with replace, the template's in place of the ones the card
+ * has in another version (and none it lacks). In the card's file; or, for the card the device is using, through the slot, as a game would
  * write them. show = on the screen of a save on its way. MCFS_* (or TPL_LEFT); put = how many saves were written */
 static int template_into(const template_t *t, card_t *c, int replace, int show, int *put)
 {
@@ -353,7 +354,7 @@ static int template_into(const template_t *t, card_t *c, int replace, int show, 
     for (i = 0; i < t->n && r == MCFS_OK; i++) {
         if ((has = mc_has_folder(port, t->saves[i].folder)) < 0)
             r = MCFS_ERR_IO;
-        else if (!has || replace) {
+        else if (replace ? has : !has) {
             if (show) {
                 apply_before(t, i);
                 save_into_fixed();   /* (nothing tells how far it is, and it can't be given up) */
@@ -367,51 +368,6 @@ static int template_into(const template_t *t, card_t *c, int replace, int show, 
     }
     log_msg("template %s into %s, through the slot: %d save(s), %d", t->name, c->id, *put, r);
     return r;
-}
-
-static void template_to_card(template_t *t)
-{
-    char s[300], note[200];
-    card_t *to;
-    int n, put = 0, r;
-    if (!t->n) {
-        message_wait(0, NULL, COLOR_WARN, T(T_TPL_EMPTY));
-        return;
-    }
-    if (!nCards) {
-        message_wait(0, NULL, COLOR_WARN, T(T_NO_CARDS_SD));
-        return;
-    }
-    destFiles = 0;
-    if (!(to = choose_dest(NULL, T_TPL_APPLY_TO, 0, NULL)))
-        return;
-    find_active();
-    if ((n = card_lacks(to, t)) < 0) {
-        message_wait(0, NULL, COLOR_ERROR, T(T_CARD_UNREADABLE));
-        return;
-    }
-    if (!n) {
-        snprintf(s, sizeof(s), T(T_TPL_NOTHING), to->base);
-        message_wait(0, NULL, COLOR_OK, s);
-        return;
-    }
-    snprintf(s, sizeof(s), T(T_TPL_APPLY_ASK), t->name, to->base);
-    snprintf(note, sizeof(note), T(T_TPL_APPLY_NOTE), n);
-    if (!confirm(s, note, T_TPL_APPLY))
-        return;
-    ap.cards = 0;
-    cancelLatched = 0;
-    r = template_into(t, to, 0, 1, &put);
-    apply_done();
-    if (r == MCFS_ERR_CANCELLED || r == TPL_LEFT)
-        return;   /* given up, or left alone: said already */
-    if (r == MCFS_OK || r == MCFS_ERR_FULL)
-        snprintf(s, sizeof(s), T(r == MCFS_OK ? T_TPL_APPLIED : T_TPL_APPLIED_FULL), to->base, put);
-    else {
-        op_result(r, 0, to);
-        return;
-    }
-    message_wait(0, NULL, r == MCFS_OK ? COLOR_OK : COLOR_WARN, s);
 }
 
 /* -------- the cards a template is for: the main template is every game card's, and any template can be a game's */
@@ -488,13 +444,13 @@ static void cards_get(const template_t *t, int n, int replace)
         if (r == MCFS_ERR_CANCELLED)
             break;
         failed += r != MCFS_OK;
-        if (r == MCFS_OK && card_lacks_its(c) == 0)
+        if (c->type == TYPE_GAMEID && r == MCFS_OK && card_lacks_its(c) == 0)
             templates_settle(c->id, c->folder);
     }
     apply_done();
     ap.cards = 0;
     templates_save();
-    snprintf(got, sizeof(got), T(T_TPL_GAMES_GOT), changed);
+    snprintf(got, sizeof(got), T(replace ? T_TPL_UPDATED_N : T_TPL_GAMES_GOT), changed);
     snprintf(left, sizeof(left), T(T_TPL_GAMES_LEFT), failed);
     report(failed ? COLOR_WARN : COLOR_OK, got, NULL, failed ? left : NULL);
 }
@@ -525,14 +481,15 @@ static void template_to_game_cards(template_t *t, int quiet, int its)
         cards_get(t, n, 0);
 }
 
-/* "Update on the cards": on the cards the template is for, its saves take the place of the ones that differ. The
- * only thing here that writes over a save, and it says so before */
+/* "Update existing saves": on the game cards, the saves of the template that a card already has in another version
+ * give way to the template's. The only thing here that writes over a save, never over one that isn't the
+ * template's, and it says so before */
 static void template_update_cards(template_t *t)
 {
     char s[300];
     int i, n = 0;
     for (i = 0; i < nCards; i++)
-        if (card_of(t, &cards[i]))
+        if (cards[i].type == TYPE_GAMEID)
             gameCards[n++] = i;
     if (!t->n || !n) {
         message_wait(0, NULL, COLOR_WARN, T(t->n ? T_TPL_NO_GAME_CARDS : T_TPL_EMPTY));
@@ -675,7 +632,9 @@ static void scene_games(float t)
     look_space();
     look_frame();
     ui_alpha(look_fade(t));
+    rowsWide = 236;   /* (a game's name is longer than a card's: up to where the big card's picture starts) */
     list_rows(gl.n, gl.cursor, gl.top, games_text, NULL);
+    rowsWide = 0;
     for (i = gl.top; i < gl.n && i < gl.top + LIST_ROWS; i++)   /* a green light before each game it is for */
         if (template_has_game(gl.t, cards[gl.first[i]].folder)) {
             float y = ROW_Y0 + (i - gl.top) * LIST_ROW_H + ui_line_height(FONT_TEXT) / 2.0f + 1;
@@ -738,6 +697,137 @@ static void template_games_screen(template_t *t)
         template_to_game_cards(t, 1, 1);
 }
 
+/* -------- the cards a template goes into, marked one by one */
+
+static struct {
+    int n, cursor, top, marked;
+    int card[MAX_CARDS];            /* the cards: the game cards first, by their games' names (indexes in cards[]) */
+    unsigned char on[MAX_CARDS];    /* marked */
+} pk;
+
+static const char *pick_text(int i, char *buf)
+{
+    const card_t *c = &cards[pk.card[i]];
+    char channel[12] = "";
+    int k, same = 0;
+    if (c->type != TYPE_GAMEID) {
+        snprintf(buf, 64, "%s", c->base);
+        return buf;
+    }
+    for (k = 0; k < pk.n; k++)
+        same += !strcasecmp(cards[pk.card[k]].folder, c->folder);
+    if (same > 1)   /* (a game with more than one card: which of them) */
+        snprintf(channel, sizeof(channel), " (%d)", c->channel);
+    snprintf(buf, 64 - sizeof(channel), "%s", game_of(c));
+    fit(FONT_TEXT, buf, 64 - sizeof(channel), 236 - ui_measure(FONT_TEXT, channel));
+    strcat(buf, channel);
+    return buf;
+}
+
+static void scene_pick(float t)
+{
+    char s[64];
+    int i;
+    look_space();
+    look_frame();
+    ui_alpha(look_fade(t));
+    rowsWide = 236;   /* (a game's name is longer than a card's: up to where the big card's picture starts) */
+    list_rows(pk.n, pk.cursor, pk.top, pick_text, NULL);
+    rowsWide = 0;
+    for (i = pk.top; i < pk.n && i < pk.top + LIST_ROWS; i++)   /* a green light before each marked card */
+        if (pk.on[i]) {
+            float y = ROW_Y0 + (i - pk.top) * LIST_ROW_H + ui_line_height(FONT_TEXT) / 2.0f + 1;
+            ui_image(IMG_GLOW, LIST_X + 1, y - 9, 18, 18, COLOR_OK, 0x80);
+            ui_rect(LIST_X + 8, y - 2, 4, 4, COLOR_OK, 0x80);
+        }
+    {
+        legend_t l[3] = {{BUTTON_CIRCLE, T(T_BACK)}, {BUTTON_CROSS, T(T_MARK)}, {BUTTON_START, T(T_TPL_APPLY)}};
+        look_legend(l, 3, 0);
+    }
+    look_title(CARD_CX, 82, T(T_TPL_PICK_CARDS), 1);
+    draw_card_picture(&cards[pk.card[pk.cursor]], NULL, ui_clock());
+    snprintf(s, sizeof(s), T(T_MARKED_N), pk.marked);
+    ui_text_center(FONT_TEXT, CARD_CX, CARD_Y + LOOK_CARD_H + 2, pk.marked ? COLOR_OK : COLOR_DIM, s);
+}
+
+/* "Select cards": X marks and unmarks a card, START puts the template into the marked ones */
+static void template_pick_cards(template_t *t)
+{
+    char s[300], f[100];
+    int i, k, n = 0;
+    if (!t->n) {
+        message_wait(0, NULL, COLOR_WARN, T(T_TPL_EMPTY));
+        return;
+    }
+    ui_lock();
+    memset(&pk, 0, sizeof(pk));
+    for (i = 0; i < nCards; i++) {   /* the game cards first: a template is mostly for them */
+        if (cards[i].type != TYPE_GAMEID)
+            continue;
+        for (k = pk.n++; k > 0 && strcasecmp(game_of(&cards[pk.card[k - 1]]), game_of(&cards[i])) > 0; k--)
+            pk.card[k] = pk.card[k - 1];
+        pk.card[k] = i;
+    }
+    for (i = 0; i < nCards; i++)
+        if (cards[i].type != TYPE_GAMEID)
+            pk.card[pk.n++] = i;
+    ui_unlock();
+    if (!pk.n) {
+        message_wait(0, NULL, COLOR_WARN, T(T_NO_CARDS_SD));
+        return;
+    }
+    for (;;) {
+        u32 b;
+        ui_scene(scene_pick);
+        b = wait_nav(PAD_UP | PAD_DOWN | PAD_CROSS | PAD_CIRCLE | PAD_START);
+        if (b & PAD_CIRCLE) {
+            sound_play(SND_BACK);
+            return;
+        }
+        if (b & PAD_START) {
+            sound_play(pk.marked ? SND_CONFIRM : SND_BACK);
+            if (!pk.marked)
+                continue;
+            snprintf(s, sizeof(s), T(T_TPL_PICK_ASK), t->name);
+            snprintf(f, sizeof(f), T(T_MARKED_N), pk.marked);
+            if (!confirm(s, f, T_TPL_APPLY))
+                continue;
+            for (i = 0; i < pk.n; i++)
+                if (pk.on[i])
+                    gameCards[n++] = pk.card[i];
+            find_active();
+            cards_get(t, n, 0);
+            return;
+        }
+        ui_lock();
+        if (b & PAD_CROSS) {
+            pk.on[pk.cursor] = !pk.on[pk.cursor];
+            pk.marked += pk.on[pk.cursor] ? 1 : -1;
+        } else {
+            pk.cursor = (b & PAD_UP) ? (pk.cursor + pk.n - 1) % pk.n : (pk.cursor + 1) % pk.n;
+            scroll_to(pk.cursor, &pk.top);
+        }
+        ui_unlock();
+        sound_play((b & PAD_CROSS) ? SND_CONFIRM : SND_MOVE);
+    }
+}
+
+/* "Apply template...": to every game card, to the cards the user marks, or only bringing up to date, on the game
+ * cards, the saves of the template they already have. Circle in any of the three comes back here */
+static void template_apply_menu(template_t *t)
+{
+    const char *items[3] = {T(T_TPL_ALL_CARDS), T(T_TPL_PICK_CARDS), T(T_TPL_UPDATE)};
+    int k = 0;
+    while ((k = choose(T(T_TPL_APPLY_TITLE), items, 3, k)) >= 0) {
+        if (k == 0)
+            template_to_game_cards(t, 0, 0);
+        else if (k == 1)
+            template_pick_cards(t);
+        else
+            template_update_cards(t);
+    }
+}
+
 /* -------- changing it: more saves, another name, or none of it */
 
 static void template_add_saves(template_t *t)
@@ -787,51 +877,43 @@ static void template_add_saves(template_t *t)
     report(failed ? COLOR_WARN : COLOR_OK, s, NULL, failed ? f : NULL);
 }
 
-/* what triangle offers on the open template. 0 = the template is gone, or isn't the one it was (renamed: tplOpen is
- * the new one) */
+/* what triangle offers on a template (tplOpen): the one that is open, or the one the cursor is on in the list.
+ * 0 = the template is gone, or isn't the one it was (renamed: tplOpen is the new one) */
 static int template_options(void)
 {
-    enum { OPT_CARD, OPT_GAME_CARDS, OPT_MAIN, OPT_GAMES, OPT_UPDATE, OPT_ADD, OPT_RENAME, OPT_DELETE, OPTS };
+    enum { OPT_MAIN, OPT_ADD, OPT_APPLY, OPT_GAMES, OPT_RENAME, OPT_DELETE, OPTS };
     const char *items[OPTS];
-    char name[TPL_NAME + 1], s[300];
+    char name[TPL_NAME + 1], old[TPL_NAME + 1], s[300];
     template_t *t;
     int id[OPTS], n, k = 0;
-    for (;;) {   /* circle in what comes next comes back here; circle here goes back to the template */
+    for (;;) {   /* circle in what comes next comes back here; circle here goes back to where triangle was pressed */
         int isMain = tplOpen == template_main();
         n = 0;
-        items[n] = T(T_TPL_APPLY_CARD), id[n++] = OPT_CARD;
-        items[n] = T(T_TPL_APPLY_GAMES), id[n++] = OPT_GAME_CARDS;
         items[n] = T(isMain ? T_TPL_UNMAKE_MAIN : T_TPL_MAKE_MAIN), id[n++] = OPT_MAIN;
+        items[n] = T(T_TPL_ADD_SAVES), id[n++] = OPT_ADD;
+        items[n] = T(T_TPL_APPLY_MENU), id[n++] = OPT_APPLY;
         if (!isMain)   /* (the main one is every game's already) */
             items[n] = T(T_TPL_GAMES), id[n++] = OPT_GAMES;
-        if (isMain || template_games(tplOpen))   /* (only on the cards it is for) */
-            items[n] = T(T_TPL_UPDATE), id[n++] = OPT_UPDATE;
-        items[n] = T(T_TPL_ADD_SAVES), id[n++] = OPT_ADD;
         items[n] = T(T_TPL_RENAME), id[n++] = OPT_RENAME;
         items[n] = T(T_TPL_DELETE), id[n++] = OPT_DELETE;
         if ((k = choose(tplOpen->name, items, n, k < n ? k : 0)) < 0)
             return 1;
         switch (id[k]) {
-        case OPT_CARD:
-            template_to_card(tplOpen);
-            break;
-        case OPT_GAME_CARDS:
-            template_to_game_cards(tplOpen, 0, 0);
-            break;
         case OPT_MAIN:
             template_toggle_main(tplOpen);
-            break;
-        case OPT_GAMES:
-            template_games_screen(tplOpen);
-            break;
-        case OPT_UPDATE:
-            template_update_cards(tplOpen);
             break;
         case OPT_ADD:
             template_add_saves(tplOpen);
             return 1;   /* back to the template, where what it has now shows */
+        case OPT_APPLY:
+            template_apply_menu(tplOpen);
+            break;
+        case OPT_GAMES:
+            template_games_screen(tplOpen);
+            break;
         case OPT_RENAME:
             snprintf(name, sizeof(name), "%s", tplOpen->name);
+            snprintf(old, sizeof(old), "%s", tplOpen->name);
             if (!ask_name(name, tplOpen) || !strcmp(name, tplOpen->name))
                 break;
             message(0, NULL, COLOR_TEXT, T(T_TPL_RENAMING));
@@ -839,7 +921,7 @@ static int template_options(void)
                 tplOpen = t;
                 return 1;
             }
-            tplOpen = template_find(tplCard.base);   /* (it may have moved in the list) */
+            tplOpen = template_find(old);   /* (it may have moved in the list) */
             message_wait(0, NULL, COLOR_ERROR, T(T_TPL_RENAME_FAILED));
             if (!tplOpen)
                 return 0;
@@ -980,19 +1062,24 @@ static void scene_templates(float t)
         ui_image(IMG_GLOW, LIST_X + 1, y - 9, 18, 18, color, cfg.no_tpl_after_game ? 0x40 : 0x80);
         ui_rect(LIST_X + 8, y - 2, 4, 4, color, 0x80);
     }
-    {
-        legend_t l[2] = {{BUTTON_CIRCLE, T(T_BACK)}, {BUTTON_CROSS, T(tl.cursor == tl.n - 1 ? T_TPL_CHANGE : T_OPEN)}};
-        look_legend(l, 2, 0);
+    {   /* (a template has its options right here, without being opened) */
+        legend_t l[3] = {{BUTTON_CIRCLE, T(T_BACK)}, {BUTTON_CROSS, T(tl.cursor == tl.n - 1 ? T_TPL_CHANGE : T_OPEN)},
+                         {BUTTON_TRIANGLE, T(T_OPTIONS)}};
+        look_legend(l, tl.cursor > 0 && tl.cursor < tl.n - 1 ? 3 : 2, 0);
     }
     look_title(CARD_CX, 82, T(T_TEMPLATES), 1);
     if (!tl.cursor) {
         look_card(CARD_X, CARD_Y, "+", NULL);
         return;
     }
-    if (tl.cursor == tl.n - 1) {   /* what that is, where a template's picture would be */
+    if (tl.cursor == tl.n - 1) {   /* what that is, where a template's picture would be: on or off, and which template
+                                    * (in the yellow of its light in the list). All of it around the same middle */
+        const char *name = mainOne ? mainOne->name : T(T_TPL_NO_MAIN);
+        int max = LOOK_CARD_W + 32, font = ui_measure(FONT_TEXT, name) > max ? FONT_SMALL : FONT_TEXT, w = ui_measure(font, name);
         ui_text_center(FONT_TEXT, CARD_CX, CARD_Y + 30, cfg.no_tpl_after_game ? COLOR_DIM : COLOR_OK,
                        T(cfg.no_tpl_after_game ? T_TPL_OFF : T_TPL_ON));
-        ui_paragraph(FONT_SMALL, CARD_X - 16, CARD_Y + 70, LOOK_CARD_W + 32, COLOR_DIM, T(T_TPL_AFTER_HINT));
+        ui_text_fit(font, CARD_CX - (w > max ? max : w) / 2, CARD_Y + 62, max, mainOne ? COLOR_TITLE : COLOR_DIM, name);
+        ui_paragraph_center(FONT_SMALL, CARD_CX, CARD_Y + 100, max, COLOR_DIM, T(T_TPL_AFTER_HINT));
         return;
     }
     shown = &templates[tl.cursor - 1];
@@ -1026,7 +1113,7 @@ static void templates_screen(void)
     for (;;) {
         u32 b;
         ui_scene(scene_templates);
-        b = wait_nav(PAD_UP | PAD_DOWN | PAD_CROSS | PAD_CIRCLE);
+        b = wait_nav(PAD_UP | PAD_DOWN | PAD_CROSS | PAD_CIRCLE | PAD_TRIANGLE);
         if (b & PAD_CIRCLE) {
             sound_play(SND_BACK);
             return;
@@ -1037,6 +1124,18 @@ static void templates_screen(void)
             scroll_to(tl.cursor, &tl.top);
             ui_unlock();
             sound_play(SND_MOVE);
+            continue;
+        }
+        if (b & PAD_TRIANGLE) {   /* the options of the template the cursor is on */
+            if (tl.cursor == 0 || tl.cursor == tl.n - 1)
+                continue;
+            sound_play(SND_CONFIRM);
+            tplOpen = &templates[tl.cursor - 1];
+            template_options();
+            snprintf(name, sizeof(name), "%s", tplOpen ? tplOpen->name : "");
+            tplOpen = NULL;
+            browser_close();   /* (saves may have been marked on the cards) */
+            list_set(name);
             continue;
         }
         sound_play(SND_CONFIRM);

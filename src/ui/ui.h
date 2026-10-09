@@ -62,6 +62,7 @@ int ui_text_glow(int font, float x, float y, u32 color, u32 glow, const char *ut
 int ui_text_shadow(int font, float x, float y, u32 color, const char *utf8);
 /* wraps the text into lines that fit the width; returns the y after the last line */
 int ui_paragraph(int font, float x, float y, int width, u32 color, const char *utf8);
+int ui_paragraph_center(int font, float cx, float y, int width, u32 color, const char *utf8);   /* each line's middle at cx */
 int ui_paragraph_height(int font, int width, const char *utf8);
 /* a single line; if it is wider than width, it is cut and ends with "..." */
 int ui_text_fit(int font, float x, float y, int width, u32 color, const char *utf8);

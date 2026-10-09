@@ -60,8 +60,8 @@ def fill(s, id_):
     if "%s" in s and id_ in ("T_CONFIRM_COPY", "T_CONFIRM_MOVE", "T_DELETE_ASK", "T_CONFIRM_CLOUD", "T_CONFIRM_IMPORT",
                              "T_CONFIRM_EXPORT", "T_TPL_REMOVE_ASK"):
         s = s.replace("%s", LONG_SAVE, 1).replace("%s", LONG_CARD)
-    if "%s" in s and id_ in ("T_TPL_CREATE_ASK", "T_TPL_CREATED", "T_TPL_DELETE_ASK", "T_TPL_ADD_ASK", "T_TPL_APPLY_ASK",
-                             "T_TPL_MAIN_NOW", "T_TPL_GAMES_ASK", "T_TPL_UPDATE_ASK"):
+    if "%s" in s and id_ in ("T_TPL_CREATE_ASK", "T_TPL_CREATED", "T_TPL_DELETE_ASK", "T_TPL_ADD_ASK",
+                             "T_TPL_MAIN_NOW", "T_TPL_GAMES_ASK", "T_TPL_UPDATE_ASK", "T_TPL_PICK_ASK"):
         s = s.replace("%s", LONG_TEMPLATE, 1).replace("%s", LONG_CARD)
     if id_ == "T_TPL_SUMMARY":
         s = s.replace("%d", "32", 1)   # saves, then KB
@@ -69,7 +69,7 @@ def fill(s, id_):
         if id_ in ("T_HIST_TITLE", "T_RESTORE_TITLE", "T_RESTORE_IN_USE", "T_RESTORING", "T_CARD_IN_USE", "T_DONE_COPY",
                    "T_DONE_MOVE", "T_DELETE_TEXT", "T_ERR_EXISTS", "T_ERR_FULL", "T_ERR_MC_CHECK", "T_DONE_IMPORT",
                    "T_SWITCH_ASK", "T_INSERT_DONE", "T_INSERT_FAILED", "T_SWITCH_BACK_FAILED", "T_INSTALL_REPLACE_ASK",
-                   "T_INSTALLING", "T_TPL_NOTHING", "T_TPL_APPLIED", "T_TPL_APPLIED_FULL"):
+                   "T_INSTALLING"):
             s = s.replace("%s", LONG_CARD)
         elif id_ in ("T_CARD_LAST", "T_RESTORE_FROM"):
             s = s.replace("%s", LONG_DATE)
@@ -174,17 +174,18 @@ PLACE = {
     # and the title over the big card, the keyboard's title, the screen where saves are marked, a template open on
     # the screen of saves (what is under its name, and in the middle when it has none), a save's page there, and
     # the screen of a save on its way
-    "T_TOOLS": ("text", 320, 1), "T_TEMPLATES": ("text", 200, 1), "T_TPL_APPLY_CARD": ("text", 320, 1),
+    "T_TOOLS": ("text", 320, 1), "T_TEMPLATES": ("text", 200, 1),
     "T_TPL_ADD_SAVES": ("text", 320, 1), "T_TPL_RENAME": ("text", 320, 1), "T_TPL_DELETE": ("text", 320, 1),
     "T_TPL_NEW": ("text", 172, 1), "T_TPL_NAME": ("text", 400, 1), "T_TPL_MARK_TITLE": ("text", 200, 1),
     "T_MARKED_N": ("text", 200, 1), "T_TPL_SUMMARY": ("text", 244, 1), "T_TPL_EMPTY": ("browser", 540, 1),
-    "T_TPL_REMOVE": ("browser", 304, 1), "T_TPL_APPLY_TO": ("text", 200, 1), "T_TPL_COPYING": ("text", 296, 1),
+    "T_TPL_REMOVE": ("browser", 304, 1), "T_TPL_COPYING": ("text", 296, 1),
     "T_TPL_APPLYING": ("text", 296, 1), "T_TPL_RENAMING": ("text", DIALOG, 1),
-    "T_TPL_APPLY_GAMES": ("text", 320, 1), "T_TPL_MAKE_MAIN": ("text", 320, 1), "T_TPL_UNMAKE_MAIN": ("text", 320, 1),
+    "T_TPL_APPLY_MENU": ("text", 320, 1), "T_TPL_APPLY_TITLE": ("text", 400, 1), "T_TPL_MAKE_MAIN": ("text", 320, 1), "T_TPL_UNMAKE_MAIN": ("text", 320, 1),
     "T_TPL_MAIN": ("small", 100, 1), "T_TPL_CHECKING": ("text", DIALOG, 1), "T_TPL_WARN": ("text", WIDE, 2),
     "T_TPL_GAMES": ("text", 320, 1), "T_TPL_UPDATE": ("text", 320, 1), "T_TPL_AFTER_GAME": ("text", 236, 1),
     "T_TPL_AFTER_HINT": ("small", 212, 6), "T_TPL_ON": ("text", 200, 1), "T_TPL_OFF": ("text", 200, 1),
-    "T_TPL_UPDATE_NOTE": ("text", DIALOG, 4),
+    "T_TPL_UPDATE_NOTE": ("text", DIALOG, 4), "T_TPL_ALL_CARDS": ("text", 320, 1), "T_TPL_PICK_CARDS": ("text", 200, 1),
+    "T_TPL_NO_MAIN": ("small", 212, 1),
 }
 PARAGRAPH = ("text", DIALOG, 3)     # error messages and the rest: up to 3 lines in a box
 # what only an sd2psx is ever told (being moved to another card, its boot cards, one more channel for a folder): not
@@ -214,14 +215,16 @@ LEGENDS = [
     (("T_BACK", "T_TPL_REMOVE_YES"), False), (("T_BACK", "T_TPL_APPLY"), False), (("T_BACK", "T_TPL_ADD"), False),
     (("T_BACK", "T_REPLACE", "T_TPL_KEEP"), False), (("T_LATER", "T_TPL_APPLY", "T_TPL_NO_WARN"), False),
     (("T_BACK", "T_MARK"), False), (("T_BACK", "T_TPL_UPDATE_YES"), False), (("T_BACK", "T_TPL_CHANGE"), False),
+    (("T_BACK", "T_MARK", "T_TPL_APPLY"), False), (("T_BACK", "T_OPEN", "T_OPTIONS"), False),
 ]
 
 
 def legend_width(texts, apart):
     """each button is a 20 px symbol, 6 px and its text; the last apart of them stand apart from the others, by a
-    wider gap; five of them stand closer together (look_legend)"""
+    wider gap, and always 18 px from each other; five of them stand closer together (look_legend)"""
     gap, wide = (18, 34) if len(texts) > 4 else (26, 70)
-    w = sum(measure("text", t) + 26 for t in texts) + gap * (len(texts) - 1)
+    inner = apart - 1 if apart else 0
+    w = sum(measure("text", t) + 26 for t in texts) + 18 * inner + gap * (len(texts) - 1 - inner)
     return w + (wide - gap if apart and len(texts) > apart else 0)
 
 

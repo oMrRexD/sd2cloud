@@ -601,25 +601,27 @@ int template_update(const template_t *t, const char *card, int (*before)(const t
     if (template_lacking(t, card, lacks, NULL, NULL) < 0)
         return MCFS_ERR_IO;
     for (i = 0; i < t->n && r == MCFS_OK; i++) {
+        buffer_t mine = {0}, its = {0};
+        int readable, same;
+        if (lacks[i])   /* (a save the card doesn't have isn't put there: template_apply does that) */
+            continue;
         template_path(t, i, path, sizeof(path));
-        if (!lacks[i]) {   /* the card has one: left alone when it is the template's own, file by file */
-            buffer_t mine = {0}, its = {0};
-            int readable = file_read(path, &mine) == 0 && mine.len > 0;
-            int same = readable && mcfs_export_psu(card, t->saves[i].folder, &its) == MCFS_OK && same_save(&mine, &its);
-            buf_free(&mine);
-            buf_free(&its);
-            if (same)
-                continue;
-            if (!readable) {   /* (the card's save isn't deleted for one that can't be read) */
-                r = MCFS_ERR_IO;
-                break;
-            }
+        /* the card's one is left alone when it is the template's own, file by file */
+        readable = file_read(path, &mine) == 0 && mine.len > 0;
+        same = readable && mcfs_export_psu(card, t->saves[i].folder, &its) == MCFS_OK && same_save(&mine, &its);
+        buf_free(&mine);
+        buf_free(&its);
+        if (same)
+            continue;
+        if (!readable) {   /* (the card's save isn't deleted for one that can't be read) */
+            r = MCFS_ERR_IO;
+            break;
         }
         if (before && before(t, i)) {
             r = MCFS_ERR_CANCELLED;
             break;
         }
-        if (!lacks[i] && (r = mcfs_delete_save(card, t->saves[i].folder)) != MCFS_OK)
+        if ((r = mcfs_delete_save(card, t->saves[i].folder)) != MCFS_OK)
             break;
         if ((r = mcfs_import_psu(path, card, progress)) == MCFS_OK)
             n++;

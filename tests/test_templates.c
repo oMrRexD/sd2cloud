@@ -417,6 +417,11 @@ static void games_and_update(void)
     CHECK_INT(put, 0);
     CHECK_INT(mcfs_fingerprint(CARD_B, fp2, NULL), 0);
     CHECK_STR(fp2, fp);
+    /* and a save the card doesn't have isn't put there by it */
+    CHECK_INT(mcfs_delete_save(CARD_B, NET), MCFS_OK);
+    CHECK_INT(template_update(a, CARD_B, NULL, NULL, &put), MCFS_OK);
+    CHECK_INT(put, 0);
+    CHECK(!has_save(CARD_B, NET));
 
     /* deleted, a template is for no game */
     CHECK_INT(template_delete(template_find("Speed")), 0);
