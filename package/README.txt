@@ -51,7 +51,8 @@ REQUIREMENTS
 INSTALLATION
 1. Extract this .zip file to the root of the MMCE. It adds APPS/SD2Cloud (the application) and
    SD2Cloud/sd2cloud.ini (the settings; it can be edited on a PC before the first run). The file only has
-   the options: each one is explained in sd2cloud.example.ini, next to it.
+   the options: each one is explained in sd2cloud.example.ini, next to it. The cover and the logo OPL shows
+   for SD2Cloud in its Apps tab go to the ART folder.
 2. Open SD2Cloud: from the Apps tab of OPL, or by running APPS/SD2Cloud/SD2CLOUD.ELF with any launcher
    (wLaunchELF, for example). The folder does not have to stay in APPS.
    SD2Cloud can live on a USB drive, an MX4SIO card or the internal HDD (exFAT or APA) instead: put the

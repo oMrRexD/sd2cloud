@@ -101,7 +101,8 @@ SD2Cloud ainda não foi testado em um.
 
 1. Baixe o `SD2Cloud-vX.Y.zip` da [release mais recente](../../releases/latest).
 2. Extraia na raiz do MMCE. Serão criadas as pastas `APPS/SD2Cloud` (o aplicativo) e `SD2Cloud`,
-   com o `sd2cloud.ini` (as configurações, explicadas no `sd2cloud.example.ini` ao lado dele).
+   com o `sd2cloud.ini` (as configurações, explicadas no `sd2cloud.example.ini` ao lado dele). A capa e a logo
+   que o OPL exibe para o SD2Cloud na aba Apps vão para a pasta `ART`.
 3. Abra o SD2Cloud: pela aba Apps do OPL, ou executando `APPS/SD2Cloud/SD2CLOUD.ELF` em qualquer programa que abra
    um ELF (o wLaunchELF, por exemplo). A pasta não precisa ficar em `APPS`.
 4. Conecte a sua conta do Google quando ele perguntar (ou depois, nos Ajustes): acesse google.com/device no

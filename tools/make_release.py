@@ -2,7 +2,8 @@
 update downloads those), SHA256SUMS.txt and RELEASE-NOTES.md (docs/release-notes.md with the table of hashes).
 
 The zip holds the two ELFs built by make (dist/SD2CLOUD.ELF, dist/SD2CLOUD-IGR.ELF) and what is in package/: the
-texts, the settings file (the same one the app creates when there is none) and its example.
+texts, the settings file (the same one the app creates when there is none) and its example, and the cover and the
+logo OPL shows for the app in its Apps tab (package/art, made by tools/make_opl_art.py).
 
 It also holds Extras/APP_SD2CLOUD.psu, the Save Application System (SAS) package: the save folder SD2Cloud itself
 writes to the memory card when the automatic sync is turned on (the IGR helper, the shortcut that opens SD2Cloud from
@@ -86,6 +87,9 @@ def main():
         ("THIRD-PARTY-NOTICES.txt", crlf((PKG / "THIRD-PARTY-NOTICES.txt").read_bytes())),
         ("LICENSE.txt", crlf((ROOT / "LICENSE").read_bytes())),
         ("OFL.txt", crlf((ROOT / "third_party/varelaround/OFL.txt").read_bytes())),
+        # the art OPL looks for in the device's ART folder, by the name of the ELF that title.cfg starts
+        ("ART/SD2CLOUD.ELF_COV.png", (PKG / "art" / "SD2CLOUD.ELF_COV.png").read_bytes()),
+        ("ART/SD2CLOUD.ELF_LGO.png", (PKG / "art" / "SD2CLOUD.ELF_LGO.png").read_bytes()),
         # what SD2Cloud itself writes to the memory card, for whoever wants to import it into a card by hand
         (f"Extras/{SAS}.psu", package),
     ]
