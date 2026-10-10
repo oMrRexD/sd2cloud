@@ -8,6 +8,7 @@
 
 **Manage and back up your sd2psx memory cards, right on your PS2.**
 
+[![Downloads](https://img.shields.io/github/downloads/oMrRexD/sd2cloud/total?style=for-the-badge&logo=github)](https://github.com/oMrRexD/sd2cloud/releases)
 > [!WARNING]
 > SD2Cloud is at an early stage and has not been widely tested yet. Before copying, moving, deleting, importing or
 > restoring saved data with it, back up your memory cards: copy the `MemoryCards` folder of the microSD to a PC.
