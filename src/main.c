@@ -18,7 +18,7 @@ int cancelLatched;          /* circle was pressed during an upload or download *
 int backupCancelled;        /* the user confirmed cancelling the backup */
 int restoring;              /* the backup running is the one before a restore (cancelling it doesn't leave) */
 const card_t *singleCard;   /* the card of run_backup's mode 3 */
-icon_t *sd2psxIcon;         /* the SD2PSX memory card, for the cards shared by many games */
+icon_t *sd2psxIcon;         /* the device's memory card (an sd2psx, or MemCard PRO2), for the cards shared by many games */
 icon_t *cubeIcon;           /* the blue cube of a save without an icon (or with one that can't be read) */
 int activeCard = -1;        /* the card the sd2psx is emulating (index in cards[]); -1 = none here, or not known */
 u64 watchNext;              /* when the device is next asked whether it is there (device_watch) */
@@ -110,6 +110,7 @@ int main(int argc, char *argv[])
         i18n_select(cfg.language);
         ui_lock();
         i18n_device(dev->name);   /* (it may be another device, or the user said it is) */
+        sd2psxIcon = icon_make_sd2psx();   /* and its memory card's model */
         ui_unlock();
         if (!configExists)
             config_write_template();

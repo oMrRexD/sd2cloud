@@ -5,10 +5,11 @@ white screen in its raised frame showing what the device shows, the two buttons 
 opening with its eight gold contacts.
 
 Writes assets/sd2psx.icn: the model and its 128x128 texture, in the PS2's icon format, which the program embeds and
-reads as it reads a save's icon (icon_make_sd2psx in src/ui/icon.c). It is kept in the repository, so this only runs
-when the model changes (it needs Pillow, and numpy for the preview).
+reads as it reads a save's icon (icon_make_sd2psx in src/ui/icon.c). And assets/memcardpro2.icn, a MemCard PRO2 (see
+"the MemCard PRO2" below), which the program shows on that device. They are kept in the repository, so this only
+runs when a model changes (it needs Pillow, and numpy for the previews).
 
-usage: python tools/make_card_model.py [<out file> [<a preview.png to look at>]]
+usage: python tools/make_card_model.py [<out folder> [<a folder for a preview of each, to look at>]]
 """
 import math
 import pathlib
@@ -318,6 +319,293 @@ def texture():
     return im
 
 
+# ------------------------------------------------------------ the MemCard PRO2
+
+# The MemCard PRO2 (8BitMods), for SD2Cloud on that device: a PS2 memory card in a dark smoked see-through shell, as
+# big as the sd2psx's model, so the program draws either the same way. Its upper part is thin, and the dark board
+# inside shows through it with the device's name printed on the board; its lower part is a thicker block standing out
+# of the face, with the screen (white on black) sunk into it in a black bezel, the two buttons at its corners, "8BitMods"
+# moulded between them, and the opening of the microSD at its end
+P_Z, P_ZB, P_YB = 0.2, 0.36, 2.95          # the thin part's half thickness; the block's face; where the block ends
+P_RTOP, P_RBOTTOM = 0.16, 0.3              # the corners: the block's are rounder
+P_BEZEL, P_SINK = (0.0, 1.8, 1.96, 1.12), 0.035   # the screen's bezel (middle, width, height) and how deep it is sunk
+P_OLED = (0.0, 1.8, 1.62, 0.81)            # its lit part, 2:1 as the device's 128x64
+P_BUTTON_X, P_BUTTON = (-1.22, 1.22), (0.6, 0.46, 0.07)   # the buttons: their x; their y, side and height
+P_SD = (0.6, 0.05, 0.1)                    # the microSD's opening in the block's end: half width, half height, depth
+P_SLOT_Z = 0.11                            # half the depth of the opening at the top, where the contacts are
+P_SMOKE = (40, 42, 47)                     # the smoked shell, over what is inside it
+P_BOARD = (22, 23, 27)                     # the board inside, black
+P_TRACE = (44, 46, 52)                     # its traces
+P_PRINT = (240, 244, 240)                  # what is printed on the board
+P_LIT = (205, 226, 255)                    # what the screen shows
+P_MOULD = (98, 102, 111)                   # what is moulded in the block
+# the parts with no drawing, each a plain color of the texture: under the buttons' caps, which hide it
+P_COLORS = {"back": (36, 38, 43), "rim": (60, 63, 70), "side": (52, 55, 62), "ledge": (76, 80, 88),
+            "sink": (16, 17, 20), "button": (86, 90, 98), "slot": (10, 11, 14), "gold": (222, 176, 78),
+            "inside": (30, 32, 37)}
+
+
+def pro2_patches():
+    """where each plain color is: a 3x3 texel square, nine of them under each button's cap"""
+    boxes = []
+    for bx in P_BUTTON_X:
+        u, v = face_uv(bx, P_BUTTON[0])
+        cx, cy = int(u * 128), int(v * 128)
+        boxes += [(cx - 4 + 3 * (i % 3), cy - 4 + 3 * (i // 3), cx - 1 + 3 * (i % 3), cy - 1 + 3 * (i // 3)) for i in range(9)]
+    return dict(zip(P_COLORS, boxes))
+
+
+def pro2_uv(name):
+    b = pro2_patches()[name]
+    return ((b[0] + b[2]) / 2 / 128, (b[1] + b[3]) / 2 / 128)
+
+
+def contacts(sx):
+    """the opening at the top from -sx to sx: eight contacts in groups of 2, 3 and 3, as a PS2 memory card has them,
+    with the shell's two dividers between them. Each piece: its x from and to, and whether it is a contact"""
+    gap, divider, edge = 0.05, 0.12, 0.06
+    cw = (2 * sx - 2 * edge - 2 * divider - 5 * gap) / 8
+    x, out = -sx + edge, []
+    for group in (2, 3, 3):
+        for i in range(group):
+            out.append((x, x + cw, 1))
+            x += cw + (gap if i < group - 1 else 0)
+        if x < sx - edge - 0.001:
+            out.append((x, x + divider, 0))
+            x += divider
+    return out
+
+
+def pro2_outline(y0, y1, r0, r1, top_corners=True):
+    """a rectangle the card's width from y0 to y1, counterclockwise from its bottom right, its bottom corners rounded
+    by r0 and its top ones by r1 (or square)"""
+    pts = []
+
+    def corner(cx, cy, r, a0):
+        for k in range(7):
+            a = math.radians(a0 + 15 * k)
+            pts.append((cx + r * math.cos(a), cy + r * math.sin(a)))
+    if r0:
+        corner(W / 2 - r0, y0 + r0, r0, -90)
+    else:
+        pts.append((W / 2, y0))
+    if top_corners:
+        corner(W / 2 - r1, y1 - r1, r1, 0)
+        corner(-W / 2 + r1, y1 - r1, r1, 90)
+    else:
+        pts += [(W / 2, y1), (-W / 2, y1)]
+    if r0:
+        corner(-W / 2 + r0, y0 + r0, r0, 180)
+    else:
+        pts.append((-W / 2, y0))
+    return pts
+
+
+def fan(pts, z, normal, uv, bright=0x80):
+    """a flat convex shape at depth z, from its middle: uv = a function of (x, y), or one place in the texture"""
+    c = (sum(p[0] for p in pts) / len(pts), sum(p[1] for p in pts) / len(pts))
+    for i, a in enumerate(pts):
+        b = pts[(i + 1) % len(pts)]
+        ps = [c, a, b]
+        tri([p + (z,) for p in ps], normal, [uv(*p) for p in ps] if callable(uv) else uv,
+            [bright(p[1]) for p in ps] if callable(bright) else bright)
+
+
+def walls(pts, z0, z1, color, skip=()):
+    """the sides of an outline from depth z0 to z1, facing out; skip = the edges (by their first corner) left out"""
+    out = outward(pts)
+    for i, a in enumerate(pts):
+        if i in skip:
+            continue
+        j = (i + 1) % len(pts)
+        b, na, nb = pts[j], out[i], out[j]
+        quad([a + (z0,), b + (z0,), b + (z1,), a + (z1,)], [na + (0,), nb + (0,), nb + (0,), na + (0,)], color)
+
+
+def face_with_hole(pts, hole, z):
+    """the block's face, a convex outline with a rectangular hole in it (the screen's bezel): the ring between them
+    in quads, each from a stretch of the outline to the stretch of the hole's edge it faces"""
+    hx, hy, hw, hh = hole
+
+    def on_hole(p):
+        dx, dy = p[0] - hx, p[1] - hy
+        t = min(hw / 2 / abs(dx) if dx else 1e9, hh / 2 / abs(dy) if dy else 1e9)
+        return (hx + dx * t, hy + dy * t)
+
+    def on_outline(a):   # where the ray from the hole's middle at angle a leaves the outline
+        dx, dy = math.cos(a), math.sin(a)
+        best = None
+        for i, p in enumerate(pts):
+            q = pts[(i + 1) % len(pts)]
+            ex, ey = q[0] - p[0], q[1] - p[1]
+            den = dx * ey - dy * ex
+            if abs(den) < 1e-12:
+                continue
+            t = ((p[0] - hx) * ey - (p[1] - hy) * ex) / den
+            s = ((p[0] - hx) * dy - (p[1] - hy) * dx) / den
+            if t > 0 and -1e-9 <= s <= 1 + 1e-9 and (best is None or t < best):
+                best = t
+        return (hx + dx * best, hy + dy * best)
+    angles = sorted({math.atan2(p[1] - hy, p[0] - hx) for p in pts} |
+                    {math.atan2(sy * hh / 2, sx * hw / 2) for sx in (-1, 1) for sy in (-1, 1)})
+    ring = [on_outline(a) for a in angles]
+    for i, a in enumerate(ring):
+        b = ring[(i + 1) % len(ring)]
+        ps = [a, b, on_hole(b), on_hole(a)]
+        quad([p + (z,) for p in ps], (0, 0, 1), [face_uv(*p) for p in ps])
+
+
+def pro2_model():
+    color = pro2_uv
+    plate = pro2_outline(P_YB, H, 0, P_RTOP)
+    block = pro2_outline(0, P_YB, P_RBOTTOM, 0, top_corners=False)
+    whole = pro2_outline(0, H, P_RBOTTOM, P_RTOP)
+    # the thin part: its face (lighter toward the top, as the light falls on it), its sides, and its top with the
+    # opening; the block's top edge on it
+    fan(plate, P_Z, (0, 0, 1), face_uv, lambda y: int(round(0x80 * (0.8 + 0.2 * y / H))))
+    top = len(plate) // 2 - 1   # (the edge between the two top corners)
+    walls(plate, -P_Z, P_Z, color("rim"), skip=(len(plate) - 1, top))
+    x1, sx, sz, floor, y = W / 2 - P_RTOP, SLOT_X, P_SLOT_Z, H - SLOT_DEPTH, H
+    for xa, xb in ((-x1, -sx), (sx, x1)):
+        quad([(xa, y, -P_Z), (xb, y, -P_Z), (xb, y, P_Z), (xa, y, P_Z)], (0, 1, 0), color("rim"))
+    for za, zb in ((P_Z, sz), (-sz, -P_Z)):
+        quad([(-sx, y, za), (sx, y, za), (sx, y, zb), (-sx, y, zb)], (0, 1, 0), color("rim"))
+    for z, n in ((sz, (0, 0, -1)), (-sz, (0, 0, 1))):
+        quad([(-sx, y, z), (sx, y, z), (sx, floor, z), (-sx, floor, z)], n, color("inside"))
+    for x, n in ((-sx, (1, 0, 0)), (sx, (-1, 0, 0))):
+        quad([(x, y, -sz), (x, y, sz), (x, floor, sz), (x, floor, -sz)], n, color("inside"))
+    quad([(-sx, floor, -sz), (sx, floor, -sz), (sx, floor, sz), (-sx, floor, sz)], (0, 1, 0), color("inside"))
+    for xa, xb, gold in contacts(sx):
+        if gold:
+            box((xa, floor, -0.055), (xb, y - 0.03, 0.055), color("gold"))
+        else:
+            box((xa, floor, -sz), (xb, y, sz), color("rim"))
+    # the block: its face with the bezel sunk into it and the lit glass at the bottom, its sides and end, and its
+    # top edge
+    face_with_hole(block, P_BEZEL[:4], P_ZB)
+    bx, by, bw, bh = P_BEZEL
+    z0, zg = P_ZB, P_ZB - P_SINK
+    hole = [(bx + bw / 2, by - bh / 2), (bx + bw / 2, by + bh / 2), (bx - bw / 2, by + bh / 2), (bx - bw / 2, by - bh / 2)]
+    for i, a in enumerate(hole):
+        b = hole[(i + 1) % 4]
+        n = unit((a[1] - b[1], b[0] - a[0]))   # (into the hole: the walls are seen from inside it)
+        quad([a + (z0,), b + (z0,), b + (zg,), a + (zg,)], n + (0,), color("sink"))
+    quad([p + (zg,) for p in hole], (0, 0, 1), [face_uv(*p) for p in hole], GLOW)
+    walls(block, -P_Z, P_ZB, color("side"), skip=(7, len(block) - 1))   # (not its top, on the thin part, nor its end)
+    quad([(-W / 2, P_YB, P_Z), (W / 2, P_YB, P_Z), (W / 2, P_YB, P_ZB), (-W / 2, P_YB, P_ZB)], (0, 1, 0), color("ledge"))
+    # its end, with the microSD's opening in the middle of its depth
+    xe, (hw, hz, depth), zm = W / 2 - P_RBOTTOM, P_SD, (P_ZB - P_Z) / 2
+    down = (0, -1, 0)
+    for za, zb in ((-P_Z, zm - hz), (zm + hz, P_ZB)):
+        quad([(-xe, 0, za), (xe, 0, za), (xe, 0, zb), (-xe, 0, zb)], down, color("side"))
+    for xa, xb in ((-xe, -hw), (hw, xe)):
+        quad([(xa, 0, zm - hz), (xb, 0, zm - hz), (xb, 0, zm + hz), (xa, 0, zm + hz)], down, color("side"))
+    for z, n in ((zm - hz, (0, 0, 1)), (zm + hz, (0, 0, -1))):
+        quad([(-hw, 0, z), (hw, 0, z), (hw, depth, z), (-hw, depth, z)], n, color("slot"))
+    for x, n in ((-hw, (1, 0, 0)), (hw, (-1, 0, 0))):
+        quad([(x, 0, zm - hz), (x, 0, zm + hz), (x, depth, zm + hz), (x, depth, zm - hz)], n, color("slot"))
+    quad([(-hw, depth, zm - hz), (hw, depth, zm - hz), (hw, depth, zm + hz), (-hw, depth, zm + hz)], down, color("slot"))
+    # the buttons, standing on the block's face at its corners
+    y, side, height = P_BUTTON
+    for x in P_BUTTON_X:
+        box((x - side / 2, y - side / 2, P_ZB), (x + side / 2, y + side / 2, P_ZB + height), color("button"))
+    # the back, all of it
+    fan(whole, -P_Z, (0, 0, -1), color("back"))
+    return [((x, y + BASE, z), *rest) for (x, y, z), *rest in verts]
+
+
+def pro2_screen(w, h, k):
+    """what the device shows, as in the photo of one: the mode, the microSD and the signal in the first line, the card
+    and its channel under it"""
+    im = Image.new("RGB", (w, h), (3, 4, 6))
+    d = ImageDraw.Draw(im)
+    big, small = ImageFont.truetype(TTF, int(h * 0.34)), ImageFont.truetype(TTF, int(h * 0.2))
+    d.text((w * 0.03, h * 0.05), "PS2", font=big, fill=P_LIT, anchor="lt", stroke_width=k // 3, stroke_fill=P_LIT)
+    d.text((w * 0.97, h * 0.05), "8M", font=big, fill=P_LIT, anchor="rt", stroke_width=k // 3, stroke_fill=P_LIT)
+    d.rectangle((w * 0.33, h * 0.08, w * 0.4, h * 0.36), outline=P_LIT, width=max(k // 2, 1))   # the microSD
+    for i in range(4):   # the signal's bars
+        x = w * (0.46 + 0.045 * i)
+        d.rectangle((x, h * (0.3 - 0.06 * i), x + w * 0.03, h * 0.36), fill=P_LIT)
+    d.text((w * 0.5, h * 0.6), "PS2 Memory Card 1", font=small, fill=P_LIT, anchor="mm")
+    d.text((w * 0.03, h * 0.93), "MemoryCard1", font=small, fill=P_LIT, anchor="ls")
+    d.text((w * 0.97, h * 0.93), "Ch:1", font=small, fill=P_LIT, anchor="rs")
+    return im
+
+
+def pro2_texture():
+    """the face: the board through the shell above, the block below with the bezel and the screen in it and
+    "8BitMods" moulded; then the plain colors under the buttons"""
+    k = 8
+    w = 128 * k
+    px = w / W
+    h = int(round(H * px))
+
+    def fx(x):
+        return w / 2 + x * px
+
+    def fy(y):
+        return h - y * px
+    # what is inside the shell, in its dark: the board all down the card, its traces and a chip, the switches
+    # under the buttons and the microSD's socket at its end
+    inside = Image.new("RGB", (w, h), (16, 17, 20))
+    d = ImageDraw.Draw(inside)
+    m = 0.2   # the shell all around the board
+    d.rounded_rectangle((fx(-W / 2 + m), fy(H - m), fx(W / 2 - m), fy(m)), radius=0.12 * px, fill=P_BOARD)
+    for i in range(6):   # the traces, from the contacts down to the screen
+        x = -1.1 + 0.44 * i
+        d.line((fx(x), fy(H - m), fx(x), fy(H - 0.62), fx(x + 0.18), fy(H - 0.8), fx(x + 0.18), fy(P_BEZEL[1])),
+               fill=P_TRACE, width=int(0.035 * px))
+    d.rectangle((fx(0.95), fy(3.25), fx(1.48), fy(2.98)), fill=(20, 22, 26))   # a chip
+    for x in P_BUTTON_X:   # the buttons' switches
+        y, side = P_BUTTON[0], P_BUTTON[1]
+        d.rectangle((fx(x - side / 2 - 0.04), fy(y + side / 2 + 0.04), fx(x + side / 2 + 0.04), fy(y - side / 2 - 0.04)),
+                    fill=(150, 154, 160))
+    d.rectangle((fx(-0.62), fy(0.3), fx(0.62), fy(0.05)), fill=(150, 154, 160))   # the microSD's socket
+    # the smoked shell over all of it, dark: thin above, thicker in the block, which shows less of what is inside
+    smoke = Image.new("L", (w, h), int(0.55 * 255))
+    ImageDraw.Draw(smoke).rectangle((0, fy(P_YB), w, h), fill=int(0.74 * 255))
+    face = Image.composite(Image.new("RGB", (w, h), P_SMOKE), inside, smoke)
+    d = ImageDraw.Draw(face)
+    # the name printed on the board, white enough to be read through the shell: "MemCard", and "PRO" over a "2"
+    big, small = ImageFont.truetype(TTF, int(0.5 * px)), ImageFont.truetype(TTF, int(0.22 * px))
+    wb, ws = d.textlength("MemCard", font=big), d.textlength("PRO", font=small)
+    left, base = fx(0) - (wb + 0.05 * px + ws) / 2, fy(3.3)
+    d.text((left, base), "MemCard", font=big, fill=P_PRINT, anchor="ls", stroke_width=k // 3, stroke_fill=P_PRINT)
+    xp = left + wb + 0.05 * px
+    d.text((xp, base - 0.25 * px), "PRO", font=small, fill=P_PRINT, anchor="ls", stroke_width=k // 4, stroke_fill=P_PRINT)
+    d.text((xp + ws / 2, base), "2", font=small, fill=P_PRINT, anchor="ms", stroke_width=k // 4, stroke_fill=P_PRINT)
+    tiny = ImageFont.truetype(TTF, int(0.11 * px))
+    for i, s in enumerate(("Copyright © 2023 AppCake LTD.", "MemCardPRO2")):
+        d.text((fx(0), fy(3.08 - 0.14 * i)), s, font=tiny, fill=(110, 128, 120), anchor="mm")
+    for xa, xb, gold in contacts(SLOT_X):   # the shell's dividers at the opening
+        if not gold:
+            d.rectangle((fx(xa + 0.02), fy(H), fx(xb - 0.02), fy(H - 0.7)), fill=(128, 134, 142))
+    for s in (-1, 1):   # the shell's two posts, at the top corners
+        x, y, r = fx(s * (W / 2 - 0.3)), fy(H - 0.3), 0.12 * px
+        d.ellipse((x - r, y - r, x + r, y + r), fill=(30, 32, 36))
+        r *= 0.6
+        d.ellipse((x - r, y - r, x + r, y + r), fill=(96, 100, 108))
+    # on the block: the bezel and the screen in it, and the name moulded between the buttons
+    bx, by, bw, bh = P_BEZEL
+    d.rectangle((fx(bx - bw / 2), fy(by + bh / 2), fx(bx + bw / 2), fy(by - bh / 2)), fill=(6, 7, 9))
+    ox, oy, ow, oh = P_OLED
+    face.paste(pro2_screen(int(ow * px), int(oh * px), k), (int(fx(ox - ow / 2)), int(fy(oy + oh / 2))))
+    d.text((fx(0), fy(P_BUTTON[0])), "8BitMods", font=ImageFont.truetype(TTF, int(0.3 * px)), fill=P_MOULD, anchor="mm",
+           stroke_width=k // 3, stroke_fill=P_MOULD)
+    # the light on the clear shell: a soft band across it, which is what tells it is glass-like over what is inside
+    sheen = Image.new("L", (w, h), 0)
+    ImageDraw.Draw(sheen).polygon(((fx(-W / 2), fy(3.6)), (fx(-W / 2), fy(4.3)), (fx(W / 2), fy(2.2)), (fx(W / 2), fy(1.5))),
+                                  fill=34)
+    sheen = sheen.filter(ImageFilter.GaussianBlur(0.12 * px))
+    ImageDraw.Draw(sheen).rectangle((fx(bx - bw / 2), fy(by + bh / 2), fx(bx + bw / 2), fy(by - bh / 2)), fill=0)
+    face = Image.composite(Image.new("RGB", (w, h), (200, 206, 214)), face, sheen)
+    im = face.resize((128, 128), Image.LANCZOS)
+    d = ImageDraw.Draw(im)
+    for name, b in pro2_patches().items():
+        d.rectangle((b[0], b[1], b[2] - 1, b[3] - 1), fill=P_COLORS[name])
+    return im
+
+
 # ------------------------------------------------------------ the preview
 
 def preview(vertices, tex, path):
@@ -390,12 +678,14 @@ def preview(vertices, tex, path):
     out.save(path)
 
 
-out = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "assets" / "sd2psx.icn"
-tex = texture()
-vertices = model()
-data = icn(vertices, tex)
-out.write_bytes(data)
-print(out.name, len(data), "bytes,", len(vertices) // 3, "triangles")
-if len(sys.argv) > 2:
-    preview(vertices, tex, sys.argv[2])
-    print("preview written")
+out = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "assets"
+for file, build, paint in (("sd2psx.icn", model, texture), ("memcardpro2.icn", pro2_model, pro2_texture)):
+    verts.clear()
+    vertices = build()
+    tex = paint()
+    data = icn(vertices, tex)
+    (out / file).write_bytes(data)
+    print(file, len(data), "bytes,", len(vertices) // 3, "triangles")
+    if len(sys.argv) > 2:
+        preview(vertices, tex, str(pathlib.Path(sys.argv[2]) / (file[:-4] + ".png")))
+        print("preview written")

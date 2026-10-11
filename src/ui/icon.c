@@ -41,10 +41,12 @@ static float lef(const unsigned char *p)
     return v.f;
 }
 
+static icon_t *cardModel[2];
+
 void icon_free(icon_t *ic)
 {
     int i;
-    if (!ic)
+    if (!ic || ic == cardModel[0] || ic == cardModel[1])   /* (the memory card's models are kept: icon_make_sd2psx) */
         return;
     gsKit_TexManager_free(ui_gs_global(), &ic->gtex);
     free(ic->still);
@@ -318,19 +320,25 @@ static void neutral_lights(icon_t *ic)
 
 /* ------------------------------------------------------------ the SD2PSX memory card */
 
-extern unsigned char asset_sd2psx_icn[];
-extern unsigned int size_asset_sd2psx_icn;
+/* the sd2psx's model, or the MemCard PRO2's on that device: the one of the device in use. Each is read once and kept
+ * (icon_free leaves them be), so the device can change while one is on screen */
+extern unsigned char asset_sd2psx_icn[], asset_memcardpro2_icn[];
+extern unsigned int size_asset_sd2psx_icn, size_asset_memcardpro2_icn;
 
 icon_t *icon_make_sd2psx(void)
 {
-    buffer_t ico = {asset_sd2psx_icn, size_asset_sd2psx_icn, 0};
-    icon_t *ic = read_icon(&ico);
-    if (!ic)
-        return NULL;
-    neutral_lights(ic);
-    snprintf(ic->title, sizeof(ic->title), "SD2PSX");
-    ic->swing = 1;
-    return ic;
+    int k = !dev->sd2psx;
+    if (!cardModel[k]) {
+        buffer_t ico = {k ? asset_memcardpro2_icn : asset_sd2psx_icn, k ? size_asset_memcardpro2_icn : size_asset_sd2psx_icn, 0};
+        icon_t *ic = read_icon(&ico);
+        if (!ic)
+            return NULL;
+        neutral_lights(ic);
+        snprintf(ic->title, sizeof(ic->title), "%s", k ? "MemCard PRO2" : "SD2PSX");
+        ic->swing = 1;
+        cardModel[k] = ic;
+    }
+    return cardModel[k];
 }
 
 /* ------------------------------------------------------------ the cube of a save without an icon */
