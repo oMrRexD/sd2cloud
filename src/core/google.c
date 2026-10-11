@@ -449,16 +449,22 @@ static void quote(const char *s, char *out, size_t size)
     out[n] = 0;
 }
 
-/* text for inside JSON (quotes and backslashes escaped; control characters dropped) */
+/* text for inside JSON (quotes and backslashes escaped; control characters dropped). What doesn't fit is left out a
+ * whole character at a time: half of one (a kanji's 3 bytes of UTF-8) would make the JSON invalid */
 static void json_escape(const char *s, char *out, size_t size)
 {
     size_t n = 0;
-    while (*s && n + 3 < size) {
-        if (*s == '"' || *s == '\\')
+    while (*s) {
+        unsigned char c = *s;
+        size_t len = c >= 0xF0 ? 4 : c >= 0xE0 ? 3 : c >= 0xC0 ? 2 : 1, i;
+        if (n + len + 2 >= size)
+            break;
+        if (c == '"' || c == '\\')
             out[n++] = '\\';
-        if ((unsigned char)*s >= 0x20)
-            out[n++] = *s;
-        s++;
+        for (i = 0; i < len && s[i]; i++)
+            if ((unsigned char)s[i] >= 0x20)
+                out[n++] = s[i];
+        s += i;
     }
     out[n] = 0;
 }

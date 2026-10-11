@@ -22,6 +22,7 @@
 #include <gsInline.h>
 #include "common.h"
 #include "ui.h"
+#include "font.h"
 #include "icon.h"
 
 GSGLOBAL *ui_gs_global(void);
@@ -78,9 +79,23 @@ static icon_t *new_icon(void)
 
 /* ------------------------------------------------------------ icon.sys */
 
-/* Shift-JIS to plain text: ASCII, the full-width letters, digits and the usual punctuation (most western games write
- * their titles that way). Anything else (kana, kanji) makes it give up: -1 */
-static int sjis_to_ascii(const unsigned char *s, int n, char *out, int size)
+/* Shift-JIS to Unicode (tools/make_sjis.py): two bytes, low first, per code of lead 0x81-0x9F or 0xE0-0xEF and second
+ * byte 0x40-0xFC */
+extern unsigned char asset_sjis_bin[];
+
+static unsigned int sjis_unicode(unsigned int lead, unsigned int trail)
+{
+    int row = lead >= 0x81 && lead <= 0x9F ? (int)lead - 0x81 : lead >= 0xE0 && lead <= 0xEF ? (int)lead - 0xE0 + 31 : -1;
+    const unsigned char *p;
+    if (row < 0 || trail < 0x40 || trail > 0xFC)
+        return 0;
+    p = asset_sjis_bin + (row * 189 + (trail - 0x40)) * 2;
+    return p[0] | p[1] << 8;
+}
+
+/* the plain character a full-width one of Shift-JIS stands for (most western games write their titles in full-width
+ * letters, digits and the usual punctuation), or 0 */
+static int sjis_plain(unsigned int c)
 {
     static const struct {
         unsigned short code;
@@ -92,31 +107,71 @@ static int sjis_to_ascii(const unsigned char *s, int n, char *out, int size)
         {0x8170, '}'}, {0x817B, '+'}, {0x817C, '-'}, {0x8181, '='}, {0x8183, '<'}, {0x8184, '>'}, {0x8190, '$'}, {0x8193, '%'},
         {0x8194, '#'}, {0x8195, '&'}, {0x8196, '*'}, {0x8197, '@'},
     };
-    int i = 0, k = 0, j;
+    int j;
+    if (c >= 0x824F && c <= 0x8258)
+        return '0' + (c - 0x824F);
+    if (c >= 0x8260 && c <= 0x8279)
+        return 'A' + (c - 0x8260);
+    if (c >= 0x8281 && c <= 0x829A)
+        return 'a' + (c - 0x8281);
+    for (j = 0; j < (int)(sizeof(punct) / sizeof(punct[0])); j++)
+        if (punct[j].code == c)
+            return punct[j].c;
+    return 0;
+}
+
+/* 1 = a title in Japanese: a character of it is neither ASCII nor one of those (kana, kanji) */
+static int sjis_japanese(const unsigned char *s, int n)
+{
+    int i = 0;
+    while (i < n && s[i]) {
+        if (s[i] < 0x80) {
+            i++;
+            continue;
+        }
+        if ((s[i] >= 0xA1 && s[i] <= 0xDF) || i + 1 >= n || !sjis_plain(s[i] << 8 | s[i + 1]))
+            return 1;
+        i += 2;
+    }
+    return 0;
+}
+
+/* Shift-JIS to UTF-8. In a western title (japanese = 0) the full-width letters become plain ones; a Japanese one stays
+ * as it is written (its long vowel mark is not a hyphen). A character the font doesn't have, or no room left, makes
+ * it give up: -1 */
+static int sjis_to_utf8(const unsigned char *s, int n, char *out, int size, int japanese)
+{
+    int i = 0, k = 0;
     while (i < n && s[i] && k + 1 < size) {
-        unsigned int c = s[i];
+        unsigned int c = s[i], u;
         if (c < 0x80) {
             out[k++] = c >= 0x20 ? (char)c : ' ';
             i++;
             continue;
         }
-        if (i + 1 >= n)
-            break;
-        c = (c << 8) | s[i + 1];
-        i += 2;
-        if (c >= 0x824F && c <= 0x8258)
-            out[k++] = '0' + (c - 0x824F);
-        else if (c >= 0x8260 && c <= 0x8279)
-            out[k++] = 'A' + (c - 0x8260);
-        else if (c >= 0x8281 && c <= 0x829A)
-            out[k++] = 'a' + (c - 0x8281);
-        else {
-            for (j = 0; j < (int)(sizeof(punct) / sizeof(punct[0])) && punct[j].code != c; j++)
-                ;
-            if (j == (int)(sizeof(punct) / sizeof(punct[0])))
-                return -1;
-            out[k++] = punct[j].c;
+        if (c >= 0xA1 && c <= 0xDF) {   /* a half-width kana, of a single byte */
+            u = 0xFF61 + (c - 0xA1);
+            i++;
+        } else {
+            if (i + 1 >= n)
+                break;
+            c = (c << 8) | s[i + 1];
+            i += 2;
+            if (!japanese && sjis_plain(c)) {
+                out[k++] = sjis_plain(c);
+                continue;
+            }
+            u = sjis_unicode(c >> 8, c & 0xFF);
         }
+        if (!u || !font_has(u) || k + 4 > size)
+            return -1;
+        if (u < 0x800) {
+            out[k++] = 0xC0 | u >> 6;
+        } else {
+            out[k++] = 0xE0 | u >> 12;
+            out[k++] = 0x80 | (u >> 6 & 0x3F);
+        }
+        out[k++] = 0x80 | (u & 0x3F);
     }
     out[k] = 0;
     return k;
@@ -125,12 +180,13 @@ static int sjis_to_ascii(const unsigned char *s, int n, char *out, int size)
 /* the title (2 lines in the file, joined with a space), the lights and the ambient color */
 static void read_iconsys(icon_t *ic, const unsigned char *d)
 {
-    char a[80], b[80];
-    int brk = le16u(d + 6), i, j;
+    char a[sizeof(ic->line1)], b[sizeof(ic->line2)];
+    int brk = le16u(d + 6), i, j, japanese = sjis_japanese(d + 192, 68);
     if (brk > 68)
         brk = 68;
     ic->title[0] = ic->line1[0] = ic->line2[0] = 0;
-    if (sjis_to_ascii(d + 192, brk, a, sizeof(a)) >= 0 && sjis_to_ascii(d + 192 + brk, 68 - brk, b, sizeof(b)) >= 0) {
+    if (sjis_to_utf8(d + 192, brk, a, sizeof(a), japanese) >= 0 &&
+        sjis_to_utf8(d + 192 + brk, 68 - brk, b, sizeof(b), japanese) >= 0) {
         trim(a);
         trim(b);
         snprintf(ic->title, sizeof(ic->title), "%s%s%s", a, a[0] && b[0] ? " " : "", b);

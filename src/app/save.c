@@ -176,7 +176,7 @@ static int save_delete(card_t *c, save_view_t *v)
 static void save_to_cloud(card_t *c, save_view_t *v)
 {
     buffer_t psu = {0};
-    char folderId[80], savesId[80] = "", name[160], desc[200], id[80], t[400];
+    char folderId[80], savesId[80] = "", name[160], desc[300], id[80], t[400];
     const char *cache;
     char key[200];
     datetime_t when;

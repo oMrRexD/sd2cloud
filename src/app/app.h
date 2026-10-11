@@ -82,7 +82,7 @@ typedef struct {
     card_t *card;          /* the card it is on */
     icon_t *icon;
     int tried;             /* the icon was read (or failed) */
-    char line1[72], line2[72];
+    char line1[104], line2[104];   /* (icon_t's) */
 } save_view_t;
 
 /* the programs in the microSD's APPS (a folder with a title.cfg, as OPL's Apps tab shows them): where SD2Cloud can

@@ -23,8 +23,8 @@ typedef struct {
     unsigned short tex[128 * 128] __attribute__((aligned(64)));   /* A1B5G5R5 */
     float lightDir[3][3], lightCol[3][3], ambient[3];
     float center[3], radius;
-    char title[100];         /* from icon.sys, when it's in letters the font has */
-    char line1[72], line2[72];   /* the same, as the two lines icon.sys splits it in */
+    char title[210];         /* from icon.sys, when it's in letters the font has (UTF-8: a kanji takes 3 bytes) */
+    char line1[104], line2[104];   /* the same, as the two lines icon.sys splits it in */
     GSTEXTURE gtex;          /* the texture for gsKit's texture manager (Mem = tex) */
     GSPRIMUVPOINT *still;    /* the still icon, ready for the GS (icon_draw with t < 0) */
     int stillCount;
