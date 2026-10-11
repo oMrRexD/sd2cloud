@@ -1,0 +1,800 @@
+# SD2Cloud -- the texts on screen in Spanish, neutral (for Latin America and Spain). The original is en.txt; how to
+# translate: CONTRIBUTING.md.
+#
+# Tone: a system application's, addressing the user as "usted". Errors use "No se pudo...", questions "¿Desea...?".
+# A memory card is a "tarjeta de memoria" ("tarjeta" when short), a save a "partida", a backup a "copia de seguridad"
+# ("copia" when short), the default template the "principal" one, to upload "subir". A first translation: corrections
+# by native speakers are welcome.
+
+LANGUAGE_NAME = Español
+# how a date is written: DMY (31/12/2026), MDY (12/31/2026) or YMD (2026-12-31)
+DATE_FORMAT = DMY
+
+# One line. English: Searching for memory cards...
+T_SEARCHING = Buscando tarjetas de memoria...
+# Up to 3 lines. English: The sd2psx memory card folder was not found (MemoryCards/PS2 on the MMCE).
+T_NO_SD = No se encontró la carpeta de tarjetas del sd2psx (MemoryCards/PS2 en el MMCE).
+# Up to 5 lines. English: No memory cards are included in the sync. Check sd2cloud.ini.
+T_NO_CARDS = No hay tarjetas en la sincronización. Revise el sd2cloud.ini.
+# Up to 3 lines. English: Checking
+T_CHECKING = Verificando
+# One line. English: Never synced
+T_ST_NEW = Nunca sincronizada
+# One line. English: Not synced
+T_ST_CHANGED = No sincronizada
+# One line. English: Synced
+T_ST_UP_TO_DATE = Sincronizada
+# One line. English: Read error
+T_ST_ERROR = Error de lectura
+# One line. English: Excluded
+T_ST_SKIPPED = No incluida
+# Up to 3 lines. English: Connecting to the network...
+T_NET_STARTING = Conectando a la red...
+# Up to 3 lines. English: Unable to load the network drivers.
+T_NET_ERR_DRIVERS = No se pudieron cargar los controladores de red.
+# Up to 3 lines. English: No network connection. Check the network cable.
+T_NET_ERR_LINK = Sin conexión de red. Revise el cable de red.
+# Up to 3 lines. English: Unable to obtain an IP address from the router (DHCP).
+T_NET_ERR_DHCP = No se pudo obtener una dirección IP del router (DHCP).
+# Up to 3 lines. English: Signing in to Google...
+T_SIGNING_IN = Conectando con Google...
+# One line. English: Connect to Google
+T_LOGIN_TITLE = Conectar con Google
+# One line. English: On your phone or PC, visit
+T_LOGIN_OPEN = En su teléfono o PC, visite
+# One line. English: and enter this code
+T_LOGIN_ENTER = y escriba este código
+# One line. English: This code expires in %d min
+T_LOGIN_EXPIRES = Este código expira en %d min
+# One line. English: or use the QR code
+T_LOGIN_QR = o use el código QR
+# One line. English: Connected to Google.
+T_LOGIN_OK = Conectado con Google.
+# One line. English: Unable to connect to Google.
+T_LOGIN_ERROR = No se pudo conectar con Google.
+# Up to 3 lines. English: The code has expired. Try again.
+T_LOGIN_EXPIRED = El código expiró. Inténtelo de nuevo.
+# Up to 3 lines. English: Access was denied on the Google page.
+T_LOGIN_DENIED = Se denegó el acceso en la página de Google.
+# Up to 3 lines. English: Google access has expired or was revoked. Please sign in again.
+T_LOGIN_REVOKED = El acceso a Google expiró o fue revocado. Vuelva a conectarse.
+# One line. English: Initial sync
+T_FIRST_TITLE = Primera sincronización
+# Up to 2 lines. English: Sync all %d memory cards now? (%s, approx. %d min)
+T_FIRST_QUESTION = ¿Desea sincronizar las %d tarjetas de memoria ahora? (%s, aprox. %d min)
+# One line. English: After this, only changed cards will be uploaded.
+T_FIRST_AFTER = Después, solo se subirán las tarjetas modificadas.
+# Button. English: Yes
+T_YES = Sí
+# Button. English: Not now
+T_LATER = Ahora no
+# One line. English: Update SD2Cloud to %s
+T_MENU_UPDATE = Actualizar SD2Cloud a %s
+# One line. English: Update
+T_UPDATE = Actualizar
+# Button. English: Exit
+T_MENU_EXIT = Salir
+# One line. English: %d of %d
+T_UPLOADING = %d de %d
+# One line. English: Uploading to Google Drive...
+T_BACKING_UP = Subiendo a Google Drive...
+# Up to 3 lines. English: uploaded
+T_UPLOAD_OK = subida
+# Up to 3 lines. English: failed
+T_UPLOAD_FAILED = falló
+# One line. English: Sync complete
+T_SUMMARY_OK = Sincronización completada
+# One line. English: Sync partially completed
+T_SUMMARY_PARTIAL = Sincronización completada en parte
+# One line. English: Sync failed
+T_SUMMARY_FAILED = Falló la sincronización
+# One line. English: Returning in %d s...
+T_RETURNING = Volviendo en %d s...
+# Button. English: Back
+T_BACK = Volver
+# One line. English: Automatic sync
+T_IGR_TITLE = Sincronización automática
+# Up to 3 lines. English: SD2Cloud is not connected to Google. Open SD2Cloud from the Apps tab to set it up.
+T_IGR_NO_LOGIN = SD2Cloud no está conectado con Google. Abra SD2Cloud desde la pestaña Apps para configurarlo.
+# One line. English: SAS package
+T_HELPER_TITLE = Paquete SAS
+# Up to 2 lines. English: Required for automatic sync via IGR. It also adds a shortcut to the PS2 browser.
+T_HELPER_ABOUT = Necesario para la sincronización automática (IGR). También crea un acceso en el navegador del PS2.
+# One line. English: Destination (memory card in use):
+T_HELPER_WHERE = Destino (tarjeta de memoria en uso):
+# One line. English: If Autoboot is enabled, install it while the BootCard is in use.
+T_HELPER_AUTOBOOT = Con el Autoboot activado, instálelo con el BootCard en uso.
+# Button. English: Install
+T_HELPER_INSTALL = Instalar
+# One line. English: SAS package installed
+T_HELPER_OK = Paquete SAS instalado
+# Up to 2 lines. English: Unable to install the SAS package on the memory card%s.
+T_HELPER_ERROR = No se pudo instalar el paquete SAS en la tarjeta de memoria%s.
+# Up to 3 lines. English: \ (error %d)
+T_MC_ERROR = \ (error %d)
+# Up to 3 lines. English: The sd2psx disconnected the memory card during the writing%s.
+T_HELPER_DROPPED = El sd2psx desconectó la tarjeta de memoria durante la escritura%s.
+# One line. English: Try again, or use an 8 MB card%s.
+T_HELPER_DROPPED_HINT = Inténtelo de nuevo o use una tarjeta de 8 MB%s.
+# Up to 3 lines. English: \ (this one has %d MB)
+T_HELPER_CARD_MB = \ (esta tiene %d MB)
+# Up to 2 lines. English: SD2CLOUD-IGR.ELF was not found in the SD2Cloud folder.
+T_HELPER_MISSING = No se encontró SD2CLOUD-IGR.ELF en la carpeta de SD2Cloud.
+# Up to 3 lines. English: Unable to connect to Google:
+T_ERR_INTERNET = No se pudo conectar con Google:
+# Up to 3 lines. English: the upload was interrupted
+T_ERR_UPLOAD_STOPPED = la subida se interrumpió
+# Up to 3 lines. English: Google Drive did not return a file ID
+T_ERR_NO_FILE_ID = Google Drive no devolvió el ID del archivo
+# Up to 3 lines. English: the file on Google Drive does not match (SHA-256)
+T_ERR_CHECKSUM = el archivo en Google Drive no coincide (SHA-256)
+# Up to 3 lines. English: Google Drive: unexpected position (%lld)
+T_ERR_POSITION = Google Drive: posición inesperada (%lld)
+# Up to 3 lines. English: the PS2's clock is ahead (%s): set the console's date and time
+T_ERR_CLOCK_AHEAD = el reloj del PS2 está adelantado (%s): ajuste la fecha y la hora de la consola
+# Up to 3 lines. English: Checking for updates...
+T_UPDATE_CHECKING = Buscando actualizaciones...
+# Up to 3 lines. English: Updating SD2Cloud...
+T_UPDATE_RUNNING = Actualizando SD2Cloud...
+# Up to 3 lines. English: Update complete. Starting the new version...
+T_UPDATE_DONE = Actualización completada. Iniciando la nueva versión...
+# Up to 3 lines. English: The update failed. The current version was kept.
+T_UPDATE_ERROR = La actualización falló. Se mantuvo la versión actual.
+# Button. English: Enter
+T_SELECT = Confirmar
+# Button. English: Cancel
+T_CANCEL = Cancelar
+# One line. English: Cancel the sync?
+T_CANCEL_TITLE = ¿Desea cancelar la sincronización?
+# Up to 2 lines. English: Cards already uploaded will remain on Google Drive. SD2Cloud will close.
+T_CANCEL_TEXT = Las tarjetas ya subidas permanecerán en Google Drive. SD2Cloud se cerrará.
+# Button. English: Yes, cancel
+T_CANCEL_YES = Sí, cancelar
+# Button. English: Continue
+T_CANCEL_NO = Continuar
+# One line. English: Last backup: %s
+T_CARD_LAST = Última copia: %s
+# One line. English: %s backups
+T_HIST_TITLE = Copias de %s
+# One line. English: Loading backups...
+T_HIST_LOADING = Cargando copias de seguridad...
+# Up to 3 lines. English: No backups of this card on Google Drive.
+T_HIST_EMPTY = Esta tarjeta no tiene copias en Google Drive.
+# One line. English: Same as current
+T_HIST_SAME = Igual a la actual
+# Button. English: Restore
+T_RESTORE = Restaurar
+# One line. English: Restore %s?
+T_RESTORE_TITLE = ¿Desea restaurar %s?
+# One line. English: Backup from %s
+T_RESTORE_FROM = Copia del %s
+# Up to 2 lines. English: The memory card on the MMCE will be replaced with this backup.
+T_RESTORE_TEXT = La tarjeta de memoria en el MMCE será reemplazada por esta copia.
+# One line. English: The current card will be synced first.
+T_RESTORE_SAVE_FIRST = Antes, se sincronizará la tarjeta actual.
+# Up to 2 lines. English: %s is currently in use by the sd2psx. Switch it to another card, then press X again.
+T_RESTORE_IN_USE = %s está en uso en el sd2psx. Seleccione otra tarjeta en el sd2psx y presione X de nuevo.
+# Up to 2 lines. English: Unable to determine which card the sd2psx is using. If it is this card, switch to another card first.
+T_RESTORE_UNKNOWN = No se pudo identificar la tarjeta en uso en el sd2psx. Si es esta, seleccione otra tarjeta antes.
+# One line. English: Downloading the backup...
+T_RESTORE_STEP_DOWNLOAD = Descargando la copia...
+# One line. English: Writing to the MMCE...
+T_RESTORE_STEP_WRITE = Escribiendo en el MMCE...
+# One line. English: Memory card restored
+T_RESTORE_OK = Tarjeta de memoria restaurada
+# One line. English: Restore failed
+T_RESTORE_FAILED = Falló la restauración
+# One line. English: Cancel the restore?
+T_RESTORE_CANCEL_TITLE = ¿Desea cancelar la restauración?
+# One line. English: The memory card will not be changed.
+T_RESTORE_CANCEL_TEXT = La tarjeta de memoria no se modificará.
+# Up to 3 lines. English: this backup is too large to restore on the PS2
+T_ERR_TOO_BIG = esta copia es demasiado grande para restaurarla en el PS2
+# Up to 3 lines. English: the backup failed verification (SHA-256)
+T_ERR_BAD_BACKUP = la copia no pasó la verificación (SHA-256)
+# Up to 3 lines. English: unable to write the memory card to the MMCE
+T_ERR_WRITE = no se pudo escribir la tarjeta de memoria en el MMCE
+# Up to 3 lines. English: the download was interrupted
+T_ERR_DOWNLOAD = la descarga se interrumpió
+# Button. English: Options
+T_OPTIONS = Opciones
+# One line. English: %d KB free
+T_FREE_KB = %d KB libres
+# One line. English: This memory card contains no saved data.
+T_CARD_EMPTY = Esta tarjeta no contiene datos guardados.
+# One line. English: Upload complete
+T_IGR_DONE = Subida completada
+# Up to 2 lines. English: No memory cards have changed.
+T_IGR_NOTHING = Ninguna tarjeta de memoria cambió.
+# One line. English: Sync now
+T_SYNC_NOW = Sincronizar ahora
+# One line. English: Restore a backup
+T_RESTORE_BACKUP = Restaurar una copia
+# Button. English: Copy
+T_COPY = Copiar
+# Button. English: Move
+T_MOVE = Mover
+# Button. English: Delete
+T_DELETE = Eliminar
+# One line. English: Upload to Drive
+T_TO_CLOUD = Subir a Drive
+# One line. English: %d KB
+T_SAVE_KB = %d KB
+# One line. English: Copy to
+T_COPY_TO = Copiar a
+# One line. English: Move to
+T_MOVE_TO = Mover a
+# Up to 3 lines. English: No other memory cards were found on the MMCE.
+T_NO_OTHER_CARDS = No se encontró ninguna otra tarjeta de memoria en el MMCE.
+# Up to 3 lines. English: %s is currently in use by the sd2psx. Switch to another card on the sd2psx first.
+T_CARD_IN_USE = %s está en uso en el sd2psx. Seleccione otra tarjeta en el sd2psx antes de continuar.
+# Up to 3 lines. English: Copying...
+T_WORKING_COPY = Copiando...
+# Up to 3 lines. English: Moving...
+T_WORKING_MOVE = Moviendo...
+# Up to 3 lines. English: Deleting...
+T_WORKING_DELETE = Eliminando...
+# Up to 3 lines. English: Copied to %s.
+T_DONE_COPY = Se copió a %s.
+# Up to 3 lines. English: Moved to %s.
+T_DONE_MOVE = Se movió a %s.
+# One line. English: Deleted.
+T_DONE_DELETE = Se eliminó.
+# Up to 3 lines. English: Delete "%s"?
+T_DELETE_ASK = ¿Desea eliminar "%s"?
+# Up to 3 lines. English: It will be permanently removed from %s. This action cannot be undone.
+T_DELETE_TEXT = Se eliminará de forma permanente de %s. Esta acción no se puede deshacer.
+# Up to 3 lines. English: %s already contains data with the same name.
+T_ERR_EXISTS = %s ya contiene datos con el mismo nombre.
+# Up to 3 lines. English: There is not enough free space on %s.
+T_ERR_FULL = No hay suficiente espacio libre en %s.
+# Up to 3 lines. English: Unable to write to the memory card.
+T_ERR_MC_WRITE = No se pudo escribir en la tarjeta de memoria.
+# Up to 3 lines. English: The copy on %s failed verification.
+T_ERR_MC_CHECK = La copia en %s no pasó la verificación.
+# One line. English: Uploaded to Google Drive.
+T_CLOUD_DONE = Se subió a Google Drive.
+# Up to 3 lines. English: Upload failed:
+T_CLOUD_FAILED = Falló la subida:
+# Up to 3 lines. English: Cards already uploaded will remain on Google Drive.
+T_CANCEL_TEXT_MANUAL = Las tarjetas ya subidas permanecerán en Google Drive.
+# Up to 3 lines. English: Sync %s now?
+T_CONFIRM_BACKUP_ONE = ¿Desea sincronizar %s ahora?
+# Up to 3 lines. English: Sync the %d unsynced cards now?
+T_CONFIRM_BACKUP_CHANGED = ¿Desea sincronizar las %d tarjetas no sincronizadas?
+# Up to 3 lines. English: Sync all %d cards again? A new backup of each card will be created on Google Drive.
+T_SYNC_AGAIN_ALL = ¿Desea sincronizar las %d tarjetas de nuevo? Se creará una nueva copia de cada tarjeta en Google Drive.
+# Up to 3 lines. English: The data will be uploaded to your Google Drive. Press the Circle button to cancel at any time.
+T_CONFIRM_BACKUP_TEXT = Los datos se subirán a su Google Drive. Presione el botón Círculo para cancelar en cualquier momento.
+# Up to 3 lines. English: SD2Cloud will download and start the new version.
+T_CONFIRM_UPDATE_TEXT = SD2Cloud descargará e iniciará la nueva versión.
+# Up to 3 lines. English: Copy "%s" to %s?
+T_CONFIRM_COPY = ¿Desea copiar "%s" a %s?
+# Up to 2 lines. English: Copy %d saves to %s?
+T_CONFIRM_COPY_N = ¿Desea copiar %d partidas a %s?
+# Button. English: Paste
+T_PASTE = Pegar
+# One line. English: Sort by
+T_SORT_BY = Ordenar por
+# One line. English: Date, descending
+T_SORT_NEWEST = Más recientes
+# One line. English: Date, ascending
+T_SORT_OLDEST = Más antiguas
+# One line. English: Name
+T_SORT_NAME = Nombre
+# One line. English: Duplicates
+T_REPEATED = Repetidas
+# One line. English: Hidden
+T_REPEATED_HIDDEN = Ocultas
+# One line. English: Shown
+T_REPEATED_SHOWN = Visibles
+# One line. English: Device
+T_SET_DEVICE = Dispositivo
+# One line. English: Which device is in use?
+T_DEVICE_ASK = ¿Qué dispositivo está en uso?
+# Up to 3 lines. English: This can be changed in Settings.
+T_DEVICE_NOTE = Esto se puede cambiar en Ajustes.
+# Up to 3 lines. English: Move "%s" to %s?
+T_CONFIRM_MOVE = ¿Desea mover "%s" a %s?
+# Up to 3 lines. English: Upload "%s" to Google Drive?
+T_CONFIRM_CLOUD = ¿Desea subir "%s" a Google Drive?
+# Up to 3 lines. English: A .psu file will be created in the Saves folder, next to this card's backups.
+T_CONFIRM_CLOUD_TEXT = Se creará un archivo .psu en la carpeta Saves, junto a las copias de esta tarjeta.
+# One line. English: Cards
+T_TAB_CARDS = Tarjetas
+# One line. English: Games
+T_TAB_GAMES = Juegos
+# One line. English: Boot
+T_TAB_BOOT = Boot
+# One line. English: Files
+T_TAB_FILES = Archivos
+# One line. English: All saves
+T_ALL_SAVES = Todas las partidas
+# One line. English: %d saves
+T_SAVES_COUNT = %d partidas
+# One line. English: %d cards
+T_GAME_CARDS_N = %d tarjetas
+# One line. English: Not enough free space
+T_NO_ROOM = Espacio insuficiente
+# Button. English: Open
+T_OPEN = Abrir
+# Button. English: Sync
+T_SYNC = Sincronizar
+# Button. English: Settings
+T_SETTINGS = Ajustes
+# Button. English: Tools
+T_TOOLS = Utilidades
+# Up to 3 lines. English: %s is already synced.
+T_ALREADY_SYNCED = %s ya está sincronizada.
+# Up to 3 lines. English: Sync it again? A new backup will be created on Google Drive.
+T_SYNC_AGAIN_ONE = ¿Desea sincronizarla de nuevo? Se creará una nueva copia en Google Drive.
+# One line. English: All cards are synced.
+T_ALL_SYNCED = Todas las tarjetas están sincronizadas.
+# One line. English: Sync all cards
+T_SET_SYNC_ALL = Sincronizar todas las tarjetas
+# Up to 3 lines. English: 1 pending
+T_PENDING_ONE = 1 pendiente
+# One line. English: %d pending
+T_PENDING_N = %d pendientes
+# One line. English: All synced
+T_NONE_PENDING = Todas sincronizadas
+# One line. English: IGR path
+T_SET_IGR_RETURN = Salida del IGR
+# One line. English: Language
+T_SET_LANGUAGE = Idioma
+# One line. English: Backups kept per card
+T_SET_KEEP = Copias conservadas por tarjeta
+# One line. English: Backup format
+T_SET_FORMAT = Formato de la copia
+# One line. English: Check for updates
+T_SET_UPDATES = Buscar actualizaciones
+# Up to 3 lines. English: Update channel
+T_SET_CHANNEL = Canal de actualización
+# Up to 3 lines. English: Stable
+T_CHANNEL_STABLE = Estable
+# Up to 3 lines. English: Use the beta channel?
+T_CHANNEL_BETA_ASK = ¿Desea usar el canal beta?
+# Up to 3 lines. English: The beta channel gets every change before final testing and may contain bugs.
+T_CHANNEL_BETA_TEXT = El canal beta recibe cada cambio antes de las pruebas finales y puede contener errores.
+# One line. English: Google account
+T_SET_ACCOUNT = Cuenta de Google
+# One line. English: About SD2Cloud
+T_SET_ABOUT = Acerca de SD2Cloud
+# Up to 3 lines. English: Automatic
+T_AUTO = Automático
+# Up to 3 lines. English: PS2 Browser
+T_RET_OSD = Navegador del PS2
+# Button. English: Return to Browser
+T_EXIT_BROWSER = Volver al navegador
+# One line. English: Run an ELF...
+T_EXIT_FILES = Ejecutar un ELF...
+# Up to 3 lines. English: sd2psx disconnected
+T_DEVICE_GONE = sd2psx desconectado
+# Up to 3 lines. English: Reconnect the sd2psx to continue.
+T_DEVICE_GONE_TEXT = Vuelva a conectar el sd2psx para continuar.
+# Button. English: Run
+T_RUN = Ejecutar
+# One line. English: Start application
+T_START_APP = Iniciar aplicación
+# One line. English: No limit
+T_KEEP_ALL = Sin límite
+# Up to 3 lines. English: Installed
+T_HELPER_INSTALLED = Instalado
+# Up to 3 lines. English: Outdated
+T_HELPER_OUTDATED = Desactualizado
+# One line. English: Not installed
+T_HELPER_NOT_INSTALLED = No instalado
+# Up to 3 lines. English: Unavailable
+T_HELPER_NA = No disponible
+# Up to 3 lines. English: Connected
+T_ACCOUNT_ON = Conectada
+# One line. English: Not connected
+T_ACCOUNT_OFF = No conectada
+# Up to 3 lines. English: Disconnect the Google account?
+T_LOGOUT_ASK = ¿Desea desconectar la cuenta de Google?
+# Up to 3 lines. English: SD2Cloud will not be able to upload data until you connect again. Backups on Google Drive are kept.
+T_LOGOUT_TEXT = SD2Cloud no podrá subir datos hasta que se conecte de nuevo. Las copias en Google Drive se conservarán.
+# Button. English: Disconnect
+T_LOGOUT_YES = Desconectar
+# Up to 3 lines. English: Google account disconnected.
+T_LOGOUT_DONE = Cuenta de Google desconectada.
+# Up to 3 lines. English: Manage and back up your sd2psx memory cards, right on your PS2.
+T_ABOUT_TEXT = Gestione y respalde las tarjetas de memoria de su sd2psx, directamente en el PS2.
+# Up to 3 lines. English: Design inspired by the PlayStation BB Navigator. Font: Varela Round (SIL Open Font License).
+T_ABOUT_CREDITS = Diseño inspirado en el PlayStation BB Navigator. Fuente: Varela Round (SIL Open Font License).
+# One line. English: Third-party licenses: see THIRD-PARTY-NOTICES.txt.
+T_ABOUT_LICENSES = Licencias de terceros: consulte THIRD-PARTY-NOTICES.txt.
+# Up to 3 lines. English: Developed by MrRexD.
+T_ABOUT_AUTHOR = Desarrollado por MrRexD.
+# One line. English: Exit to
+T_EXIT_TO = Salir a
+# Up to 3 lines. English: Connect a Google account now to sync your memory cards?
+T_CONNECT_ASK = ¿Desea conectar una cuenta de Google ahora para sincronizar sus tarjetas de memoria?
+# Up to 2 lines. English: You can also connect later in Settings (START).
+T_CONNECT_HINT = También puede conectarla después, en Ajustes (START).
+# Button. English: Connect
+T_CONNECT = Conectar
+# One line. English: Copy to a device
+T_COPY_DEVICE = Copiar a un dispositivo
+# Button. English: Don't ask again
+T_NEVER_ASK = No volver a preguntar
+# Up to 3 lines. English: To connect later, open Settings (START) and choose Google account.
+T_CONNECT_WHERE = Para conectar después, abra Ajustes (START) y elija Cuenta de Google.
+# Up to 3 lines. English: memory card
+T_DEV_MC = tarjeta de memoria
+# Up to 3 lines. English: HDD
+T_DEV_HDD = HDD
+# Up to 3 lines. English: Turn on automatic sync? When you exit a game using IGR, changed memory cards will be uploaded to Google Drive.
+T_AUTO_ASK = ¿Desea activar la sincronización automática? Al salir de un juego con IGR, las tarjetas modificadas se subirán a Google Drive.
+# Up to 2 lines. English: The SAS package will be installed on the memory card in use (with Autoboot enabled, use the BootCard).
+T_AUTO_WHERE = El paquete SAS se instalará en la tarjeta de memoria en uso (con el Autoboot activado, use el BootCard).
+# Button. English: Turn on
+T_AUTO_ON = Activar
+# Up to 3 lines. English: Automatic sync can be turned on later in Settings (START), under SAS package.
+T_AUTO_LATER = La sincronización automática se puede activar después en Ajustes (START), en la opción Paquete SAS.
+# Up to 3 lines. English: Installing the SAS package...
+T_AUTO_INSTALLING = Instalando el paquete SAS...
+# One line. English: Automatic sync turned on
+T_AUTO_DONE = Sincronización automática activada
+# One line. English: In OPL, set "IGR Path" to:
+T_AUTO_OPL = En OPL, en "IGR Path", escriba:
+# One line. English: Write down the path above. It is also in README.txt.
+T_AUTO_NOTE = Anote la ruta de arriba. También está en README.txt.
+# One line. English: Insert into sd2psx
+T_INSERT = Insertar en el sd2psx
+# One line. English: Insert this card (experimental)
+T_INSERT_PREVIEW = Insertar esta tarjeta (experimental)
+# Button. English: Insert
+T_INSERT_YES = Insertar
+# Up to 2 lines. English: From now on, the sd2psx will start from this BootCard.
+T_INSERT_BOOT_ASK = A partir de ahora, el sd2psx iniciará desde este BootCard.
+# One line. English: Switching cards on the sd2psx...
+T_SWITCHING = Cambiando la tarjeta en uso...
+# Up to 2 lines. English: %s inserted into the sd2psx.
+T_INSERT_DONE = %s insertada en el sd2psx.
+# Up to 2 lines. English: Unable to switch the sd2psx to %s.
+T_INSERT_FAILED = No se pudo cambiar el sd2psx a %s.
+# Up to 2 lines. English: Requires Autoboot enabled in the sd2psx settings.
+T_INSERT_NEEDS_BOOT = Requiere el Autoboot activado en los ajustes del sd2psx.
+# Up to 2 lines. English: Requires Game ID enabled in the sd2psx settings.
+T_INSERT_NEEDS_GAMEID = Requiere el Game ID activado en los ajustes del sd2psx.
+# Up to 3 lines. English: %s is in use by the sd2psx. To change it, the sd2psx will be switched to another card temporarily.
+T_SWITCH_ASK = %s está en uso en el sd2psx. Para modificarla, el sd2psx se cambiará a otra tarjeta temporalmente.
+# Button. English: Continue
+T_CONTINUE = Continuar
+# Up to 3 lines. English: Unable to switch the card on the sd2psx. Nothing was changed.
+T_SWITCH_FAILED = No se pudo cambiar la tarjeta en el sd2psx. No se modificó nada.
+# Up to 3 lines. English: Unable to switch the sd2psx back to %s. Select it on the sd2psx.
+T_SWITCH_BACK_FAILED = No se pudo volver el sd2psx a %s. Selecciónela en el sd2psx.
+# One line. English: On
+T_SYNC_ON = Activada
+# One line. English: Off
+T_SYNC_OFF = Desactivada
+# Up to 3 lines. English: Without a Google account connected, automatic sync stays off.
+T_SYNC_NO_ACCOUNT = Sin una cuenta de Google conectada, la sincronización automática permanece desactivada.
+# Button. English: Done
+T_FINISH = Terminar
+# One line. English: %s available
+T_UPDATE_AVAILABLE = %s disponible
+# Up to 3 lines. English: SD2Cloud is up to date (v%s).
+T_UPDATE_NONE = SD2Cloud está actualizado (v%s).
+# Up to 3 lines. English: Unable to check for updates.
+T_UPDATE_CHECK_FAILED = No se pudo buscar actualizaciones.
+# Up to 3 lines. English: Not enough free space on the memory card in use (%d KB needed, %d KB free). Nothing was changed.
+T_HELPER_FULL = No hay espacio suficiente en la tarjeta en uso (se necesitan %d KB; libres: %d KB). No se modificó nada.
+# One line. English: Space required: %d KB (%d KB free).
+T_HELPER_SPACE = Espacio necesario: %d KB (%d KB libres).
+# One line. English: Space required: %d KB.
+T_HELPER_SPACE_NEED = Espacio necesario: %d KB.
+# One line. English: Reinstall
+T_HELPER_REINSTALL = Reinstalar
+# Button. English: Uninstall
+T_HELPER_UNINSTALL = Desinstalar
+# One line. English: Uninstall the SAS package?
+T_HELPER_UNINSTALL_ASK = ¿Desea desinstalar el paquete SAS?
+# Up to 3 lines. English: Automatic sync will stop working, and the shortcut leaves the PS2 browser. In OPL, change "IGR Path" as well.
+T_HELPER_UNINSTALL_TEXT = La sincronización automática y el acceso directo dejarán de funcionar. En OPL, cambie también "IGR Path".
+# Up to 3 lines. English: SAS package uninstalled.
+T_HELPER_UNINSTALLED = Paquete SAS desinstalado.
+# Up to 3 lines. English: Unable to remove the SAS package from the memory card.
+T_HELPER_UNINSTALL_ERROR = No se pudo quitar el paquete SAS de la tarjeta de memoria.
+# Up to 2 lines. English: The earlier path (BOOT/SD2CLOUD-IGR.ELF) still works.
+T_HELPER_OLD_PATH = La ruta anterior (BOOT/SD2CLOUD-IGR.ELF) sigue siendo válida.
+# Up to 3 lines. English: The SAS package is already on the memory card, next to SD2Cloud. No installation is needed.
+T_HELPER_ON_CARD = El paquete SAS ya está en la tarjeta de memoria, junto a SD2Cloud. No es necesario instalarlo.
+# One line. English: MMCE
+T_DEV_SD = MMCE
+# One line. English: USB drive
+T_DEV_USB = Unidad USB
+# Up to 5 lines. English: Install or open .psu saves and memory card files (.mcd, .mc2, .ps2, .bin, .zip).
+T_FILES_HINT = Instale o abra partidas .psu y archivos de tarjeta (.mcd, .mc2, .ps2, .bin, .zip).
+# One line. English: Loading...
+T_LOADING = Cargando...
+# One line. English: Looking for a USB drive...
+T_USB_SEARCHING = Buscando una unidad USB...
+# Up to 3 lines. English: No USB drive was found. It must be formatted as FAT32 or exFAT.
+T_USB_NONE = No se encontró ninguna unidad USB. Debe estar formateada en FAT32 o exFAT.
+# One line. English: Unable to read this folder.
+T_DIR_ERROR = No se pudo leer esta carpeta.
+# One line. English: This folder is empty.
+T_DIR_EMPTY = Esta carpeta está vacía.
+# Button. English: Export
+T_EXPORT = Exportar
+# Up to 3 lines. English: Export "%s" to this folder?
+T_CONFIRM_EXPORT = ¿Desea exportar "%s" a esta carpeta?
+# Up to 2 lines. English: Export %d saves to this folder?
+T_CONFIRM_EXPORT_N = ¿Desea exportar %d partidas a esta carpeta?
+# Up to 2 lines. English: File: %s
+T_EXPORT_FILE = Archivo: %s
+# Up to 3 lines. English: %s already exists in this folder. Replace it?
+T_EXPORT_REPLACE = %s ya existe en esta carpeta. ¿Desea reemplazarlo?
+# Button. English: Replace
+T_REPLACE = Reemplazar
+# One line. English: Exporting...
+T_WORKING_EXPORT = Exportando...
+# Up to 2 lines. English: Exported as %s.
+T_DONE_EXPORT = Se exportó como %s.
+# Up to 3 lines. English: Unable to write the file.
+T_ERR_EXPORT = No se pudo escribir el archivo.
+# One line. English: Import to card
+T_IMPORT = Importar a tarjeta
+# Button. English: Import
+T_IMPORT_YES = Importar
+# One line. English: Import to
+T_IMPORT_TO = Importar a
+# Up to 3 lines. English: this file is not a PS2 memory card
+T_ERR_NOT_CARD = este archivo no es una tarjeta de memoria de PS2
+# Up to 3 lines. English: unable to read the file
+T_ERR_READ_FILE = no se pudo leer el archivo
+# Up to 3 lines. English: This file is not a PS2 memory card.
+T_ERR_CARD_FILE = Este archivo no es una tarjeta de memoria de PS2.
+# Up to 3 lines. English: This memory card is too large to open on the PS2. Install it on the MMCE?
+T_FILE_TOO_BIG = Esta tarjeta de memoria es demasiado grande para abrirla en el PS2. ¿Desea instalarla en el MMCE?
+# Button. English: Install card
+T_INSTALL = Instalar tarjeta
+# Button. English: Install
+T_INSTALL_YES = Instalar
+# Button. English: Install save
+T_INSTALL_SAVE = Instalar partida
+# One line. English: Install to
+T_INSTALL_TO = Instalar en
+# One line. English: New card
+T_NEW_CARD = Nueva tarjeta
+# One line. English: Install as a new card?
+T_INSTALL_NEW_ASK = ¿Desea instalarla como una nueva tarjeta?
+# One line. English: Replace %s?
+T_INSTALL_REPLACE_ASK = ¿Desea reemplazar %s?
+# Up to 2 lines. English: Its contents will be replaced with the card in this file. This action cannot be undone.
+T_INSTALL_REPLACE_TEXT = Su contenido se reemplazará por la tarjeta de este archivo. Esta acción no se puede deshacer.
+# Up to 2 lines. English: This is a BootCard: it may hold the files your console starts from.
+T_INSTALL_BOOT_WARN = Este es un BootCard: puede contener los archivos de arranque de la consola.
+# Up to 3 lines. English: If the file can't be read to the end and the installation is cancelled, %s will be left empty.
+T_INSTALL_BIG_WARN = Si la lectura del archivo falla y la instalación se cancela, %s quedará vacía.
+# Up to 4 lines. English: Unable to tell which game this card is for. Install it under Cards, or rename the file to the game's ID (SLUS-21065-1.mcd).
+T_INSTALL_NO_GAME = No se pudo identificar de qué juego es esta tarjeta. Instálela en Tarjetas o cambie el nombre del archivo al ID del juego (SLUS-21065-1.mcd).
+# One line. English: Which game is this card for?
+T_INSTALL_WHICH_GAME = ¿De qué juego es esta tarjeta?
+# Up to 3 lines. English: This folder already has %d cards, the limit set on the sd2psx. Raise the limit to %d and install?
+T_INSTALL_RAISE_ASK = Esta carpeta ya tiene %d tarjetas, el límite configurado en el sd2psx. ¿Desea aumentar el límite a %d e instalar?
+# Up to 3 lines. English: This folder has reached its limit of %d cards. Replace one of them instead.
+T_INSTALL_NO_CHANNEL = Esta carpeta alcanzó su límite de %d tarjetas. Reemplace una de ellas.
+# One line. English: Memory card installed
+T_INSTALL_OK = Tarjeta de memoria instalada
+# One line. English: Installation failed
+T_INSTALL_FAILED = Falló la instalación
+# One line. English: Cancel the installation?
+T_INSTALL_CANCEL_TITLE = ¿Desea cancelar la instalación?
+# One line. English: Nothing has been written to the MMCE.
+T_INSTALL_CANCEL_TEXT = No se escribió nada en el MMCE.
+# Up to 3 lines. English: The new memory card will not be created.
+T_INSTALL_CANCEL_NEW = No se creará la nueva tarjeta de memoria.
+# Up to 3 lines. English: Unable to read the file.
+T_INSTALL_LOST = No se pudo leer el archivo.
+# Up to 3 lines. English: %s is incomplete until the rest of the file is written.
+T_INSTALL_LOST_TEXT = %s queda incompleta hasta que se escriba el resto del archivo.
+# Up to 3 lines. English: Try again
+T_TRY_AGAIN = Reintentar
+# Button. English: Keep both
+T_KEEP_BOTH = Conservar ambos
+# Up to 3 lines. English: Import "%s" to %s?
+T_CONFIRM_IMPORT = ¿Desea importar "%s" a %s?
+# One line. English: Importing...
+T_WORKING_IMPORT = Importando...
+# One line. English: Cancel?
+T_WORK_CANCEL_TITLE = ¿Desea cancelar?
+# One line. English: Cancelling...
+T_CANCELLING = Cancelando...
+# One line. English: Imported to %s.
+T_DONE_IMPORT = Se importó a %s.
+# Up to 3 lines. English: This file is not a valid .psu save file.
+T_ERR_PSU = Este archivo no es un .psu válido.
+# Up to 3 lines. English: This folder is not a valid memory card save.
+T_ERR_SAVE_FOLDER = Esta carpeta no es una partida de tarjeta de memoria válida.
+# Up to 3 lines. English: No memory cards were found on the MMCE.
+T_NO_CARDS_SD = No se encontró ninguna tarjeta de memoria en el MMCE.
+# Up to 2 lines. English: A new 8 MB memory card will be created for this game.
+T_NEWCARD_NOTE = Se creará una nueva tarjeta de memoria de 8 MB para este juego.
+# One line. English: Creating the memory card...
+T_NEWCARD_MAKING = Creando la tarjeta de memoria...
+# Up to 2 lines. English: Unable to create the memory card.
+T_NEWCARD_FAILED = No se pudo crear la tarjeta de memoria.
+# Up to 3 lines. English: This game's folder has reached its limit of %d cards.
+T_NEWCARD_NO_CHANNEL = La carpeta de este juego alcanzó su límite de %d tarjetas.
+# Up to 3 lines. English: Choose an ELF...
+T_PICK_ELF = Elegir un ELF...
+# Up to 3 lines. English: Unable to read this memory card.
+T_CARD_UNREADABLE = No se pudo leer esta tarjeta de memoria.
+# Button. English: Type
+T_KB_TYPE = Escribir
+# Button. English: Erase
+T_KB_ERASE = Borrar
+# One line. English: Templates
+T_TEMPLATES = Plantillas
+# One line. English: New template
+T_TPL_NEW = Nueva plantilla
+# One line. English: Template name
+T_TPL_NAME = Nombre de la plantilla
+# Up to 3 lines. English: Template %d
+T_TPL_DEFAULT = Plantilla %d
+# Up to 3 lines. English: Invalid name.
+T_TPL_BAD_NAME = Nombre no válido.
+# Up to 3 lines. English: A template with this name already exists.
+T_TPL_TAKEN = Ya existe una plantilla con este nombre.
+# Up to 3 lines. English: The limit of %d templates has been reached.
+T_TPL_MANY = Se alcanzó el límite de %d plantillas.
+# Button. English: Select
+T_MARK = Seleccionar
+# One line. English: Selected: %d
+T_MARKED_N = Seleccionadas: %d
+# One line. English: Select saves
+T_TPL_MARK_TITLE = Seleccionar partidas
+# Up to 3 lines. English: Discard the selected saves?
+T_MARK_DROP = ¿Desea descartar las partidas seleccionadas?
+# Button. English: Discard
+T_MARK_DROP_YES = Descartar
+# Up to 3 lines. English: Create the template "%s"?
+T_TPL_CREATE_ASK = ¿Desea crear la plantilla "%s"?
+# Button. English: Create
+T_TPL_CREATE = Crear
+# One line. English: Copying to the template...
+T_TPL_COPYING = Copiando a la plantilla...
+# Up to 3 lines. English: Unable to create the template.
+T_TPL_FAILED = No se pudo crear la plantilla.
+# Up to 3 lines. English: Template "%s" created.
+T_TPL_CREATED = Plantilla "%s" creada.
+# Up to 3 lines. English: Saves copied: %d
+T_TPL_COPIED_N = Partidas copiadas: %d
+# Up to 3 lines. English: Saves not copied: %d
+T_TPL_NOT_COPIED = Partidas no copiadas: %d
+# One line. English: Saves: %d (%d KB)
+T_TPL_SUMMARY = Partidas: %d (%d KB)
+# One line. English: This template has no saves.
+T_TPL_EMPTY = Esta plantilla no tiene partidas.
+# One line. English: Remove from template
+T_TPL_REMOVE = Quitar de la plantilla
+# Up to 3 lines. English: Remove "%s" from the template?
+T_TPL_REMOVE_ASK = ¿Desea quitar "%s" de la plantilla?
+# Button. English: Remove
+T_TPL_REMOVE_YES = Quitar
+# One line. English: Add saves
+T_TPL_ADD_SAVES = Agregar partidas
+# One line. English: Rename
+T_TPL_RENAME = Cambiar nombre
+# One line. English: Delete template
+T_TPL_DELETE = Eliminar plantilla
+# Up to 3 lines. English: Delete the template "%s"?
+T_TPL_DELETE_ASK = ¿Desea eliminar la plantilla "%s"?
+# Up to 3 lines. English: Saves already applied to cards are kept.
+T_TPL_DELETE_NOTE = Las partidas ya aplicadas a las tarjetas se conservarán.
+# Up to 3 lines. English: Unable to delete the template.
+T_TPL_DELETE_FAILED = No se pudo eliminar la plantilla.
+# Button. English: Apply
+T_TPL_APPLY = Aplicar
+# One line. English: Applying the template...
+T_TPL_APPLYING = Aplicando la plantilla...
+# Up to 3 lines. English: Add the selected saves to the template "%s"?
+T_TPL_ADD_ASK = ¿Desea agregar las partidas seleccionadas a la plantilla "%s"?
+# Button. English: Add
+T_TPL_ADD = Agregar
+# Up to 3 lines. English: The template already has %d of the selected saves. Replace them?
+T_TPL_REPLACE_ASK = La plantilla ya tiene %d de las partidas seleccionadas. ¿Desea reemplazarlas?
+# Button. English: Keep existing
+T_TPL_KEEP = Conservar existentes
+# Up to 3 lines. English: A template holds %d saves at most.
+T_TPL_FULL = Una plantilla admite como máximo %d partidas.
+# Up to 3 lines. English: Saves added to the template: %d
+T_TPL_ADDED = Partidas agregadas a la plantilla: %d
+# One line. English: Renaming...
+T_TPL_RENAMING = Cambiando el nombre...
+# Up to 3 lines. English: Unable to rename the template.
+T_TPL_RENAME_FAILED = No se pudo cambiar el nombre de la plantilla.
+# One line. English: Apply template...
+T_TPL_APPLY_MENU = Aplicar plantilla...
+# One line. English: Apply template
+T_TPL_APPLY_TITLE = Aplicar plantilla
+# One line. English: All game cards
+T_TPL_ALL_CARDS = Todas las tarjetas de juego
+# One line. English: Select cards
+T_TPL_PICK_CARDS = Seleccionar tarjetas
+# Up to 3 lines. English: Apply the template "%s" to the selected cards?
+T_TPL_PICK_ASK = ¿Desea aplicar la plantilla "%s" a las tarjetas seleccionadas?
+# Button. English: Set as default
+T_TPL_MAKE_MAIN = Fijar como principal
+# One line. English: Remove as default
+T_TPL_UNMAKE_MAIN = Quitar como principal
+# One line. English: Default
+T_TPL_MAIN = Principal
+# Up to 3 lines. English: "%s" set as the default template.
+T_TPL_MAIN_NOW = "%s" es ahora la plantilla principal.
+# Up to 3 lines. English: Apply the template "%s" to the game cards?
+T_TPL_GAMES_ASK = ¿Desea aplicar la plantilla "%s" a las tarjetas de juego?
+# Up to 3 lines. English: Cards without the template's saves: %d
+T_TPL_GAMES_N = Tarjetas sin las partidas de la plantilla: %d
+# Up to 3 lines. English: Every game card already has the saves of this template.
+T_TPL_GAMES_NONE = Todas las tarjetas de juego ya tienen las partidas de esta plantilla.
+# Up to 3 lines. English: There are no game cards on the MMCE.
+T_TPL_NO_GAME_CARDS = No hay tarjetas de juego en el MMCE.
+# One line. English: Checking the game cards...
+T_TPL_CHECKING = Verificando las tarjetas de juego...
+# Up to 3 lines. English: Cards that got saves: %d
+T_TPL_GAMES_GOT = Tarjetas que recibieron partidas: %d
+# Up to 3 lines. English: Cards not changed: %d
+T_TPL_GAMES_LEFT = Tarjetas sin cambios: %d
+# Up to 2 lines. English: Game cards without their template: %d
+T_TPL_WARN = Tarjetas de juego sin su plantilla: %d
+# Button. English: Don't warn
+T_TPL_NO_WARN = No avisar
+# One line. English: Linked games
+T_TPL_GAMES = Juegos vinculados
+# One line. English: Update existing saves
+T_TPL_UPDATE = Actualizar partidas existentes
+# Up to 3 lines. English: Update the saves of the template "%s" on the game cards?
+T_TPL_UPDATE_ASK = ¿Desea actualizar las partidas de la plantilla "%s" en las tarjetas de juego?
+# Up to 4 lines. English: Only the saves of this template that a card already has are replaced, with the template's version. No other save is changed.
+T_TPL_UPDATE_NOTE = Solo se reemplazan, por la versión de la plantilla, las partidas de esta plantilla que la tarjeta ya tiene. No se modifica ninguna otra partida.
+# Button. English: Update
+T_TPL_UPDATE_YES = Actualizar
+# Up to 3 lines. English: Cards updated: %d
+T_TPL_UPDATED_N = Tarjetas actualizadas: %d
+# One line. English: Auto-apply
+T_TPL_AFTER_GAME = Aplicación automática
+# Up to 6 lines. English: With the automatic sync on, a game's card gets the default template when the game is left, with no question asked.
+T_TPL_AFTER_HINT = Con la sincronización automática activada, la tarjeta de un juego recibe la plantilla principal al salir del juego, sin preguntar.
+# One line. English: No default template
+T_TPL_NO_MAIN = Sin plantilla principal
+# One line. English: On
+T_TPL_ON = Activada
+# One line. English: Off
+T_TPL_OFF = Desactivada
+# Button. English: Change
+T_TPL_CHANGE = Cambiar
+# Button. English: Disable sync
+T_SYNC_DISABLE = Desactivar sincronización
+# One line. English: Enable sync
+T_SYNC_ENABLE = Activar sincronización
+# Button. English: Skip
+T_SKIP = Omitir
+# One line. English: Skip %s?
+T_SKIP_ASK = ¿Desea omitir %s?
+# One line. English: The card will not be uploaded this time.
+T_SKIP_TEXT = La tarjeta no se subirá esta vez.
+# Up to 3 lines. English: %d min left
+T_TIME_LEFT_MIN = Quedan %d min
+# Up to 3 lines. English: %d s left
+T_TIME_LEFT_SEC = Quedan %d s
+# Up to 3 lines. English: skipped
+T_UPLOAD_SKIPPED = omitida
+# One line. English: Not used by the sd2psx
+T_CARD_UNUSED = No usada por el sd2psx
+# One line. English: Move saves to %s
+T_MOVE_SAVES = Mover partidas a %s
+# Up to 2 lines. English: Move the saves of %s to %s?
+T_MOVE_SAVES_ASK = ¿Desea mover las partidas de %s a %s?
+# Up to 2 lines. English: The sd2psx uses the folder %s for this game.
+T_MOVE_SAVES_NOTE = El sd2psx usa la carpeta %s para este juego.
+# Up to 3 lines. English: Saves moved: %d
+T_MOVED_N = Partidas movidas: %d
+# Up to 3 lines. English: Saves not moved: %d
+T_NOT_MOVED_N = Partidas no movidas: %d
+# One line. English: Updating the SAS package...
+T_HELPER_UPDATING = Actualizando el paquete SAS...

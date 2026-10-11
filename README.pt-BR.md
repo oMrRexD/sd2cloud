@@ -87,7 +87,7 @@ SD2Cloud ainda não foi testado em um.
   escolhidos nos ajustes: **Estável**, as versões lançadas, e **Beta**, uma compilação feita automaticamente a
   cada alteração, antes dos testes que uma versão recebe (a [pre-release beta](../../releases/tag/beta)).
 - Visual inspirado no PlayStation BB Navigator.
-- Em português e em inglês.
+- Em português, inglês e espanhol. Traduções são bem-vindas: veja [Translating](CONTRIBUTING.md#translating).
 
 ## Requisitos
 

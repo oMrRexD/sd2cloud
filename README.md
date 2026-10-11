@@ -84,7 +84,7 @@ on one yet.
   settings: **Stable**, the released versions, and **Beta**, a build made automatically from every change, before it
   is tested the way a version is (the [beta pre-release](../../releases/tag/beta)).
 - Interface inspired by the PlayStation BB Navigator.
-- English and Portuguese.
+- English, Portuguese and Spanish. Translations are welcome: see [Translating](CONTRIBUTING.md#translating).
 
 ## Requirements
 
