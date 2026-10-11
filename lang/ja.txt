@@ -1,0 +1,803 @@
+# SD2Cloud -- the texts on screen in Japanese. The original is en.txt; how to translate: CONTRIBUTING.md.
+#
+# Tone: a system application's, polite (です/ます). Errors use "〜できませんでした", questions "〜しますか？". A memory
+# card is a "メモリーカード" ("カード" when short), a save "セーブデータ", a backup "バックアップ", to sync "同期", the
+# default template the "デフォルト" one. Counts use a counter word (枚 for cards, 個 for saves) or come after a colon.
+# A half-width space goes between Japanese and a Latin word or a number ("Google ドライブ", "%d 枚"). The circle
+# confirms and the cross goes back, as in Japan (CONFIRM_BUTTON): the texts that name a button name them that way. A
+# first translation: corrections by native speakers are welcome.
+
+LANGUAGE_NAME = 日本語
+# how a date is written: DMY (31/12/2026), MDY (12/31/2026) or YMD (2026-12-31); with another separator, D.M.Y (31.12.2026)
+DATE_FORMAT = Y/M/D
+# the button that confirms: CROSS, or CIRCLE as in Japan (the other one goes back)
+CONFIRM_BUTTON = CIRCLE
+
+# One line. English: Searching for memory cards...
+T_SEARCHING = メモリーカードを検索しています...
+# Up to 3 lines. English: The sd2psx memory card folder was not found (MemoryCards/PS2 on the MMCE).
+T_NO_SD = sd2psx のメモリーカードフォルダーが見つかりません（MMCE の MemoryCards/PS2）。
+# Up to 5 lines. English: No memory cards are included in the sync. Check sd2cloud.ini.
+T_NO_CARDS = 同期するメモリーカードがありません。sd2cloud.ini を確認してください。
+# Up to 3 lines. English: Checking
+T_CHECKING = 確認中
+# One line. English: Never synced
+T_ST_NEW = 未同期
+# One line. English: Not synced
+T_ST_CHANGED = 変更あり
+# One line. English: Synced
+T_ST_UP_TO_DATE = 同期済み
+# One line. English: Read error
+T_ST_ERROR = 読み込みエラー
+# One line. English: Excluded
+T_ST_SKIPPED = 対象外
+# Up to 3 lines. English: Connecting to the network...
+T_NET_STARTING = ネットワークに接続しています...
+# Up to 3 lines. English: Unable to load the network drivers.
+T_NET_ERR_DRIVERS = ネットワークドライバーを読み込めませんでした。
+# Up to 3 lines. English: No network connection. Check the network cable.
+T_NET_ERR_LINK = ネットワークに接続されていません。LAN ケーブルを確認してください。
+# Up to 3 lines. English: Unable to obtain an IP address from the router (DHCP).
+T_NET_ERR_DHCP = ルーターから IP アドレスを取得できませんでした（DHCP）。
+# Up to 3 lines. English: Signing in to Google...
+T_SIGNING_IN = Google にログインしています...
+# One line. English: Connect to Google
+T_LOGIN_TITLE = Google に接続
+# One line. English: On your phone or PC, visit
+T_LOGIN_OPEN = スマホか PC で次のページを開き
+# One line. English: and enter this code
+T_LOGIN_ENTER = このコードを入力してください
+# One line. English: This code expires in %d min
+T_LOGIN_EXPIRES = コードの有効期限: あと %d 分
+# One line. English: or use the QR code
+T_LOGIN_QR = または QR コード
+# One line. English: Connected to Google.
+T_LOGIN_OK = Google に接続しました。
+# One line. English: Unable to connect to Google.
+T_LOGIN_ERROR = Google に接続できませんでした。
+# Up to 3 lines. English: The code has expired. Try again.
+T_LOGIN_EXPIRED = コードの有効期限が切れました。もう一度お試しください。
+# Up to 3 lines. English: Access was denied on the Google page.
+T_LOGIN_DENIED = Google のページでアクセスが拒否されました。
+# Up to 3 lines. English: Google access has expired or was revoked. Please sign in again.
+T_LOGIN_REVOKED = Google へのアクセスの期限が切れたか、取り消されました。もう一度ログインしてください。
+# One line. English: Initial sync
+T_FIRST_TITLE = 初回の同期
+# Up to 2 lines. English: Sync all %d memory cards now? (%s, approx. %d min)
+T_FIRST_QUESTION = %d 枚のメモリーカードをすべて今すぐ同期しますか？（%s、約 %d 分）
+# One line. English: After this, only changed cards will be uploaded.
+T_FIRST_AFTER = 次回からは変更されたカードのみアップロードします。
+# Button. English: Yes
+T_YES = はい
+# Button. English: Not now
+T_LATER = あとで
+# One line. English: Update SD2Cloud to %s
+T_MENU_UPDATE = SD2Cloud を %s に更新
+# One line. English: Update
+T_UPDATE = 更新
+# Button. English: Exit
+T_MENU_EXIT = 終了
+# One line. English: %d of %d
+T_UPLOADING = %d / %d
+# One line. English: Uploading to Google Drive...
+T_BACKING_UP = ドライブにアップロード中...
+# Up to 3 lines. English: uploaded
+T_UPLOAD_OK = アップロード完了
+# Up to 3 lines. English: failed
+T_UPLOAD_FAILED = 失敗
+# One line. English: Sync complete
+T_SUMMARY_OK = 同期が完了しました
+# One line. English: Sync partially completed
+T_SUMMARY_PARTIAL = 同期は一部のみ完了しました
+# One line. English: Sync failed
+T_SUMMARY_FAILED = 同期に失敗しました
+# One line. English: Returning in %d s...
+T_RETURNING = %d 秒後に戻ります...
+# Button. English: Back
+T_BACK = 戻る
+# One line. English: Automatic sync
+T_IGR_TITLE = 自動同期
+# Up to 3 lines. English: SD2Cloud is not connected to Google. Open SD2Cloud from the Apps tab to set it up.
+T_IGR_NO_LOGIN = SD2Cloud は Google に接続されていません。設定するには「Apps」タブから SD2Cloud を起動してください。
+# One line. English: SAS package
+T_HELPER_TITLE = SAS パッケージ
+# Up to 2 lines. English: Required for automatic sync via IGR. It also adds a shortcut to the PS2 browser.
+T_HELPER_ABOUT = IGR による自動同期に必要です。PS2 ブラウザーにショートカットも追加します。
+# One line. English: Destination (memory card in use):
+T_HELPER_WHERE = インストール先（使用中のメモリーカード）:
+# One line. English: If Autoboot is enabled, install it while the BootCard is in use.
+T_HELPER_AUTOBOOT = Autoboot 有効時は BootCard にインストールしてください。
+# Button. English: Install
+T_HELPER_INSTALL = インストール
+# One line. English: SAS package installed
+T_HELPER_OK = SAS パッケージをインストールしました
+# Up to 2 lines. English: Unable to install the SAS package on the memory card%s.
+T_HELPER_ERROR = メモリーカードに SAS パッケージをインストールできませんでした%s。
+# Up to 3 lines. English: \ (error %d)
+T_MC_ERROR = （エラー %d）
+# Up to 3 lines. English: The sd2psx disconnected the memory card during the writing%s.
+T_HELPER_DROPPED = 書き込み中に sd2psx がメモリーカードを切断しました%s。
+# One line. English: Try again, or use an 8 MB card%s.
+T_HELPER_DROPPED_HINT = 再試行するか 8 MB のカードを使ってください%s。
+# Up to 3 lines. English: \ (this one has %d MB)
+T_HELPER_CARD_MB = （現在 %d MB）
+# Up to 2 lines. English: SD2CLOUD-IGR.ELF was not found in the SD2Cloud folder.
+T_HELPER_MISSING = SD2Cloud フォルダーに SD2CLOUD-IGR.ELF が見つかりません。
+# Up to 3 lines. English: Unable to connect to Google:
+T_ERR_INTERNET = Google に接続できませんでした:
+# Up to 3 lines. English: the upload was interrupted
+T_ERR_UPLOAD_STOPPED = アップロードが中断されました
+# Up to 3 lines. English: Google Drive did not return a file ID
+T_ERR_NO_FILE_ID = Google ドライブからファイル ID が返されませんでした
+# Up to 3 lines. English: the file on Google Drive does not match (SHA-256)
+T_ERR_CHECKSUM = Google ドライブ上のファイルが一致しません（SHA-256）
+# Up to 3 lines. English: Google Drive: unexpected position (%lld)
+T_ERR_POSITION = Google ドライブ: 予期しない位置（%lld）
+# Up to 3 lines. English: the PS2's clock is ahead (%s): set the console's date and time
+T_ERR_CLOCK_AHEAD = PS2 の時計が進んでいます（%s）。本体の日付と時刻を設定してください
+# Up to 3 lines. English: Checking for updates...
+T_UPDATE_CHECKING = アップデートを確認しています...
+# Up to 3 lines. English: Updating SD2Cloud...
+T_UPDATE_RUNNING = SD2Cloud を更新しています...
+# Up to 3 lines. English: Update complete. Starting the new version...
+T_UPDATE_DONE = 更新が完了しました。新しいバージョンを起動しています...
+# Up to 3 lines. English: The update failed. The current version was kept.
+T_UPDATE_ERROR = 更新に失敗しました。現在のバージョンのままです。
+# Button. English: Enter
+T_SELECT = 決定
+# Button. English: Cancel
+T_CANCEL = キャンセル
+# One line. English: Cancel the sync?
+T_CANCEL_TITLE = 同期をキャンセルしますか？
+# Up to 2 lines. English: Cards already uploaded will remain on Google Drive. SD2Cloud will close.
+T_CANCEL_TEXT = アップロード済みのカードは Google ドライブに残ります。SD2Cloud は終了します。
+# Button. English: Yes, cancel
+T_CANCEL_YES = キャンセルする
+# Button. English: Continue
+T_CANCEL_NO = 続ける
+# One line. English: Last backup: %s
+T_CARD_LAST = 最終同期: %s
+# One line. English: %s backups
+T_HIST_TITLE = %s のバックアップ
+# One line. English: Loading backups...
+T_HIST_LOADING = バックアップを読み込んでいます...
+# Up to 3 lines. English: No backups of this card on Google Drive.
+T_HIST_EMPTY = バックアップがありません。
+# One line. English: Same as current
+T_HIST_SAME = 現在と同じ
+# Button. English: Restore
+T_RESTORE = 復元
+# One line. English: Restore %s?
+T_RESTORE_TITLE = %s を復元しますか？
+# One line. English: Backup from %s
+T_RESTORE_FROM = %s のバックアップ
+# Up to 2 lines. English: The memory card on the MMCE will be replaced with this backup.
+T_RESTORE_TEXT = MMCE 上のメモリーカードがこのバックアップで置き換えられます。
+# One line. English: The current card will be synced first.
+T_RESTORE_SAVE_FIRST = 先に現在のカードを同期します。
+# Up to 2 lines. English: %s is currently in use by the sd2psx. Switch it to another card, then press X again.
+T_RESTORE_IN_USE = %s は sd2psx で使用中です。別のカードに切り替えてから、もう一度○ボタンを押してください。
+# Up to 2 lines. English: Unable to determine which card the sd2psx is using. If it is this card, switch to another card first.
+T_RESTORE_UNKNOWN = sd2psx が使用中のカードを特定できません。このカードの場合は、先に別のカードに切り替えてください。
+# One line. English: Downloading the backup...
+T_RESTORE_STEP_DOWNLOAD = バックアップをダウンロードしています...
+# One line. English: Writing to the MMCE...
+T_RESTORE_STEP_WRITE = MMCE に書き込んでいます...
+# One line. English: Memory card restored
+T_RESTORE_OK = メモリーカードを復元しました
+# One line. English: Restore failed
+T_RESTORE_FAILED = 復元に失敗しました
+# One line. English: Cancel the restore?
+T_RESTORE_CANCEL_TITLE = 復元をキャンセルしますか？
+# One line. English: The memory card will not be changed.
+T_RESTORE_CANCEL_TEXT = メモリーカードは変更されません。
+# Up to 3 lines. English: this backup is too large to restore on the PS2
+T_ERR_TOO_BIG = このバックアップは大きすぎて PS2 では復元できません
+# Up to 3 lines. English: the backup failed verification (SHA-256)
+T_ERR_BAD_BACKUP = バックアップの検証に失敗しました（SHA-256）
+# Up to 3 lines. English: unable to write the memory card to the MMCE
+T_ERR_WRITE = MMCE にメモリーカードを書き込めませんでした
+# Up to 3 lines. English: the download was interrupted
+T_ERR_DOWNLOAD = ダウンロードが中断されました
+# Button. English: Options
+T_OPTIONS = オプション
+# One line. English: %d KB free
+T_FREE_KB = 空き容量: %d KB
+# One line. English: This memory card contains no saved data.
+T_CARD_EMPTY = このカードにはセーブデータがありません。
+# One line. English: Upload complete
+T_IGR_DONE = アップロード完了
+# Up to 2 lines. English: No memory cards have changed.
+T_IGR_NOTHING = 変更されたメモリーカードはありません。
+# One line. English: Sync now
+T_SYNC_NOW = 今すぐ同期
+# One line. English: Restore a backup
+T_RESTORE_BACKUP = バックアップから復元
+# Button. English: Copy
+T_COPY = コピー
+# Button. English: Move
+T_MOVE = 移動
+# Button. English: Delete
+T_DELETE = 削除
+# One line. English: Upload to Drive
+T_TO_CLOUD = ドライブにアップロード
+# One line. English: %d KB
+T_SAVE_KB = %d KB
+# One line. English: Copy to
+T_COPY_TO = コピー先
+# One line. English: Move to
+T_MOVE_TO = 移動先
+# Up to 3 lines. English: No other memory cards were found on the MMCE.
+T_NO_OTHER_CARDS = MMCE にほかのメモリーカードが見つかりません。
+# Up to 3 lines. English: %s is currently in use by the sd2psx. Switch to another card on the sd2psx first.
+T_CARD_IN_USE = %s は sd2psx で使用中です。先に sd2psx で別のカードに切り替えてください。
+# Up to 3 lines. English: Copying...
+T_WORKING_COPY = コピーしています...
+# Up to 3 lines. English: Moving...
+T_WORKING_MOVE = 移動しています...
+# Up to 3 lines. English: Deleting...
+T_WORKING_DELETE = 削除しています...
+# Up to 3 lines. English: Copied to %s.
+T_DONE_COPY = %s にコピーしました。
+# Up to 3 lines. English: Moved to %s.
+T_DONE_MOVE = %s に移動しました。
+# One line. English: Deleted.
+T_DONE_DELETE = 削除しました。
+# Up to 3 lines. English: Delete "%s"?
+T_DELETE_ASK = 「%s」を削除しますか？
+# Up to 3 lines. English: It will be permanently removed from %s. This action cannot be undone.
+T_DELETE_TEXT = %s から完全に削除されます。この操作は元に戻せません。
+# Up to 3 lines. English: %s already contains data with the same name.
+T_ERR_EXISTS = %s には同じ名前のデータがすでにあります。
+# Up to 3 lines. English: There is not enough free space on %s.
+T_ERR_FULL = %s の空き容量が足りません。
+# Up to 3 lines. English: Unable to write to the memory card.
+T_ERR_MC_WRITE = メモリーカードに書き込めませんでした。
+# Up to 3 lines. English: The copy on %s failed verification.
+T_ERR_MC_CHECK = %s へのコピーの検証に失敗しました。
+# One line. English: Uploaded to Google Drive.
+T_CLOUD_DONE = Google ドライブにアップロードしました。
+# Up to 3 lines. English: Upload failed:
+T_CLOUD_FAILED = アップロードに失敗しました:
+# Up to 3 lines. English: Cards already uploaded will remain on Google Drive.
+T_CANCEL_TEXT_MANUAL = アップロード済みのカードは Google ドライブに残ります。
+# Up to 3 lines. English: Sync %s now?
+T_CONFIRM_BACKUP_ONE = %s を今すぐ同期しますか？
+# Up to 3 lines. English: Sync the %d unsynced cards now?
+T_CONFIRM_BACKUP_CHANGED = 未同期のカード %d 枚を今すぐ同期しますか？
+# Up to 3 lines. English: Sync all %d cards again? A new backup of each card will be created on Google Drive.
+T_SYNC_AGAIN_ALL = %d 枚のカードをすべてもう一度同期しますか？各カードの新しいバックアップが Google ドライブに作成されます。
+# Up to 3 lines. English: The data will be uploaded to your Google Drive. Press the Circle button to cancel at any time.
+T_CONFIRM_BACKUP_TEXT = データはあなたの Google ドライブにアップロードされます。×ボタンでいつでもキャンセルできます。
+# Up to 3 lines. English: SD2Cloud will download and start the new version.
+T_CONFIRM_UPDATE_TEXT = SD2Cloud は新しいバージョンをダウンロードして起動します。
+# Up to 3 lines. English: Copy "%s" to %s?
+T_CONFIRM_COPY = 「%s」を %s にコピーしますか？
+# Up to 2 lines. English: Copy %d saves to %s?
+T_CONFIRM_COPY_N = %d 個のセーブデータを %s にコピーしますか？
+# Button. English: Paste
+T_PASTE = 貼り付け
+# One line. English: Sort by
+T_SORT_BY = 並べ替え
+# One line. English: Date, descending
+T_SORT_NEWEST = 日付（新しい順）
+# One line. English: Date, ascending
+T_SORT_OLDEST = 日付（古い順）
+# One line. English: Name
+T_SORT_NAME = 名前
+# One line. English: Duplicates
+T_REPEATED = 重複
+# One line. English: Hidden
+T_REPEATED_HIDDEN = 非表示
+# One line. English: Shown
+T_REPEATED_SHOWN = 表示
+# One line. English: Device
+T_SET_DEVICE = デバイス
+# One line. English: Which device is in use?
+T_DEVICE_ASK = 使用中のデバイスはどれですか？
+# Up to 3 lines. English: This can be changed in Settings.
+T_DEVICE_NOTE = これは設定で変更できます。
+# Up to 3 lines. English: Move "%s" to %s?
+T_CONFIRM_MOVE = 「%s」を %s に移動しますか？
+# Up to 3 lines. English: Upload "%s" to Google Drive?
+T_CONFIRM_CLOUD = 「%s」を Google ドライブにアップロードしますか？
+# Up to 3 lines. English: A .psu file will be created in the Saves folder, next to this card's backups.
+T_CONFIRM_CLOUD_TEXT = このカードのバックアップと同じ場所にある Saves フォルダーに、.psu ファイルが作成されます。
+# One line. English: Cards
+T_TAB_CARDS = カード
+# One line. English: Games
+T_TAB_GAMES = ゲーム
+# One line. English: Boot
+T_TAB_BOOT = Boot
+# One line. English: Files
+T_TAB_FILES = ファイル
+# One line. English: All saves
+T_ALL_SAVES = すべてのセーブデータ
+# One line. English: %d saves
+T_SAVES_COUNT = セーブデータ: %d
+# One line. English: %d cards
+T_GAME_CARDS_N = カード: %d
+# One line. English: Not enough free space
+T_NO_ROOM = 空き容量が足りません
+# Button. English: Open
+T_OPEN = 開く
+# Button. English: Sync
+T_SYNC = 同期
+# Button. English: Settings
+T_SETTINGS = 設定
+# Button. English: Tools
+T_TOOLS = ツール
+# Up to 3 lines. English: %s is already synced.
+T_ALREADY_SYNCED = %s はすでに同期されています。
+# Up to 3 lines. English: Sync it again? A new backup will be created on Google Drive.
+T_SYNC_AGAIN_ONE = もう一度同期しますか？Google ドライブに新しいバックアップが作成されます。
+# One line. English: All cards are synced.
+T_ALL_SYNCED = すべてのカードが同期済みです。
+# One line. English: Sync all cards
+T_SET_SYNC_ALL = すべてのカードを同期
+# Up to 3 lines. English: 1 pending
+T_PENDING_ONE = 1 枚が未同期
+# One line. English: %d pending
+T_PENDING_N = %d 枚が未同期
+# One line. English: All synced
+T_NONE_PENDING = すべて同期済み
+# One line. English: IGR path
+T_SET_IGR_RETURN = IGR の終了先
+# One line. English: Language
+T_SET_LANGUAGE = 言語
+# One line. English: Backups kept per card
+T_SET_KEEP = カードごとのバックアップ保持数
+# One line. English: Backup format
+T_SET_FORMAT = バックアップ形式
+# One line. English: Check for updates
+T_SET_UPDATES = アップデートを確認
+# Up to 3 lines. English: Update channel
+T_SET_CHANNEL = 更新チャンネル
+# Up to 3 lines. English: Stable
+T_CHANNEL_STABLE = 安定版
+# Up to 3 lines. English: Use the beta channel?
+T_CHANNEL_BETA_ASK = ベータチャンネルを使用しますか？
+# Up to 3 lines. English: The beta channel gets every change before final testing and may contain bugs.
+T_CHANNEL_BETA_TEXT = ベータチャンネルでは最終テスト前の変更をすべて受け取るため、不具合が含まれることがあります。
+# One line. English: Google account
+T_SET_ACCOUNT = Google アカウント
+# One line. English: About SD2Cloud
+T_SET_ABOUT = SD2Cloud について
+# Up to 3 lines. English: Automatic
+T_AUTO = 自動
+# Up to 3 lines. English: PS2 Browser
+T_RET_OSD = PS2 ブラウザー
+# Button. English: Return to Browser
+T_EXIT_BROWSER = ブラウザーに戻る
+# One line. English: Run an ELF...
+T_EXIT_FILES = ELF を実行...
+# Up to 3 lines. English: sd2psx disconnected
+T_DEVICE_GONE = sd2psx が切断されました
+# Up to 3 lines. English: Reconnect the sd2psx to continue.
+T_DEVICE_GONE_TEXT = 続けるには sd2psx を接続し直してください。
+# Button. English: Run
+T_RUN = 実行
+# One line. English: Start application
+T_START_APP = アプリケーションを起動
+# One line. English: No limit
+T_KEEP_ALL = 無制限
+# Up to 3 lines. English: Installed
+T_HELPER_INSTALLED = インストール済み
+# Up to 3 lines. English: Outdated
+T_HELPER_OUTDATED = 古いバージョン
+# One line. English: Not installed
+T_HELPER_NOT_INSTALLED = 未インストール
+# Up to 3 lines. English: Unavailable
+T_HELPER_NA = 利用できません
+# Up to 3 lines. English: Connected
+T_ACCOUNT_ON = 接続済み
+# One line. English: Not connected
+T_ACCOUNT_OFF = 未接続
+# Up to 3 lines. English: Disconnect the Google account?
+T_LOGOUT_ASK = Google アカウントの接続を解除しますか？
+# Up to 3 lines. English: SD2Cloud will not be able to upload data until you connect again. Backups on Google Drive are kept.
+T_LOGOUT_TEXT = 再接続するまで SD2Cloud はデータをアップロードできません。Google ドライブ上のバックアップは残ります。
+# Button. English: Disconnect
+T_LOGOUT_YES = 接続を解除
+# Up to 3 lines. English: Google account disconnected.
+T_LOGOUT_DONE = Google アカウントの接続を解除しました。
+# Up to 3 lines. English: Manage and back up your sd2psx memory cards, right on your PS2.
+T_ABOUT_TEXT = sd2psx のメモリーカードを PS2 上で直接管理・バックアップできます。
+# Up to 3 lines. English: Design inspired by the PlayStation BB Navigator. Fonts: Varela Round, Nunito and M PLUS Rounded 1c (SIL Open Font License).
+T_ABOUT_CREDITS = デザインは PlayStation BB Navigator をもとにしています。フォント: Varela Round、Nunito、M PLUS Rounded 1c（SIL Open Font License）。
+# One line. English: Third-party licenses: see THIRD-PARTY-NOTICES.txt.
+T_ABOUT_LICENSES = ライセンス情報: THIRD-PARTY-NOTICES.txt
+# Up to 3 lines. English: Developed by MrRexD.
+T_ABOUT_AUTHOR = 開発: MrRexD
+# One line. English: Exit to
+T_EXIT_TO = 終了先
+# Up to 3 lines. English: Connect a Google account now to sync your memory cards?
+T_CONNECT_ASK = メモリーカードを同期するために、今すぐ Google アカウントに接続しますか？
+# Up to 2 lines. English: You can also connect later in Settings (START).
+T_CONNECT_HINT = あとで設定（START）から接続することもできます。
+# Button. English: Connect
+T_CONNECT = 接続
+# One line. English: Copy to a device
+T_COPY_DEVICE = デバイスにコピー
+# Button. English: Don't ask again
+T_NEVER_ASK = 今後表示しない
+# Up to 3 lines. English: To connect later, open Settings (START) and choose Google account.
+T_CONNECT_WHERE = あとで接続するには、設定（START）を開いて「Google アカウント」を選んでください。
+# Up to 3 lines. English: memory card
+T_DEV_MC = メモリーカード
+# Up to 3 lines. English: HDD
+T_DEV_HDD = HDD
+# Up to 3 lines. English: Turn on automatic sync? When you exit a game using IGR, changed memory cards will be uploaded to Google Drive.
+T_AUTO_ASK = 自動同期をオンにしますか？IGR でゲームを終了すると、変更されたメモリーカードが Google ドライブにアップロードされます。
+# Up to 2 lines. English: The SAS package will be installed on the memory card in use (with Autoboot enabled, use the BootCard).
+T_AUTO_WHERE = SAS パッケージは使用中のメモリーカードにインストールされます（Autoboot が有効な場合は BootCard を使用してください）。
+# Button. English: Turn on
+T_AUTO_ON = オンにする
+# Up to 3 lines. English: Automatic sync can be turned on later in Settings (START), under SAS package.
+T_AUTO_LATER = 自動同期はあとで設定（START）の「SAS パッケージ」からオンにできます。
+# Up to 3 lines. English: Installing the SAS package...
+T_AUTO_INSTALLING = SAS パッケージをインストールしています...
+# One line. English: Automatic sync turned on
+T_AUTO_DONE = 自動同期をオンにしました
+# One line. English: In OPL, set "IGR Path" to:
+T_AUTO_OPL = OPL の「IGR Path」に次のパスを設定してください:
+# One line. English: Write down the path above. It is also in README.txt.
+T_AUTO_NOTE = 上のパスを控えてください。README.txt にも記載されています。
+# One line. English: Insert into sd2psx
+T_INSERT = sd2psx に挿入
+# One line. English: Insert this card (experimental)
+T_INSERT_PREVIEW = このカードを挿入（試験的）
+# Button. English: Insert
+T_INSERT_YES = 挿入
+# Up to 2 lines. English: From now on, the sd2psx will start from this BootCard.
+T_INSERT_BOOT_ASK = 今後、sd2psx はこの BootCard から起動します。
+# One line. English: Switching cards on the sd2psx...
+T_SWITCHING = カードを切り替えています...
+# Up to 2 lines. English: %s inserted into the sd2psx.
+T_INSERT_DONE = %s を sd2psx に挿入しました。
+# Up to 2 lines. English: Unable to switch the sd2psx to %s.
+T_INSERT_FAILED = sd2psx を %s に切り替えられませんでした。
+# Up to 2 lines. English: Requires Autoboot enabled in the sd2psx settings.
+T_INSERT_NEEDS_BOOT = sd2psx の設定で Autoboot を有効にする必要があります。
+# Up to 2 lines. English: Requires Game ID enabled in the sd2psx settings.
+T_INSERT_NEEDS_GAMEID = sd2psx の設定で Game ID を有効にする必要があります。
+# Up to 3 lines. English: %s is in use by the sd2psx. To change it, the sd2psx will be switched to another card temporarily.
+T_SWITCH_ASK = %s は sd2psx で使用中です。変更するために、sd2psx を一時的に別のカードに切り替えます。
+# Button. English: Continue
+T_CONTINUE = 続ける
+# Up to 3 lines. English: Unable to switch the card on the sd2psx. Nothing was changed.
+T_SWITCH_FAILED = sd2psx のカードを切り替えられませんでした。何も変更されていません。
+# Up to 3 lines. English: Unable to switch the sd2psx back to %s. Select it on the sd2psx.
+T_SWITCH_BACK_FAILED = sd2psx を %s に戻せませんでした。sd2psx で選択してください。
+# One line. English: On
+T_SYNC_ON = オン
+# One line. English: Off
+T_SYNC_OFF = オフ
+# Up to 3 lines. English: Without a Google account connected, automatic sync stays off.
+T_SYNC_NO_ACCOUNT = Google アカウントに接続していない間は、自動同期はオフのままです。
+# Button. English: Done
+T_FINISH = 完了
+# One line. English: %s available
+T_UPDATE_AVAILABLE = %s があります
+# Up to 3 lines. English: SD2Cloud is up to date (v%s).
+T_UPDATE_NONE = SD2Cloud は最新です（v%s）。
+# Up to 3 lines. English: Unable to check for updates.
+T_UPDATE_CHECK_FAILED = アップデートを確認できませんでした。
+# Up to 3 lines. English: Not enough free space on the memory card in use (%d KB needed, %d KB free). Nothing was changed.
+T_HELPER_FULL = 使用中のメモリーカードの空き容量が足りません（必要: %d KB、空き: %d KB）。何も変更されていません。
+# One line. English: Space required: %d KB (%d KB free).
+T_HELPER_SPACE = 必要な容量: %d KB（空き: %d KB）
+# One line. English: Space required: %d KB.
+T_HELPER_SPACE_NEED = 必要な容量: %d KB
+# One line. English: Reinstall
+T_HELPER_REINSTALL = 再インストール
+# Button. English: Uninstall
+T_HELPER_UNINSTALL = アンインストール
+# One line. English: Uninstall the SAS package?
+T_HELPER_UNINSTALL_ASK = SAS パッケージを削除しますか？
+# Up to 3 lines. English: Automatic sync will stop working, and the shortcut leaves the PS2 browser. In OPL, change "IGR Path" as well.
+T_HELPER_UNINSTALL_TEXT = 自動同期は動作しなくなり、PS2 ブラウザーからショートカットが消えます。OPL の「IGR Path」も変更してください。
+# Up to 3 lines. English: SAS package uninstalled.
+T_HELPER_UNINSTALLED = SAS パッケージをアンインストールしました。
+# Up to 3 lines. English: Unable to remove the SAS package from the memory card.
+T_HELPER_UNINSTALL_ERROR = メモリーカードから SAS パッケージを削除できませんでした。
+# Up to 2 lines. English: The earlier path (BOOT/SD2CLOUD-IGR.ELF) still works.
+T_HELPER_OLD_PATH = 以前のパス（BOOT/SD2CLOUD-IGR.ELF）も引き続き使えます。
+# Up to 3 lines. English: The SAS package is already on the memory card, next to SD2Cloud. No installation is needed.
+T_HELPER_ON_CARD = SAS パッケージはすでにメモリーカードの SD2Cloud と同じ場所にあります。インストールは不要です。
+# One line. English: MMCE
+T_DEV_SD = MMCE
+# One line. English: USB drive
+T_DEV_USB = USB ドライブ
+# Up to 5 lines. English: Install or open .psu saves and memory card files (.mcd, .mc2, .ps2, .bin, .zip).
+T_FILES_HINT = .psu のセーブデータやメモリーカードのファイル（.mcd、.mc2、.ps2、.bin、.zip）をインストールしたり開いたりできます。
+# One line. English: Loading...
+T_LOADING = 読み込み中...
+# One line. English: Looking for a USB drive...
+T_USB_SEARCHING = USB ドライブを探しています...
+# Up to 3 lines. English: No USB drive was found. It must be formatted as FAT32 or exFAT.
+T_USB_NONE = USB ドライブが見つかりません。FAT32 か exFAT でフォーマットされている必要があります。
+# One line. English: Unable to read this folder.
+T_DIR_ERROR = このフォルダーを読み込めません。
+# One line. English: This folder is empty.
+T_DIR_EMPTY = このフォルダーは空です。
+# Button. English: Export
+T_EXPORT = エクスポート
+# Up to 3 lines. English: Export "%s" to this folder?
+T_CONFIRM_EXPORT = 「%s」をこのフォルダーにエクスポートしますか？
+# Up to 2 lines. English: Export %d saves to this folder?
+T_CONFIRM_EXPORT_N = %d 個のセーブデータをこのフォルダーにエクスポートしますか？
+# Up to 2 lines. English: File: %s
+T_EXPORT_FILE = ファイル: %s
+# Up to 3 lines. English: %s already exists in this folder. Replace it?
+T_EXPORT_REPLACE = %s はこのフォルダーにすでにあります。置き換えますか？
+# Button. English: Replace
+T_REPLACE = 置き換え
+# One line. English: Exporting...
+T_WORKING_EXPORT = エクスポートしています...
+# Up to 2 lines. English: Exported as %s.
+T_DONE_EXPORT = %s としてエクスポートしました。
+# Up to 3 lines. English: Unable to write the file.
+T_ERR_EXPORT = ファイルを書き込めませんでした。
+# One line. English: Import to card
+T_IMPORT = カードにインポート
+# Button. English: Import
+T_IMPORT_YES = インポート
+# One line. English: Import to
+T_IMPORT_TO = インポート先
+# Up to 3 lines. English: this file is not a PS2 memory card
+T_ERR_NOT_CARD = このファイルは PS2 のメモリーカードではありません
+# Up to 3 lines. English: unable to read the file
+T_ERR_READ_FILE = ファイルを読み込めませんでした
+# Up to 3 lines. English: This file is not a PS2 memory card.
+T_ERR_CARD_FILE = このファイルは PS2 のメモリーカードではありません。
+# Up to 3 lines. English: This memory card is too large to open on the PS2. Install it on the MMCE?
+T_FILE_TOO_BIG = このメモリーカードは大きすぎて PS2 では開けません。MMCE にインストールしますか？
+# Button. English: Install card
+T_INSTALL = カードをインストール
+# Button. English: Install
+T_INSTALL_YES = インストール
+# Button. English: Install save
+T_INSTALL_SAVE = セーブデータをインストール
+# One line. English: Install to
+T_INSTALL_TO = インストール先
+# One line. English: New card
+T_NEW_CARD = 新しいカード
+# One line. English: Install as a new card?
+T_INSTALL_NEW_ASK = 新しいカードとしてインストールしますか？
+# One line. English: Replace %s?
+T_INSTALL_REPLACE_ASK = %s を置き換えますか？
+# Up to 2 lines. English: Its contents will be replaced with the card in this file. This action cannot be undone.
+T_INSTALL_REPLACE_TEXT = カードの内容がこのファイルのカードで置き換えられます。この操作は元に戻せません。
+# Up to 2 lines. English: This is a BootCard: it may hold the files your console starts from.
+T_INSTALL_BOOT_WARN = これは BootCard です。本体の起動に使うファイルが入っている可能性があります。
+# Up to 3 lines. English: If the file can't be read to the end and the installation is cancelled, %s will be left empty.
+T_INSTALL_BIG_WARN = ファイルを最後まで読み込めずにインストールが中止された場合、%s は空になります。
+# Up to 4 lines. English: Unable to tell which game this card is for. Install it under Cards, or rename the file to the game's ID (SLUS-21065-1.mcd).
+T_INSTALL_NO_GAME = どのゲームのカードか判別できません。「カード」タブにインストールするか、ファイル名をゲームの ID にしてください（SLUS-21065-1.mcd）。
+# One line. English: Which game is this card for?
+T_INSTALL_WHICH_GAME = どのゲームのカードですか？
+# Up to 3 lines. English: This folder already has %d cards, the limit set on the sd2psx. Raise the limit to %d and install?
+T_INSTALL_RAISE_ASK = このフォルダーにはすでに sd2psx の上限である %d 枚のカードがあります。上限を %d 枚に増やしてインストールしますか？
+# Up to 3 lines. English: This folder has reached its limit of %d cards. Replace one of them instead.
+T_INSTALL_NO_CHANNEL = このフォルダーは上限の %d 枚に達しています。代わりにいずれかのカードを置き換えてください。
+# One line. English: Memory card installed
+T_INSTALL_OK = メモリーカードをインストールしました
+# One line. English: Installation failed
+T_INSTALL_FAILED = インストールに失敗しました
+# One line. English: Cancel the installation?
+T_INSTALL_CANCEL_TITLE = インストールをキャンセルしますか？
+# One line. English: Nothing has been written to the MMCE.
+T_INSTALL_CANCEL_TEXT = MMCE には何も書き込まれていません。
+# Up to 3 lines. English: The new memory card will not be created.
+T_INSTALL_CANCEL_NEW = 新しいメモリーカードは作成されません。
+# Up to 3 lines. English: Unable to read the file.
+T_INSTALL_LOST = ファイルを読み込めませんでした。
+# Up to 3 lines. English: %s is incomplete until the rest of the file is written.
+T_INSTALL_LOST_TEXT = ファイルの残りが書き込まれるまで、%s は不完全なままです。
+# Up to 3 lines. English: Try again
+T_TRY_AGAIN = 再試行
+# Button. English: Keep both
+T_KEEP_BOTH = 両方残す
+# Up to 3 lines. English: Import "%s" to %s?
+T_CONFIRM_IMPORT = 「%s」を %s にインポートしますか？
+# One line. English: Importing...
+T_WORKING_IMPORT = インポートしています...
+# One line. English: Cancel?
+T_WORK_CANCEL_TITLE = キャンセルしますか？
+# One line. English: Cancelling...
+T_CANCELLING = キャンセルしています...
+# One line. English: Imported to %s.
+T_DONE_IMPORT = %s にインポートしました。
+# Up to 3 lines. English: This file is not a valid .psu save file.
+T_ERR_PSU = このファイルは有効な .psu セーブデータではありません。
+# Up to 3 lines. English: This folder is not a valid memory card save.
+T_ERR_SAVE_FOLDER = このフォルダーは有効なメモリーカードのセーブデータではありません。
+# Up to 3 lines. English: No memory cards were found on the MMCE.
+T_NO_CARDS_SD = MMCE にメモリーカードが見つかりません。
+# Up to 2 lines. English: A new 8 MB memory card will be created for this game.
+T_NEWCARD_NOTE = このゲーム用に 8 MB の新しいメモリーカードが作成されます。
+# One line. English: Creating the memory card...
+T_NEWCARD_MAKING = メモリーカードを作成しています...
+# Up to 2 lines. English: Unable to create the memory card.
+T_NEWCARD_FAILED = メモリーカードを作成できませんでした。
+# Up to 3 lines. English: This game's folder has reached its limit of %d cards.
+T_NEWCARD_NO_CHANNEL = このゲームのフォルダーは上限の %d 枚に達しています。
+# Up to 3 lines. English: Choose an ELF...
+T_PICK_ELF = ELF を選択...
+# Up to 3 lines. English: Unable to read this memory card.
+T_CARD_UNREADABLE = このメモリーカードを読み込めません。
+# Button. English: Type
+T_KB_TYPE = 入力
+# Button. English: Erase
+T_KB_ERASE = 消去
+# One line. English: Templates
+T_TEMPLATES = テンプレート
+# One line. English: New template
+T_TPL_NEW = 新しいテンプレート
+# One line. English: Template name
+T_TPL_NAME = テンプレート名
+# Up to 3 lines. Latin letters only: it becomes a folder's name, and the keyboard that edits it has no others. English: Template %d
+T_TPL_DEFAULT = Template %d
+# Up to 3 lines. English: Invalid name.
+T_TPL_BAD_NAME = 無効な名前です。
+# Up to 3 lines. English: A template with this name already exists.
+T_TPL_TAKEN = 同じ名前のテンプレートがすでにあります。
+# Up to 3 lines. English: The limit of %d templates has been reached.
+T_TPL_MANY = テンプレートの上限（%d 個）に達しました。
+# Button. English: Select
+T_MARK = 選択
+# One line. English: Selected: %d
+T_MARKED_N = 選択中: %d
+# One line. English: Select saves
+T_TPL_MARK_TITLE = セーブデータを選択
+# Up to 3 lines. English: Discard the selected saves?
+T_MARK_DROP = 選択を解除しますか？
+# Button. English: Discard
+T_MARK_DROP_YES = 解除
+# Up to 3 lines. English: Create the template "%s"?
+T_TPL_CREATE_ASK = テンプレート「%s」を作成しますか？
+# Button. English: Create
+T_TPL_CREATE = 作成
+# One line. English: Copying to the template...
+T_TPL_COPYING = テンプレートにコピーしています...
+# Up to 3 lines. English: Unable to create the template.
+T_TPL_FAILED = テンプレートを作成できませんでした。
+# Up to 3 lines. English: Template "%s" created.
+T_TPL_CREATED = テンプレート「%s」を作成しました。
+# Up to 3 lines. English: Saves copied: %d
+T_TPL_COPIED_N = コピーしたセーブデータ: %d
+# Up to 3 lines. English: Saves not copied: %d
+T_TPL_NOT_COPIED = コピーできなかったセーブデータ: %d
+# One line. English: Saves: %d (%d KB)
+T_TPL_SUMMARY = セーブ %d 個（%d KB）
+# One line. English: This template has no saves.
+T_TPL_EMPTY = このテンプレートは空です。
+# One line. English: Remove from template
+T_TPL_REMOVE = テンプレートから外す
+# Up to 3 lines. English: Remove "%s" from the template?
+T_TPL_REMOVE_ASK = 「%s」をテンプレートから外しますか？
+# Button. English: Remove
+T_TPL_REMOVE_YES = 外す
+# One line. English: Add saves
+T_TPL_ADD_SAVES = セーブデータを追加
+# One line. English: Rename
+T_TPL_RENAME = 名前を変更
+# One line. English: Delete template
+T_TPL_DELETE = テンプレートを削除
+# Up to 3 lines. English: Delete the template "%s"?
+T_TPL_DELETE_ASK = テンプレート「%s」を削除しますか？
+# Up to 3 lines. English: Saves already applied to cards are kept.
+T_TPL_DELETE_NOTE = すでにカードに適用されたセーブデータは残ります。
+# Up to 3 lines. English: Unable to delete the template.
+T_TPL_DELETE_FAILED = テンプレートを削除できませんでした。
+# Button. English: Apply
+T_TPL_APPLY = 適用
+# One line. English: Applying the template...
+T_TPL_APPLYING = テンプレートを適用しています...
+# Up to 3 lines. English: Add the selected saves to the template "%s"?
+T_TPL_ADD_ASK = 選択したセーブデータをテンプレート「%s」に追加しますか？
+# Button. English: Add
+T_TPL_ADD = 追加
+# Up to 3 lines. English: The template already has %d of the selected saves. Replace them?
+T_TPL_REPLACE_ASK = 選択したセーブデータのうち %d 個はすでにテンプレートにあります。置き換えますか？
+# Button. English: Keep existing
+T_TPL_KEEP = 既存を残す
+# Up to 3 lines. English: A template holds %d saves at most.
+T_TPL_FULL = テンプレートに入れられるセーブデータは最大 %d 個です。
+# Up to 3 lines. English: Saves added to the template: %d
+T_TPL_ADDED = テンプレートに追加したセーブデータ: %d
+# One line. English: Renaming...
+T_TPL_RENAMING = 名前を変更しています...
+# Up to 3 lines. English: Unable to rename the template.
+T_TPL_RENAME_FAILED = テンプレートの名前を変更できませんでした。
+# One line. English: Apply template...
+T_TPL_APPLY_MENU = テンプレートを適用...
+# One line. English: Apply template
+T_TPL_APPLY_TITLE = テンプレートを適用
+# One line. English: All game cards
+T_TPL_ALL_CARDS = すべてのゲームカード
+# One line. English: Select cards
+T_TPL_PICK_CARDS = カードを選択
+# Up to 3 lines. English: Apply the template "%s" to the selected cards?
+T_TPL_PICK_ASK = テンプレート「%s」を選択したカードに適用しますか？
+# Button. English: Set as default
+T_TPL_MAKE_MAIN = デフォルトに設定
+# One line. English: Remove as default
+T_TPL_UNMAKE_MAIN = デフォルトを解除
+# One line. English: Default
+T_TPL_MAIN = デフォルト
+# Up to 3 lines. English: "%s" set as the default template.
+T_TPL_MAIN_NOW = 「%s」をデフォルトのテンプレートに設定しました。
+# Up to 3 lines. English: Apply the template "%s" to the game cards?
+T_TPL_GAMES_ASK = テンプレート「%s」をゲームカードに適用しますか？
+# Up to 3 lines. English: Cards without the template's saves: %d
+T_TPL_GAMES_N = テンプレートのセーブデータがないカード: %d
+# Up to 3 lines. English: Every game card already has the saves of this template.
+T_TPL_GAMES_NONE = すべてのゲームカードにこのテンプレートのセーブデータがすでにあります。
+# Up to 3 lines. English: There are no game cards on the MMCE.
+T_TPL_NO_GAME_CARDS = MMCE にゲームカードがありません。
+# One line. English: Checking the game cards...
+T_TPL_CHECKING = ゲームカードを確認しています...
+# Up to 3 lines. English: Cards that got saves: %d
+T_TPL_GAMES_GOT = セーブデータを追加したカード: %d
+# Up to 3 lines. English: Cards not changed: %d
+T_TPL_GAMES_LEFT = 変更しなかったカード: %d
+# Up to 2 lines. English: Game cards without their template: %d
+T_TPL_WARN = テンプレートのないゲームカード: %d
+# Button. English: Don't warn
+T_TPL_NO_WARN = 通知しない
+# One line. English: Linked games
+T_TPL_GAMES = 関連付けたゲーム
+# One line. English: Update existing saves
+T_TPL_UPDATE = 既存のセーブデータを更新
+# Up to 3 lines. English: Update the saves of the template "%s" on the game cards?
+T_TPL_UPDATE_ASK = ゲームカード上のテンプレート「%s」のセーブデータを更新しますか？
+# Up to 4 lines. English: Only the saves of this template that a card already has are replaced, with the template's version. No other save is changed.
+T_TPL_UPDATE_NOTE = カードにすでにあるこのテンプレートのセーブデータだけが、テンプレートの内容で置き換えられます。ほかのセーブデータは変更されません。
+# Button. English: Update
+T_TPL_UPDATE_YES = 更新
+# Up to 3 lines. English: Cards updated: %d
+T_TPL_UPDATED_N = 更新したカード: %d
+# One line. English: Auto-apply
+T_TPL_AFTER_GAME = 自動適用
+# Up to 6 lines. English: With the automatic sync on, a game's card gets the default template when the game is left, with no question asked.
+T_TPL_AFTER_HINT = 自動同期がオンの場合、ゲームを終了すると、そのゲームのカードにデフォルトのテンプレートが確認なしで適用されます。
+# One line. English: No default template
+T_TPL_NO_MAIN = デフォルトのテンプレートなし
+# One line. English: On
+T_TPL_ON = オン
+# One line. English: Off
+T_TPL_OFF = オフ
+# Button. English: Change
+T_TPL_CHANGE = 変更
+# Button. English: Disable sync
+T_SYNC_DISABLE = 同期を無効にする
+# One line. English: Enable sync
+T_SYNC_ENABLE = 同期を有効にする
+# Button. English: Skip
+T_SKIP = スキップ
+# One line. English: Skip %s?
+T_SKIP_ASK = %s をスキップしますか？
+# One line. English: The card will not be uploaded this time.
+T_SKIP_TEXT = 今回はこのカードをアップロードしません。
+# Up to 3 lines. English: %d min left
+T_TIME_LEFT_MIN = 残り %d 分
+# Up to 3 lines. English: %d s left
+T_TIME_LEFT_SEC = 残り %d 秒
+# Up to 3 lines. English: skipped
+T_UPLOAD_SKIPPED = スキップ
+# One line. English: Not used by the sd2psx
+T_CARD_UNUSED = sd2psx では未使用
+# One line. English: Move saves to %s
+T_MOVE_SAVES = セーブを %s に移動
+# Up to 2 lines. English: Move the saves of %s to %s?
+T_MOVE_SAVES_ASK = %s のセーブデータを %s に移動しますか？
+# Up to 2 lines. English: The sd2psx uses the folder %s for this game.
+T_MOVE_SAVES_NOTE = このゲームには %s フォルダーが使われています。
+# Up to 3 lines. English: Saves moved: %d
+T_MOVED_N = 移動したセーブデータ: %d
+# Up to 3 lines. English: Saves not moved: %d
+T_NOT_MOVED_N = 移動できなかったセーブデータ: %d
+# One line. English: Updating the SAS package...
+T_HELPER_UPDATING = SAS パッケージを更新しています...
