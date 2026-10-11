@@ -28,6 +28,7 @@ u32 pad_buttons(void);                      /* buttons held right now (PAD_*) */
 u32 wait_button(u32 mask, int seconds);     /* 0 = timed out; seconds = 0 waits forever */
 u32 wait_nav(u32 mask);                     /* for lists: like wait_button, but the arrows repeat while held */
 u32 wait_nav_ms(u32 mask, int ms);          /* the same, giving up after ms (0 = no press) */
+u32 wait_nav_repeat(u32 mask, u32 repeat);  /* wait_nav, the buttons of repeat repeating too (square erasing, held) */
 extern void (*idleHook)(void);              /* called over and over while one of those waits (NULL = nothing to call) */
 typedef struct {
     int year, month, day, hour, minute, second;

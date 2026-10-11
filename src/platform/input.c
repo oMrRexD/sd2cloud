@@ -64,11 +64,12 @@ u32 wait_button(u32 mask, int seconds)
     }
 }
 
-/* for lists: a new press returns at once; the arrows held repeat (after 400 ms, then every 100 ms). A button that is
- * already held when the screen opens (the X that confirmed the previous screen) only counts after it's released.
- * ms >= 0: gives up after that long and returns 0 (the screen has something to do in the background meanwhile) */
+/* for lists: a new press returns at once; the arrows held repeat (after 400 ms, then every 100 ms), and so do the
+ * other buttons of repeat. A button that is already held when the screen opens (the X that confirmed the previous
+ * screen) only counts after it's released. ms >= 0: gives up after that long and returns 0 (the screen has something
+ * to do in the background meanwhile) */
 #define ARROWS (PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT)
-u32 wait_nav_ms(u32 mask, int ms)
+static u32 nav_wait(u32 mask, int ms, u32 repeat)
 {
     static u32 held;
     static u64 next;
@@ -83,7 +84,7 @@ u32 wait_nav_ms(u32 mask, int ms)
             return b;
     }
 #endif
-    held = (held & now) | (now & ~ARROWS);
+    held = (held & now) | (now & ~repeat);
     for (;;) {
         u32 b = pad_buttons() & mask, fresh = b & ~held;
         u64 t = now_ms();
@@ -92,10 +93,10 @@ u32 wait_nav_ms(u32 mask, int ms)
             next = t + 400;
             return fresh;
         }
-        if ((b & held & ARROWS) && t >= next) {
+        if ((b & held & repeat) && t >= next) {
             held = b;
             next = t + 100;
-            return b & ARROWS;
+            return b & repeat;
         }
         held = b;
         if (ms >= 0 && t >= end)
@@ -106,7 +107,9 @@ u32 wait_nav_ms(u32 mask, int ms)
     }
 }
 
-u32 wait_nav(u32 mask) { return wait_nav_ms(mask, -1); }
+u32 wait_nav_ms(u32 mask, int ms) { return nav_wait(mask, ms, ARROWS); }
+u32 wait_nav(u32 mask) { return nav_wait(mask, -1, ARROWS); }
+u32 wait_nav_repeat(u32 mask, u32 repeat) { return nav_wait(mask, -1, ARROWS | repeat); }
 
 /* the PS2 clock keeps Japan time; convert it with the time zone set on the console */
 void local_time(datetime_t *t)

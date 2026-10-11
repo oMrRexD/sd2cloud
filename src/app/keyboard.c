@@ -80,7 +80,8 @@ int keyboard(const char *title, char *text, size_t size)
     ui_unlock();
     ui_scene(scene_keyboard);
     for (;;) {
-        u32 b = wait_nav(PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT | PAD_CROSS | PAD_SQUARE | PAD_CIRCLE | PAD_START);
+        /* (square held goes on erasing, as the arrows held go on moving) */
+        u32 b = wait_nav_repeat(PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT | PAD_CROSS | PAD_SQUARE | PAD_CIRCLE | PAD_START, PAD_SQUARE);
         int n = (int)strlen(kb.text), sound = SND_MOVE;
         if (b & PAD_CIRCLE) {
             sound_play(SND_BACK);
