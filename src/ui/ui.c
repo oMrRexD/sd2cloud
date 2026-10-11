@@ -490,9 +490,19 @@ static int lay_out(int font, float x, float y, int width, u32 color, const char 
         char test[400];
         snprintf(test, sizeof(test), "%s%s%.*s", line, line[0] && apart ? " " : "", (int)n, p);
         if (line[0] && ui_measure(font, test) > width) {
+            /* inside a run of Japanese, the line goes back to its last ideographic space (U+3000, between the words
+             * of a game's title) when what follows it fits on the next line: "ＴＨＥ" and "メイド服と機関銃", not
+             * "ＴＨＥ　メイド服と機関" and "銃" */
+            char *wide = NULL, *s;
+            for (s = line; !apart && (s = strstr(s, "\xE3\x80\x80")) != NULL; s += 3)
+                wide = s;
+            if (wide > line && snprintf(test, sizeof(test), "%s%.*s", wide + 3, (int)n, p) >= 0 && ui_measure(font, test) <= width)
+                *wide = 0;
+            else
+                snprintf(test, sizeof(test), "%.*s", (int)n, p);
             put_line(font, x, y + lines * lh, color, line, draw);
             lines++;
-            snprintf(line, sizeof(line), "%.*s", (int)n, p);
+            snprintf(line, sizeof(line), "%s", test);
         } else
             snprintf(line, sizeof(line), "%s", test);
         p += n;

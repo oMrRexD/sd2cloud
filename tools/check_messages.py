@@ -56,11 +56,11 @@ def words(part):
     """the words of a line of text as ui.c lays them out, each with whether a space comes before it"""
     out, i, apart = [], 0, False
     while i < len(part):
-        if part[i].isspace():
+        if part[i] == " ":
             i, apart = i + 1, True
             continue
         j = i + 1
-        while j < len(part) and not part[j].isspace() and not (
+        while j < len(part) and part[j] != " " and not (
                 (japanese(part[j - 1]) or japanese(part[j])) and part[j - 1] not in NO_END and part[j] not in NO_START):
             j += 1
         out.append((part[i:j], apart))
@@ -76,7 +76,9 @@ def count_lines(font, s, width):
         for word, apart in words(part):
             test = f"{line}{' ' if line and apart else ''}{word}"
             if line and measure(font, test) > width:
-                n, line = n + 1, word
+                # (inside Japanese, back to the line's last ideographic space when what follows it fits: ui.c)
+                rest = line[line.rindex("\u3000") + 1:] + word if not apart and "\u3000" in line[1:] else None
+                n, line = n + 1, rest if rest is not None and measure(font, rest) <= width else word
             else:
                 line = test
         n += 1 if line else 0
