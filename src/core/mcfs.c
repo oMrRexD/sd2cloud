@@ -105,6 +105,22 @@ static int read_all(int fd, unsigned char *out, unsigned int n)
     return 0;
 }
 
+/* n bytes from byte at. The device can be busy for a moment (reading a card it was told to take into its memory, or
+ * writing the one in use), and a read then fails in the middle of cards that are whole: a failed read is tried again,
+ * a little later each time, before the card counts as unreadable. 0 = read */
+#define READ_TRIES 4
+static int read_at(int fd, long at, unsigned char *out, unsigned int n)
+{
+    int t;
+    for (t = 0; t < READ_TRIES; t++) {
+        if (t)
+            sleep_ms(150 << t);   /* 300, 600, 1200 ms */
+        if (lseek(fd, at, SEEK_SET) == at && read_all(fd, out, n) == 0)
+            return 0;
+    }
+    return -1;
+}
+
 /* the bytes of "physical" cluster n: from memory, or from the file, where a .ps2 has its ECC after each page */
 static int read_cluster(mc_t *m, unsigned int n, unsigned char *out)
 {
@@ -117,13 +133,13 @@ static int read_cluster(mc_t *m, unsigned int n, unsigned char *out)
         return 0;
     }
     if (!m->spare) {
-        if (lseek(m->fd, (long)n * m->csz, SEEK_SET) < 0 || read_all(m->fd, out, m->csz) != 0) {
+        if (read_at(m->fd, (long)n * m->csz, out, m->csz) != 0) {
             snprintf(lastError, sizeof(lastError), "cluster %u (byte %lu) not read, errno %d", n, (unsigned long)n * m->csz, errno);
             return -1;
         }
         return 0;
     }
-    if (lseek(m->fd, (long)n * pages * stride, SEEK_SET) < 0 || read_all(m->fd, raw, pages * stride) != 0)
+    if (read_at(m->fd, (long)n * pages * stride, raw, pages * stride) != 0)
         return -1;
     for (p = 0; p < pages; p++)
         memcpy(out + p * m->page, raw + p * stride, m->page);
@@ -269,15 +285,18 @@ static int mc_open_mode(mc_t *m, const char *path, int flags)
         m->mem = imageMem;
         m->memLen = imageLen;
     } else {
-        m->fd = open(image ? imageFile : path, flags);
+        i = 0;   /* (a file that isn't there isn't waited for: only a device that may be busy, see read_at) */
+        while ((m->fd = open(image ? imageFile : path, flags)) < 0 && errno != ENOENT && ++i < READ_TRIES)
+            sleep_ms(150 << i);
         if (m->fd < 0) {
             snprintf(lastError, sizeof(lastError), "not opened (%d, errno %d)", m->fd, errno);
             return -1;
         }
-        if ((i = (unsigned int)read(m->fd, sb, sizeof(sb))) != sizeof(sb)) {
-            snprintf(lastError, sizeof(lastError), "its first %u bytes not read (%d, errno %d)", (unsigned)sizeof(sb), (int)i, errno);
+        if (read_at(m->fd, 0, sb, sizeof(sb)) != 0) {
+            snprintf(lastError, sizeof(lastError), "its first %u bytes not read (errno %d)", (unsigned)sizeof(sb), errno);
             goto bad;
         }
+        ioReads--;   /* (what the log counts is the card's clusters read, not its superblock) */
     }
     if (memcmp(sb, MAGIC, sizeof(MAGIC) - 1) != 0) {
         snprintf(lastError, sizeof(lastError), "not a PS2 memory card (it starts with %02X %02X %02X %02X)", sb[0], sb[1], sb[2], sb[3]);

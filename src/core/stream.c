@@ -179,7 +179,12 @@ int stream_zip(const card_t *c, const datetime_t *t, stream_t *s, chunk_cb cb, v
 
     zip_head(&o, name, dosTime, dosDate);
     for (;;) {
-        n = read(fd, block, sizeof(block));
+        int k = 0;
+        /* the device busy for a moment (see read_at in mcfs.c): read again from where it was, a little later each time */
+        while (((n = read(fd, block, sizeof(block))) < 0 || (n == 0 && s->read < s->total)) && ++k < 4) {
+            sleep_ms(150 << k);
+            lseek(fd, (long)s->read, SEEK_SET);
+        }
         if (n < 0) {
             log_msg("%s: read error at %lld (%d)", c->id, s->read, n);
             goto out_z;

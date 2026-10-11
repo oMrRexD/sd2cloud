@@ -312,11 +312,14 @@ void manual(void)
 #endif
         if (cardsUnsorted)   /* a card made for a save: into its place, now that nothing holds on to the others */
             cards_resort();
-        /* the selected card's icon is read when the cursor rests a moment */
+        /* the selected card's icon is read when the cursor rests a moment; a card not read yet, every few seconds */
         b = wait_nav_ms(keys, 250);
         if (!b) {
             menu_icon();
-            b = wait_nav(keys);
+            while (cards_unread() && !(b = wait_nav_ms(keys, 3000)))
+                card_reread();
+            if (!b)
+                b = wait_nav(keys);
         }
         if (tabs_nav(&menu.g, b) || tabs_folder_nav(&menu.g, b))
             continue;
@@ -327,8 +330,13 @@ void manual(void)
             sound_play(SND_CONFIRM);
             files_screen(menu.g.cursor);
         } else if ((b & PAD_CROSS) && tabs_card(&menu.g)) {
+            card_t *c = tabs_card(&menu.g);
             sound_play(SND_CONFIRM);
-            card_screen(tabs_card(&menu.g));
+            if (c->status == ST_ERROR) {   /* not read when the list was made: read again first */
+                message(0, NULL, COLOR_TEXT, T(T_LOADING));
+                cards_recheck(c);
+            }
+            card_screen(c);
         } else if ((b & PAD_TRIANGLE) && tabs_card(&menu.g)) {
             sound_play(SND_CONFIRM);
             card_options(tabs_card(&menu.g));

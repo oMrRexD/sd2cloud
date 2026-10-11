@@ -117,6 +117,32 @@ void cards_retry(void)
     }
 }
 
+/* One still not read is read again while the list of cards waits for the controller, every few seconds and a few
+ * times at most, without anyone having to close and open the program (and X on it reads it again at once). 1 = there
+ * is one to read again */
+#define REREADS 5
+int cards_unread(void)
+{
+    int i;
+    for (i = 0; i < nCards; i++)
+        if (cards[i].included && cards[i].status == ST_ERROR && cards[i].rereads < REREADS)
+            return 1;
+    return 0;
+}
+
+void card_reread(void)
+{
+    int i;
+    for (i = 0; i < nCards; i++)
+        if (cards[i].included && cards[i].status == ST_ERROR && cards[i].rereads < REREADS) {
+            cards[i].rereads++;
+            cards_recheck(&cards[i]);
+            log_msg("%s: read again while the list waited (%d): %s", cards[i].id, cards[i].rereads,
+                    cards[i].status == ST_ERROR ? "still not read" : "read");
+            return;
+        }
+}
+
 /* the icon of the card being sent: on a game's card (Game ID), the 3D icon of its newest save; on a card shared by
  * many games (CardN, named folders, BootCard) or when the save's icon can't be read, the SD2PSX memory card */
 static icon_t *cardIcon;

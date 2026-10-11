@@ -360,6 +360,8 @@ void tools_screen(void);
 /* ------------------------------------------------------------ work.c */
 void checking_progress(int i, int n, const card_t *c);
 void cards_retry(void);
+int cards_unread(void);                  /* a card not read yet, to read again while the list of cards waits? */
+void card_reread(void);                  /* reads the next one of those again */
 extern int circleDown;
 void watch_cancel(void);
 extern int watchOff;
