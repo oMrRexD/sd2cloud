@@ -97,7 +97,8 @@ void look_frame(void)
         snprintf(v, sizeof(v), "v%s", APP_VERSION);
         ui_text_right(FONT_SMALL, LOOK_LINE_X1 - 4, 40, 0x6A7486, v);
     }
-#if defined(BETA_BUILD) || defined(DEBUG_BUILD)
+/* (README_SHOTS: the debug build that takes the README's screenshots, which show the program as it is) */
+#if defined(BETA_BUILD) || (defined(DEBUG_BUILD) && !defined(README_SHOTS))
     {   /* before the version, what else the build is: nothing else on the screen tells it from the program */
         int x = LOOK_LINE_X1 - 4 - ui_measure(FONT_SMALL, v) - (news[0] ? ui_measure(FONT_SMALL, news) : 0) - 10;
 #ifdef BETA_BUILD
@@ -105,7 +106,7 @@ void look_frame(void)
         ui_text_right(FONT_SMALL, x, 40, COLOR_ACCENT, "beta " APP_COMMIT);
         x -= ui_measure(FONT_SMALL, "beta " APP_COMMIT) + 10;
 #endif
-#ifdef DEBUG_BUILD
+#if defined(DEBUG_BUILD) && !defined(README_SHOTS)
         ui_text_right(FONT_SMALL, x, 40, COLOR_WARN, "debug");
 #endif
     }

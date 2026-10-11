@@ -298,22 +298,27 @@ void card_work_done(void)
 }
 
 #ifdef DEBUG_BUILD
-/* script "V<n>" at the start: shows the backup screen of card n (in the menu's order) for 6 s without sending
- * anything, its bar a fifth of the way by then, and captures it: to check the icons and the time left on PCSX2 */
-void debug_preview(int k)
+/* the backup screen as it was set (a card's, or a save's), for 6 s without sending anything, its bar a fifth of the
+ * way by then, and captured: to check the icons and the time left on PCSX2 */
+void debug_preview_shown(void)
 {
-    u64 end;
-    if (k < 0 || k >= nCards)
-        return;
-    currentN = totalN = 1;
-    load_card_icon(&cards[k]);
     /* the main thread only sleeps, as if it were waiting on the network: the animation must keep going by itself */
-    end = now_ms() + 6000;
+    u64 end = now_ms() + 6000;
     while (now_ms() < end) {
         upload_screen((long long)(now_ms() - iconStart), 30000);
         sleep_ms(100);
     }
     debug_capture_and_stop();
+}
+
+/* script "V<n>" at the start: the backup screen of card n (in the menu's order) */
+void debug_preview(int k)
+{
+    if (k < 0 || k >= nCards)
+        return;
+    currentN = totalN = 1;
+    load_card_icon(&cards[k]);
+    debug_preview_shown();
 }
 #endif
 

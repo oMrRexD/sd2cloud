@@ -384,6 +384,7 @@ void card_work(const card_t *c, int own, const char *text, int fixed);
 void card_work_done(void);
 #ifdef DEBUG_BUILD
 void debug_preview(int k);
+void debug_preview_shown(void);
 #endif
 void save_into(const card_t *to, const save_view_t *v, int text);
 int save_progress(int phase, long long done, long long total);

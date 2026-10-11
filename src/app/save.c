@@ -173,6 +173,18 @@ static int save_delete(card_t *c, save_view_t *v)
 }
 
 /* just this save to Drive, as a .psu: "<main folder>/<card folder>/Saves/<save> YYYY-MM-DD HHhMM.psu" */
+/* the screen of a card's backup, with the save's icon and name */
+static void upload_shown(card_t *c, const save_view_t *v, const char *name)
+{
+    ui_lock();
+    current = c;
+    saveIcon = v->icon;
+    snprintf(saveTitle, sizeof(saveTitle), "%s", name);
+    iconStart = now_ms();
+    currentN = totalN = 1;
+    ui_unlock();
+}
+
 static void save_to_cloud(card_t *c, save_view_t *v)
 {
     buffer_t psu = {0};
@@ -185,6 +197,12 @@ static void save_to_cloud(card_t *c, save_view_t *v)
     snprintf(t, sizeof(t), T(T_CONFIRM_CLOUD), name);
     if (!confirm(t, T(T_CONFIRM_CLOUD_TEXT), T_TO_CLOUD))
         return;
+#ifdef DEBUG_BUILD
+    if (debug_take('V')) {   /* script "V" here: that screen, without sending the save (debug_preview) */
+        upload_shown(c, v, name);
+        debug_preview_shown();
+    }
+#endif
     googleError[0] = 0;
     if ((r = ensure_google(1)) != 0) {
         if (r > 0) {
@@ -193,14 +211,7 @@ static void save_to_cloud(card_t *c, save_view_t *v)
         }
         return;
     }
-    /* the same screen as a card's backup, with the save's icon and name */
-    ui_lock();
-    current = c;
-    saveIcon = v->icon;
-    snprintf(saveTitle, sizeof(saveTitle), "%s", name);
-    iconStart = now_ms();
-    currentN = totalN = 1;
-    ui_unlock();
+    upload_shown(c, v, name);
     upload_screen(0, 1);
     backupCancelled = cancelLatched = 0;
     rootId[0] = 0;
