@@ -405,8 +405,8 @@ T_LOGOUT_YES = Disconnect
 T_LOGOUT_DONE = Google account disconnected.
 # Up to 3 lines.
 T_ABOUT_TEXT = Manage and back up your sd2psx memory cards, right on your PS2.
-# Up to 3 lines.
-T_ABOUT_CREDITS = Design inspired by the PlayStation BB Navigator. Fonts: Varela Round, Nunito and M PLUS Rounded 1c (SIL Open Font License).
+# Up to 2 lines.
+T_ABOUT_CREDITS = Design inspired by the PlayStation BB Navigator. Fonts: Varela Round, Nunito and M PLUS Rounded 1c (SIL OFL).
 # One line.
 T_ABOUT_LICENSES = Third-party licenses: see THIRD-PARTY-NOTICES.txt.
 # Up to 3 lines.

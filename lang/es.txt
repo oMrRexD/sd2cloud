@@ -402,8 +402,8 @@ T_LOGOUT_YES = Desconectar
 T_LOGOUT_DONE = Cuenta de Google desconectada.
 # Up to 3 lines. English: Manage and back up your sd2psx memory cards, right on your PS2.
 T_ABOUT_TEXT = Gestione y respalde las tarjetas de memoria de su sd2psx, directamente en el PS2.
-# Up to 3 lines. English: Design inspired by the PlayStation BB Navigator. Fonts: Varela Round, Nunito and M PLUS Rounded 1c (SIL Open Font License).
-T_ABOUT_CREDITS = Diseño inspirado en el PlayStation BB Navigator. Fuentes: Varela Round, Nunito y M PLUS Rounded 1c (SIL Open Font License).
+# Up to 2 lines. English: Design inspired by the PlayStation BB Navigator. Fonts: Varela Round, Nunito and M PLUS Rounded 1c (SIL OFL).
+T_ABOUT_CREDITS = Diseño inspirado en el PlayStation BB Navigator. Fuentes: Varela Round, Nunito y M PLUS Rounded 1c (SIL OFL).
 # One line. English: Third-party licenses: see THIRD-PARTY-NOTICES.txt.
 T_ABOUT_LICENSES = Licencias de terceros: consulte THIRD-PARTY-NOTICES.txt.
 # Up to 3 lines. English: Developed by MrRexD.

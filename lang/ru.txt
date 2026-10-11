@@ -402,8 +402,8 @@ T_LOGOUT_YES = Отключить
 T_LOGOUT_DONE = Аккаунт Google отключён.
 # Up to 3 lines. English: Manage and back up your sd2psx memory cards, right on your PS2.
 T_ABOUT_TEXT = Управление картами памяти sd2psx и их резервное копирование прямо на PS2.
-# Up to 3 lines. English: Design inspired by the PlayStation BB Navigator. Fonts: Varela Round, Nunito and M PLUS Rounded 1c (SIL Open Font License).
-T_ABOUT_CREDITS = Дизайн вдохновлён PlayStation BB Navigator. Шрифты: Varela Round, Nunito и M PLUS Rounded 1c (SIL Open Font License).
+# Up to 2 lines. English: Design inspired by the PlayStation BB Navigator. Fonts: Varela Round, Nunito and M PLUS Rounded 1c (SIL OFL).
+T_ABOUT_CREDITS = Дизайн вдохновлён PlayStation BB Navigator. Шрифты: Varela Round, Nunito и M PLUS Rounded 1c (SIL OFL).
 # One line. English: Third-party licenses: see THIRD-PARTY-NOTICES.txt.
 T_ABOUT_LICENSES = Сторонние лицензии: см. THIRD-PARTY-NOTICES.txt.
 # Up to 3 lines. English: Developed by MrRexD.

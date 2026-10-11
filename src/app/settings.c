@@ -575,10 +575,11 @@ static void about_screen(void)
 #ifdef DEBUG_BUILD
     snprintf(t + strlen(t), sizeof(t) - strlen(t), " debug");
 #endif
+    /* (all of it has to fit between the header's line and the legend's: tools/check_messages.py adds it up) */
     dlg_new(COLOR_TITLE, t);
-    dlg_line(FONT_TEXT, COLOR_TEXT, 10, T(T_ABOUT_TEXT));
+    dlg_line(FONT_TEXT, COLOR_TEXT, 8, T(T_ABOUT_TEXT));
     dlg_line(FONT_SMALL, COLOR_DIM, 4, T(T_ABOUT_CREDITS));
-    dlg_line(FONT_SMALL, COLOR_DIM, 10, T(T_ABOUT_LICENSES));
+    dlg_line(FONT_SMALL, COLOR_DIM, 8, T(T_ABOUT_LICENSES));
     dlg_line(FONT_TEXT, COLOR_TEXT, 2, T(T_ABOUT_AUTHOR));
     snprintf(t, sizeof(t), "github.com/%s", cfg.repo);
     dlg_line(FONT_SMALL, COLOR_ACCENT, 6, t);

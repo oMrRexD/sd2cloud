@@ -172,7 +172,7 @@ PLACE = {
     "T_MENU_UPDATE": ("text", 440, 1), "T_PENDING_N": ("text", 200, 1), "T_NONE_PENDING": ("text", 200, 1), "T_UPDATE_AVAILABLE": ("text", 200, 1),
     "T_HELPER_NOT_INSTALLED": ("text", 200, 1), "T_ACCOUNT_OFF": ("text", 200, 1),
     "T_SYNC_NOW": ("text", 320, 1), "T_EXIT_TO": ("text", 330, 1), "T_EXIT_BROWSER": ("text", 320, 1), "T_ALL_SYNCED": ("text", DIALOG, 1), "T_AUTO_ASK": ("text", WIDE, 3), "T_AUTO_WHERE": ("small", WIDE, 2),
-    "T_AUTO_OPL": ("text", WIDE, 1), "T_ABOUT_CREDITS": ("small", WIDE, 3), "T_ABOUT_LICENSES": ("small", WIDE, 1), "T_AUTO_NOTE": ("small", WIDE, 1), "T_AUTO_DONE": ("text", WIDE, 1), "T_CONNECT_HINT": ("small", DIALOG, 2),
+    "T_AUTO_OPL": ("text", WIDE, 1), "T_ABOUT_CREDITS": ("small", WIDE, 2), "T_ABOUT_LICENSES": ("small", WIDE, 1), "T_AUTO_NOTE": ("small", WIDE, 1), "T_AUTO_DONE": ("text", WIDE, 1), "T_CONNECT_HINT": ("small", DIALOG, 2),
     # the box with a list (a card's options, the exit menu): title and items centered in 380 px; an item wider than
     # 320 px is cut with "..." (main.c choose)
     "T_RESTORE_BACKUP": ("text", 320, 1), "T_COPY_DEVICE": ("text", 320, 1), "T_HELPER_REINSTALL": ("text", 320, 1), "T_HELPER_UNINSTALL": ("text", 320, 1),
@@ -374,6 +374,23 @@ def legend_width(texts, apart, font="text"):
     gap, wide = (18, 34) if len(texts) > 4 else (26, 70)
     inner = apart - 1 if apart else 0
     w = sum(measure(font, t) + 26 for t in texts) + 18 * inner + gap * (len(texts) - 1 - inner)
+def line_height(font):
+    """a line of a paragraph, as ui.c spaces them: the font's height (FreeType's, rounded up) and 2 pixels"""
+    hhea, upm = TTFont(TTF)["hhea"], TTFont(TTF)["head"].unitsPerEm
+    px = SPEC[font][0]
+    return -(-round((hhea.ascent - hhea.descent + hhea.lineGap) * px / upm * 64) // 64) + 2
+
+
+def about_height(texts):
+    """the box of Settings > About (settings.c, about_screen; dialog.c, scene_dialog): its title (the version), the
+    texts with the gaps under each, the project's address and where the program is, and 28 pixels around them"""
+    rows = [("text", "SD2Cloud v1.6.2 (98cce06) beta debug", 10), ("text", texts["T_ABOUT_TEXT"], 8),
+            ("small", texts["T_ABOUT_CREDITS"], 4), ("small", texts["T_ABOUT_LICENSES"], 8),
+            ("text", texts["T_ABOUT_AUTHOR"], 2), ("small", "github.com/oMrRexD/sd2cloud", 6),
+            ("small", "mmce0:/APPS/SD2Cloud/SD2CLOUD.ELF", 0)]
+    return 2 * 28 + sum(count_lines(font, s, 520 - 56) * line_height(font) + gap for font, s, gap in rows)
+
+
     return w + (wide - gap if apart and len(texts) > apart else 0)
 
 
@@ -455,6 +472,10 @@ def main():
           f"{bad} problem(s)")
     return 1 if bad else 0
 
+        h = about_height(texts)
+        if h > 372 - 74:   # (LOOK_BOTTOM - LOOK_TOP: between the header's line and the legend's)
+            bad += 1
+            print(f"  ABOUT TOO TALL [{code}] {h} px / {372 - 74} px: Settings > About")
 
 if __name__ == "__main__":
     sys.exit(main())
