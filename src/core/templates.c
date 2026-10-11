@@ -207,6 +207,16 @@ void templates_settle(const char *cardId, const char *game)
     signature(game, settled[i].sig);
 }
 
+void templates_unsettle(const char *cardId)
+{
+    int i;
+    for (i = 0; i < nSettled; i++)
+        if (!strcmp(settled[i].id, cardId)) {
+            settled[i] = settled[--nSettled];
+            return;
+        }
+}
+
 void template_path(const template_t *t, int i, char *out, size_t size)
 {
     char root[64];

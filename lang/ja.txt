@@ -747,6 +747,8 @@ T_TPL_GAMES_LEFT = 変更しなかったカード: %d
 T_TPL_WARN = テンプレートのないゲームカード: %d
 # Button. English: Don't warn
 T_TPL_NO_WARN = 通知しない
+# One line. English: Re-enable warnings
+T_TPL_WARN_AGAIN = 警告を再表示
 # One line. English: Linked games
 T_TPL_GAMES = 関連付けたゲーム
 # One line. English: Update existing saves

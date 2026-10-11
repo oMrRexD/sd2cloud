@@ -750,6 +750,8 @@ T_TPL_WARN = Game cards without their template: %d
 # Button.
 T_TPL_NO_WARN = Don't warn
 # One line.
+T_TPL_WARN_AGAIN = Re-enable warnings
+# One line.
 T_TPL_GAMES = Linked games
 # One line.
 T_TPL_UPDATE = Update existing saves

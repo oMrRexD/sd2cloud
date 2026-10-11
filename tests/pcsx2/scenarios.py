@@ -125,6 +125,9 @@ SCENARIOS = [
     {"name": "template-no-warning", "what": "the same, and the user asks not to be told about that card",
      "cards": CARDS, "files": dict(TEMPLATE, **{"SD2Cloud/templates/templates.ini": b"[templates]\nmain = Net\n"}),
      "script": "QC"},
+    {"name": "template-warn-again", "what": "told not to warn about that card, then \"Re-enable warnings\" in the template's options: "
+     "said again at once, and put into it", "cards": CARDS,
+     "files": dict(TEMPLATE, **{"SD2Cloud/templates/templates.ini": b"[templates]\nmain = Net\n"}), "script": "QLXDTDDDXXXC"},
     {"name": "template-games", "what": "a template made a game's, and put into that game's card",
      "cards": CARDS, "files": TEMPLATE, "script": "LXDXTDDDXXOXXC"},
     # (the template's save is another version of one the game card has; Card1-1 has it too, and is no game card)

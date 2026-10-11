@@ -225,7 +225,7 @@ PLACE = {
     "T_MARKED_N": ("text", 200, 1), "T_TPL_SUMMARY": ("text", 244, 1), "T_TPL_EMPTY": ("browser", 540, 1),
     "T_TPL_REMOVE": ("browser", 304, 1), "T_TPL_COPYING": ("text", 296, 1),
     "T_TPL_APPLYING": ("text", 296, 1), "T_TPL_RENAMING": ("text", DIALOG, 1),
-    "T_TPL_APPLY_MENU": ("text", 320, 1), "T_TPL_APPLY_TITLE": ("text", 400, 1), "T_TPL_MAKE_MAIN": ("text", 320, 1), "T_TPL_UNMAKE_MAIN": ("text", 320, 1),
+    "T_TPL_APPLY_MENU": ("text", 320, 1), "T_TPL_APPLY_TITLE": ("text", 400, 1), "T_TPL_MAKE_MAIN": ("text", 320, 1), "T_TPL_UNMAKE_MAIN": ("text", 320, 1), "T_TPL_WARN_AGAIN": ("text", 320, 1),
     "T_TPL_MAIN": ("small", 100, 1), "T_TPL_CHECKING": ("text", DIALOG, 1), "T_TPL_WARN": ("text", WIDE, 2),
     "T_TPL_GAMES": ("text", 320, 1), "T_TPL_UPDATE": ("text", 320, 1), "T_TPL_AFTER_GAME": ("text", 236, 1),
     "T_TPL_AFTER_HINT": ("small", 212, 6), "T_TPL_ON": ("text", 200, 1), "T_TPL_OFF": ("text", 200, 1),

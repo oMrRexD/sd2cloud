@@ -353,7 +353,7 @@ int tabs_nav(tabs_t *g, u32 b);
 void tabs_draw(const tabs_t *g, int dots);
 
 /* ------------------------------------------------------------ tools.c */
-void templates_startup(void);
+int templates_startup(void);              /* the warning of game cards that lack their templates: how many (0 = none) */
 int templates_wanted(void);              /* templates to put into the game cards after a game? */
 void templates_after_game(int alone);
 void tools_screen(void);

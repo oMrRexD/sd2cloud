@@ -744,6 +744,8 @@ T_TPL_GAMES_LEFT = Cartões não alterados: %d
 T_TPL_WARN = Cartões de jogo sem o template: %d
 # Button. English: Don't warn
 T_TPL_NO_WARN = Não avisar
+# One line. English: Re-enable warnings
+T_TPL_WARN_AGAIN = Reativar avisos
 # One line. English: Linked games
 T_TPL_GAMES = Jogos vinculados
 # One line. English: Update existing saves

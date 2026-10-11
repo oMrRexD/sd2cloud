@@ -405,16 +405,16 @@ static void template_update_cards(template_t *t)
 /* When the program opens: the game cards that lack saves of their templates and aren't settled (the card the device
  * made for a new game is one). Said once, with the three things to do about it: put them there now, later, or never
  * for those cards */
-void templates_startup(void)
+int templates_startup(void)
 {
     char s[300], names[200] = "";
     int i, n;
     u32 b;
     if (!templates_in_use())
-        return;
+        return 0;
     templates_scan();
     if (!(n = cards_lacking(NULL, 0)))
-        return;
+        return 0;
     for (i = 0; i < n && i < 3; i++)   /* which ones: the first few, by their games */
         snprintf(names + strlen(names), sizeof(names) - strlen(names), "%s%s", i ? ", " : "", game_of(&cards[gameCards[i]]));
     if (n > 3)
@@ -438,6 +438,35 @@ void templates_startup(void)
         templates_save();
     } else
         sound_play(SND_BACK);
+    return n;
+}
+
+/* a template's options: is any game card it is for settled (with its saves, or by the user's "Don't warn")? */
+static int settled_any(const template_t *t)
+{
+    int i;
+    for (i = 0; i < nCards; i++)
+        if (card_of(t, &cards[i]) && templates_settled(cards[i].id, cards[i].folder))
+            return 1;
+    return 0;
+}
+
+/* "Re-enable warnings": what is settled about the game cards the template is for is let go of, and they are looked
+ * into at once: the warning of the start, for the ones that lack saves of their templates. The template that was
+ * open is the same one after it (template_scan doesn't move it) */
+static void warn_again(const template_t *t)
+{
+    char name[TPL_NAME + 1];
+    int i;
+    snprintf(name, sizeof(name), "%s", t->name);
+    for (i = 0; i < nCards; i++)
+        if (card_of(t, &cards[i]))
+            templates_unsettle(cards[i].id);
+    templates_save();
+    message(0, NULL, COLOR_TEXT, T(T_TPL_CHECKING));
+    if (!templates_startup())
+        message_wait(0, NULL, COLOR_OK, T(T_TPL_GAMES_NONE));
+    tplOpen = template_find(name);
 }
 
 /* After a game, with nobody at the controller (the automatic sync): the game cards about to be sent get the saves
@@ -790,7 +819,7 @@ static void template_add_saves(template_t *t)
  * 0 = the template is gone, or isn't the one it was (renamed: tplOpen is the new one) */
 static int template_options(void)
 {
-    enum { OPT_MAIN, OPT_ADD, OPT_APPLY, OPT_GAMES, OPT_RENAME, OPT_DELETE, OPTS };
+    enum { OPT_MAIN, OPT_ADD, OPT_APPLY, OPT_WARN, OPT_GAMES, OPT_RENAME, OPT_DELETE, OPTS };
     const char *items[OPTS];
     char name[TPL_NAME + 1], old[TPL_NAME + 1], s[300];
     template_t *t;
@@ -801,6 +830,8 @@ static int template_options(void)
         items[n] = T(isMain ? T_TPL_UNMAKE_MAIN : T_TPL_MAKE_MAIN), id[n++] = OPT_MAIN;
         items[n] = T(T_TPL_ADD_SAVES), id[n++] = OPT_ADD;
         items[n] = T(T_TPL_APPLY_MENU), id[n++] = OPT_APPLY;
+        if (settled_any(tplOpen))   /* ("Don't warn" was said of some of its cards, or they have its saves) */
+            items[n] = T(T_TPL_WARN_AGAIN), id[n++] = OPT_WARN;
         if (!isMain)   /* (the main one is every game's already) */
             items[n] = T(T_TPL_GAMES), id[n++] = OPT_GAMES;
         items[n] = T(T_TPL_RENAME), id[n++] = OPT_RENAME;
@@ -816,6 +847,11 @@ static int template_options(void)
             return 1;   /* back to the template, where what it has now shows */
         case OPT_APPLY:
             template_apply_menu(tplOpen);
+            break;
+        case OPT_WARN:
+            warn_again(tplOpen);
+            if (!tplOpen)
+                return 0;
             break;
         case OPT_GAMES:
             template_games_screen(tplOpen);

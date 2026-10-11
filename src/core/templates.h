@@ -75,6 +75,7 @@ int template_games(const template_t *t);           /* how many games it is for *
 int templates_of_game(const char *game, const template_t *list[TPL_MAX]);
 int templates_settled(const char *cardId, const char *game);
 void templates_settle(const char *cardId, const char *game);
+void templates_unsettle(const char *cardId);       /* looked into again, as if it had never been settled */
 int templates_save(void);                          /* templates.ini written with what those changed. 0 = written */
 
 #endif

@@ -317,6 +317,19 @@ static void main_template(void)
     CHECK_INT(templates_settled(card, "SLUS-21065"), 0);
     templates_settle(card, "SLUS-21065");
 
+    /* let go of ("Re-enable warnings"), and kept so: then settled again */
+    templates_unsettle(card);
+    CHECK_INT(templates_settled(card, "SLUS-21065"), 0);
+    CHECK_INT(templates_save(), 0);
+    CHECK_INT(templates_scan(), 1);
+    CHECK_INT(templates_settled(card, "SLUS-21065"), 0);
+    t = template_main();
+    CHECK(t != NULL);
+    if (!t)
+        return;
+    templates_settle(card, "SLUS-21065");
+    CHECK_INT(templates_settled(card, "SLUS-21065"), 1);
+
     /* renamed, it is still the main one, and the cards are as settled as they were; deleted, there is none */
     t = template_rename(t, "Network");
     CHECK(t != NULL);

@@ -746,6 +746,8 @@ T_TPL_GAMES_LEFT = Карт без изменений: %d
 T_TPL_WARN = Карт игр без их шаблона: %d
 # Button. English: Don't warn
 T_TPL_NO_WARN = Не предупреждать
+# One line. English: Re-enable warnings
+T_TPL_WARN_AGAIN = Включить предупреждения
 # One line. English: Linked games
 T_TPL_GAMES = Связанные игры
 # One line. English: Update existing saves
