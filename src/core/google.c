@@ -111,6 +111,11 @@ static CURLcode on_ssl_ctx(CURL *c, void *ctx, void *u)
 }
 
 static int (*sendProgress)(long long done, long long total);   /* google_upload_buffer's, while it sends */
+/* while cards are sent, the app's word on the one on its way (google_set_stop): != 0 = stop it now. Asked from the
+ * middle of any request, so a button is answered at once, not when the piece being sent is through. userStop = the
+ * request under way was stopped that way: it isn't tried again */
+static int (*stopHook)(void);
+static int userStop;
 
 /* curl calls it many times a second while transferring: lets the app watch the controller (and, for a file sent
  * from memory, show how much went; != 0 stops) */
@@ -121,12 +126,15 @@ static int on_xfer(void *u, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ult
     (void)dlnow;
     if (pollHook)
         pollHook();
+    if (stopHook && stopHook())
+        return userStop = 1;
     if (sendProgress && ultotal > 0)
         return sendProgress((long long)ulnow, (long long)ultotal);
     return 0;
 }
 
 void google_set_poll(void (*poll)(void)) { pollHook = poll; }
+void google_set_stop(int (*stop)(void)) { stopHook = stop; }
 
 static int on_debug(CURL *c, curl_infotype type, char *d, size_t n, void *u)
 {
@@ -185,7 +193,7 @@ static CURLcode request(const char *method, const char *url, struct curl_slist *
     r->http = 0;
     r->location[0] = r->range[0] = 0;
     curlError[0] = 0;
-    clockAhead = 0;
+    clockAhead = userStop = 0;
     curl_easy_setopt(curl, CURLOPT_URL, url);
     curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);   /* clears the method and body of the previous request */
     curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, NULL);
@@ -252,6 +260,8 @@ static long api(const char *method, const char *url, const char *body, response_
             hdr = curl_slist_append(hdr, "Content-Type: application/json; charset=UTF-8");
         c = request(method, url, hdr, body, body ? strlen(body) : 0, r);
         curl_slist_free_all(hdr);
+        if (userStop)
+            break;
         if (c == CURLE_OK && r->http == 401 && !renewed && google_refresh() == 0) {
             renewed = 1;
             attempt--;
@@ -662,6 +672,8 @@ static int on_chunk(const unsigned char *d, size_t n, int last, void *u)
             return -1;
         }
         h = put(up, d + from, n - from, up->pos, total);
+        if (userStop)
+            return -1;
         if (h == 200 || h == 201) {
             up->pos = start + n;
             up->done = 1;
@@ -685,6 +697,8 @@ static int on_chunk(const unsigned char *d, size_t n, int last, void *u)
         /* ask where it stopped */
         sleep_ms(2000);
         h = put(up, NULL, 0, 0, total);
+        if (userStop)
+            return -1;
         if (h == 200 || h == 201) {
             up->pos = start + n;
             up->done = 1;

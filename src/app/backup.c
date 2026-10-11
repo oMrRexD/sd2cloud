@@ -4,8 +4,13 @@
 
 static int backupSkip;   /* the user gave up the card on its way (confirm_skip's answer) */
 
-int on_progress(long long done, long long total)
+/* Circle (the whole sync) and square (the card on its way), asked as soon as the button is pressed: from here, and
+ * from inside the request under way while cards are sent (google_set_stop). 1 = stop what is under way; what was
+ * answered stays, so whatever comes next of it stops at once too */
+static int stop_asked(void)
 {
+    if (backupCancelled || backupSkip)
+        return 1;
     watch_cancel();
     if (cancelLatched) {
         if (confirm_cancel(restoring ? T_RESTORE_CANCEL_TITLE : T_CANCEL_TITLE,
@@ -15,6 +20,13 @@ int on_progress(long long done, long long total)
         }
     }
     if (skipLatched && current && (backupSkip = confirm_skip(current)) != 0)
+        return 1;
+    return 0;
+}
+
+int on_progress(long long done, long long total)
+{
+    if (stop_asked())
         return 1;
     upload_screen(done, total);
 #ifdef DEBUG_BUILD
@@ -126,6 +138,7 @@ void run_backup(int mode, int rotate)
     currentN = 0;
     skipLatched = backupSkip = 0;
     skipOffered = mode != 3;   /* (a card synced by itself is given up with circle) */
+    google_set_stop(stop_asked);
     for (i = 0; i < nCards && !backupCancelled; i++) {
         card_t *c = &cards[i];
         card_state_t *e;
@@ -137,22 +150,22 @@ void run_backup(int mode, int rotate)
         googleError[0] = 0;
         load_card_icon(c);
         upload_screen(0, c->size);
-        if (card_folder(c, folderId, sizeof(folderId)) != 0) {
-            add_result(COLOR_ERROR, "%s: %s (%s)", c->base, T(T_UPLOAD_FAILED), googleError);
-            failed++;
-            continue;
+        /* (the card's folder on Drive first: a button pressed meanwhile is answered there too) */
+        r = stop_asked() || card_folder(c, folderId, sizeof(folderId)) != 0 ? -1 : 0;
+        if (r == 0) {
+            local_time(&when);
+            e = state_card(c->id, 0);
+            /* two backups of the same card in the same minute get the seconds in the name */
+            snprintf(t, sizeof(t), "%04d-%02d-%02d %02d:%02d", when.year, when.month, when.day, when.hour, when.minute);
+            if (e && !strncmp(e->when, t, 16))
+                snprintf(name, sizeof(name), "%s %04d-%02d-%02d %02dh%02dm%02d.zip", c->base, when.year, when.month, when.day,
+                         when.hour, when.minute, when.second);
+            else
+                snprintf(name, sizeof(name), "%s %04d-%02d-%02d %02dh%02d.zip", c->base, when.year, when.month, when.day, when.hour,
+                         when.minute);
+            memset(&s, 0, sizeof(s));
+            r = google_upload(c, folderId, name, &when, &s, on_progress, id, sizeof(id));
         }
-        local_time(&when);
-        e = state_card(c->id, 0);
-        /* two backups of the same card in the same minute get the seconds in the name */
-        snprintf(t, sizeof(t), "%04d-%02d-%02d %02d:%02d", when.year, when.month, when.day, when.hour, when.minute);
-        if (e && !strncmp(e->when, t, 16))
-            snprintf(name, sizeof(name), "%s %04d-%02d-%02d %02dh%02dm%02d.zip", c->base, when.year, when.month, when.day, when.hour,
-                     when.minute, when.second);
-        else
-            snprintf(name, sizeof(name), "%s %04d-%02d-%02d %02dh%02d.zip", c->base, when.year, when.month, when.day, when.hour, when.minute);
-        memset(&s, 0, sizeof(s));
-        r = google_upload(c, folderId, name, &when, &s, on_progress, id, sizeof(id));
         if (r != 0) {
             if (backupCancelled) {
                 log_msg("%s: upload cancelled", c->id);
@@ -184,8 +197,11 @@ void run_backup(int mode, int rotate)
         add_result(COLOR_OK, "%s: %s (%s)", c->base, T(T_UPLOAD_OK), t);
         if (rotate)
             delete_old(c, folderId, id);
+        backupSkip = 0;   /* (square while the old backups were deleted: this card was sent already) */
     }
+    google_set_stop(NULL);
     skipOffered = 0;
+    backupSkip = 0;
     state_write();
 }
 

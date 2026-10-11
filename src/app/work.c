@@ -68,7 +68,8 @@ int confirm_cancel(int title, int text)
 }
 
 /* Square while cards are sent: is the card on its way left out? 0 = no, keep going; 1 = of this sync; 2 = of this
- * one and of every other from now on (its sync is turned off) */
+ * one and of every other from now on (its sync is turned off). Square again leaves it out: going through the cards
+ * skipping one after the other is square, square */
 int confirm_skip(const card_t *c)
 {
     char t[200];
@@ -79,12 +80,12 @@ int confirm_skip(const card_t *c)
     snprintf(t, sizeof(t), T(T_SKIP_ASK), c->base);
     dlg_new(COLOR_WARN, t);
     dlg_line(FONT_TEXT, COLOR_TEXT, 0, T(T_SKIP_TEXT));
-    dlg_buttons(BUTTON_CIRCLE, T_CANCEL_NO, BUTTON_CROSS, T_SKIP);
-    dlg_button(BUTTON_SQUARE, T_SYNC_DISABLE);
+    dlg_buttons(BUTTON_CIRCLE, T_CANCEL_NO, BUTTON_SQUARE, T_SKIP);
+    dlg_button(BUTTON_TRIANGLE, T_SYNC_DISABLE);
     next.wide = 1;
     dlg_show();
-    b = wait_button(PAD_CROSS | PAD_CIRCLE | PAD_SQUARE, 0);
-    r = (b & PAD_CIRCLE) ? 0 : (b & PAD_SQUARE) ? 2 : (b & PAD_CROSS) ? 1 : 0;
+    b = wait_button(PAD_SQUARE | PAD_CIRCLE | PAD_TRIANGLE, 0);
+    r = (b & PAD_CIRCLE) ? 0 : (b & PAD_TRIANGLE) ? 2 : (b & PAD_SQUARE) ? 1 : 0;
     sound_play(r ? SND_CONFIRM : SND_BACK);
     skipLatched = cancelLatched = 0;
     circleDown = squareDown = 1;   /* (the button that answered counts again only after being released) */
@@ -175,8 +176,19 @@ void load_card_icon(const card_t *c)
     ui_unlock();
 }
 
+/* how long the work on screen has left, from how far its bar went in the last few seconds: a sample of it each second,
+ * the speed over the samples kept (eta_note). left < 0 = not known yet (it takes a few seconds of going) */
+#define ETA_SAMPLES 16
+static struct {
+    const void *of;
+    long long total, d[ETA_SAMPLES];
+    u64 t[ETA_SAMPLES];
+    int n;
+    volatile int left;
+} eta = {NULL, 0, {0}, {0}, 0, -1};
+
 /* the screen while a card is sent, like a console's saving screen: the icon turning on the left, in a soft light; the
- * game (or the card), the card and what's happening on the right, over a thin white bar */
+ * game (or the card), the card and what's happening on the right, over a thin white bar; under it, how long is left */
 void scene_upload(float t)
 {
     char s[200];
@@ -207,14 +219,45 @@ void scene_upload(float t)
         snprintf(s, sizeof(s), T(T_UPLOADING), currentN, totalN);
         ui_text_right(FONT_SMALL, x + w, y + 12, COLOR_DIM, s);
     }
+    if (eta.left >= 10) {   /* (under the bar's start, as the count is under its end) */
+        if (eta.left >= 90)
+            snprintf(s, sizeof(s), T(T_TIME_LEFT_MIN), (eta.left + 30) / 60);
+        else
+            snprintf(s, sizeof(s), T(T_TIME_LEFT_SEC), (eta.left + 4) / 5 * 5);
+        ui_text(FONT_SMALL, x, y + 12, COLOR_DIM, s);
+    }
     if (!workFixed) {
         legend_t l[2] = {{BUTTON_CIRCLE, T(T_CANCEL)}, {BUTTON_SQUARE, T(T_SKIP)}};
         look_legend(l, skipOffered ? 2 : 1, 0);
     }
 }
 
+static void eta_note(long long done, long long total)
+{
+    u64 now = now_ms();
+    int last = (eta.n + ETA_SAMPLES - 1) % ETA_SAMPLES, first;
+    if (eta.of != current || eta.total != total || (eta.n && done < eta.d[last])) {   /* another work: from its start */
+        eta.of = current;
+        eta.total = total;
+        eta.n = 0;
+        eta.left = -1;
+    }
+    if (eta.n && now - eta.t[last] < 1000)
+        return;
+    last = eta.n % ETA_SAMPLES;
+    eta.t[last] = now;
+    eta.d[last] = done;
+    first = ++eta.n > ETA_SAMPLES ? eta.n % ETA_SAMPLES : 0;
+    if (eta.n < 5 || eta.d[last] <= eta.d[first]) {
+        eta.left = -1;
+        return;
+    }
+    eta.left = (int)((double)(total - done) * (double)(eta.t[last] - eta.t[first]) / (double)(eta.d[last] - eta.d[first]) / 1000);
+}
+
 void upload_screen(long long done, long long total)
 {
+    eta_note(done, total);
     shownDone = done;
     shownTotal = total;
     ui_scene(scene_upload);
@@ -255,8 +298,8 @@ void card_work_done(void)
 }
 
 #ifdef DEBUG_BUILD
-/* script "V<n>" at the start: shows the backup screen of card n (in the menu's order) for 1.5 s without sending
- * anything, and captures it: to check the icons on PCSX2 */
+/* script "V<n>" at the start: shows the backup screen of card n (in the menu's order) for 6 s without sending
+ * anything, its bar a fifth of the way by then, and captures it: to check the icons and the time left on PCSX2 */
 void debug_preview(int k)
 {
     u64 end;
@@ -265,9 +308,9 @@ void debug_preview(int k)
     currentN = totalN = 1;
     load_card_icon(&cards[k]);
     /* the main thread only sleeps, as if it were waiting on the network: the animation must keep going by itself */
-    end = now_ms() + 1500;
+    end = now_ms() + 6000;
     while (now_ms() < end) {
-        upload_screen((long long)(now_ms() - iconStart), 3000);
+        upload_screen((long long)(now_ms() - iconStart), 30000);
         sleep_ms(100);
     }
     debug_capture_and_stop();

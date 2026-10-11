@@ -37,6 +37,8 @@ int google_upload_buffer(const char *folder, const char *name, const char *descr
 int google_download(const char *id, int (*sink)(const unsigned char *d, size_t n, void *u), void *u);
 /* called while curl transfers (to watch the controller during an upload or download) */
 void google_set_poll(void (*poll)(void));
+/* and while cards are sent: stop() != 0 stops the request under way at once (NULL = nothing asks) */
+void google_set_stop(int (*stop)(void));
 extern char googleError[256];               /* why the last request failed, for the screen */
 /* GET from GitHub (the API or a release asset; follow = follow redirects). returns the HTTP status, 0 = network */
 long github_get(const char *url, buffer_t *b, int follow);
