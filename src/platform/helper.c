@@ -42,6 +42,16 @@ static void remove_partial(int port, const char *path)
 /* told of each piece written, and of each one read back (NULL = nobody) */
 static void (*mcStep)(int bytes);
 
+/* the first error mcman gave while the package was written (0 = none): the screen says it as it came */
+int helperMcError;
+
+static int mc_failed(int r)
+{
+    if (!helperMcError && r < 0)
+        helperMcError = r;
+    return -1;
+}
+
 static int mc_write_file(int port, const char *path, const unsigned char *d, int n)
 {
     int fd, done = 0, r;
@@ -52,7 +62,7 @@ static int mc_write_file(int port, const char *path, const unsigned char *d, int
     fd = mc_wait();
     log_msg("helper: open for writing %d", fd);
     if (fd < 0)
-        return -1;
+        return mc_failed(fd);
     while (done < n) {
         int k = n - done > 16384 ? 16384 : n - done;
         mcWrite(fd, d + done, k);
@@ -61,7 +71,7 @@ static int mc_write_file(int port, const char *path, const unsigned char *d, int
             mcClose(fd);
             mc_wait();
             remove_partial(port, path);
-            return -1;
+            return mc_failed(r);
         }
         done += k;
         if (mcStep)
@@ -71,18 +81,20 @@ static int mc_write_file(int port, const char *path, const unsigned char *d, int
     if ((r = mc_wait()) < 0) {
         log_msg("helper: close %d", r);
         remove_partial(port, path);
-        return -1;
+        return mc_failed(r);
     }
     /* read it back and compare */
     mcOpen(port, 0, path, MC_RDONLY);
     fd = mc_wait();
     log_msg("helper: open for verifying %d", fd);
     if (fd < 0)
-        return -1;
+        return mc_failed(fd);
     for (done = 0; done < n;) {
         int k = n - done > (int)sizeof(back) ? (int)sizeof(back) : n - done;
         mcRead(fd, back, k);
-        if (mc_wait() != k || memcmp(back, d + done, k) != 0) {
+        if ((r = mc_wait()) != k || memcmp(back, d + done, k) != 0) {
+            if (r != k)
+                mc_failed(r);
             mcClose(fd);
             mc_wait();
             remove_partial(port, path);
@@ -268,8 +280,8 @@ int helper_status(void)
 }
 
 /* the root folder of the card the PS2 sees in that slot (the one the sd2psx is emulating), as mcfs_root_signature
- * reads it from a .mcd */
-int mc_root_signature(int port, char hex[65])
+ * reads it from a .mcd. skip = a folder left out of it (NULL = none) */
+static int root_signature(int port, const char *skip, char hex[65])
 {
     static sceMcTblGetDir table[512];
     static unsigned char rec[512][ROOT_REC];
@@ -283,7 +295,7 @@ int mc_root_signature(int port, char hex[65])
         return -1;
     for (i = 0; i < n; i++) {
         const char *name = (const char *)table[i].EntryName;
-        if (!strcmp(name, ".") || !strcmp(name, ".."))
+        if (!strcmp(name, ".") || !strcmp(name, "..") || (skip && !strcmp(name, skip)))
             continue;
         memset(rec[k], 0, ROOT_REC);
         memcpy(rec[k], name, strnlen(name, 32));
@@ -293,6 +305,8 @@ int mc_root_signature(int port, char hex[65])
     mcfs_sign_records(rec, k, hex);
     return 0;
 }
+
+int mc_root_signature(int port, char hex[65]) { return root_signature(port, NULL, hex); }
 
 int helperNeedKb, helperFreeKb;
 
@@ -491,14 +505,50 @@ static void folder_date(void)
     log_msg("helper: the folder's date set (%d)", mc_wait());
 }
 
+/* The device may drop the card in the middle of a write and show it again a moment later (an sd2psx with a 64 MB
+ * BootCard, 10/2026: mcman said -51, then that there was no card, then that it had been changed). Waits for it to
+ * answer again and tells whether it is the card the package was being written to: its root folder as it was, but for
+ * the package's own folder, which the writing changes. 1 = the same card is back. cardDropped = the device let go of
+ * the card meanwhile (it didn't answer, or came back with another one): what failed was the device's doing */
+static int cardDropped;
+#ifdef DEBUG_BUILD
+static int debugCardGone;   /* (script "F": the card is dropped for good) */
+#endif
+
+static int same_card_back(const char *before)
+{
+    char now[65];
+    int i;
+#ifdef DEBUG_BUILD
+    if (debugCardGone) {
+        cardDropped = 1;
+        log_msg("helper: the card doesn't come back (script)");
+        return 0;
+    }
+#endif
+    for (i = 1; i <= 20; i++) {
+        sleep_ms(500);
+        if (root_signature(0, CARD_DIR + 1, now) == 0) {
+            log_msg("helper: the card answers again after %d ms: %s", i * 500, strcmp(now, before) ? "ANOTHER card" : "the same one");
+            cardDropped |= strcmp(now, before) != 0;
+            return !strcmp(now, before);
+        }
+        cardDropped = 1;
+    }
+    log_msg("helper: the card didn't come back");
+    return 0;
+}
+
 int helper_install(void)
 {
     folder_file_t f[FOLDER_FILES];
     buffer_t title = {0};
-    char path[100];
-    int i, r = 0;
+    char path[100], before[65];
+    int i, k, r = 0, known;
     if (appOnCard || memcard_ready(0) != 0)
         return -1;
+    known = root_signature(0, CARD_DIR + 1, before) == 0;
+    cardDropped = helperMcError = 0;
     /* a helper in BOOT, from a version up to 1.5: this version's, in its place (it takes no more room there), so the
      * path OPL was given keeps working whatever happens to the folder */
     if (mc_size(LEGACY) >= 0 && mc_same(LEGACY, card_igr_elf, (int)size_card_igr_elf) != 1)
@@ -514,12 +564,24 @@ int helper_install(void)
     folder_list(f, &title);
     for (i = 0; i < FOLDER_FILES && r == 0; i++) {
         snprintf(path, sizeof(path), CARD_DIR "/%s", f[i].name);
-        r = mc_write_file(0, path, f[i].data, (int)f[i].len);
+#ifdef DEBUG_BUILD
+        /* (script: the third file isn't written, as if the device had dropped the card: "f" for a moment, "F" for good) */
+        if (i == 2 && (debug_take('f') || (debugCardGone = debug_take('F')) != 0)) {
+            log_msg("[script] %c: %s not written, as if the card had been dropped", debugCardGone ? 'F' : 'f', path);
+            r = mc_failed(-51);   /* (what mcman said on a console when it happened) */
+        } else
+#endif
+            r = mc_write_file(0, path, f[i].data, (int)f[i].len);
+        /* the card dropped and shown again: once the same one is back, the file is written again, twice at most */
+        for (k = 1; r != 0 && k <= 2 && known && same_card_back(before); k++) {
+            log_msg("helper: %s written again (%d)", path, k);
+            r = mc_write_file(0, path, f[i].data, (int)f[i].len);
+        }
     }
     buf_free(&title);
     folder_date();
-    log_msg("helper: %s", r == 0 ? "installed and verified" : "FAILED");
-    return r;
+    log_msg("helper: %s", r == 0 ? "installed and verified" : cardDropped ? "FAILED: the device dropped the card" : "FAILED");
+    return r == 0 ? 0 : cardDropped ? -4 : r;
 }
 
 /* the folder and the helper an earlier version left in BOOT, whichever are there */

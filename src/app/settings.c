@@ -118,15 +118,31 @@ static void sync_all(void)
         manual_backup(1);
 }
 
-/* what helper_install's answer means for the user */
-static const char *helper_result(int r)
+/* what helper_install's answer means for the user, with the error mcman gave, as it came. -4: the device let go of
+ * the card while it was being written, which is said as it is: it isn't SD2Cloud's doing. What may help is said under
+ * it, with the card's size when it is a large one */
+static void helper_failed(int r)
 {
-    static char t[200];
-    if (r == -3) {
+    char t[300], code[24] = "", hint[160], size[40] = "";
+    if (helperMcError)
+        snprintf(code, sizeof(code), T(T_MC_ERROR), helperMcError);
+    dlg_new(COLOR_ERROR, T(T_HELPER_TITLE));
+    if (r == -3)
         snprintf(t, sizeof(t), T(T_HELPER_FULL), helperNeedKb, helperFreeKb);
-        return t;
+    else
+        snprintf(t, sizeof(t), T(r == -4 ? T_HELPER_DROPPED : T_HELPER_ERROR), code);
+    dlg_line(FONT_TEXT, COLOR_TEXT, r == -4 ? 8 : 0, t);
+    if (r == -4) {
+        if (activeCard >= 0 && cards[activeCard].size > 8 * 1024 * 1024)
+            snprintf(size, sizeof(size), T(T_HELPER_CARD_MB), (int)(cards[activeCard].size / (1024 * 1024)));
+        snprintf(hint, sizeof(hint), T(T_HELPER_DROPPED_HINT), size);
+        dlg_line(FONT_SMALL, COLOR_DIM, 0, hint);
     }
-    return T(T_HELPER_ERROR);
+    dlg_buttons(BUTTON_CROSS, T_BACK, 0, 0);
+    next.wide = 1;
+    dlg_show();
+    wait_button(PAD_CROSS | PAD_CIRCLE, 0);
+    sound_play(SND_BACK);
 }
 
 /* how much of the memory card in use the helper takes, and how much the card has free: said before installing
@@ -154,7 +170,7 @@ static void helper_install_now(int doneTitle)
     r = helper_install();
     helperState = helper_status();
     if (r != 0) {
-        message_wait(COLOR_ERROR, T(T_HELPER_TITLE), COLOR_TEXT, helper_result(r));
+        helper_failed(r);
         return;
     }
     snprintf(path, sizeof(path), "mc0:%s", helper_path());   /* (OPL didn't find it as "mc?:" when it was typed so) */

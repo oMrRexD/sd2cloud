@@ -109,6 +109,7 @@ PLACE = {
     # inside the dialogs
     "T_HELPER_ABOUT": ("text", WIDE, 2), "T_HELPER_WHERE": ("text", WIDE, 1), "T_HELPER_SPACE": ("text", WIDE, 1),
     "T_HELPER_SPACE_NEED": ("text", WIDE, 1), "T_HELPER_OK": ("text", WIDE, 1),
+    "T_HELPER_ERROR": ("text", WIDE, 2), "T_HELPER_DROPPED": ("text", WIDE, 3), "T_HELPER_DROPPED_HINT": ("small", WIDE, 1),
     "T_HELPER_UNINSTALL_ASK": ("text", DIALOG, 1), "T_HELPER_UNINSTALL_TEXT": ("text", DIALOG, 3),
     "T_HELPER_MISSING": ("text", WIDE, 2),
     "T_HELPER_OLD_PATH": ("small", WIDE, 2), "T_NEWCARD_NOTE": ("text", DIALOG, 2),

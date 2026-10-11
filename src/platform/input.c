@@ -12,13 +12,27 @@ void sleep_ms(int ms) { usleep(ms * 1000); }
 
 u32 pad_buttons(void)
 {
+    static u64 lost;   /* since when the controller hasn't answered (0 = it answers) */
     struct padButtonStatus b;
     int st;
     if (!padOpen)
         return 0;
     st = padGetState(0, 0);
-    if (st != PAD_STATE_STABLE && st != PAD_STATE_FINDCTP1)
+    if (st != PAD_STATE_STABLE && st != PAD_STATE_FINDCTP1) {
+        /* The controller and the memory card in slot 1 share the PS2's port: a device that drops its card for a moment
+         * left the controller without answering for most of a minute (an sd2psx, 10/2026). After 3 s of that, the
+         * controller's port is opened again, and again 3 s later if it still doesn't answer */
+        u64 now = now_ms();
+        if (!lost)
+            lost = now;
+        else if (now - lost > 3000) {
+            padPortClose(0, 0);
+            log_msg("controller: no answer for 3 s (state %d), its port opened again (%d)", st, padPortOpen(0, 0, padArea));
+            lost = now;
+        }
         return 0;
+    }
+    lost = 0;
     if (padRead(0, 0, &b) == 0)
         return 0;
     return 0xffff ^ b.btns;

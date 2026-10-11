@@ -26,8 +26,10 @@ int mc_delete_save(int port, const char *folder);
 int mc_put_save(int port, const char *psu);
 int mc_card_state(int port);                     /* 0 = the card in that slot is the one it was when last asked */
 int helper_present(void);                   /* it can be installed (always, unless the program can't be found by it) */
-int helper_install(void);                   /* writes it to mc0: 0 = ok, -1 = couldn't write, -3 = not enough room
-                                               (helperNeedKb, helperFreeKb) */
+int helper_install(void);                   /* writes it to mc0: 0 = ok, -1 = couldn't write, -3 = not enough room,
+                                               (helperNeedKb, helperFreeKb), -4 = the device dropped the card while it
+                                               was written */
+extern int helperMcError;                   /* and the first error mcman gave meanwhile (0 = none) */
 /* what installing takes on the memory card in use and what the card has free, for the question before installing:
  * fills helperNeedKb and helperFreeKb (-1 = unknown) */
 int helper_space(void);
