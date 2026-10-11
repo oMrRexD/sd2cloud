@@ -57,7 +57,11 @@ static void build_settings(void)
     set_item(&i, SET_UPDATES, T(T_SET_UPDATES), updateAvailable ? v : "");
     set_item(&i, SET_CHANNEL, T(T_SET_CHANNEL), cfg.beta ? "Beta" : T(T_CHANNEL_STABLE));
     set_item(&i, SET_ACCOUNT, T(T_SET_ACCOUNT), T(google_has_access() ? T_ACCOUNT_ON : T_ACCOUNT_OFF));
+#ifdef BETA_BUILD
+    set_item(&i, SET_ABOUT, T(T_SET_ABOUT), "v" APP_VERSION " beta");
+#else
     set_item(&i, SET_ABOUT, T(T_SET_ABOUT), "v" APP_VERSION);
+#endif
     st.n = i;
     if (st.cursor >= i)
         st.cursor = 0;
@@ -540,6 +544,9 @@ static void about_screen(void)
     char t[120];
     /* with the commit it was built from, when the build was told: it is what tells one beta from another */
     snprintf(t, sizeof(t), "SD2Cloud v%s%s%s%s", APP_VERSION, APP_COMMIT[0] ? " (" : "", APP_COMMIT, APP_COMMIT[0] ? ")" : "");
+#ifdef BETA_BUILD
+    snprintf(t + strlen(t), sizeof(t) - strlen(t), " beta");
+#endif
 #ifdef DEBUG_BUILD
     snprintf(t + strlen(t), sizeof(t) - strlen(t), " debug");
 #endif

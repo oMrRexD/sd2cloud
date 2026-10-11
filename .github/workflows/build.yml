@@ -56,14 +56,15 @@ jobs:
           printf '#define GOOGLE_CLIENT_ID "%s"\n#define GOOGLE_CLIENT_SECRET "%s"\n' \
             "${GOOGLE_CLIENT_ID:-placeholder}" "${GOOGLE_CLIENT_SECRET:-placeholder}" > src/credentials.h
 
-      # the commit goes into the program ("About" shows it): given here, so that git isn't asked inside the container
+      # the commit goes into the program ("About" shows it): given here, so that git isn't asked inside the container.
+      # A build of main is the beta, and says so on the screen (BETA=1); a tag's build is the version
       - name: Build
-        run: make APP_COMMIT="$(echo "$GITHUB_SHA" | cut -c1-7)"
+        run: make APP_COMMIT="$(echo "$GITHUB_SHA" | cut -c1-7)" BETA=${{ github.ref == 'refs/heads/main' && '1' || '0' }}
 
       # the debug build (the Makefile says what it does differently): every build checks that it compiles too, and the
       # beta publishes it
       - name: Build the debug program
-        run: make DEBUG=1 APP_COMMIT="$(echo "$GITHUB_SHA" | cut -c1-7)"
+        run: make DEBUG=1 APP_COMMIT="$(echo "$GITHUB_SHA" | cut -c1-7)" BETA=${{ github.ref == 'refs/heads/main' && '1' || '0' }}
 
       - name: Package
         run: python3 tools/make_release.py

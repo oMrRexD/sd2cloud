@@ -7,6 +7,7 @@
 # make         -> dist/SD2CLOUD.ELF and dist/SD2CLOUD-IGR.ELF (the IGR helper, built in igr/)
 # make DEBUG=1  -> dist/SD2CLOUD-DEBUG.ELF: keeps a log (SD2Cloud/debug-log.txt, written when it closes), "(debug)"
 #                 folder on Drive, keeps 3 backups; a script.txt, when there is one, presses the buttons
+# make BETA=1   -> the beta channel's build: says "beta" and its commit next to the version
 # Then python tools/make_release.py packages the release in dist/.
 # make test (or make -C tests, which needs no PS2 toolchain) runs the regression tests: see tests/README.md.
 PORTS4096 ?= ports4096
@@ -61,6 +62,11 @@ EE_CFLAGS += -Os -Wall -Wno-format-truncation $(EXTRA_CFLAGS)
 # Actions passes its own, and so must a build made to compare hashes with it
 APP_COMMIT ?= $(shell git rev-parse HEAD 2>/dev/null | cut -c1-7)
 EE_CFLAGS += -DAPP_COMMIT=\"$(APP_COMMIT)\"
+# BETA=1: a build of main, for the beta channel (GitHub Actions gives it to every push to main). Its version is still
+# the last one released, so the screen says it is a beta, and which: "beta" and the commit, before the version
+ifeq ($(BETA),1)
+EE_CFLAGS += -DBETA_BUILD
+endif
 
 .PHONY: all igr clean test
 all: $(PORTS4096)/lib/libwolfssl.a $(MMCEMAN) src/credentials.h $(EE_BIN_PACKED)
