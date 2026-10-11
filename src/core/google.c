@@ -220,10 +220,7 @@ static const char *curl_text(CURLcode c)
     if (!clockAhead)
         return curlError[0] ? curlError : curl_easy_strerror(c);
     local_time(&d);
-    if (i18n_is_pt())
-        snprintf(when, sizeof(when), "%02d/%02d/%04d", d.day, d.month, d.year);
-    else
-        snprintf(when, sizeof(when), "%04d-%02d-%02d", d.year, d.month, d.day);
+    i18n_date(when, sizeof(when), d.year, d.month, d.day);
     snprintf(t, sizeof(t), T(T_ERR_CLOCK_AHEAD), when);
     return t;
 }

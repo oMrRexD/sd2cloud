@@ -1,10 +1,16 @@
-"""Checks that the texts on screen (messages.def) fit where they are drawn, in both languages.
+"""Checks the texts on screen, one file per language in lang/ (en.txt is the original): that each file has the ids of
+src/ui/messages.def and no others (English and Portuguese all of them; another language may leave some in English),
+that %s and %d are the original's, and that each text fits where it is drawn.
 
 Measures like the app: the same font (Varela Round) at the same sizes, plus what the app's emboldening adds to each
 letter (font.c: the advance grows by the "bold" amount). Where each text goes and how wide that place is follows
 src/app and src/ui/look.c (a 640 px screen; the frame's lines go from x = 36 to 604).
 
-usage: python tools/check_messages.py [--device NAME]     (exits with an error if a text doesn't fit its place)
+usage: python tools/check_messages.py [--device NAME] [--sync]     (exits with an error on a problem)
+
+--sync writes the files of lang/ again in the order of messages.def, each text with a comment above it saying what it
+is (and, in a translation, the English text): run it after adding a text to en.txt, so that the other languages get it
+to translate (empty, which shows in English until it is). Each file's own comments at its top are kept.
 
 The texts name the sd2psx; on another device the app puts that device's name in its place (i18n_device).
 --device "MemCard PRO2" checks them as they are shown there.
@@ -230,6 +236,88 @@ LEGENDS = [
 ]
 
 
+LANG = ROOT / "lang"
+REQUIRED = ("en", "pt")   # the languages that have every text
+DATE_FORMATS = ("DMY", "MDY", "YMD")
+BUTTONS = {i for ids, _ in LEGENDS for i in ids}
+
+
+def parse(text):
+    """the (key, value) of a file of lang/, as lang.c reads it (the .properties format: comments start with # or !,
+    the key ends at "=", ":" or a space, \\n \\t \\uXXXX and \\<any> in the value, a \\ at the end goes on in
+    the next line)"""
+    lines, out, i = text.lstrip("\ufeff").splitlines(), [], 0
+    while i < len(lines):
+        line = lines[i].lstrip(" \t\f")
+        i += 1
+        if not line or line[0] in "#!":
+            continue
+        m = re.match(r"([^=:\s]*)[ \t]*[=:]?[ \t]*", line)
+        key, rest, value = m.group(1), line[m.end():], []
+        while True:
+            j, more = 0, False
+            while j < len(rest):
+                c, j = rest[j], j + 1
+                if c != "\\":
+                    value.append(c)
+                elif j == len(rest):
+                    more = True
+                else:
+                    c, j = rest[j], j + 1
+                    if c == "u" and re.fullmatch(r"[0-9a-fA-F]{4}", rest[j:j + 4]):
+                        value.append(chr(int(rest[j:j + 4], 16)))
+                        j += 4
+                    else:
+                        value.append({"n": "\n", "t": "\t", "r": "\r"}.get(c, c))
+            if more and i < len(lines):
+                rest, i = lines[i].lstrip(" \t"), i + 1
+                continue
+            break
+        out.append((key, "".join(value)))
+    return out
+
+
+def escape(s):
+    """a text as the value of a line"""
+    s = s.replace("\\", "\\\\").replace("\n", "\\n").replace("\t", "\\t")
+    return "\\" + s if s.startswith(" ") else s
+
+
+def kind(id_):
+    """what the comment above a text says it is"""
+    if id_ in BUTTONS:
+        return "Button."
+    lines = PLACE.get(id_, PARAGRAPH)[2]
+    return "One line." if lines == 1 else f"Up to {lines} lines."
+
+
+def holes(s):
+    """what the program fills in, in order"""
+    return re.findall(r"%[0-9]*l*[sdu]", s)
+
+
+def sync(ids, files):
+    """each file of lang/ in the order of ids, with the comments above its texts"""
+    english = dict(parse(files["en"].read_text(encoding="utf-8")))
+    for code, path in files.items():
+        lines = path.read_text(encoding="utf-8").splitlines()
+        top = 0
+        while top < len(lines) and (not lines[top].strip() or lines[top].lstrip()[0] in "#!"):
+            top += 1
+        texts = dict(parse(path.read_text(encoding="utf-8")))
+        gone = [k for k in texts if k not in ids and k not in ("LANGUAGE_NAME", "DATE_FORMAT")]
+        if gone:
+            print(f"  {code}.txt: left out, as no text has these ids: {', '.join(gone)}")
+        out = lines[:top] + [f"LANGUAGE_NAME = {texts.get('LANGUAGE_NAME', code)}",
+                             "# how a date is written: DMY (31/12/2026), MDY (12/31/2026) or YMD (2026-12-31)",
+                             f"DATE_FORMAT = {texts.get('DATE_FORMAT', 'YMD')}", ""]
+        for id_ in ids:
+            out.append(f"# {kind(id_)}" if code == "en" else f"# {kind(id_)} English: {escape(english.get(id_, ''))}")
+            value = texts.get(id_, "")
+            out.append(f"{id_} = {escape(value)}" if value else f"{id_} =")
+        path.write_text("\n".join(out) + "\n", encoding="utf-8", newline="\n")
+
+
 def legend_width(texts, apart):
     """each button is a 20 px symbol, 6 px and its text; the last apart of them stand apart from the others, by a
     wider gap, and always 18 px from each other; five of them stand closer together (look_legend)"""
@@ -240,30 +328,64 @@ def legend_width(texts, apart):
 
 
 def main():
-    txt = (ROOT / "src" / "ui" / "messages.def").read_text(encoding="utf-8")
-    items = re.findall(r'^X\((\w+),\s*"((?:[^"\\]|\\.)*)",\s*"((?:[^"\\]|\\.)*)"\)', txt, re.M)
-    texts = {id_: (en.replace('\\"', '"'), pt.replace('\\"', '"')) for id_, en, pt in items}
+    ids = re.findall(r"^X\((\w+)\)", (ROOT / "src" / "ui" / "messages.def").read_text(encoding="utf-8"), re.M)
+    files = {path.stem: path for path in sorted(LANG.glob("*.txt"))}
+    if "--sync" in sys.argv:
+        sync(ids, files)
+    bad = 0
+    langs = {}
+    for code, path in files.items():
+        pairs = parse(path.read_text(encoding="utf-8"))
+        keys = [k for k, _ in pairs]
+        for k in sorted({k for k in keys if keys.count(k) > 1}):
+            bad += 1
+            print(f"  TWICE        {k} [{code}]")
+        for k in [k for k in keys if k not in ids and k not in ("LANGUAGE_NAME", "DATE_FORMAT")]:
+            bad += 1
+            print(f"  UNKNOWN ID   {k} [{code}] (not in messages.def)")
+        texts = dict(pairs)
+        if not re.fullmatch(r"[a-z]+", code):
+            bad += 1
+            print(f"  FILE NAME    {path.name}: a language's code is letters only (es.txt, fr.txt)")
+        if not texts.get("LANGUAGE_NAME") or texts.get("DATE_FORMAT") not in DATE_FORMATS:
+            bad += 1
+            print(f"  [{code}] needs LANGUAGE_NAME, and DATE_FORMAT = {', '.join(DATE_FORMATS)}")
+        missing = [i for i in ids if not texts.get(i)]
+        if missing and code in REQUIRED:
+            bad += len(missing)
+            print(f"  MISSING      [{code}] {', '.join(missing)}")
+        elif missing:
+            print(f"  [{code}] {len(missing)} text(s) not translated yet: shown in English")
+        langs[code] = texts
+    english = langs["en"]
+    for code, texts in langs.items():
+        for id_ in ids:
+            if texts.get(id_) and holes(texts[id_]) != holes(english.get(id_, "")):
+                bad += 1
+                print(f"  %s AND %d    {id_} [{code}] has {holes(texts[id_])}, English {holes(english.get(id_, ''))}")
+    for code, texts in langs.items():   # what the screen shows: a text not translated is the English one
+        langs[code] = {i: texts.get(i) or english.get(i, "") for i in ids}
     if "--device" in sys.argv:
         name = sys.argv[sys.argv.index("--device") + 1]
-        texts = {id_: (en.replace("sd2psx", name), pt.replace("sd2psx", name)) for id_, (en, pt) in texts.items()
-                 if id_ not in ONLY_SD2PSX}
-    bad = 0
-    for id_, (en, pt) in texts.items():
-        font, width, max_lines = PLACE.get(id_, PARAGRAPH)
-        for lang, s in (("en", en), ("pt", pt)):
+        langs = {code: {i: s.replace("sd2psx", name) for i, s in texts.items() if i not in ONLY_SD2PSX}
+                 for code, texts in langs.items()}
+    for code, texts in langs.items():
+        for id_, s in texts.items():
+            font, width, max_lines = PLACE.get(id_, PARAGRAPH)
             s = fill(s, id_)
             w = measure(font, s)
             n = 1 if w <= width else count_lines(font, s, width)
             if n > max_lines:
                 bad += 1
-                print(f"  DOESN'T FIT  {id_} [{lang}] {w} px / {width} px ({n} lines, max {max_lines}): {s}")
-    for ids, apart in LEGENDS:
-        for k, lang in enumerate(("en", "pt")):
-            w = legend_width([texts[i][k] for i in ids], apart)
-            if w > 596 - 40:
-                bad += 1
-                print(f"  LEGEND TOO WIDE [{lang}] {w} px: {' / '.join(texts[i][k] for i in ids)}")
-    print(f"{len(items)} texts x 2 languages and {len(LEGENDS)} legends checked; {bad} problem(s)")
+                print(f"  DOESN'T FIT  {id_} [{code}] {w} px / {width} px ({n} lines, max {max_lines}): {s}")
+        for row, apart in LEGENDS:
+            if all(i in texts for i in row):
+                w = legend_width([texts[i] for i in row], apart)
+                if w > 596 - 40:
+                    bad += 1
+                    print(f"  LEGEND TOO WIDE [{code}] {w} px: {' / '.join(texts[i] for i in row)}")
+    print(f"{len(ids)} texts x {len(langs)} languages ({', '.join(langs)}) and {len(LEGENDS)} legends checked; "
+          f"{bad} problem(s)")
     return 1 if bad else 0
 
 

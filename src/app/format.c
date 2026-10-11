@@ -22,13 +22,12 @@ const char *format_name(int ps2)
     return ps2 ? ".ps2 (PCSX2)" : own;
 }
 
-/* a date for the screen: 02/10/2026 21:10 in Portuguese, 2026-10-02 21:10 in English */
+/* a date for the screen, as its language writes one (02/10/2026 21:10, 2026-10-02 21:10) */
 static void format_when(int year, int month, int day, int hour, int minute, char *out, size_t size)
 {
-    if (i18n_is_pt())
-        snprintf(out, size, "%02d/%02d/%04d %02d:%02d", day, month, year, hour, minute);
-    else
-        snprintf(out, size, "%04d-%02d-%02d %02d:%02d", year, month, day, hour, minute);
+    char date[16];
+    i18n_date(date, sizeof(date), year, month, day);
+    snprintf(out, size, "%s %02d:%02d", date, hour, minute);
 }
 
 /* the date of a backup, from its name ("<card> YYYY-MM-DD HHhMM.zip"); else from Drive's createdTime (UTC) */

@@ -25,7 +25,7 @@ settings: [cards] format = ps2 (0)
 [script] U
 [script] U
 [script] X
-[script] D
+[script] U
 [script] X
 settings: [general] language = auto (0)
 [script] D

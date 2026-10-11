@@ -23,6 +23,39 @@ the affected `.mcd` file.
 Use the suggestion form in the same place. Say what you would like SD2Cloud to do and in which situation you missed
 it.
 
+## Translating
+
+SD2Cloud's texts are in [lang/](lang): a plain text file per language, `en.txt` being the original. Every language
+there is built into the program, so a translation needs nothing from the people who use it: they pick it in
+Settings > Language, or the program follows the PS2's own language.
+
+Each text is a line `ID = text`, and the line above it says what it is (a button, one line, a message of up to some
+lines) and, in a translation, the English text:
+
+```
+# One line. English: Searching for memory cards...
+T_SEARCHING = Buscando tarjetas de memoria...
+```
+
+- Change only what comes after `=`. The IDs, `LANGUAGE_NAME` and `DATE_FORMAT` stay as they are (`DATE_FORMAT`
+  says how the language writes a date: `DMY`, `MDY` or `YMD`).
+- `%s` and `%d` (also `%lld`, `%02d`) are filled in by the program, with a card's name or a number: keep each one,
+  in the same order.
+- `\n` starts a new line on the screen; a text that starts with a space starts with `\ `.
+- The screen is a TV's, and small: each text has to fit its place. Keep the texts about as long as the English ones.
+- A text left empty is shown in English.
+
+To improve a translation, edit its file (GitHub's editor in the browser does it: the pencil on the file's page) and
+open a pull request. GitHub checks every pull request with `tools/check_messages.py`: that no text is missing or
+unknown, that `%s` and `%d` match the English ones, and that each text fits on the screen. When a check fails, its
+log says which text and by how much. Once a pull request is merged, the [beta](../../releases/tag/beta) has it within
+minutes.
+
+To add a language, copy `en.txt` to a file named by the language's code, in lowercase letters only (`fr.txt`,
+`it.txt`), write its name in that language in `LANGUAGE_NAME` (`Français`), and translate. The program picks it up
+by itself; `fr`, `de`, `it`, `nl` and `ja` are also chosen when the PS2 is set to that language. The font has the
+Latin letters with their accents (no Japanese, Chinese or Korean characters for now).
+
 ## Sending a pull request
 
 1. Fork the repository and create a branch from `main`.
@@ -40,8 +73,9 @@ it.
 Conventions of the code:
 
 - Code, comments, file names and commit messages are in English.
-- Every text shown on screen exists in English and in Portuguese. The texts are in `src/ui/messages.def`, and
-  `python tools/check_messages.py` checks that each one fits where it is drawn.
+- Every text shown on screen has an id in `src/ui/messages.def` and its text in `lang/en.txt` and `lang/pt.txt`.
+  After adding one, `python tools/check_messages.py --sync` puts it in the other languages' files, to be translated,
+  and `python tools/check_messages.py` checks that each text fits where it is drawn.
 - Follow the style of the code around your change (4 spaces, lines up to 120 columns: `.editorconfig` has it), and
   keep the build free of warnings.
 - A function or a variable that only its own file uses is `static`. What another file uses is declared in that

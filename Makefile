@@ -27,7 +27,8 @@ endif
 # (one name each, whatever the folder: the objects all go to the same place)
 SOURCES = main format dialog leave work account backup tabs history active saves save dest install browse menu settings autosync \
           keyboard tools marks \
-          boot log input net mmce usb launch debug helper ui font image look sound icon i18n files json config state cards mcfs stream google update restore templates
+          boot log input net mmce usb launch debug helper ui font image look sound icon i18n files json config state cards mcfs stream google update restore templates \
+          lang
 # where the sources are: the screens and what they do (app), the rules with no screen and no PS2 hardware (core),
 # the PS2 itself (platform) and the drawing (ui). See docs/ARCHITECTURE.md
 SRC_DIRS = src src/app src/core src/platform src/ui
@@ -45,11 +46,15 @@ ASSET_OBJS = $(addprefix asset_, $(addsuffix _png.o, $(IMAGES)) $(addsuffix _adp
 # the IOP modules embedded in the program: mmceman (the sd2psx), and the drivers of the other devices a program can be
 # opened from after SD2Cloud (loaded only for that, see run_elf)
 EMBEDDED_IRX = mmceman mcman mcserv usbd usbmass_bd bdm bdmfs_fatfs mx4sio_bd ata_bd ps2dev9 ps2atad ps2hdd ps2fs
+# the texts on screen: a file per language in lang/ (en.txt, pt.txt...), each one built into the program as it is,
+# and langs.c listing them (i18n.c reads them). A file added there is a language more, with nothing else to change
+LANGS = $(basename $(notdir $(wildcard lang/*.txt)))
+LANG_OBJS = langs.o $(addprefix lang_, $(addsuffix .o, $(LANGS)))
 # what SD2Cloud writes to the memory card when the automatic sync is turned on, embedded in the program: the
 # APP_SD2CLOUD save folder, with the IGR helper, the shortcut that opens SD2Cloud (both built in igr/), and the Save
 # Application System's icon and title.cfg (package/sas)
 CARD_FILES = igr_elf open_elf icon_sys icon_icn title_cfg
-EE_OBJS = $(addprefix $(OBJ_DIR)/, $(addsuffix .o, $(SOURCES)) qrcodegen.o cacert_pem.o ini_default.o $(ASSET_OBJS) \
+EE_OBJS = $(addprefix $(OBJ_DIR)/, $(addsuffix .o, $(SOURCES)) qrcodegen.o cacert_pem.o ini_default.o $(ASSET_OBJS) $(LANG_OBJS) \
           $(addprefix irx_, $(addsuffix .o, $(EMBEDDED_IRX))) $(addprefix card_, $(addsuffix .o, $(CARD_FILES))))
 EE_INCS += $(addprefix -I, $(SRC_DIRS)) -I. -Ithird_party/qrcodegen -I$(PORTS4096)/include -I$(PS2SDK)/ports/include \
            -I$(PS2SDK)/ports/include/freetype2 -I$(GSKIT)/include
@@ -143,6 +148,24 @@ $(OBJ_DIR)/irx_mmceman.c: $(MMCEMAN)
 $(OBJ_DIR)/irx_ps2hdd.c: $(PS2SDK)/iop/irx/ps2hdd-osd.irx
 	@mkdir -p $(OBJ_DIR)
 	bin2c $< $@ ps2hdd_irx
+
+$(OBJ_DIR)/lang_%.c: lang/%.txt
+	@mkdir -p $(OBJ_DIR)
+	bin2c $< $@ lang_$*_txt
+
+$(OBJ_DIR)/lang_%.o: $(OBJ_DIR)/lang_%.c
+	$(EE_CC) -c $< -o $@
+
+$(OBJ_DIR)/langs.c: $(wildcard lang/*.txt) Makefile
+	@mkdir -p $(OBJ_DIR)
+	@{ echo '#include "i18n.h"'; \
+	   for l in $(LANGS); do echo "extern unsigned char lang_$${l}_txt[]; extern unsigned int size_lang_$${l}_txt;"; done; \
+	   echo 'const lang_file_t langFiles[] = {'; \
+	   for l in $(LANGS); do echo "    {\"$$l\", lang_$${l}_txt, &size_lang_$${l}_txt},"; done; \
+	   echo '};'; echo 'const int nLangFiles = sizeof(langFiles) / sizeof(langFiles[0]);'; } > $@
+
+$(OBJ_DIR)/langs.o: $(OBJ_DIR)/langs.c $(HEADERS)
+	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
 
 # Mozilla's root certificates (https://curl.se/ca/cacert.pem)
 $(OBJ_DIR)/cacert_pem.c: src/cacert.pem

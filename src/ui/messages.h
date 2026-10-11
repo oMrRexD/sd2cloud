@@ -4,7 +4,7 @@
 
 enum {
     T_NONE = 0,
-#define X(id, en, pt) id,
+#define X(id) id,
 #include "messages.def"
 #undef X
     T_COUNT

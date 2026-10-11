@@ -1,45 +1,146 @@
-/* SD2Cloud -- English and Portuguese. "auto" follows the PS2's language (Portuguese -> pt, anything else -> en) */
+/* SD2Cloud -- the texts on screen, in each language of lang/ (built into the program: langFiles), read the first time
+ * one is needed. A text a language doesn't have is the English one. "auto" follows the PS2's language when there is
+ * a file for it, else English */
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <osd_config.h>
 #include "common.h"
+#include "lang.h"
 
-static const char *const english[T_COUNT] = {
+#define MAX_LANGS 16
+
+static const char *const ids[T_COUNT] = {
     [T_NONE] = "",
-#define X(id, en, pt) [id] = en,
+#define X(id) [id] = #id,
 #include "messages.def"
 #undef X
 };
 
-static const char *const portuguese[T_COUNT] = {
-    [T_NONE] = "",
-#define X(id, en, pt) [id] = pt,
-#include "messages.def"
-#undef X
-};
+static struct {
+    const char *code, *name;
+    char date[4];                    /* DMY, MDY or YMD */
+    const char *text[T_COUNT];
+    const char *renamed[T_COUNT];    /* the texts that name the sd2psx, naming another device (i18n_device) */
+} langs[MAX_LANGS];
+static int nLangs, current, english;
 
-static const char *const *current = english;
+/* a text of the file being read, put where its id says. The files list them in the order of the ids, so the next id
+ * is looked at first */
+typedef struct {
+    int k, next;
+} reading_t;
 
-/* the texts for a device that isn't the sd2psx: the ones that name it, with that device's name instead */
-static const char *renamed[2][T_COUNT];
-static int otherDevice;
+static void on_text(const char *key, const char *value, void *u)
+{
+    reading_t *r = u;
+    int id;
+    if (!strcmp(key, "LANGUAGE_NAME")) {
+        langs[r->k].name = value;
+        return;
+    }
+    if (!strcmp(key, "DATE_FORMAT")) {
+        snprintf(langs[r->k].date, sizeof(langs[0].date), "%s", value);
+        return;
+    }
+    if (!value[0])   /* (not translated yet) */
+        return;
+    if (r->next < T_COUNT && !strcmp(ids[r->next], key))
+        id = r->next;
+    else
+        for (id = 1; id < T_COUNT && strcmp(ids[id], key); id++)
+            ;
+    if (id < T_COUNT) {
+        langs[r->k].text[id] = value;
+        r->next = id + 1;
+    }
+}
+
+static void load(void)
+{
+    int k, id;
+    if (nLangs)
+        return;
+    for (k = 0; k < nLangFiles && nLangs < MAX_LANGS; k++) {
+        unsigned int n = *langFiles[k].size;
+        char *text = malloc(n + 1);   /* (kept for good: the texts are in it) */
+        reading_t r = {nLangs, 1};
+        if (!text)
+            continue;
+        memcpy(text, langFiles[k].text, n);
+        text[n] = 0;
+        langs[nLangs].code = langs[nLangs].name = langFiles[k].code;
+        strcpy(langs[nLangs].date, "YMD");
+        lang_parse(text, n, on_text, &r);
+        if (!strcmp(langFiles[k].code, "en"))
+            english = nLangs;
+        nLangs++;
+    }
+    for (k = 0; k < nLangs; k++)
+        for (id = 1; id < T_COUNT; id++)
+            if (!langs[k].text[id])
+                langs[k].text[id] = langs[english].text[id];
+    current = english;
+}
+
+int i18n_count(void)
+{
+    load();
+    return nLangs;
+}
+
+const char *i18n_code(int k) { return k >= 0 && k < i18n_count() ? langs[k].code : ""; }
+const char *i18n_name(int k) { return k >= 0 && k < i18n_count() ? langs[k].name : ""; }
+
+int i18n_find(const char *code)
+{
+    int k;
+    size_t n = strcspn(code, "-_");   /* ("pt-BR" is pt) */
+    for (k = 0; k < i18n_count(); k++)
+        if (strlen(langs[k].code) == n && !strncasecmp(langs[k].code, code, n))
+            return k;
+    return -1;
+}
+
+/* the language the PS2 is set to (its settings, in the console's browser) */
+static const char *console_language(void)
+{
+    switch (configGetLanguage()) {
+    case LANGUAGE_JAPANESE: return "ja";
+    case LANGUAGE_FRENCH: return "fr";
+    case LANGUAGE_SPANISH: return "es";
+    case LANGUAGE_GERMAN: return "de";
+    case LANGUAGE_ITALIAN: return "it";
+    case LANGUAGE_DUTCH: return "nl";
+    case LANGUAGE_PORTUGUESE: return "pt";
+    default: return "en";
+    }
+}
+
+void i18n_select(const char *language)
+{
+    int k = strcmp(language, "auto") ? i18n_find(language) : -1;
+    if (k < 0)
+        k = i18n_find(console_language());
+    current = k < 0 ? english : k;
+}
 
 void i18n_device(const char *name)
 {
     static const char old[] = "sd2psx";
-    const char *const *table[2] = {english, portuguese};
     int k, id;
-    for (k = 0; k < 2; k++)   /* (the ones of the device before) */
-        for (id = 1; id < T_COUNT; id++) {
-            free((char *)renamed[k][id]);
-            renamed[k][id] = NULL;
+    load();
+    for (k = 0; k < nLangs; k++)
+        for (id = 1; id < T_COUNT; id++) {   /* (the ones of the device before) */
+            free((char *)langs[k].renamed[id]);
+            langs[k].renamed[id] = NULL;
         }
-    otherDevice = 0;
     if (!strcmp(name, old))
         return;
-    for (k = 0; k < 2; k++)
+    for (k = 0; k < nLangs; k++)
         for (id = 1; id < T_COUNT; id++) {
-            const char *s = table[k][id], *p;
+            const char *s = langs[k].text[id], *p;
             char *out, *q;
             size_t n = 0;
             for (p = s; p && (p = strstr(p, old)) != NULL; p += sizeof(old) - 1)
@@ -54,28 +155,25 @@ void i18n_device(const char *name)
                 } else
                     *q++ = *p++;
             *q = 0;
-            renamed[k][id] = out;
+            langs[k].renamed[id] = out;
         }
-    otherDevice = 1;
 }
-
-void i18n_select(const char *language)
-{
-    if (strcmp(language, "pt") == 0 || strcmp(language, "pt-BR") == 0)
-        current = portuguese;
-    else if (strcmp(language, "en") == 0)
-        current = english;
-    else
-        current = (configGetLanguage() == LANGUAGE_PORTUGUESE) ? portuguese : english;
-}
-
-int i18n_is_pt(void) { return current == portuguese; }
 
 const char *T(int id)
 {
-    if (id <= 0 || id >= T_COUNT || !current[id])
+    load();
+    if (id <= 0 || id >= T_COUNT || !langs[current].text[id])
         return "?";
-    if (otherDevice && renamed[current == portuguese][id])
-        return renamed[current == portuguese][id];
-    return current[id];
+    return langs[current].renamed[id] ? langs[current].renamed[id] : langs[current].text[id];
+}
+
+void i18n_date(char *out, size_t size, int year, int month, int day)
+{
+    load();
+    if (!strcmp(langs[current].date, "DMY"))
+        snprintf(out, size, "%02d/%02d/%04d", day, month, year);
+    else if (!strcmp(langs[current].date, "MDY"))
+        snprintf(out, size, "%02d/%02d/%04d", month, day, year);
+    else
+        snprintf(out, size, "%04d-%02d-%02d", year, month, day);
 }

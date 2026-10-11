@@ -16,7 +16,7 @@ code is written around. Each source file says what it is for at its top.
 | `src/app/` | The screens and what they do, one file for each screen or flow |
 | `src/core/` | The rules, with no screen and no PS2 hardware: memory cards, backups, settings, Google Drive |
 | `src/platform/` | The PS2 itself: IOP modules, controller, clock, network, the MMCE device, other programs |
-| `src/ui/` | Drawing: the scenes, the font, images, icons, sound, and the texts in both languages |
+| `src/ui/` | Drawing: the scenes, the font, images, icons, sound, and the texts in each language |
 | `igr/` | The two small programs that live on the memory card: the IGR helper and the shortcut |
 | `tests/` | The regression tests: `core` on a PC, the screens on PCSX2 ([tests/README.md](../tests/README.md)) |
 | `tools/` | Scripts of the build: the ports, mmceman, the art, the sounds, the release, the texts' check |
@@ -60,6 +60,7 @@ a PC's compiler. `src/app` is the only place that knows the screens; it calls do
 | `config.c`, `state.c` | The settings (`sd2cloud.ini`); what is remembered between runs (`state.ini`, `token.dat`) |
 | `update.c` | Updating the program from its GitHub releases |
 | `files.c`, `json.c` | Whole files and `.ini` files; the little of JSON the answers need |
+| `lang.c` | A file of `lang/`: the texts of one language |
 
 Each has its header (`mcfs.h`, `cards.h`...). `src/common.h` includes them all.
 
@@ -95,8 +96,10 @@ The main thread waits for the controller in `wait_button()` and `wait_nav()` (`p
 `idleHook` runs: that is how `device_watch()` (`app/active.c`) notices the card changed on the device itself, or the
 device taken out.
 
-Every text on screen is in `ui/messages.def`, in English and in Portuguese; `tools/check_messages.py` checks that
-each one fits where it is drawn.
+Every text on screen has its id in `ui/messages.def` and its text in each file of `lang/` (one per language,
+`en.txt` the original). The Makefile builds all of them into the program and lists them in `langs.c`; `ui/i18n.c`
+reads them (`core/lang.c`) the first time a text is needed, and a text a language lacks is the English one.
+`tools/check_messages.py` checks every file against the ids and that each text fits where it is drawn.
 
 ## The rules of the device
 

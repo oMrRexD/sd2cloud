@@ -10,6 +10,7 @@
 #include <time.h>
 #include <unistd.h>
 #include "common.h"
+#include "lang.h"
 #include <fileXio_rpc.h>
 
 char googleError[256];
@@ -59,16 +60,31 @@ void card_time_now(unsigned char t[8])
     memcpy(t, when, 8);
 }
 
-/* the texts, in English */
-const char *T(int id)
-{
-    static const char *const text[] = {
-        "",
-#define X(id, en, pt) en,
+/* the texts, in English: lang/en.txt, read as the program reads it (lang.c) the first time one is asked for. The tests
+ * run in tests/build/work */
+static const char *const textIds[T_COUNT] = {
+    [T_NONE] = "",
+#define X(id) [id] = #id,
 #include "messages.def"
 #undef X
-    };
-    return id > 0 && id < T_COUNT ? text[id] : "";
+};
+static const char *texts[T_COUNT];
+
+static void on_text(const char *key, const char *value, void *u)
+{
+    int id;
+    (void)u;
+    for (id = 1; id < T_COUNT; id++)
+        if (!strcmp(textIds[id], key))
+            texts[id] = value;
+}
+
+const char *T(int id)
+{
+    static buffer_t b;   /* (kept: the texts are in it) */
+    if (!b.data && file_read("../../../lang/en.txt", &b) == 0)
+        lang_parse((char *)b.data, b.len, on_text, NULL);
+    return id > 0 && id < T_COUNT && texts[id] ? texts[id] : "";
 }
 
 /* no network in the tests */

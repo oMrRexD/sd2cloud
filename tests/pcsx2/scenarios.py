@@ -75,7 +75,7 @@ SCENARIOS = [
     {"name": "card-file-copy", "what": "two saves of a card file marked there, and copied to a card", "cards": CARDS,
      "files": {"Files/card.mcd": "game.mcd"}, "script": ">>XXXXX>XSDXXXC"},
     {"name": "settings", "what": "settings changed (how many backups are kept, their format, the language) and About",
-     "cards": CARDS, "script": "SDDDDDXDXDXDXUUXDXDDDDDDXOOC"},
+     "cards": CARDS, "script": "SDDDDDXDXDXDXUUXUXDDDDDDXOOC"},
     {"name": "card-sync-toggle", "what": "a card's sync turned off in its options, and on again", "cards": CARDS,
      "script": "TDXTDXC"},
     # (the device has another folder for that game now, by its Game2Folder.ini: the card of the game's own folder was

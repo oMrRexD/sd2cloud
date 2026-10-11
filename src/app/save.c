@@ -248,10 +248,11 @@ void save_page(save_view_t *v, const char *where, long long bytes, const int *op
     fit(FONT_TEXT, sp.where, sizeof(sp.where), 304);
     sp.options = options;
     sp.nOptions = n;
-    if (i18n_is_pt())
-        snprintf(sp.date, sizeof(sp.date), "%02d/%02d/%04d  %02d:%02d:%02d", d.day, d.month, d.year, d.hour, d.minute, d.second);
-    else
-        snprintf(sp.date, sizeof(sp.date), "%04d-%02d-%02d  %02d:%02d:%02d", d.year, d.month, d.day, d.hour, d.minute, d.second);
+    {
+        char date[16];
+        i18n_date(date, sizeof(date), d.year, d.month, d.day);
+        snprintf(sp.date, sizeof(sp.date), "%s  %02d:%02d:%02d", date, d.hour, d.minute, d.second);
+    }
     snprintf(sp.size, sizeof(sp.size), T(T_SAVE_KB), (int)((bytes + 1023) / 1024));
     sp.cursor = 0;
     sp.since = now_ms();

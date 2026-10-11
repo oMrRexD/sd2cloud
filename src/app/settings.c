@@ -47,8 +47,8 @@ static void build_settings(void)
     set_item(&i, SET_IGR_RETURN, T(T_SET_IGR_RETURN), v);
     if (deviceBoth)   /* (a microSD with the cards of both devices: which one it is in is the user's to say) */
         set_item(&i, SET_DEVICE, T(T_SET_DEVICE), dev->name);
-    set_item(&i, SET_LANGUAGE, T(T_SET_LANGUAGE), !strcmp(cfg.language, "pt") ? "Português" : !strcmp(cfg.language, "en") ? "English"
-                                                                                    : T(T_AUTO));
+    set_item(&i, SET_LANGUAGE, T(T_SET_LANGUAGE), i18n_find(cfg.language) >= 0 ? i18n_name(i18n_find(cfg.language))
+                                                                                     : T(T_AUTO));
     snprintf(v, sizeof(v), "%d", cfg.keep);
     set_item(&i, SET_KEEP, T(T_SET_KEEP), cfg.keep ? v : T(T_KEEP_ALL));
     set_item(&i, SET_FORMAT, T(T_SET_FORMAT), format_name(cfg.ps2));
@@ -507,18 +507,23 @@ static void pick_auto_sync(void)
     note_igr_auto(NULL);
 }
 
+/* "Automatic" (the PS2's language), then each language of lang/ by its own name */
 static void pick_language(void)
 {
-    static const char *const values[3] = {"auto", "pt", "en"};
-    static const char *items[3];
-    int k, start = !strcmp(cfg.language, "pt") ? 1 : !strcmp(cfg.language, "en") ? 2 : 0;
+    static const char *items[1 + 16];
+    int k, n = i18n_count() < 16 ? i18n_count() : 16, start = 0;
+    const char *code;
     items[0] = T(T_AUTO);
-    items[1] = "Português";
-    items[2] = "English";
-    if ((k = choose(T(T_SET_LANGUAGE), items, 3, start)) < 0)
+    for (k = 0; k < n; k++) {
+        items[1 + k] = i18n_name(k);
+        if (i18n_find(cfg.language) == k)   /* ("auto" is no language's) */
+            start = 1 + k;
+    }
+    if ((k = choose(T(T_SET_LANGUAGE), items, 1 + n, start)) < 0)
         return;
-    snprintf(cfg.language, sizeof(cfg.language), "%s", values[k]);
-    config_set("general", "language", values[k]);
+    code = k ? i18n_code(k - 1) : "auto";
+    snprintf(cfg.language, sizeof(cfg.language), "%s", code);
+    config_set("general", "language", code);
     ui_lock();
     i18n_select(cfg.language);   /* every screen changes language at once */
     ui_unlock();

@@ -8,7 +8,7 @@
 SRC = ../src
 CORE = $(SRC)/core
 HEADERS = $(wildcard $(SRC)/*.h $(SRC)/*/*.h) $(SRC)/ui/messages.def
-ENGINE = mcfs stream restore cards config state json files templates
+ENGINE = mcfs stream restore cards config state json files templates lang
 TESTS = $(basename $(wildcard test_*.c))
 OUT = build
 

@@ -1,0 +1,803 @@
+# SD2Cloud -- the texts on screen in English: the original, which the other files of this folder translate.
+#
+# Each text is a line "ID = text". A translation keeps the IDs as they are and changes only what comes after "=".
+# - %s, %d, %lld and %02d are filled in by the program (a card's name, a number): keep each one, in the same order.
+# - \n starts a new line on the screen. A text that starts with a space starts with "\ " instead.
+# - The screen is a TV's, and small: each text has to fit its place. The comment above each one says what it is.
+#   tools/check_messages.py measures every text of every language, and GitHub runs it on each pull request.
+# - A text left out, or left empty, is shown in English.
+# Tone: a system application's. Errors start with "Unable to...", the rest are plain sentences.
+# How to translate, and how to add a language: CONTRIBUTING.md, "Translating".
+
+LANGUAGE_NAME = English
+# how a date is written: DMY (31/12/2026), MDY (12/31/2026) or YMD (2026-12-31)
+DATE_FORMAT = YMD
+
+# One line.
+T_SEARCHING = Searching for memory cards...
+# Up to 3 lines.
+T_NO_SD = The sd2psx memory card folder was not found (MemoryCards/PS2 on the MMCE).
+# Up to 5 lines.
+T_NO_CARDS = No memory cards are included in the sync. Check sd2cloud.ini.
+# Up to 3 lines.
+T_CHECKING = Checking
+# One line.
+T_ST_NEW = Never synced
+# One line.
+T_ST_CHANGED = Not synced
+# One line.
+T_ST_UP_TO_DATE = Synced
+# One line.
+T_ST_ERROR = Read error
+# One line.
+T_ST_SKIPPED = Excluded
+# Up to 3 lines.
+T_NET_STARTING = Connecting to the network...
+# Up to 3 lines.
+T_NET_ERR_DRIVERS = Unable to load the network drivers.
+# Up to 3 lines.
+T_NET_ERR_LINK = No network connection. Check the network cable.
+# Up to 3 lines.
+T_NET_ERR_DHCP = Unable to obtain an IP address from the router (DHCP).
+# Up to 3 lines.
+T_SIGNING_IN = Signing in to Google...
+# One line.
+T_LOGIN_TITLE = Connect to Google
+# One line.
+T_LOGIN_OPEN = On your phone or PC, visit
+# One line.
+T_LOGIN_ENTER = and enter this code
+# One line.
+T_LOGIN_EXPIRES = This code expires in %d min
+# One line.
+T_LOGIN_QR = or use the QR code
+# One line.
+T_LOGIN_OK = Connected to Google.
+# One line.
+T_LOGIN_ERROR = Unable to connect to Google.
+# Up to 3 lines.
+T_LOGIN_EXPIRED = The code has expired. Try again.
+# Up to 3 lines.
+T_LOGIN_DENIED = Access was denied on the Google page.
+# Up to 3 lines.
+T_LOGIN_REVOKED = Google access has expired or was revoked. Please sign in again.
+# One line.
+T_FIRST_TITLE = Initial sync
+# Up to 2 lines.
+T_FIRST_QUESTION = Sync all %d memory cards now? (%s, approx. %d min)
+# One line.
+T_FIRST_AFTER = After this, only changed cards will be uploaded.
+# Button.
+T_YES = Yes
+# Button.
+T_LATER = Not now
+# One line.
+T_MENU_UPDATE = Update SD2Cloud to %s
+# One line.
+T_UPDATE = Update
+# Button.
+T_MENU_EXIT = Exit
+# One line.
+T_UPLOADING = %d of %d
+# One line.
+T_BACKING_UP = Uploading to Google Drive...
+# Up to 3 lines.
+T_UPLOAD_OK = uploaded
+# Up to 3 lines.
+T_UPLOAD_FAILED = failed
+# One line.
+T_SUMMARY_OK = Sync complete
+# One line.
+T_SUMMARY_PARTIAL = Sync partially completed
+# One line.
+T_SUMMARY_FAILED = Sync failed
+# One line.
+T_RETURNING = Returning in %d s...
+# Button.
+T_BACK = Back
+# One line.
+T_IGR_TITLE = Automatic sync
+# Up to 3 lines.
+T_IGR_NO_LOGIN = SD2Cloud is not connected to Google. Open SD2Cloud from the Apps tab to set it up.
+# One line.
+T_HELPER_TITLE = SAS package
+# Up to 2 lines.
+T_HELPER_ABOUT = Required for automatic sync via IGR. It also adds a shortcut to the PS2 browser.
+# One line.
+T_HELPER_WHERE = Destination (memory card in use):
+# One line.
+T_HELPER_AUTOBOOT = If Autoboot is enabled, install it while the BootCard is in use.
+# Button.
+T_HELPER_INSTALL = Install
+# One line.
+T_HELPER_OK = SAS package installed
+# Up to 2 lines.
+T_HELPER_ERROR = Unable to install the SAS package on the memory card%s.
+# Up to 3 lines.
+T_MC_ERROR = \ (error %d)
+# Up to 3 lines.
+T_HELPER_DROPPED = The sd2psx disconnected the memory card during the writing%s.
+# One line.
+T_HELPER_DROPPED_HINT = Try again, or use an 8 MB card%s.
+# Up to 3 lines.
+T_HELPER_CARD_MB = \ (this one has %d MB)
+# Up to 2 lines.
+T_HELPER_MISSING = SD2CLOUD-IGR.ELF was not found in the SD2Cloud folder.
+# Up to 3 lines.
+T_ERR_INTERNET = Unable to connect to Google:
+# Up to 3 lines.
+T_ERR_UPLOAD_STOPPED = the upload was interrupted
+# Up to 3 lines.
+T_ERR_NO_FILE_ID = Google Drive did not return a file ID
+# Up to 3 lines.
+T_ERR_CHECKSUM = the file on Google Drive does not match (SHA-256)
+# Up to 3 lines.
+T_ERR_POSITION = Google Drive: unexpected position (%lld)
+# Up to 3 lines.
+T_ERR_CLOCK_AHEAD = the PS2's clock is ahead (%s): set the console's date and time
+# Up to 3 lines.
+T_UPDATE_CHECKING = Checking for updates...
+# Up to 3 lines.
+T_UPDATE_RUNNING = Updating SD2Cloud...
+# Up to 3 lines.
+T_UPDATE_DONE = Update complete. Starting the new version...
+# Up to 3 lines.
+T_UPDATE_ERROR = The update failed. The current version was kept.
+# Button.
+T_SELECT = Enter
+# Button.
+T_CANCEL = Cancel
+# One line.
+T_CANCEL_TITLE = Cancel the sync?
+# Up to 2 lines.
+T_CANCEL_TEXT = Cards already uploaded will remain on Google Drive. SD2Cloud will close.
+# Button.
+T_CANCEL_YES = Yes, cancel
+# Button.
+T_CANCEL_NO = Continue
+# One line.
+T_CARD_LAST = Last backup: %s
+# One line.
+T_HIST_TITLE = %s backups
+# One line.
+T_HIST_LOADING = Loading backups...
+# Up to 3 lines.
+T_HIST_EMPTY = No backups of this card on Google Drive.
+# One line.
+T_HIST_SAME = Same as current
+# Button.
+T_RESTORE = Restore
+# One line.
+T_RESTORE_TITLE = Restore %s?
+# One line.
+T_RESTORE_FROM = Backup from %s
+# Up to 2 lines.
+T_RESTORE_TEXT = The memory card on the MMCE will be replaced with this backup.
+# One line.
+T_RESTORE_SAVE_FIRST = The current card will be synced first.
+# Up to 2 lines.
+T_RESTORE_IN_USE = %s is currently in use by the sd2psx. Switch it to another card, then press X again.
+# Up to 2 lines.
+T_RESTORE_UNKNOWN = Unable to determine which card the sd2psx is using. If it is this card, switch to another card first.
+# One line.
+T_RESTORE_STEP_DOWNLOAD = Downloading the backup...
+# One line.
+T_RESTORE_STEP_WRITE = Writing to the MMCE...
+# One line.
+T_RESTORE_OK = Memory card restored
+# One line.
+T_RESTORE_FAILED = Restore failed
+# One line.
+T_RESTORE_CANCEL_TITLE = Cancel the restore?
+# One line.
+T_RESTORE_CANCEL_TEXT = The memory card will not be changed.
+# Up to 3 lines.
+T_ERR_TOO_BIG = this backup is too large to restore on the PS2
+# Up to 3 lines.
+T_ERR_BAD_BACKUP = the backup failed verification (SHA-256)
+# Up to 3 lines.
+T_ERR_WRITE = unable to write the memory card to the MMCE
+# Up to 3 lines.
+T_ERR_DOWNLOAD = the download was interrupted
+# Button.
+T_OPTIONS = Options
+# One line.
+T_FREE_KB = %d KB free
+# One line.
+T_CARD_EMPTY = This memory card contains no saved data.
+# One line.
+T_IGR_DONE = Upload complete
+# Up to 2 lines.
+T_IGR_NOTHING = No memory cards have changed.
+# One line.
+T_SYNC_NOW = Sync now
+# One line.
+T_RESTORE_BACKUP = Restore a backup
+# Button.
+T_COPY = Copy
+# Button.
+T_MOVE = Move
+# Button.
+T_DELETE = Delete
+# One line.
+T_TO_CLOUD = Upload to Drive
+# One line.
+T_SAVE_KB = %d KB
+# One line.
+T_COPY_TO = Copy to
+# One line.
+T_MOVE_TO = Move to
+# Up to 3 lines.
+T_NO_OTHER_CARDS = No other memory cards were found on the MMCE.
+# Up to 3 lines.
+T_CARD_IN_USE = %s is currently in use by the sd2psx. Switch to another card on the sd2psx first.
+# Up to 3 lines.
+T_WORKING_COPY = Copying...
+# Up to 3 lines.
+T_WORKING_MOVE = Moving...
+# Up to 3 lines.
+T_WORKING_DELETE = Deleting...
+# Up to 3 lines.
+T_DONE_COPY = Copied to %s.
+# Up to 3 lines.
+T_DONE_MOVE = Moved to %s.
+# One line.
+T_DONE_DELETE = Deleted.
+# Up to 3 lines.
+T_DELETE_ASK = Delete "%s"?
+# Up to 3 lines.
+T_DELETE_TEXT = It will be permanently removed from %s. This action cannot be undone.
+# Up to 3 lines.
+T_ERR_EXISTS = %s already contains data with the same name.
+# Up to 3 lines.
+T_ERR_FULL = There is not enough free space on %s.
+# Up to 3 lines.
+T_ERR_MC_WRITE = Unable to write to the memory card.
+# Up to 3 lines.
+T_ERR_MC_CHECK = The copy on %s failed verification.
+# One line.
+T_CLOUD_DONE = Uploaded to Google Drive.
+# Up to 3 lines.
+T_CLOUD_FAILED = Upload failed:
+# Up to 3 lines.
+T_CANCEL_TEXT_MANUAL = Cards already uploaded will remain on Google Drive.
+# Up to 3 lines.
+T_CONFIRM_BACKUP_ONE = Sync %s now?
+# Up to 3 lines.
+T_CONFIRM_BACKUP_CHANGED = Sync the %d unsynced cards now?
+# Up to 3 lines.
+T_SYNC_AGAIN_ALL = Sync all %d cards again? A new backup of each card will be created on Google Drive.
+# Up to 3 lines.
+T_CONFIRM_BACKUP_TEXT = The data will be uploaded to your Google Drive. Press the Circle button to cancel at any time.
+# Up to 3 lines.
+T_CONFIRM_UPDATE_TEXT = SD2Cloud will download and start the new version.
+# Up to 3 lines.
+T_CONFIRM_COPY = Copy "%s" to %s?
+# Up to 2 lines.
+T_CONFIRM_COPY_N = Copy %d saves to %s?
+# Button.
+T_PASTE = Paste
+# One line.
+T_SORT_BY = Sort by
+# One line.
+T_SORT_NEWEST = Date, descending
+# One line.
+T_SORT_OLDEST = Date, ascending
+# One line.
+T_SORT_NAME = Name
+# One line.
+T_REPEATED = Duplicates
+# One line.
+T_REPEATED_HIDDEN = Hidden
+# One line.
+T_REPEATED_SHOWN = Shown
+# One line.
+T_SET_DEVICE = Device
+# One line.
+T_DEVICE_ASK = Which device is in use?
+# Up to 3 lines.
+T_DEVICE_NOTE = This can be changed in Settings.
+# Up to 3 lines.
+T_CONFIRM_MOVE = Move "%s" to %s?
+# Up to 3 lines.
+T_CONFIRM_CLOUD = Upload "%s" to Google Drive?
+# Up to 3 lines.
+T_CONFIRM_CLOUD_TEXT = A .psu file will be created in the Saves folder, next to this card's backups.
+# One line.
+T_TAB_CARDS = Cards
+# One line.
+T_TAB_GAMES = Games
+# One line.
+T_TAB_BOOT = Boot
+# One line.
+T_TAB_FILES = Files
+# One line.
+T_ALL_SAVES = All saves
+# One line.
+T_SAVES_COUNT = %d saves
+# One line.
+T_GAME_CARDS_N = %d cards
+# One line.
+T_NO_ROOM = Not enough free space
+# Button.
+T_OPEN = Open
+# Button.
+T_SYNC = Sync
+# Button.
+T_SETTINGS = Settings
+# Button.
+T_TOOLS = Tools
+# Up to 3 lines.
+T_ALREADY_SYNCED = %s is already synced.
+# Up to 3 lines.
+T_SYNC_AGAIN_ONE = Sync it again? A new backup will be created on Google Drive.
+# One line.
+T_ALL_SYNCED = All cards are synced.
+# One line.
+T_SET_SYNC_ALL = Sync all cards
+# Up to 3 lines.
+T_PENDING_ONE = 1 pending
+# One line.
+T_PENDING_N = %d pending
+# One line.
+T_NONE_PENDING = All synced
+# One line.
+T_SET_IGR_RETURN = IGR path
+# One line.
+T_SET_LANGUAGE = Language
+# One line.
+T_SET_KEEP = Backups kept per card
+# One line.
+T_SET_FORMAT = Backup format
+# One line.
+T_SET_UPDATES = Check for updates
+# Up to 3 lines.
+T_SET_CHANNEL = Update channel
+# Up to 3 lines.
+T_CHANNEL_STABLE = Stable
+# Up to 3 lines.
+T_CHANNEL_BETA_ASK = Use the beta channel?
+# Up to 3 lines.
+T_CHANNEL_BETA_TEXT = The beta channel gets every change before final testing and may contain bugs.
+# One line.
+T_SET_ACCOUNT = Google account
+# One line.
+T_SET_ABOUT = About SD2Cloud
+# Up to 3 lines.
+T_AUTO = Automatic
+# Up to 3 lines.
+T_RET_OSD = PS2 Browser
+# Button.
+T_EXIT_BROWSER = Return to Browser
+# One line.
+T_EXIT_FILES = Run an ELF...
+# Up to 3 lines.
+T_DEVICE_GONE = sd2psx disconnected
+# Up to 3 lines.
+T_DEVICE_GONE_TEXT = Reconnect the sd2psx to continue.
+# Button.
+T_RUN = Run
+# One line.
+T_START_APP = Start application
+# One line.
+T_KEEP_ALL = No limit
+# Up to 3 lines.
+T_HELPER_INSTALLED = Installed
+# Up to 3 lines.
+T_HELPER_OUTDATED = Outdated
+# One line.
+T_HELPER_NOT_INSTALLED = Not installed
+# Up to 3 lines.
+T_HELPER_NA = Unavailable
+# Up to 3 lines.
+T_ACCOUNT_ON = Connected
+# One line.
+T_ACCOUNT_OFF = Not connected
+# Up to 3 lines.
+T_LOGOUT_ASK = Disconnect the Google account?
+# Up to 3 lines.
+T_LOGOUT_TEXT = SD2Cloud will not be able to upload data until you connect again. Backups on Google Drive are kept.
+# Button.
+T_LOGOUT_YES = Disconnect
+# Up to 3 lines.
+T_LOGOUT_DONE = Google account disconnected.
+# Up to 3 lines.
+T_ABOUT_TEXT = Manage and back up your sd2psx memory cards, right on your PS2.
+# Up to 3 lines.
+T_ABOUT_CREDITS = Design inspired by the PlayStation BB Navigator. Font: Varela Round (SIL Open Font License).
+# One line.
+T_ABOUT_LICENSES = Third-party licenses: see THIRD-PARTY-NOTICES.txt.
+# Up to 3 lines.
+T_ABOUT_AUTHOR = Developed by MrRexD.
+# One line.
+T_EXIT_TO = Exit to
+# Up to 3 lines.
+T_CONNECT_ASK = Connect a Google account now to sync your memory cards?
+# Up to 2 lines.
+T_CONNECT_HINT = You can also connect later in Settings (START).
+# Button.
+T_CONNECT = Connect
+# One line.
+T_COPY_DEVICE = Copy to a device
+# Button.
+T_NEVER_ASK = Don't ask again
+# Up to 3 lines.
+T_CONNECT_WHERE = To connect later, open Settings (START) and choose Google account.
+# Up to 3 lines.
+T_DEV_MC = memory card
+# Up to 3 lines.
+T_DEV_HDD = HDD
+# Up to 3 lines.
+T_AUTO_ASK = Turn on automatic sync? When you exit a game using IGR, changed memory cards will be uploaded to Google Drive.
+# Up to 2 lines.
+T_AUTO_WHERE = The SAS package will be installed on the memory card in use (with Autoboot enabled, use the BootCard).
+# Button.
+T_AUTO_ON = Turn on
+# Up to 3 lines.
+T_AUTO_LATER = Automatic sync can be turned on later in Settings (START), under SAS package.
+# Up to 3 lines.
+T_AUTO_INSTALLING = Installing the SAS package...
+# One line.
+T_AUTO_DONE = Automatic sync turned on
+# One line.
+T_AUTO_OPL = In OPL, set "IGR Path" to:
+# One line.
+T_AUTO_NOTE = Write down the path above. It is also in README.txt.
+# One line.
+T_INSERT = Insert into sd2psx
+# One line.
+T_INSERT_PREVIEW = Insert this card (experimental)
+# Button.
+T_INSERT_YES = Insert
+# Up to 2 lines.
+T_INSERT_BOOT_ASK = From now on, the sd2psx will start from this BootCard.
+# One line.
+T_SWITCHING = Switching cards on the sd2psx...
+# Up to 2 lines.
+T_INSERT_DONE = %s inserted into the sd2psx.
+# Up to 2 lines.
+T_INSERT_FAILED = Unable to switch the sd2psx to %s.
+# Up to 2 lines.
+T_INSERT_NEEDS_BOOT = Requires Autoboot enabled in the sd2psx settings.
+# Up to 2 lines.
+T_INSERT_NEEDS_GAMEID = Requires Game ID enabled in the sd2psx settings.
+# Up to 3 lines.
+T_SWITCH_ASK = %s is in use by the sd2psx. To change it, the sd2psx will be switched to another card temporarily.
+# Button.
+T_CONTINUE = Continue
+# Up to 3 lines.
+T_SWITCH_FAILED = Unable to switch the card on the sd2psx. Nothing was changed.
+# Up to 3 lines.
+T_SWITCH_BACK_FAILED = Unable to switch the sd2psx back to %s. Select it on the sd2psx.
+# One line.
+T_SYNC_ON = On
+# One line.
+T_SYNC_OFF = Off
+# Up to 3 lines.
+T_SYNC_NO_ACCOUNT = Without a Google account connected, automatic sync stays off.
+# Button.
+T_FINISH = Done
+# One line.
+T_UPDATE_AVAILABLE = %s available
+# Up to 3 lines.
+T_UPDATE_NONE = SD2Cloud is up to date (v%s).
+# Up to 3 lines.
+T_UPDATE_CHECK_FAILED = Unable to check for updates.
+# Up to 3 lines.
+T_HELPER_FULL = Not enough free space on the memory card in use (%d KB needed, %d KB free). Nothing was changed.
+# One line.
+T_HELPER_SPACE = Space required: %d KB (%d KB free).
+# One line.
+T_HELPER_SPACE_NEED = Space required: %d KB.
+# One line.
+T_HELPER_REINSTALL = Reinstall
+# Button.
+T_HELPER_UNINSTALL = Uninstall
+# One line.
+T_HELPER_UNINSTALL_ASK = Uninstall the SAS package?
+# Up to 3 lines.
+T_HELPER_UNINSTALL_TEXT = Automatic sync will stop working, and the shortcut leaves the PS2 browser. In OPL, change "IGR Path" as well.
+# Up to 3 lines.
+T_HELPER_UNINSTALLED = SAS package uninstalled.
+# Up to 3 lines.
+T_HELPER_UNINSTALL_ERROR = Unable to remove the SAS package from the memory card.
+# Up to 2 lines.
+T_HELPER_OLD_PATH = The earlier path (BOOT/SD2CLOUD-IGR.ELF) still works.
+# Up to 3 lines.
+T_HELPER_ON_CARD = The SAS package is already on the memory card, next to SD2Cloud. No installation is needed.
+# One line.
+T_DEV_SD = MMCE
+# One line.
+T_DEV_USB = USB drive
+# Up to 5 lines.
+T_FILES_HINT = Install or open .psu saves and memory card files (.mcd, .mc2, .ps2, .bin, .zip).
+# One line.
+T_LOADING = Loading...
+# One line.
+T_USB_SEARCHING = Looking for a USB drive...
+# Up to 3 lines.
+T_USB_NONE = No USB drive was found. It must be formatted as FAT32 or exFAT.
+# One line.
+T_DIR_ERROR = Unable to read this folder.
+# One line.
+T_DIR_EMPTY = This folder is empty.
+# Button.
+T_EXPORT = Export
+# Up to 3 lines.
+T_CONFIRM_EXPORT = Export "%s" to this folder?
+# Up to 2 lines.
+T_CONFIRM_EXPORT_N = Export %d saves to this folder?
+# Up to 2 lines.
+T_EXPORT_FILE = File: %s
+# Up to 3 lines.
+T_EXPORT_REPLACE = %s already exists in this folder. Replace it?
+# Button.
+T_REPLACE = Replace
+# One line.
+T_WORKING_EXPORT = Exporting...
+# Up to 2 lines.
+T_DONE_EXPORT = Exported as %s.
+# Up to 3 lines.
+T_ERR_EXPORT = Unable to write the file.
+# One line.
+T_IMPORT = Import to card
+# Button.
+T_IMPORT_YES = Import
+# One line.
+T_IMPORT_TO = Import to
+# Up to 3 lines.
+T_ERR_NOT_CARD = this file is not a PS2 memory card
+# Up to 3 lines.
+T_ERR_READ_FILE = unable to read the file
+# Up to 3 lines.
+T_ERR_CARD_FILE = This file is not a PS2 memory card.
+# Up to 3 lines.
+T_FILE_TOO_BIG = This memory card is too large to open on the PS2. Install it on the MMCE?
+# Button.
+T_INSTALL = Install card
+# Button.
+T_INSTALL_YES = Install
+# Button.
+T_INSTALL_SAVE = Install save
+# One line.
+T_INSTALL_TO = Install to
+# One line.
+T_NEW_CARD = New card
+# One line.
+T_INSTALL_NEW_ASK = Install as a new card?
+# One line.
+T_INSTALL_REPLACE_ASK = Replace %s?
+# Up to 2 lines.
+T_INSTALL_REPLACE_TEXT = Its contents will be replaced with the card in this file. This action cannot be undone.
+# Up to 2 lines.
+T_INSTALL_BOOT_WARN = This is a BootCard: it may hold the files your console starts from.
+# Up to 3 lines.
+T_INSTALL_BIG_WARN = If the file can't be read to the end and the installation is cancelled, %s will be left empty.
+# Up to 4 lines.
+T_INSTALL_NO_GAME = Unable to tell which game this card is for. Install it under Cards, or rename the file to the game's ID (SLUS-21065-1.mcd).
+# One line.
+T_INSTALL_WHICH_GAME = Which game is this card for?
+# Up to 3 lines.
+T_INSTALL_RAISE_ASK = This folder already has %d cards, the limit set on the sd2psx. Raise the limit to %d and install?
+# Up to 3 lines.
+T_INSTALL_NO_CHANNEL = This folder has reached its limit of %d cards. Replace one of them instead.
+# One line.
+T_INSTALL_OK = Memory card installed
+# One line.
+T_INSTALL_FAILED = Installation failed
+# One line.
+T_INSTALL_CANCEL_TITLE = Cancel the installation?
+# One line.
+T_INSTALL_CANCEL_TEXT = Nothing has been written to the MMCE.
+# Up to 3 lines.
+T_INSTALL_CANCEL_NEW = The new memory card will not be created.
+# Up to 3 lines.
+T_INSTALL_LOST = Unable to read the file.
+# Up to 3 lines.
+T_INSTALL_LOST_TEXT = %s is incomplete until the rest of the file is written.
+# Up to 3 lines.
+T_TRY_AGAIN = Try again
+# Button.
+T_KEEP_BOTH = Keep both
+# Up to 3 lines.
+T_CONFIRM_IMPORT = Import "%s" to %s?
+# One line.
+T_WORKING_IMPORT = Importing...
+# One line.
+T_WORK_CANCEL_TITLE = Cancel?
+# One line.
+T_CANCELLING = Cancelling...
+# One line.
+T_DONE_IMPORT = Imported to %s.
+# Up to 3 lines.
+T_ERR_PSU = This file is not a valid .psu save file.
+# Up to 3 lines.
+T_ERR_SAVE_FOLDER = This folder is not a valid memory card save.
+# Up to 3 lines.
+T_NO_CARDS_SD = No memory cards were found on the MMCE.
+# Up to 2 lines.
+T_NEWCARD_NOTE = A new 8 MB memory card will be created for this game.
+# One line.
+T_NEWCARD_MAKING = Creating the memory card...
+# Up to 2 lines.
+T_NEWCARD_FAILED = Unable to create the memory card.
+# Up to 3 lines.
+T_NEWCARD_NO_CHANNEL = This game's folder has reached its limit of %d cards.
+# Up to 3 lines.
+T_PICK_ELF = Choose an ELF...
+# Up to 3 lines.
+T_CARD_UNREADABLE = Unable to read this memory card.
+# Button.
+T_KB_TYPE = Type
+# Button.
+T_KB_ERASE = Erase
+# One line.
+T_TEMPLATES = Templates
+# One line.
+T_TPL_NEW = New template
+# One line.
+T_TPL_NAME = Template name
+# Up to 3 lines.
+T_TPL_DEFAULT = Template %d
+# Up to 3 lines.
+T_TPL_BAD_NAME = Invalid name.
+# Up to 3 lines.
+T_TPL_TAKEN = A template with this name already exists.
+# Up to 3 lines.
+T_TPL_MANY = The limit of %d templates has been reached.
+# Button.
+T_MARK = Select
+# One line.
+T_MARKED_N = Selected: %d
+# One line.
+T_TPL_MARK_TITLE = Select saves
+# Up to 3 lines.
+T_MARK_DROP = Discard the selected saves?
+# Button.
+T_MARK_DROP_YES = Discard
+# Up to 3 lines.
+T_TPL_CREATE_ASK = Create the template "%s"?
+# Button.
+T_TPL_CREATE = Create
+# One line.
+T_TPL_COPYING = Copying to the template...
+# Up to 3 lines.
+T_TPL_FAILED = Unable to create the template.
+# Up to 3 lines.
+T_TPL_CREATED = Template "%s" created.
+# Up to 3 lines.
+T_TPL_COPIED_N = Saves copied: %d
+# Up to 3 lines.
+T_TPL_NOT_COPIED = Saves not copied: %d
+# One line.
+T_TPL_SUMMARY = Saves: %d (%d KB)
+# One line.
+T_TPL_EMPTY = This template has no saves.
+# One line.
+T_TPL_REMOVE = Remove from template
+# Up to 3 lines.
+T_TPL_REMOVE_ASK = Remove "%s" from the template?
+# Button.
+T_TPL_REMOVE_YES = Remove
+# One line.
+T_TPL_ADD_SAVES = Add saves
+# One line.
+T_TPL_RENAME = Rename
+# One line.
+T_TPL_DELETE = Delete template
+# Up to 3 lines.
+T_TPL_DELETE_ASK = Delete the template "%s"?
+# Up to 3 lines.
+T_TPL_DELETE_NOTE = Saves already applied to cards are kept.
+# Up to 3 lines.
+T_TPL_DELETE_FAILED = Unable to delete the template.
+# Button.
+T_TPL_APPLY = Apply
+# One line.
+T_TPL_APPLYING = Applying the template...
+# Up to 3 lines.
+T_TPL_ADD_ASK = Add the selected saves to the template "%s"?
+# Button.
+T_TPL_ADD = Add
+# Up to 3 lines.
+T_TPL_REPLACE_ASK = The template already has %d of the selected saves. Replace them?
+# Button.
+T_TPL_KEEP = Keep existing
+# Up to 3 lines.
+T_TPL_FULL = A template holds %d saves at most.
+# Up to 3 lines.
+T_TPL_ADDED = Saves added to the template: %d
+# One line.
+T_TPL_RENAMING = Renaming...
+# Up to 3 lines.
+T_TPL_RENAME_FAILED = Unable to rename the template.
+# One line.
+T_TPL_APPLY_MENU = Apply template...
+# One line.
+T_TPL_APPLY_TITLE = Apply template
+# One line.
+T_TPL_ALL_CARDS = All game cards
+# One line.
+T_TPL_PICK_CARDS = Select cards
+# Up to 3 lines.
+T_TPL_PICK_ASK = Apply the template "%s" to the selected cards?
+# Button.
+T_TPL_MAKE_MAIN = Set as default
+# One line.
+T_TPL_UNMAKE_MAIN = Remove as default
+# One line.
+T_TPL_MAIN = Default
+# Up to 3 lines.
+T_TPL_MAIN_NOW = "%s" set as the default template.
+# Up to 3 lines.
+T_TPL_GAMES_ASK = Apply the template "%s" to the game cards?
+# Up to 3 lines.
+T_TPL_GAMES_N = Cards without the template's saves: %d
+# Up to 3 lines.
+T_TPL_GAMES_NONE = Every game card already has the saves of this template.
+# Up to 3 lines.
+T_TPL_NO_GAME_CARDS = There are no game cards on the MMCE.
+# One line.
+T_TPL_CHECKING = Checking the game cards...
+# Up to 3 lines.
+T_TPL_GAMES_GOT = Cards that got saves: %d
+# Up to 3 lines.
+T_TPL_GAMES_LEFT = Cards not changed: %d
+# Up to 2 lines.
+T_TPL_WARN = Game cards without their template: %d
+# Button.
+T_TPL_NO_WARN = Don't warn
+# One line.
+T_TPL_GAMES = Linked games
+# One line.
+T_TPL_UPDATE = Update existing saves
+# Up to 3 lines.
+T_TPL_UPDATE_ASK = Update the saves of the template "%s" on the game cards?
+# Up to 4 lines.
+T_TPL_UPDATE_NOTE = Only the saves of this template that a card already has are replaced, with the template's version. No other save is changed.
+# Button.
+T_TPL_UPDATE_YES = Update
+# Up to 3 lines.
+T_TPL_UPDATED_N = Cards updated: %d
+# One line.
+T_TPL_AFTER_GAME = Auto-apply
+# Up to 6 lines.
+T_TPL_AFTER_HINT = With the automatic sync on, a game's card gets the default template when the game is left, with no question asked.
+# One line.
+T_TPL_NO_MAIN = No default template
+# One line.
+T_TPL_ON = On
+# One line.
+T_TPL_OFF = Off
+# Button.
+T_TPL_CHANGE = Change
+# Button.
+T_SYNC_DISABLE = Disable sync
+# One line.
+T_SYNC_ENABLE = Enable sync
+# Button.
+T_SKIP = Skip
+# One line.
+T_SKIP_ASK = Skip %s?
+# One line.
+T_SKIP_TEXT = The card will not be uploaded this time.
+# Up to 3 lines.
+T_TIME_LEFT_MIN = %d min left
+# Up to 3 lines.
+T_TIME_LEFT_SEC = %d s left
+# Up to 3 lines.
+T_UPLOAD_SKIPPED = skipped
+# One line.
+T_CARD_UNUSED = Not used by the sd2psx
+# One line.
+T_MOVE_SAVES = Move saves to %s
+# Up to 2 lines.
+T_MOVE_SAVES_ASK = Move the saves of %s to %s?
+# Up to 2 lines.
+T_MOVE_SAVES_NOTE = The sd2psx uses the folder %s for this game.
+# Up to 3 lines.
+T_MOVED_N = Saves moved: %d
+# Up to 3 lines.
+T_NOT_MOVED_N = Saves not moved: %d
+# One line.
+T_HELPER_UPDATING = Updating the SAS package...
