@@ -21,7 +21,8 @@
  * in slot 1 is taken as the card in use (PCSX2 has no device to say so), and is changed through the slot; "t" there:
  * the templates are put into the game cards as the automatic sync does after a game (the card active.txt names, in
  * the data folder, stands for the one in the device); "j" there: the question that square brings up while cards are
- * sent; "B" there: a sync of every card with nothing sent, the script's buttons held while it goes. For the rescue (at the end of this file): "@<seconds>" at the very
+ * sent; "B" there: a sync of every card with nothing sent, the script's buttons held while it goes. "b": the next
+ * download of more than 100 KB breaks off halfway (it is taken up where it stopped). For the rescue (at the end of this file): "@<seconds>" at the very
  * start is the test's time limit, "Y" hangs and "Z" crashes, to try it. */
 char script[256];
 int scriptPos, hasScript;

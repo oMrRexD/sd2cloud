@@ -128,6 +128,12 @@ static int on_xfer(void *u, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ult
         pollHook();
     if (stopHook && stopHook())
         return userStop = 1;
+#ifdef DEBUG_BUILD
+    if (dltotal > 100000 && dlnow * 2 >= dltotal && debug_take('b')) {   /* (script: a big download breaks off halfway) */
+        log_msg("[script] b: the download breaks off at byte %lld", (long long)dlnow);
+        return 1;
+    }
+#endif
     if (sendProgress && ultotal > 0)
         return sendProgress((long long)ulnow, (long long)ultotal);
     return 0;
@@ -821,6 +827,34 @@ int google_upload_buffer(const char *folder, const char *name, const char *descr
     return 0;
 }
 
+/* ------------------------------------------------------------ downloads that break off */
+
+/* A download that breaks off is taken up where it stopped, a few times (DOWNLOAD_TRIES in all): on a console (10/2026)
+ * the data of a big one arrived damaged halfway, and TLS ended it ("AES-GCM Authentication check fail"); the next
+ * connection failed the same way at once. The PS2's TCP/IP doesn't check the checksums of what arrives (the SDK's
+ * lwIP: CHECKSUM_CHECK_TCP 0), so a damaged packet isn't asked for again: only TLS sees it. What came before the
+ * break is whole (TLS let it through); the rest is asked for with a Range, on a new connection, with a whole
+ * handshake. What is downloaded is checked afterwards (the SHA-256 of an update, the checksum of a backup) */
+#define DOWNLOAD_TRIES 3
+
+static void next_try(int attempt, CURLcode c, long long from)
+{
+    char range[32];
+    log_msg("download: broke off (%s), try %d of %d from byte %lld", curl_text(c), attempt + 1, DOWNLOAD_TRIES, from);
+    sleep_ms(2000);
+    snprintf(range, sizeof(range), "%lld-", from);
+    curl_easy_setopt(curl, CURLOPT_RANGE, from > 0 ? range : NULL);
+    curl_easy_setopt(curl, CURLOPT_FRESH_CONNECT, 1L);
+    curl_easy_setopt(curl, CURLOPT_SSL_SESSIONID_CACHE, 0L);
+}
+
+static void tries_done(void)
+{
+    curl_easy_setopt(curl, CURLOPT_RANGE, NULL);
+    curl_easy_setopt(curl, CURLOPT_FRESH_CONNECT, 0L);
+    curl_easy_setopt(curl, CURLOPT_SSL_SESSIONID_CACHE, 1L);
+}
+
 /* ------------------------------------------------------------ download (restore.c) */
 
 typedef struct {
@@ -828,29 +862,49 @@ typedef struct {
     void *u;
     buffer_t errorBody;     /* the body of an error answer (JSON), for the reason */
     int stopped;
+    long long got;          /* what the sink has, of the whole file */
+    long long from;         /* where the try under way was taken up (got when it began) */
+    long long skip;         /* answered from the start all the same (200, not 206): what the sink has already */
+    int first;              /* nothing of the try under way came yet */
 } download_t;
 
 static size_t on_download(void *p, size_t size, size_t n, void *u)
 {
     download_t *d = u;
+    const unsigned char *s = p;
+    size_t k = size * n;
     long http = 0;
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http);
-    if (http != 200)
-        return buf_append(&d->errorBody, p, size * n) ? 0 : size * n;
-    if (d->sink(p, size * n, d->u)) {
+    if (http != 200 && http != 206)
+        return buf_append(&d->errorBody, p, k) ? 0 : k;
+    if (d->first) {
+        d->first = 0;
+        d->skip = http == 200 ? d->from : 0;
+        if (d->skip)
+            log_msg("download: answered from the start, the first %lld bytes let go of", d->skip);
+    }
+    if (d->skip) {
+        size_t drop = (long long)k < d->skip ? k : (size_t)d->skip;
+        d->skip -= drop;
+        s += drop;
+        k -= drop;
+    }
+    if (k && d->sink(s, k, d->u)) {
         d->stopped = 1;
         return 0;   /* curl stops with CURLE_WRITE_ERROR */
     }
+    d->got += k;
     return size * n;
 }
 
 int google_download(const char *id, int (*sink)(const unsigned char *d, size_t n, void *u), void *u)
 {
     response_t r = {0};
-    download_t d = {sink, u, {0}, 0};
+    download_t d = {sink, u, {0}, 0, 0, 0, 0, 0};
     struct curl_slist *hdr = NULL;
     char url[256], auth[2100], m[200];
     CURLcode c;
+    int attempt;
     snprintf(url, sizeof(url), URL_DRIVE "/%s?alt=media", id);
     snprintf(auth, sizeof(auth), "Authorization: Bearer %s", accessToken);
     hdr = curl_slist_append(hdr, auth);
@@ -864,8 +918,21 @@ int google_download(const char *id, int (*sink)(const unsigned char *d, size_t n
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, on_download);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &d);
     curl_easy_setopt(curl, CURLOPT_HEADERDATA, &r);
-    c = curl_easy_perform(curl);
-    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &r.http);
+    userStop = 0;
+    for (attempt = 1;; attempt++) {
+        d.from = d.got;
+        d.skip = 0;
+        d.first = 1;
+        c = curl_easy_perform(curl);
+        curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &r.http);
+        if (c == CURLE_OK || d.stopped || userStop || attempt == DOWNLOAD_TRIES)
+            break;
+        buf_free(&d.errorBody);
+        next_try(attempt, c, d.got);
+    }
+    tries_done();
+    if (c == CURLE_OK && r.http == 206)
+        r.http = 200;   /* (the rest of it, from where it stopped) */
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, on_body);
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 0L);
     curl_slist_free_all(hdr);
@@ -894,22 +961,49 @@ int google_download(const char *id, int (*sink)(const unsigned char *d, size_t n
 long github_get(const char *url, buffer_t *b, int follow)
 {
     response_t r = {0};
+    buffer_t have = {0};   /* what came of the file, in the tries before */
     struct curl_slist *hdr = NULL;
     CURLcode c;
+    int attempt;
     buf_free(b);
     if (google_init() != 0)
         return 0;
     if (strstr(url, "api.github.com"))
         hdr = curl_slist_append(hdr, "Accept: application/vnd.github+json");
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, follow ? 1L : 0L);
-    c = request("GET", url, hdr, NULL, 0, &r);
+    for (attempt = 1;; attempt++) {
+        c = request("GET", url, hdr, NULL, 0, &r);
+        if (r.http == 206 && have.len) {   /* the rest of it, from where it stopped */
+            if (buf_append(&have, r.body.data, r.body.len) != 0) {
+                c = CURLE_OUT_OF_MEMORY;
+                break;
+            }
+            buf_free(&r.body);
+            r.http = 200;
+        } else if (r.http == 200) {   /* the file from its start (a Range not taken, too) */
+            buf_free(&have);
+            have = r.body;
+            memset(&r.body, 0, sizeof(r.body));
+        }
+        if (c == CURLE_OK || userStop || attempt == DOWNLOAD_TRIES)   /* (an answer of HTTP's, an error too, is one) */
+            break;
+        next_try(attempt, c, (long long)have.len);
+    }
+    tries_done();
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 0L);
     curl_slist_free_all(hdr);
     if (c != CURLE_OK) {
         fail("%s", curl_text(c));
         buf_free(&r.body);
+        buf_free(&have);
         return 0;
     }
-    *b = r.body;   /* the body goes to the caller */
+    if (r.http == 200) {   /* the body goes to the caller */
+        buf_free(&r.body);
+        *b = have;
+    } else {
+        buf_free(&have);
+        *b = r.body;
+    }
     return r.http;
 }
