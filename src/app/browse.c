@@ -513,7 +513,7 @@ static int export_card(card_t *c)
     return r == 0;
 }
 
-void files_screen(int dev)
+static void browse(int dev)
 {
     if (dev == FDEV_USB) {
         message(0, NULL, COLOR_TEXT, T(T_USB_SEARCHING));
@@ -615,5 +615,29 @@ void files_screen(int dev)
                 return;   /* back to the saves they are of */
             }
         }
+    }
+}
+
+/* the folders of a device (FDEV_*). The browser may open over itself: a card file opened here, one of its saves
+ * copied to a device. The folder underneath is then shown again as it was, with the same name selected */
+void files_screen(int dev)
+{
+    static int open;
+    char root[sizeof(fb.root)], dir[sizeof(fb.dir)], on[sizeof(fb.list[0].name)] = "";
+    int under = open && fb.list, d = fb.dev;
+    if (under) {
+        snprintf(root, sizeof(root), "%s", fb.root);
+        snprintf(dir, sizeof(dir), "%s", fb.dir);
+        if (fb.cursor < fb.n)
+            snprintf(on, sizeof(on), "%s", fb.list[fb.cursor].name);
+    }
+    open++;
+    browse(dev);
+    open--;
+    if (under) {
+        fb.dev = d;
+        snprintf(fb.root, sizeof(fb.root), "%s", root);
+        snprintf(fb.dir, sizeof(fb.dir), "%s", dir);
+        fb_load(on[0] ? on : NULL);
     }
 }

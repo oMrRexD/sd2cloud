@@ -74,6 +74,9 @@ SCENARIOS = [
      "files": {"Files/card.mcd": "game.mcd"}, "script": ">>XXXX.OOC"},
     {"name": "card-file-copy", "what": "two saves of a card file marked there, and copied to a card", "cards": CARDS,
      "files": {"Files/card.mcd": "game.mcd"}, "script": ">>XXXXX>XSDXXXC"},
+    # (the folders are browsed over the ones the card file was opened from, which come back as they were)
+    {"name": "card-file-export", "what": "a save of a card file opened in Files, copied to a folder of the MMCE as a .psu",
+     "cards": CARDS, "files": {"Files/card.mcd": "game.mcd"}, "script": ">>XXXXXS>>XSXXC"},
     {"name": "settings", "what": "settings changed (how many backups are kept, their format, the language) and About",
      "cards": CARDS, "script": "SDDDDDXDXDXDXUUXUXDDDDDDXOOC"},
     {"name": "card-sync-toggle", "what": "a card's sync turned off in its options, and on again", "cards": CARDS,

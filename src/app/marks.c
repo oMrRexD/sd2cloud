@@ -355,9 +355,9 @@ int copy_marked(card_t *into)
             message_wait(0, NULL, COLOR_WARN, T(T_NO_CARDS_SD));
             return 0;
         }
-        /* they can also go to a folder of the microSD or of a USB drive, as .psu files (not from a card file: the
-         * folders are already being browsed, on the screen underneath) */
-        destFiles = marks.save[0].card != &fileCard;
+        /* they can also go to a folder of the microSD or of a USB drive, as .psu files (from a card file opened in
+         * Files too: the folders are browsed over the ones underneath, which come back as they were) */
+        destFiles = 1;
         if (!(to = choose_dest(from, T_COPY_TO, need, game)))
             return destDevice >= 0 && copy_to_device(destDevice);
     }
