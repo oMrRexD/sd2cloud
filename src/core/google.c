@@ -18,6 +18,7 @@
 #include <curl/curl.h>
 #include <wolfssl/options.h>
 #include <wolfssl/ssl.h>
+#include <wolfssl/wolfcrypt/error-crypt.h>
 #include "common.h"
 #include "credentials.h"
 
@@ -74,13 +75,38 @@ static size_t on_header(char *p, size_t size, size_t n, void *u)
     return size * n;
 }
 
+/* The certificates and the console's clock. Most PS2s have a flat clock battery by now, and their clock goes back to
+ * 2000 each time they are switched on: before December 2007 not one of the roots is valid yet, and nothing could be
+ * reached. So the roots are taken whatever the date, and a certificate that the console's date finds not valid yet is
+ * taken too, as long as it hadn't expired by the day this was written (CERT_FLOOR): with the clock behind, that is
+ * the most that can still be told. One that has expired by the console's date is refused, as before: if the clock is
+ * ahead instead, the error says so (clockAhead). */
+#define CERT_FLOOR 1791590400   /* 2026-10-10 */
+static int clockAhead;
+
+static int on_verify(int ok, WOLFSSL_X509_STORE_CTX *store)
+{
+    int e = wolfSSL_X509_STORE_CTX_get_error(store);   /* wolfSSL's own error codes, not OpenSSL's */
+    if (ok)
+        return 1;
+    if (e == ASN_BEFORE_DATE_E) {
+        WOLFSSL_X509 *x = wolfSSL_X509_STORE_CTX_get_current_cert(store);
+        time_t floor = CERT_FLOOR;
+        return x && wolfSSL_X509_cmp_time(wolfSSL_X509_get_notAfter(x), &floor) == 1;
+    }
+    if (e == ASN_AFTER_DATE_E)
+        clockAhead = 1;
+    return 0;
+}
+
 static CURLcode on_ssl_ctx(CURL *c, void *ctx, void *u)
 {
     (void)c;
     (void)u;
     if (wolfSSL_CTX_load_verify_buffer_ex((WOLFSSL_CTX *)ctx, cacert_pem, size_cacert_pem, WOLFSSL_FILETYPE_PEM, 0,
-                                          WOLFSSL_LOAD_FLAG_IGNORE_ERR) != WOLFSSL_SUCCESS)
+                                          WOLFSSL_LOAD_FLAG_IGNORE_ERR | WOLFSSL_LOAD_FLAG_DATE_ERR_OKAY) != WOLFSSL_SUCCESS)
         return CURLE_SSL_CACERT_BADFILE;
+    wolfSSL_CTX_set_verify((WOLFSSL_CTX *)ctx, WOLFSSL_VERIFY_PEER, on_verify);
     return CURLE_OK;
 }
 
@@ -159,6 +185,7 @@ static CURLcode request(const char *method, const char *url, struct curl_slist *
     r->http = 0;
     r->location[0] = r->range[0] = 0;
     curlError[0] = 0;
+    clockAhead = 0;
     curl_easy_setopt(curl, CURLOPT_URL, url);
     curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);   /* clears the method and body of the previous request */
     curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, NULL);
@@ -176,7 +203,22 @@ static CURLcode request(const char *method, const char *url, struct curl_slist *
     return c;
 }
 
-static const char *curl_text(CURLcode c) { return curlError[0] ? curlError : curl_easy_strerror(c); }
+/* what went wrong with a request: curl's words, or the console's clock when it was that */
+static const char *curl_text(CURLcode c)
+{
+    static char t[160];
+    char when[16];
+    datetime_t d;
+    if (!clockAhead)
+        return curlError[0] ? curlError : curl_easy_strerror(c);
+    local_time(&d);
+    if (i18n_is_pt())
+        snprintf(when, sizeof(when), "%02d/%02d/%04d", d.day, d.month, d.year);
+    else
+        snprintf(when, sizeof(when), "%04d-%02d-%02d", d.year, d.month, d.day);
+    snprintf(t, sizeof(t), T(T_ERR_CLOCK_AHEAD), when);
+    return t;
+}
 
 /* the reason Google gave: {"error": {"message": ...}} from the API or {"error": "...", "error_description": ...} from
  * OAuth */
@@ -796,6 +838,7 @@ int google_download(const char *id, int (*sink)(const unsigned char *d, size_t n
     snprintf(auth, sizeof(auth), "Authorization: Bearer %s", accessToken);
     hdr = curl_slist_append(hdr, auth);
     curlError[0] = 0;
+    clockAhead = 0;
     curl_easy_setopt(curl, CURLOPT_URL, url);
     curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
     curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, NULL);

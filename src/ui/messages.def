@@ -62,6 +62,7 @@ X(T_ERR_UPLOAD_STOPPED, "the upload was interrupted", "o envio foi interrompido"
 X(T_ERR_NO_FILE_ID, "Google Drive did not return a file ID", "o Google Drive não retornou o ID do arquivo")
 X(T_ERR_CHECKSUM, "the file on Google Drive does not match (SHA-256)", "o arquivo no Google Drive não confere (SHA-256)")
 X(T_ERR_POSITION, "Google Drive: unexpected position (%lld)", "Google Drive: posição inesperada (%lld)")
+X(T_ERR_CLOCK_AHEAD, "the PS2's clock is ahead (%s): set the console's date and time", "o relógio do PS2 está adiantado (%s): acerte a data e a hora do console")
 X(T_UPDATE_CHECKING, "Checking for updates...", "Verificando atualizações...")
 X(T_UPDATE_RUNNING, "Updating SD2Cloud...", "Atualizando o SD2Cloud...")
 X(T_UPDATE_DONE, "Update complete. Starting the new version...", "Atualização concluída. Iniciando a nova versão...")
