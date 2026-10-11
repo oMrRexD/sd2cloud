@@ -404,7 +404,7 @@ T_LOGOUT_DONE = Google アカウントの接続を解除しました。
 # Up to 3 lines. English: Manage and back up your sd2psx memory cards, right on your PS2.
 T_ABOUT_TEXT = sd2psx のメモリーカードを PS2 上で直接管理・バックアップできます。
 # Up to 2 lines. English: Design inspired by the PlayStation BB Navigator. Fonts: Varela Round, Nunito and M PLUS Rounded 1c (SIL OFL).
-T_ABOUT_CREDITS = デザインは PlayStation BB Navigator をもとにしています。フォント: Varela Round、Nunito、M PLUS Rounded 1c（SIL OFL）
+T_ABOUT_CREDITS = PlayStation BB Navigator をもとにしたデザイン。フォント: Varela Round、Nunito、M PLUS Rounded 1c（SIL OFL）
 # One line. English: Third-party licenses: see THIRD-PARTY-NOTICES.txt.
 T_ABOUT_LICENSES = ライセンス情報: THIRD-PARTY-NOTICES.txt
 # Up to 3 lines. English: Developed by MrRexD.
