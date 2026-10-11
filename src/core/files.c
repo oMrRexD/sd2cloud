@@ -42,17 +42,22 @@ void buf_free(buffer_t *b)
 int file_read(const char *path, buffer_t *b)
 {
     static unsigned char block[16 * 1024] __attribute__((aligned(64)));
+    long size;
     int fd, n;
     buf_free(b);
     fd = open(path, O_RDONLY);
     if (fd < 0)
         return fd;
+    size = lseek(fd, 0, SEEK_END);   /* a read that ends before the file does failed: it isn't the file */
+    lseek(fd, 0, SEEK_SET);
     while ((n = read(fd, block, sizeof(block))) > 0) {
         if (buf_append(b, block, n)) {
             n = -1;
             break;
         }
     }
+    if (n == 0 && size > 0 && (long)b->len != size)
+        n = -1;
     close(fd);
     if (n < 0)
         buf_free(b);   /* half a file is no use to anyone */

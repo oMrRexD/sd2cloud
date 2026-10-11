@@ -90,8 +90,9 @@ static int installed_differs(void)
     int r;
     if (appOnCard)
         r = card_app_read(&b);
-    else if (appElsewhere)   /* (its file can't be read from here: by the commit it was built from) */
-        return APP_COMMIT[0] && latest.commit[0] ? strncasecmp(latest.commit, APP_COMMIT, strlen(APP_COMMIT)) != 0 : -1;
+    else if (appElsewhere)   /* (its file can't be read from here: by the commit it was built from, when the release
+                              * names one; a version's release names its branch instead, which tells nothing) */
+        return APP_COMMIT[0] && strlen(latest.commit) == 40 ? strncasecmp(latest.commit, APP_COMMIT, strlen(APP_COMMIT)) != 0 : -1;
     else {
         snprintf(path, sizeof(path), "%s", appPath);
         if ((q = strstr(path, "mmce?:")) != NULL)
@@ -103,6 +104,7 @@ static int installed_differs(void)
         return -1;
     }
     sha256_hex(b.data, b.len, h);
+    log_msg("update: the program installed, %u bytes, SHA-256 %.16s; the release's %.16s", (unsigned)b.len, h, latest.sha_app);
     buf_free(&b);
     return strcasecmp(h, latest.sha_app) != 0;
 }

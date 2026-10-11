@@ -373,6 +373,10 @@ static void check_updates_now(int back)
         look_news(update_tag());
     }
     update_app();
+    /* not installed (the answer was no, or it failed): nothing about it stays on the screen, and asking again asks
+     * GitHub again */
+    updateAvailable = 0;
+    look_news("");
 }
 
 /* Which device the microSD is in, when it has the cards of an sd2psx and those of a MemCard PRO2 (it was in both) and
