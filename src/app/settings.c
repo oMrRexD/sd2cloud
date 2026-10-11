@@ -532,7 +532,7 @@ static void pick_language(void)
 static void pick_keep(void)
 {
     static const int values[6] = {3, 5, 10, 20, 50, 0};
-    static char text[6][24];
+    static char text[6][48];   /* (a number, or "No limit": two bytes a letter in some languages) */
     static const char *items[6];
     char v[16];
     int i, k, start = 2;

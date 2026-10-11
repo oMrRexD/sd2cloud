@@ -19,9 +19,9 @@ code is written around. Each source file says what it is for at its top.
 | `src/ui/` | Drawing: the scenes, the font, images, icons, sound, and the texts in each language |
 | `igr/` | The two small programs that live on the memory card: the IGR helper and the shortcut |
 | `tests/` | The regression tests: `core` on a PC, the screens on PCSX2 ([tests/README.md](../tests/README.md)) |
-| `tools/` | Scripts of the build: the ports, mmceman, the art, the sounds, the release, the texts' check |
+| `tools/` | Scripts of the build: the ports, mmceman, the art, the sounds, the font, the release, the texts' check |
 | `package/` | What goes in the release's zip beside the programs, and the SAS package's icon and title |
-| `assets/`, `third_party/` | The art and sounds the program embeds; the font and the QR code generator |
+| `assets/`, `third_party/` | The art, sounds and font the program embeds; the fonts it is made from and the QR code generator |
 
 A file of `src/core` never draws and never touches the hardware, which is what lets `tests/` build that folder with
 a PC's compiler. `src/app` is the only place that knows the screens; it calls down into the other three.

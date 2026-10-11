@@ -89,7 +89,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install what the tests are built with
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq zlib1g-dev python3-pil
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq zlib1g-dev python3-pil python3-fonttools
 
       - name: Run the regression tests
         run: make -C tests

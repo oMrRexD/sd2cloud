@@ -20,7 +20,7 @@ static const char *const ids[T_COUNT] = {
 
 static struct {
     const char *code, *name;
-    char date[4];                    /* DMY, MDY or YMD */
+    char date[6];                    /* how a date is written: D/M/Y, M/D/Y, Y-M-D, D.M.Y... */
     const char *text[T_COUNT];
     const char *renamed[T_COUNT];    /* the texts that name the sd2psx, naming another device (i18n_device) */
 } langs[MAX_LANGS];
@@ -40,8 +40,12 @@ static void on_text(const char *key, const char *value, void *u)
         langs[r->k].name = value;
         return;
     }
-    if (!strcmp(key, "DATE_FORMAT")) {
-        snprintf(langs[r->k].date, sizeof(langs[0].date), "%s", value);
+    if (!strcmp(key, "DATE_FORMAT")) {   /* DMY, MDY and YMD with their usual separators, or one of its own: D.M.Y */
+        if (strlen(value) == 3)
+            snprintf(langs[r->k].date, sizeof(langs[0].date), "%c%c%c%c%c", value[0], value[0] == 'Y' ? '-' : '/',
+                     value[1], value[0] == 'Y' ? '-' : '/', value[2]);
+        else if (strlen(value) == 5)
+            strcpy(langs[r->k].date, value);
         return;
     }
     if (!value[0])   /* (not translated yet) */
@@ -71,7 +75,7 @@ static void load(void)
         memcpy(text, langFiles[k].text, n);
         text[n] = 0;
         langs[nLangs].code = langs[nLangs].name = langFiles[k].code;
-        strcpy(langs[nLangs].date, "YMD");
+        strcpy(langs[nLangs].date, "Y-M-D");
         lang_parse(text, n, on_text, &r);
         if (!strcmp(langFiles[k].code, "en"))
             english = nLangs;
@@ -169,11 +173,12 @@ const char *T(int id)
 
 void i18n_date(char *out, size_t size, int year, int month, int day)
 {
+    const char *f;
+    int v[3], i;
     load();
-    if (!strcmp(langs[current].date, "DMY"))
-        snprintf(out, size, "%02d/%02d/%04d", day, month, year);
-    else if (!strcmp(langs[current].date, "MDY"))
-        snprintf(out, size, "%02d/%02d/%04d", month, day, year);
-    else
-        snprintf(out, size, "%04d-%02d-%02d", year, month, day);
+    f = langs[current].date;   /* D/M/Y: a letter, the separator, a letter... */
+    for (i = 0; i < 3; i++)
+        v[i] = f[2 * i] == 'Y' ? year : f[2 * i] == 'M' ? month : day;
+    snprintf(out, size, "%0*d%c%0*d%c%0*d", f[0] == 'Y' ? 4 : 2, v[0], f[1], f[2] == 'Y' ? 4 : 2, v[1], f[3],
+             f[4] == 'Y' ? 4 : 2, v[2]);
 }

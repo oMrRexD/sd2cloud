@@ -1,12 +1,13 @@
 """Checks the texts on screen, one file per language in lang/ (en.txt is the original): that each file has the ids of
 src/ui/messages.def and no others (English and Portuguese all of them; another language may leave some in English),
-that %s and %d are the original's, and that each text fits where it is drawn.
+that %s and %d are the original's, that the font has every letter they use, and that each text fits where it is drawn.
 
-Measures like the app: the same font (Varela Round) at the same sizes, plus what the app's emboldening adds to each
-letter (font.c: the advance grows by the "bold" amount). Where each text goes and how wide that place is follows
+Measures like the app: the same font (assets/font.ttf: Varela Round, with Cyrillic letters) at the same sizes, plus
+what the app's emboldening adds to each letter (font.c: the advance grows by the "bold" amount). Where each text goes and how wide that place is follows
 src/app and src/ui/look.c (a 640 px screen; the frame's lines go from x = 36 to 604).
 
-usage: python tools/check_messages.py [--device NAME] [--sync]     (exits with an error on a problem)
+usage: python tools/check_messages.py [--device NAME] [--sync]     (exits with an error on a problem; needs Pillow and
+fontTools)
 
 --sync writes the files of lang/ again in the order of messages.def, each text with a comment above it saying what it
 is (and, in a translation, the English text): run it after adding a text to en.txt, so that the other languages get it
@@ -19,10 +20,12 @@ import pathlib
 import re
 import sys
 
+from fontTools.ttLib import TTFont
 from PIL import ImageFont
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-TTF = str(ROOT / "third_party/varelaround/VarelaRound-Regular.ttf")
+TTF = str(ROOT / "assets/font.ttf")
+LETTERS = set(TTFont(TTF).getBestCmap())   # what the font has
 # the fonts of ui.c: pixels, emboldening in 1/64 pixel
 SPEC = {"text": (18, 40), "small": (15, 24), "title": (26, 52), "browser": (23, 56)}
 fonts = {k: ImageFont.truetype(TTF, px) for k, (px, bold) in SPEC.items()}
@@ -238,7 +241,12 @@ LEGENDS = [
 
 LANG = ROOT / "lang"
 REQUIRED = ("en", "pt")   # the languages that have every text
-DATE_FORMATS = ("DMY", "MDY", "YMD")
+DATE_FORMATS = ("DMY", "MDY", "YMD")   # or one of them with a separator of its own: D.M.Y, Y.M.D, D-M-Y...
+
+
+def date_ok(f):
+    order, seps = (f, "") if len(f) == 3 else (f[0::2], f[1::2])
+    return len(f) in (3, 5) and order in DATE_FORMATS and len(set(seps)) <= 1 and all(c in "./-" for c in seps)
 BUTTONS = {i for ids, _ in LEGENDS for i in ids}
 
 
@@ -283,12 +291,17 @@ def escape(s):
     return "\\" + s if s.startswith(" ") else s
 
 
+# the texts that are more than words on the screen, and what that asks of them
+LATIN_ONLY = {"T_TPL_DEFAULT": "Latin letters only: it becomes a folder's name, and the keyboard that edits it has no others."}
+
+
 def kind(id_):
     """what the comment above a text says it is"""
     if id_ in BUTTONS:
         return "Button."
     lines = PLACE.get(id_, PARAGRAPH)[2]
-    return "One line." if lines == 1 else f"Up to {lines} lines."
+    what = "One line." if lines == 1 else f"Up to {lines} lines."
+    return f"{what} {LATIN_ONLY[id_]}" if id_ in LATIN_ONLY else what
 
 
 def holes(s):
@@ -309,7 +322,8 @@ def sync(ids, files):
         if gone:
             print(f"  {code}.txt: left out, as no text has these ids: {', '.join(gone)}")
         out = lines[:top] + [f"LANGUAGE_NAME = {texts.get('LANGUAGE_NAME', code)}",
-                             "# how a date is written: DMY (31/12/2026), MDY (12/31/2026) or YMD (2026-12-31)",
+                             "# how a date is written: DMY (31/12/2026), MDY (12/31/2026) or YMD (2026-12-31); with"
+                             " another separator, D.M.Y (31.12.2026)",
                              f"DATE_FORMAT = {texts.get('DATE_FORMAT', 'YMD')}", ""]
         for id_ in ids:
             out.append(f"# {kind(id_)}" if code == "en" else f"# {kind(id_)} English: {escape(english.get(id_, ''))}")
@@ -318,12 +332,12 @@ def sync(ids, files):
         path.write_text("\n".join(out) + "\n", encoding="utf-8", newline="\n")
 
 
-def legend_width(texts, apart):
+def legend_width(texts, apart, font="text"):
     """each button is a 20 px symbol, 6 px and its text; the last apart of them stand apart from the others, by a
     wider gap, and always 18 px from each other; five of them stand closer together (look_legend)"""
     gap, wide = (18, 34) if len(texts) > 4 else (26, 70)
     inner = apart - 1 if apart else 0
-    w = sum(measure("text", t) + 26 for t in texts) + 18 * inner + gap * (len(texts) - 1 - inner)
+    w = sum(measure(font, t) + 26 for t in texts) + 18 * inner + gap * (len(texts) - 1 - inner)
     return w + (wide - gap if apart and len(texts) > apart else 0)
 
 
@@ -347,9 +361,17 @@ def main():
         if not re.fullmatch(r"[a-z]+", code):
             bad += 1
             print(f"  FILE NAME    {path.name}: a language's code is letters only (es.txt, fr.txt)")
-        if not texts.get("LANGUAGE_NAME") or texts.get("DATE_FORMAT") not in DATE_FORMATS:
+        if not texts.get("LANGUAGE_NAME") or not date_ok(texts.get("DATE_FORMAT", "")):
             bad += 1
-            print(f"  [{code}] needs LANGUAGE_NAME, and DATE_FORMAT = {', '.join(DATE_FORMATS)}")
+            print(f"  [{code}] needs LANGUAGE_NAME, and DATE_FORMAT = {', '.join(DATE_FORMATS)} (or D.M.Y...)")
+        for k, s in pairs:
+            if k in LATIN_ONLY and not s.isascii():
+                bad += 1
+                print(f"  LATIN ONLY   {k} [{code}]: {LATIN_ONLY[k]}")
+            lacking = sorted({c for c in s if ord(c) not in LETTERS and c not in "\n\t"})
+            if lacking:
+                bad += 1
+                print(f"  NOT IN FONT  {k} [{code}]: {' '.join(f'{c} (U+{ord(c):04X})' for c in lacking)}")
         missing = [i for i in ids if not texts.get(i)]
         if missing and code in REQUIRED:
             bad += len(missing)
@@ -370,6 +392,7 @@ def main():
         langs = {code: {i: s.replace("sd2psx", name) for i, s in texts.items() if i not in ONLY_SD2PSX}
                  for code, texts in langs.items()}
     for code, texts in langs.items():
+        small = []
         for id_, s in texts.items():
             font, width, max_lines = PLACE.get(id_, PARAGRAPH)
             s = fill(s, id_)
@@ -380,10 +403,16 @@ def main():
                 print(f"  DOESN'T FIT  {id_} [{code}] {w} px / {width} px ({n} lines, max {max_lines}): {s}")
         for row, apart in LEGENDS:
             if all(i in texts for i in row):
+                # (one longer than the line is written in the small letters: it has to fit in those)
                 w = legend_width([texts[i] for i in row], apart)
-                if w > 596 - 40:
+                if w > 596 - 40 and legend_width([texts[i] for i in row], apart, "small") > 596 - 40:
                     bad += 1
-                    print(f"  LEGEND TOO WIDE [{code}] {w} px: {' / '.join(texts[i] for i in row)}")
+                    print(f"  LEGEND TOO WIDE [{code}] {legend_width([texts[i] for i in row], apart, 'small')} px in "
+                          f"the small letters: {' / '.join(texts[i] for i in row)}")
+                elif w > 596 - 40:
+                    small.append(" / ".join(texts[i] for i in row))
+        if small:
+            print(f"  [{code}] {len(small)} legend(s) in the small letters, longer than the line: {'; '.join(small)}")
     print(f"{len(ids)} texts x {len(langs)} languages ({', '.join(langs)}) and {len(LEGENDS)} legends checked; "
           f"{bad} problem(s)")
     return 1 if bad else 0

@@ -21,7 +21,10 @@ void log_msg(const char *fmt, ...);
 #define ATLAS 256
 #define MAX_ATLASES 6
 #define MAX_FONTS 10
-#define DIRECT 0x180   /* glyphs of codes below this have a slot of their own; the others share a short list */
+#define DIRECT 0x180   /* glyphs of codes below this have a slot of their own, as do the Cyrillic letters; the others
+                         share a short list */
+#define CYRILLIC 0x400
+#define N_CYRILLIC 0x130   /* Cyrillic and Cyrillic Supplement, the ones the font has (tools/make_font.py) */
 #define EXTRA 48
 
 typedef struct {
@@ -41,6 +44,7 @@ typedef struct {
     FT_Face face;
     int bold, line, ascent, kerning;
     glyph_t direct[DIRECT];
+    glyph_t cyrillic[N_CYRILLIC];
     struct {
         unsigned int code;
         glyph_t g;
@@ -137,6 +141,8 @@ static glyph_t *glyph(fnt_t *f, unsigned int code)
     int i, atlas = 0, x = 0, y = 0;
     if (code < DIRECT)
         g = &f->direct[code];
+    else if (code - CYRILLIC < N_CYRILLIC)
+        g = &f->cyrillic[code - CYRILLIC];
     else {
         for (i = 0; i < f->nextra; i++)
             if (f->extra[i].code == code)

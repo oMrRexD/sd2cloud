@@ -38,11 +38,13 @@ T_SEARCHING = Buscando tarjetas de memoria...
 ```
 
 - Change only what comes after `=`. The IDs, `LANGUAGE_NAME` and `DATE_FORMAT` stay as they are (`DATE_FORMAT`
-  says how the language writes a date: `DMY`, `MDY` or `YMD`).
+  says how the language writes a date: `DMY`, `MDY` or `YMD`, or with a separator of its own, like `D.M.Y` for
+  31.12.2026).
 - `%s` and `%d` (also `%lld`, `%02d`) are filled in by the program, with a card's name or a number: keep each one,
   in the same order.
 - `\n` starts a new line on the screen; a text that starts with a space starts with `\ `.
 - The screen is a TV's, and small: each text has to fit its place. Keep the texts about as long as the English ones.
+  A row of buttons too long for its line is written in smaller letters, which still fits most of them.
 - A text left empty is shown in English.
 
 To improve a translation, edit its file (GitHub's editor in the browser does it: the pencil on the file's page) and
@@ -54,7 +56,8 @@ minutes.
 To add a language, copy `en.txt` to a file named by the language's code, in lowercase letters only (`fr.txt`,
 `it.txt`), write its name in that language in `LANGUAGE_NAME` (`Français`), and translate. The program picks it up
 by itself; `fr`, `de`, `it`, `nl` and `ja` are also chosen when the PS2 is set to that language. The font has the
-Latin letters with their accents (no Japanese, Chinese or Korean characters for now).
+Latin letters with their accents and the Cyrillic ones (no Greek, Japanese, Chinese or Korean characters for now:
+`check_messages.py` says which letters it lacks).
 
 ## Sending a pull request
 

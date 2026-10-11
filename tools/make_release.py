@@ -32,6 +32,15 @@ def version():
     raise SystemExit("APP_VERSION not found in src/common.h")
 
 
+def ofl():
+    """the license of the fonts the program draws with (tools/make_font.py): the same one for both, under the
+    copyright of each"""
+    varela = (ROOT / "third_party/varelaround/OFL.txt").read_text(encoding="utf-8")
+    nunito = (ROOT / "third_party/nunito/OFL.txt").read_text(encoding="utf-8").splitlines()[0]
+    first, rest = varela.split("\n", 1)
+    return f"{first}\n{nunito}\n{rest}".encode("utf-8")
+
+
 def crlf(b):
     return b.replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")
 
@@ -86,7 +95,7 @@ def main():
         ("LEIA-ME.txt", crlf((PKG / "LEIA-ME.txt").read_bytes())),
         ("THIRD-PARTY-NOTICES.txt", crlf((PKG / "THIRD-PARTY-NOTICES.txt").read_bytes())),
         ("LICENSE.txt", crlf((ROOT / "LICENSE").read_bytes())),
-        ("OFL.txt", crlf((ROOT / "third_party/varelaround/OFL.txt").read_bytes())),
+        ("OFL.txt", crlf(ofl())),
         # the art OPL looks for in the device's ART folder, by the name of the ELF that title.cfg starts
         ("ART/SD2CLOUD.ELF_COV.png", (PKG / "art" / "SD2CLOUD.ELF_COV.png").read_bytes()),
         ("ART/SD2CLOUD.ELF_LGO.png", (PKG / "art" / "SD2CLOUD.ELF_LGO.png").read_bytes()),

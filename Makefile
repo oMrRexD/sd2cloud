@@ -36,7 +36,7 @@ vpath %.c $(SRC_DIRS)
 # (any header changed rebuilds everything: there are few enough of them)
 HEADERS = $(wildcard src/*.h src/*/*.h) src/ui/messages.def
 # the interface's images, sounds and font, embedded in the program (assets/ is made by tools/make_assets.py; the sounds
-# by tools/make_sounds.py)
+# by tools/make_sounds.py, the font by tools/make_font.py: Varela Round with Cyrillic letters)
 IMAGES = space glow buttons card minicard
 SOUNDS = startup exit move confirm back
 # the games' names by their ID (assets/gamenames.txt, made by tools/make_gamenames.py), and the models of an sd2psx
@@ -130,7 +130,7 @@ $(OBJ_DIR)/asset_memcardpro2_icn.c: assets/memcardpro2.icn
 	@mkdir -p $(OBJ_DIR)
 	bin2c $< $@ asset_memcardpro2_icn
 
-$(OBJ_DIR)/asset_font_ttf.c: third_party/varelaround/VarelaRound-Regular.ttf
+$(OBJ_DIR)/asset_font_ttf.c: assets/font.ttf
 	@mkdir -p $(OBJ_DIR)
 	bin2c $< $@ asset_font_ttf
 

@@ -117,21 +117,33 @@ void look_frame(void)
     ui_flush();
 }
 
-void look_legend(const legend_t *items, int n, int apart)
+/* the space before the button of item i of a legend (and after the text of the one before it) */
+static int legend_gap(int n, int apart, int i)
 {
     /* (five of them only fit the line closer together: what tells the two groups is then a wider gap between them.
      * The ones that stand apart are always that close to each other: they stay where they are, whatever the others
      * are and however many) */
-    const int size = 20, tight = 18, gap = n > 4 ? tight : 26, wide = n > 4 ? 34 : 70, y = LOOK_BOTTOM + 11;
+    const int tight = 18;
+    if (apart && i == n - apart)
+        return n > 4 ? 34 : 70;
+    return (apart && i > n - apart) || n > 4 ? tight : 26;
+}
+
+void look_legend(const legend_t *items, int n, int apart)
+{
+    const int size = 20, y = LOOK_BOTTOM + 11;
     float x = LOOK_LINE_X1 - 8;
-    int i;
+    int i, w = 0, font = FONT_TEXT;
+    for (i = 0; i < n; i++)
+        w += (i ? legend_gap(n, apart, i) : 0) + size + 6 + ui_measure(FONT_TEXT, items[i].text);
+    if (x - w < LOOK_LINE_X0 + 4)   /* longer than the line (a language of long words): in the smaller letters */
+        font = FONT_SMALL;
     for (i = n - 1; i >= 0; i--) {
-        int w = ui_measure(FONT_TEXT, items[i].text);
-        x -= w;
-        ui_text(FONT_TEXT, x, y, 0xE6E8EC, items[i].text);
+        x -= ui_measure(font, items[i].text);
+        ui_text(font, x, y + (ui_line_height(FONT_TEXT) - ui_line_height(font)) / 2, 0xE6E8EC, items[i].text);
         x -= size + 6;
         ui_button(items[i].button, x, y + 1, size);
-        x -= (apart && i == n - apart) ? wide : (apart && i > n - apart) ? tight : gap;
+        x -= legend_gap(n, apart, i);
     }
 }
 

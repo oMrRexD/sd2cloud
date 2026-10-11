@@ -10,7 +10,7 @@
 # How to translate, and how to add a language: CONTRIBUTING.md, "Translating".
 
 LANGUAGE_NAME = English
-# how a date is written: DMY (31/12/2026), MDY (12/31/2026) or YMD (2026-12-31)
+# how a date is written: DMY (31/12/2026), MDY (12/31/2026) or YMD (2026-12-31); with another separator, D.M.Y (31.12.2026)
 DATE_FORMAT = YMD
 
 # One line.
@@ -404,7 +404,7 @@ T_LOGOUT_DONE = Google account disconnected.
 # Up to 3 lines.
 T_ABOUT_TEXT = Manage and back up your sd2psx memory cards, right on your PS2.
 # Up to 3 lines.
-T_ABOUT_CREDITS = Design inspired by the PlayStation BB Navigator. Font: Varela Round (SIL Open Font License).
+T_ABOUT_CREDITS = Design inspired by the PlayStation BB Navigator. Fonts: Varela Round and Nunito (SIL Open Font License).
 # One line.
 T_ABOUT_LICENSES = Third-party licenses: see THIRD-PARTY-NOTICES.txt.
 # Up to 3 lines.
@@ -637,7 +637,7 @@ T_TEMPLATES = Templates
 T_TPL_NEW = New template
 # One line.
 T_TPL_NAME = Template name
-# Up to 3 lines.
+# Up to 3 lines. Latin letters only: it becomes a folder's name, and the keyboard that edits it has no others.
 T_TPL_DEFAULT = Template %d
 # Up to 3 lines.
 T_TPL_BAD_NAME = Invalid name.
