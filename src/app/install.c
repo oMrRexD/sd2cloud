@@ -275,6 +275,23 @@ static int open_progress(int phase, long long done, long long total)
     return 0;
 }
 
+/* Saves of a card file are marked, and it was left for its folder: it is kept open (held) with them, until they are
+ * pasted or let go of. openPath = the card file in cardFile */
+static char openPath[660];
+static int held;
+
+int card_file_held(void) { return held && marks.n; }
+
+void card_file_let_go(void)
+{
+    marks_reset();
+    card_file_close(&cardFile);
+    held = 0;
+    openPath[0] = 0;
+}
+
+static void card_file_shown(const char *file, int install);
+
 /* X on a card file: the card it holds, shown as the cards of the microSD are. Its saves can be copied to those, and □
  * installs it as one of them (install_card). A .zip's card that doesn't fit in memory can't be shown: installing it
  * is offered right away. install = square on the file itself: installed without being shown first */
@@ -284,6 +301,18 @@ void card_file_screen(const char *file, int install)
     size_t n = strlen(file);
     int r;
     snprintf(path, sizeof(path), "%s%s", fb.dir, file);
+    if (held && !marks.n)   /* (kept for marks there are no more) */
+        card_file_let_go();
+    if (card_file_held()) {
+        if (!strcmp(path, openPath)) {   /* the same one: as it was left, with its saves marked */
+            held = 0;
+            card_file_shown(file, install);
+            return;
+        }
+        if (!confirm(T(T_MARK_DROP), NULL, T_MARK_DROP_YES))   /* another one: a card file at a time */
+            return;
+        card_file_let_go();
+    }
     dlg_new(0, NULL);
     dlg_line(FONT_TEXT, COLOR_TEXT, 0, T(T_LOADING));
     if (n > 4 && !strcasecmp(file + n - 4, ".zip")) {
@@ -303,9 +332,17 @@ void card_file_screen(const char *file, int install)
         message_wait(0, NULL, COLOR_ERROR, T(T_ERR_CARD_FILE));
         return;
     }
+    snprintf(openPath, sizeof(openPath), "%s", path);
 #ifdef DEBUG_BUILD
     debug_log_memory("a card file is open");   /* a .zip's card is in memory now */
 #endif
+    card_file_shown(file, install);
+}
+
+/* the card file that is open (cardFile), as a card: its saves, or straight to its installing */
+static void card_file_shown(const char *file, int install)
+{
+    size_t n = strlen(file);
     snprintf(cardFileName, sizeof(cardFileName), "%s", file);
     ui_lock();
     memset(&fileCard, 0, sizeof(fileCard));
@@ -323,5 +360,11 @@ void card_file_screen(const char *file, int install)
         card_screen(&fileCard);
     else if (confirm(T(T_FILE_TOO_BIG), NULL, T_INSTALL_YES))
         install_card();
+    if (marks.n && marks.save[0].card == &fileCard) {   /* left with saves marked: kept, for its folder to paste
+                                                           them into */
+        held = 1;
+        return;
+    }
+    openPath[0] = 0;
     card_file_close(&cardFile);
 }

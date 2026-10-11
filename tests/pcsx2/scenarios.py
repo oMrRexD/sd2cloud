@@ -75,6 +75,9 @@ SCENARIOS = [
     {"name": "card-file-copy", "what": "two saves of a card file marked there, and copied to a card", "cards": CARDS,
      "files": {"Files/card.mcd": "game.mcd"}, "script": ">>XXXXX>XSDXXXC"},
     # (the folders are browsed over the ones the card file was opened from, which come back as they were)
+    # (circle goes back to the folder with the saves marked, the card file kept open: START there pastes them)
+    {"name": "card-file-held", "what": "a save of a card file marked, circle back to its folder, pasted there as a .psu",
+     "cards": CARDS, "files": {"Files/card.mcd": "game.mcd"}, "script": ">>XXXXXOSXXC"},
     {"name": "card-file-export", "what": "a save of a card file opened in Files, copied to a folder of the MMCE as a .psu",
      "cards": CARDS, "files": {"Files/card.mcd": "game.mcd"}, "script": ">>XXXXXS>>XSXXC"},
     {"name": "settings", "what": "settings changed (how many backups are kept, their format, the language) and About",

@@ -197,6 +197,11 @@ static void scene_files(float t)
     look_frame();
     ui_alpha(look_fade(t));
     look_title(FB_X, 82, fb.title, 0);
+    if (card_file_held()) {   /* a card file's saves marked, on their way here: how many (as on a screen of saves) */
+        char s[64];
+        snprintf(s, sizeof(s), T(T_MARKED_N), marks.n);
+        ui_text_right(FONT_TEXT, FB_RIGHT, 82, COLOR_OK, s);
+    }
     for (i = fb.top, y = FB_Y0; i < fb.n && i < fb.top + FB_ROWS; i++, y += FB_ROW) {
         const dir_entry_t *e = &fb.list[i];
         int elf = !e->dir && is_elf(e->name);
@@ -246,7 +251,8 @@ static void scene_files(float t)
         int n = 1;
         if (e && fb_opens(e))
             l[n].button = BUTTON_CROSS, l[n++].text = T(fb_opens(&fb.list[fb.cursor]) == FB_ELF ? T_RUN : T_OPEN);
-        if (fbGive.c)   /* saves marked for a copy are on their way to the folder shown: START pastes them, as on a card */
+        if (fbGive.c || card_file_held())   /* saves marked for a copy are on their way to the folder shown: START
+                                                pastes them, as on a card */
             l[n].button = BUTTON_START, l[n++].text = T(T_PASTE);
         else if (fbCard)   /* a whole card is */
             l[n].button = BUTTON_TRIANGLE, l[n++].text = T(T_EXPORT);
@@ -531,7 +537,8 @@ static void browse(int dev)
     for (;;) {
         u32 b;
         ui_scene(scene_files);
-        b = wait_nav(PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT | PAD_CROSS | PAD_CIRCLE | PAD_TRIANGLE | PAD_SQUARE | (fbGive.c ? PAD_START : 0));
+        b = wait_nav(PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT | PAD_CROSS | PAD_CIRCLE | PAD_TRIANGLE | PAD_SQUARE |
+                     (fbGive.c || card_file_held() ? PAD_START : 0));
         if (b & (PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT)) {   /* left and right: a screenful at a time */
             int k = fb.cursor;
             if (!fb.n)
@@ -555,8 +562,14 @@ static void browse(int dev)
             }
         } else if (b & PAD_CIRCLE) {
             sound_play(SND_BACK);
-            if (!fb_up())
+            if (fb_up())
+                continue;
+            if (!card_file_held())
                 return;
+            if (confirm(T(T_MARK_DROP), NULL, T_MARK_DROP_YES)) {   /* (a card file's saves marked: they stay only here) */
+                card_file_let_go();
+                return;
+            }
         } else if (b & PAD_CROSS) {
             char name[256];
             if (!fb.n)
@@ -613,6 +626,12 @@ static void browse(int dev)
             if (fbGive.v ? export_save(fbGive.c, fbGive.v) : export_marked()) {
                 fbGive.done = 1;
                 return;   /* back to the saves they are of */
+            }
+        } else if ((b & PAD_START) && !fb.error && card_file_held()) {   /* the same, a card file's saves, back here */
+            sound_play(SND_CONFIRM);
+            if (export_marked()) {
+                card_file_let_go();
+                fb_load(fb.n ? fb.list[fb.cursor].name : NULL);   /* (with the files written) */
             }
         }
     }

@@ -410,11 +410,13 @@ int copy_marked(card_t *into)
 
 /* Circle on the screen of saves where a copy's marking began (c = whose saves it shows). A card's saves: the screen
  * closes and the cards are listed, to mark saves on others too; START there goes on to where they are copied to.
- * 1 = that was done: the screen is left, and the copy is over. 0 = the screen stays: nothing was marked any more,
- * and the marking is over; or they are a card file's saves, which has no other cards to go to: the marks are let go
- * of if the user says so, and the marking goes on if not */
+ * A card file's: the screen closes, and its folder is shown with them still marked (card_file_held): START there
+ * pastes them, as .psu files. 1 = the screen is left. 0 = the screen stays: nothing was marked any more, and the
+ * marking is over */
 int copy_leave(const card_t *c)
 {
+    if (marks.n && c == &fileCard)   /* back to the card file's folder, with them (card_file_held) */
+        return 1;
     if (marks.n && c != &fileCard) {
         browser_close();
         while (mark_cards(c) == 1 && !copy_marked(marks.into))

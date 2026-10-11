@@ -222,6 +222,8 @@ void history_screen(card_t *c, icon_t *icon);
 extern char fileGameFolder[48];
 int install_card(void);
 void card_file_screen(const char *file, int install);
+int card_file_held(void);       /* a card file's saves are marked, back in its folder (it is kept open for them) */
+void card_file_let_go(void);    /* those marks let go of, and the card file closed */
 
 /* ------------------------------------------------------------ keyboard.c */
 int keyboard(const char *title, char *text, size_t size);
