@@ -27,10 +27,10 @@ on one yet.
 </p>
 <p>
   <img src="docs/screens/save-en.png" width="49%" alt="The page of a game's saved data">
-  <img src="docs/screens/upload-en.png" width="49%" alt="A game's memory card being uploaded to Google Drive">
+  <img src="docs/screens/upload-en.png" width="49%" alt="A game's save being uploaded to Google Drive">
 </p>
 <p>
-  <img src="docs/screens/files-en.png" width="49%" alt="The Files tab: a folder of a USB drive with .psu files">
+  <img src="docs/screens/files-en.png" width="49%" alt="The Files tab: a folder of the MMCE with .psu files">
   <img src="docs/screens/psu-en.png" width="49%" alt="A .psu file about to be imported into a memory card">
 </p>
 

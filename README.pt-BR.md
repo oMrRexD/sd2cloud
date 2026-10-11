@@ -27,10 +27,10 @@ SD2Cloud ainda não foi testado em um.
 </p>
 <p>
   <img src="docs/screens/save-pt.png" width="49%" alt="Página dos dados salvos de um jogo">
-  <img src="docs/screens/upload-pt.png" width="49%" alt="Cartão de memória de um jogo sendo enviado ao Google Drive">
+  <img src="docs/screens/upload-pt.png" width="49%" alt="Um save de jogo sendo enviado ao Google Drive">
 </p>
 <p>
-  <img src="docs/screens/files-pt.png" width="49%" alt="Aba Arquivos: uma pasta de um pendrive USB com arquivos .psu">
+  <img src="docs/screens/files-pt.png" width="49%" alt="Aba Arquivos: uma pasta do MMCE com arquivos .psu">
   <img src="docs/screens/psu-pt.png" width="49%" alt="Um arquivo .psu prestes a ser importado para um cartão de memória">
 </p>
 
