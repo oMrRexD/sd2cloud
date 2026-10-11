@@ -930,6 +930,9 @@ static void template_create(char name[TPL_NAME + 1])
     snprintf(f, sizeof(f), T(T_TPL_COPIED_N), n);
     snprintf(w, sizeof(w), T(T_TPL_NOT_COPIED), failed);
     report(COLOR_OK, s, f, failed ? w : NULL);
+    /* the first template there is becomes the default one at once, as when it is made so in its options */
+    if (nTemplates == 1 && !template_main() && (t = template_find(name)) != NULL)
+        template_toggle_main(t);
 }
 
 /* ------------------------------------------------------------ the list of them */
@@ -971,10 +974,11 @@ static void scene_templates(float t)
         ui_image(IMG_GLOW, LIST_X + 1, y - 9, 18, 18, color, cfg.no_tpl_after_game ? 0x40 : 0x80);
         ui_rect(LIST_X + 8, y - 2, 4, 4, color, 0x80);
     }
-    {   /* (a template has its options right here, without being opened) */
-        legend_t l[3] = {{BUTTON_CIRCLE, T(T_BACK)}, {BUTTON_CROSS, T(tl.cursor == tl.n - 1 ? T_TPL_CHANGE : T_OPEN)},
-                         {BUTTON_TRIANGLE, T(T_OPTIONS)}};
-        look_legend(l, tl.cursor > 0 && tl.cursor < tl.n - 1 ? 3 : 2, 0);
+    {   /* (a template has its options right here, without being opened, and square makes it the default one) */
+        int on = tl.cursor > 0 && tl.cursor < tl.n - 1;
+        legend_t l[4] = {{BUTTON_CIRCLE, T(T_BACK)}, {BUTTON_CROSS, T(tl.cursor == tl.n - 1 ? T_TPL_CHANGE : T_OPEN)},
+                         {BUTTON_TRIANGLE, T(T_OPTIONS)}, {BUTTON_SQUARE, T(T_TPL_MAKE_MAIN)}};
+        look_legend(l, !on ? 2 : &templates[tl.cursor - 1] == mainOne ? 3 : 4, 0);
     }
     look_title(CARD_CX, 82, T(T_TEMPLATES), 1);
     if (!tl.cursor) {
@@ -1022,10 +1026,19 @@ static void templates_screen(void)
     for (;;) {
         u32 b;
         ui_scene(scene_templates);
-        b = wait_nav(PAD_UP | PAD_DOWN | PAD_CROSS | PAD_CIRCLE | PAD_TRIANGLE);
+        b = wait_nav(PAD_UP | PAD_DOWN | PAD_CROSS | PAD_CIRCLE | PAD_TRIANGLE | PAD_SQUARE);
         if (b & PAD_CIRCLE) {
             sound_play(SND_BACK);
             return;
+        }
+        if (b & PAD_SQUARE) {   /* the template the cursor is on becomes the default one (the default one stays it) */
+            if (tl.cursor == 0 || tl.cursor == tl.n - 1 || &templates[tl.cursor - 1] == template_main())
+                continue;
+            sound_play(SND_CONFIRM);
+            snprintf(name, sizeof(name), "%s", templates[tl.cursor - 1].name);
+            template_toggle_main(&templates[tl.cursor - 1]);
+            list_set(name);
+            continue;
         }
         if (b & (PAD_UP | PAD_DOWN)) {
             ui_lock();

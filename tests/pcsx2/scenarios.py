@@ -105,8 +105,8 @@ SCENARIOS = [
      "script": "I"},
     # the tools (SELECT) and the templates. The keyboard starts on A: DD>> is W. Triangle has a template's options, on
     # the list (LXDT) or with the template open (LXDXT)
-    {"name": "template-create", "what": "a template made of two saves marked on a card, under the name it is offered",
-     "cards": CARDS, "script": "LXXSXX>XSXXC"},
+    {"name": "template-create", "what": "a template made of two saves marked on a card, under the name it is offered; "
+     "the first there is, it is made the default one", "cards": CARDS, "script": "LXXSXX>XSXXXC"},
     {"name": "template-apply", "what": "a template put into a card that isn't a game's, marked in the list of cards", "cards": CARDS, "files": TEMPLATE,
      "script": "LXDTDDXDXDDXSXXC"},
     {"name": "template-edit", "what": "a template renamed (a letter erased, another typed), given a save and rid of one",
@@ -114,6 +114,8 @@ SCENARIOS = [
     {"name": "template-delete", "what": "a template deleted", "cards": CARDS, "files": TEMPLATE, "script": "LXDXTDDDDDXXC"},
     {"name": "template-main", "what": "a template made the main one, and put into the game card that lacks it",
      "cards": CARDS, "files": TEMPLATE, "script": "LXDXTXXXXC"},
+    {"name": "template-main-list", "what": "a template made the default one with square on the list of templates",
+     "cards": CARDS, "files": TEMPLATE, "script": "LXDQXXXC"},
     {"name": "template-warning", "what": "the program opens with a main template a game card lacks: said, and put into it",
      "cards": CARDS, "files": dict(TEMPLATE, **{"SD2Cloud/templates/templates.ini": b"[templates]\nmain = Net\n"}),
      "script": "XXC"},

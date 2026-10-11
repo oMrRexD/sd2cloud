@@ -22,6 +22,8 @@ templates: BASLUS-21065ALPHA of host:MemoryCards/PS2/Card1/Card1-1.mcd into Temp
 templates: BASLUS-21065BETA of host:MemoryCards/PS2/Card1/Card1-1.mcd into Template 1: 0
 template Template 1 made: 2 save(s), 0 not copied
 [script] X
+templates: Template 1 is now the main one
+[script] X
 (end: capture)
 
 # files
@@ -32,3 +34,4 @@ e67be4206c58f05d290d04e24ef9bd240e0a329b479dd8d202f12d40f464d347  MemoryCards/PS
 5d80b04c692d54f468ed80c2ad845b735c3fe68663e8b45858780407f59b0673  SD2Cloud/state-debug.ini
 b44df2d8481d5fbe8aefebf6c7a86f628b19dc53c6a48a16838f75d346acad26  SD2Cloud/templates/Template 1/BASLUS-21065ALPHA.psu
 b146d619d5964373c9801fbaaff180f038aceb0509f62243495b89ed01caa64c  SD2Cloud/templates/Template 1/BASLUS-21065BETA.psu
+9d867eaa09c38cc34d43de6815d2780910b3614b840234df0786d2153910408e  SD2Cloud/templates/templates.ini

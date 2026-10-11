@@ -221,6 +221,7 @@ LEGENDS = [
     (("T_BACK", "T_REPLACE", "T_TPL_KEEP"), False), (("T_LATER", "T_TPL_APPLY", "T_TPL_NO_WARN"), False),
     (("T_BACK", "T_MARK"), False), (("T_BACK", "T_TPL_UPDATE_YES"), False), (("T_BACK", "T_TPL_CHANGE"), False),
     (("T_BACK", "T_MARK", "T_TPL_APPLY"), False), (("T_BACK", "T_OPEN", "T_OPTIONS"), False),
+    (("T_BACK", "T_OPEN", "T_OPTIONS", "T_TPL_MAKE_MAIN"), False),
     (("T_CANCEL", "T_SKIP"), False), (("T_CANCEL_NO", "T_SKIP", "T_SYNC_DISABLE"), False), (("T_BACK", "T_MOVE"), False),
     # saves marked for a copy: on a card's saves, and on the list of cards
     (("T_BACK", "T_MARK", "T_PASTE"), False), (("T_BACK", "T_OPEN", "T_PASTE"), False), (("T_BACK", "T_COPY"), False), (("T_BACK", "T_PASTE"), False),
