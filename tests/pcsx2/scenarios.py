@@ -111,4 +111,12 @@ SCENARIOS = [
      "files": dict(TEMPLATE, **{"SD2Cloud/templates/templates.ini": b"[templates]\nmain = Net\n",
                                 "SD2Cloud/active.txt": b"BOOT/BootCard-1"}),
      "script": "tOC"},
+    # the same after a game with no sync to do (PCSX2 has no Google account): the templates are still put in
+    {"name": "template-auto-apply-no-sync", "what": "after a game with no sync to do, a game card still gets its templates; one "
+     "that may be the card in the device is left for the warning",
+     "cards": {"BOOT/BootCard-1": "empty", "Card1/Card1-1": "game", "SLUS-21065/SLUS-21065-1": "game",
+               "SLUS-20001/SLUS-20001-1": "empty"},
+     "files": dict(TEMPLATE, **{"SD2Cloud/templates/templates.ini": b"[templates]\nmain = Net\n",
+                                "SD2Cloud/active.txt": b"BOOT/BootCard-1"}),
+     "script": "I"},
 ]

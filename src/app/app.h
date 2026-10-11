@@ -354,7 +354,8 @@ void tabs_draw(const tabs_t *g, int dots);
 
 /* ------------------------------------------------------------ tools.c */
 void templates_startup(void);
-void templates_after_game(void);
+int templates_wanted(void);              /* templates to put into the game cards after a game? */
+void templates_after_game(int alone);
 void tools_screen(void);
 
 /* ------------------------------------------------------------ work.c */

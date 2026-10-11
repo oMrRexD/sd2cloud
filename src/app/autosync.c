@@ -15,9 +15,13 @@ void igr(void)
         sleep_ms(3000);
         leave(cfg.igr_return);
     }
+    if (!auto_sync_on()) {   /* no sync to do: main.c let IGR come this far for the templates alone */
+        templates_after_game(1);
+        leave(cfg.igr_return);
+    }
     cards_check(checking_progress);
     cards_retry();
-    templates_after_game();   /* the game cards about to be sent get their templates first: what is sent has them */
+    templates_after_game(0);   /* the game cards about to be sent get their templates first: what is sent has them */
     for (i = 0; i < nCards; i++)
         n += is_selected(&cards[i], 0);
     /* at IGR what matters is getting back to OPL quickly: nothing changed = say so and return; everything went well =

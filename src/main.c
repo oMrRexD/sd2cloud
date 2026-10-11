@@ -34,10 +34,10 @@ int main(int argc, char *argv[])
     if (!igrMode && debug_has_script())
         igrMode = debug_take('I');   /* (script: an "I" at the start runs it as IGR does) */
 #endif
-    /* IGR with no sync to do: straight to what comes after it, before the screen and the sound are even started. The
-     * helper does this by itself when it can (igr/igr.c); this is for when it can't: a helper from before it did, or
-     * a program on a device only SD2Cloud has the drivers for */
-    if (igrMode && !auto_sync_on()) {
+    /* IGR with no sync to do, and no templates to put into the game cards: straight to what comes after it, before the
+     * screen and the sound are even started. The helper does this by itself when it can (igr/igr.c); this is for when
+     * it can't: a helper from before it did, or a program on a device only SD2Cloud has the drivers for */
+    if (igrMode && !auto_sync_on() && !templates_wanted()) {
         char c[260];
         log_msg("IGR: %s, nothing to sync", cfg.no_auto_sync ? "the automatic sync is off" : "no Google account");
         resolve_target(cfg.igr_return, c, sizeof(c));

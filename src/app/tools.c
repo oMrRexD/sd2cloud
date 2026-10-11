@@ -445,19 +445,28 @@ void templates_startup(void)
  * back on the BootCard, or on the card from before the game. A card's file is only written when that is sure: the
  * card the device is on is known, the PS2 sees in the slot the root folder that card's file has, and this card's
  * file has another. Any doubt leaves the card as it is, for the warning when the program is next opened. Nothing
- * here may hold the way back to OPL: whatever goes wrong is only logged */
-void templates_after_game(void)
+ * here may hold the way back to OPL: whatever goes wrong is only logged.
+ * alone = IGR with no sync to do (turned off, or no Google account): the templates are still put in, into the game
+ * cards that are new or changed. The cards weren't read for a sync then: only the ones templates may be for are */
+int templates_wanted(void) { return !cfg.no_tpl_after_game && templates_in_use(); }
+
+void templates_after_game(int alone)
 {
     const template_t *list[TPL_MAX];
     char seen[65], file[65];
     int i, k, n = 0, count, put, total, r, changed = 0;
-    if (cfg.no_tpl_after_game || !templates_in_use())
+    if (!templates_wanted())
         return;
     templates_scan();
-    for (i = 0; i < nCards; i++)
-        if (cards[i].type == TYPE_GAMEID && is_selected(&cards[i], 0) && templates_of_game(cards[i].folder, list) &&
-            !templates_settled(cards[i].id, cards[i].folder))
+    for (i = 0; i < nCards; i++) {
+        card_t *c = &cards[i];
+        if (c->type != TYPE_GAMEID || !templates_of_game(c->folder, list) || templates_settled(c->id, c->folder))
+            continue;
+        if (alone)
+            cards_recheck(c);
+        if (alone ? c->status == ST_NEW || c->status == ST_CHANGED : is_selected(c, 0))
             gameCards[n++] = i;
+    }
     if (!n)
         return;
     find_active();

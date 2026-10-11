@@ -252,7 +252,7 @@ void manual(void)
             log_msg("[script] j: skip? %d", confirm_skip(&cards[0]));
         if (debug_take('t')) {
             log_msg("[script] t: the templates, as after a game");
-            templates_after_game();
+            templates_after_game(0);
         }
     }
 #endif

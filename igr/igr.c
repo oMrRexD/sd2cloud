@@ -427,8 +427,29 @@ static void not_found(const char *where)
     sleep(12);
 }
 #else
+/* does templates.ini name a template for the game cards: a main one, or one for some games? */
+static int templates_named(const char *root)
+{
+    static char t[2048], v[64];
+    const char *p, *eq, *end;
+    if (!read_text(root, "templates/templates.ini", t, sizeof(t)))
+        return 0;
+    if (setting(t, "templates", "main", v, sizeof(v)) > 0)
+        return 1;
+    for (p = strstr(t, "[games]"); p && (p = strchr(p, '\n')) != NULL && p[1] != '[';) {   /* a line "name = games" */
+        p++;
+        end = p + strcspn(p, "\r\n");
+        if (*p != ';' && *p != '#' && (eq = memchr(p, '=', end - p)) != NULL)
+            for (eq++; eq < end; eq++)
+                if (*eq != ' ' && *eq != '\t')
+                    return 1;
+    }
+    return 0;
+}
+
 /* With no sync to do, SD2Cloud isn't needed, and loading it would only take time: the automatic sync turned off in
- * its settings ([igr] auto_sync = no), or no Google account connected (no token in token.dat). What comes after IGR
+ * its settings ([igr] auto_sync = no), or no Google account connected (no token in token.dat), and no templates to put
+ * into the game cards after a game ([templates] after_game, and a template in templates.ini). What comes after IGR
  * is then started from here: the program in [igr] return or, with "auto", the OPL SD2Cloud found the last time it
  * looked ([app] igr_auto). Only a program on this microSD, or the PS2 menu: for anything else (another device, an OPL
  * not looked for yet, a file that isn't there) SD2Cloud is started as usual, which has the drivers and does the same
@@ -441,6 +462,8 @@ static void skip_sync(const char *root)
         if (setting(token, "", "refresh_token", v, sizeof(v)) > 0)
             return;   /* on, with an account: there is a sync to do */
     }
+    if ((!setting(ini, "templates", "after_game", v, sizeof(v)) || strcasecmp(v, "no") != 0) && templates_named(root))
+        return;   /* templates to put in: SD2Cloud does that with or without a sync */
     setting(ini, "igr", "return", v, sizeof(v));
     if (!v[0] || !strcasecmp(v, "auto"))
         setting(ini, "app", "igr_auto", v, sizeof(v));
