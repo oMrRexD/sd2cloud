@@ -15,6 +15,8 @@ typedef struct {
     int version;           /* MCFS_VERSION the fingerprint was computed with (0 = the first one, before 2026-10-02) */
     char sha[65];
     char when[20];
+    char resolved[65];     /* the fingerprint it was marked as resolved with, in a sync: the card as it was then is taken
+                              as synced by the automatic sync, without a backup ("" = none) */
 } card_state_t;
 card_state_t *state_card(const char *id, int create);
 const char *state_folder(const char *name);              /* Drive folder id (cache) */

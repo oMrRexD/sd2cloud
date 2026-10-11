@@ -802,3 +802,31 @@ T_MOVED_N = Перемещено сохранений: %d
 T_NOT_MOVED_N = Не перемещено сохранений: %d
 # One line. English: Updating the SAS package...
 T_HELPER_UPDATING = Обновление пакета SAS...
+# Button. English: View
+T_VIEW = Вид
+# One line. English: Sync
+T_SYNC_TITLE = Синхронизация
+# One line. English: Card %d of %d
+T_SYNC_CARD_N = Карта %d из %d
+# One line. English: Waiting
+T_SY_WAITING = Ожидает
+# One line. English: Uploading...
+T_SY_SENDING = Загрузка...
+# One line. English: Uploaded
+T_SY_SENT = Загружена
+# One line. English: Failed
+T_SY_FAILED = Ошибка
+# One line. English: Skipped
+T_SY_SKIPPED = Пропущена
+# One line. English: Marked as resolved
+T_SY_RESOLVED = Отмечена как решённая
+# One line. English: Sync disabled
+T_SY_OFF = Синхронизация отключена
+# One line. English: Mark as resolved
+T_MARK_RESOLVED = Отметить как решённую
+# Up to 3 lines. English: marked as resolved
+T_UPLOAD_RESOLVED = отмечена как решённая
+# Up to 3 lines. English: sync disabled
+T_UPLOAD_OFF = синхронизация отключена
+# Button. English: Undo
+T_UNDO = Отменить

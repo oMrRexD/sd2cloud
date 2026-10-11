@@ -254,6 +254,16 @@ void manual(void)
             log_msg("[script] t: the templates, as after a game");
             templates_after_game(0);
         }
+        /* script "B": a sync of every card, with nothing sent (PCSX2 has no Google account): its list of cards */
+        if (debug_take('B')) {
+            for (i = 0; i < nCards; i++)   /* (and, first, what the automatic sync would send now) */
+                if (is_selected(&cards[i], 0))
+                    log_msg("[script] B: the automatic sync sends %s", cards[i].id);
+            log_msg("[script] B: a sync with nothing sent");
+            debugDry = 1;
+            manual_backup(2);
+            debugDry = 0;
+        }
     }
 #endif
     if (!google_has_access() && !cfg.no_ask_connect && ask_connect()) {

@@ -2,7 +2,8 @@
  * limit are deleted; what was done is said at the end. */
 #include "app.h"
 
-static int backupSkip;   /* the user gave up the card on its way (confirm_skip's answer) */
+static int backupSkip;   /* the user gave up the card on its way (confirm_skip's answer; 3 = marked as resolved, from
+                            the list of the sync's cards) */
 
 /* Circle (the whole sync) and square (the card on its way), asked as soon as the button is pressed: from here, and
  * from inside the request under way while cards are sent (google_set_stop). 1 = stop what is under way; what was
@@ -20,6 +21,8 @@ static int stop_asked(void)
         }
     }
     if (skipLatched && current && (backupSkip = confirm_skip(current)) != 0)
+        return 1;
+    if ((backupSkip = sync_list_poll()) != 0)   /* (asked on the list of the sync's cards) */
         return 1;
     return 0;
 }
@@ -61,8 +64,8 @@ int is_selected(const card_t *c, int mode)
         return 0;
     if (mode == 2)
         return 1;
-    if (mode == 0)
-        return c->status == ST_NEW || c->status == ST_CHANGED;
+    if (mode == 0)   /* (one marked as resolved as it is, left alone) */
+        return (c->status == ST_NEW || c->status == ST_CHANGED) && !c->resolved;
     return c->status != ST_UP_TO_DATE;
 }
 
@@ -109,18 +112,57 @@ int card_folder(const card_t *c, char *folderId, size_t size)
     return 0;
 }
 
+/* A card left out of the sync, from the list of its cards (or square): of this sync only (SY_SKIPPED); taken as synced
+ * as it is now, the automatic sync leaving it alone until it changes again (SY_RESOLVED); or with its sync turned off
+ * (SY_OFF). result = it's said among the results */
+static void left_out(card_t *c, int how, int result)
+{
+    if (how == SY_RESOLVED) {
+        card_state_t *e = state_card(c->id, 1);
+        if (e)
+            snprintf(e->resolved, sizeof(e->resolved), "%s", c->fingerprint);
+        c->resolved = 1;
+    } else if (how == SY_OFF)
+        card_set_included(c, 0);
+    if (result)
+        add_result(COLOR_DIM, "%s: %s", c->base, T(how == SY_RESOLVED ? T_UPLOAD_RESOLVED : how == SY_OFF ? T_UPLOAD_OFF : T_UPLOAD_SKIPPED));
+}
+
+#ifdef DEBUG_BUILD
+/* script "B": a sync with nothing sent, PCSX2 having no Google account: each card "goes" in 3 s, the buttons the
+ * script holds meanwhile (scriptLive), and is taken as sent */
+int debugDry;
+
+static int dry_upload(const card_t *c, stream_t *s)
+{
+    u64 start = now_ms();
+    long long done;
+    while ((done = (long long)(now_ms() - start) * c->size / 3000) < c->size) {
+        if (on_progress(done, c->size))
+            return -1;
+        sleep_ms(30);
+    }
+    s->sent = c->size / 4;
+    snprintf(s->sha_mcd, sizeof(s->sha_mcd), "dry");
+    return 0;
+}
+#define DRY debugDry
+#else
+#define DRY 0
+#endif
+
 /* rotate = delete the backups beyond the configured limit (not before a restore: the backup picked to restore could
  * be the oldest one) */
 void run_backup(int mode, int rotate)
 {
     char name[160], folderId[80], t[200];
-    int i, r;
+    int k, r;
     datetime_t when;
 
     nResults = sent = failed = 0;
     backupCancelled = cancelLatched = 0;
     googleError[0] = 0;
-    r = ensure_google(!igrMode);
+    r = DRY ? 0 : ensure_google(!igrMode);
     if (r < 0) {   /* backed out of the sign-in: the same as cancelling */
         backupCancelled = 1;
         return;
@@ -133,27 +175,40 @@ void run_backup(int mode, int rotate)
     /* the main folder is checked once per run (it may have been deleted on Drive) */
     rootId[0] = 0;
 
-    for (i = 0, totalN = 0; i < nCards; i++)
-        totalN += is_selected(&cards[i], mode);
+    sync_list_start(mode);
+    totalN = nSync;
     currentN = 0;
     skipLatched = backupSkip = 0;
     skipOffered = mode != 3;   /* (a card synced by itself is given up with circle) */
+#ifdef DEBUG_BUILD
+    scriptLive = debugDry;
+#endif
     google_set_stop(stop_asked);
-    for (i = 0; i < nCards && !backupCancelled; i++) {
-        card_t *c = &cards[i];
+    for (k = 0; k < nSync && !backupCancelled; k++) {
+        card_t *c = syncCards[k].c;
         card_state_t *e;
         stream_t s;
         char id[80];
-        if (!is_selected(c, mode))
-            continue;
         currentN++;
+        syncCards[k].taken = 1;
+        if (syncCards[k].state != SY_WAITING) {   /* left out on the list before its turn came */
+            left_out(c, syncCards[k].state, 1);
+            continue;
+        }
+        sync_set(k, SY_SENDING);
         googleError[0] = 0;
         load_card_icon(c);
         upload_screen(0, c->size);
         /* (the card's folder on Drive first: a button pressed meanwhile is answered there too) */
-        r = stop_asked() || card_folder(c, folderId, sizeof(folderId)) != 0 ? -1 : 0;
+        r = stop_asked() || (!DRY && card_folder(c, folderId, sizeof(folderId)) != 0) ? -1 : 0;
         if (r == 0) {
             local_time(&when);
+#ifdef DEBUG_BUILD
+            if (debugDry) {   /* (always the same, as the tests compare what the state file has) */
+                datetime_t fixed = {2026, 10, 11, 21, 0, 0};
+                when = fixed;
+            }
+#endif
             e = state_card(c->id, 0);
             /* two backups of the same card in the same minute get the seconds in the name */
             snprintf(t, sizeof(t), "%04d-%02d-%02d %02d:%02d", when.year, when.month, when.day, when.hour, when.minute);
@@ -164,24 +219,32 @@ void run_backup(int mode, int rotate)
                 snprintf(name, sizeof(name), "%s %04d-%02d-%02d %02dh%02d.zip", c->base, when.year, when.month, when.day, when.hour,
                          when.minute);
             memset(&s, 0, sizeof(s));
-            r = google_upload(c, folderId, name, &when, &s, on_progress, id, sizeof(id));
+#ifdef DEBUG_BUILD
+            if (debugDry)
+                r = dry_upload(c, &s);
+            else
+#endif
+                r = google_upload(c, folderId, name, &when, &s, on_progress, id, sizeof(id));
         }
         if (r != 0) {
             if (backupCancelled) {
+                sync_set(k, SY_WAITING);
                 log_msg("%s: upload cancelled", c->id);
                 break;
             }
-            if (backupSkip) {   /* left out by the user: of this sync, or of every one from now on */
-                add_result(COLOR_DIM, "%s: %s", c->base, T(T_UPLOAD_SKIPPED));
-                if (backupSkip == 2)
-                    card_set_included(c, 0);
+            if (backupSkip) {   /* left out by the user: of this sync, or of every one from now on; or resolved */
+                int how = backupSkip == 3 ? SY_RESOLVED : backupSkip == 2 ? SY_OFF : SY_SKIPPED;
+                sync_set(k, how);
+                left_out(c, how, 1);
                 backupSkip = 0;
                 continue;
             }
+            sync_set(k, SY_FAILED);
             add_result(COLOR_ERROR, "%s: %s (%s)", c->base, T(T_UPLOAD_FAILED), googleError);
             failed++;
             continue;
         }
+        sync_set(k, SY_SENT);
         e = state_card(c->id, 1);
         if (e) {
             snprintf(e->fingerprint, sizeof(e->fingerprint), "%s", c->fingerprint);
@@ -189,17 +252,26 @@ void run_backup(int mode, int rotate)
             snprintf(e->sha, sizeof(e->sha), "%s", s.sha_mcd);
             snprintf(e->when, sizeof(e->when), "%04d-%02d-%02d %02d:%02d:%02d", when.year, when.month, when.day, when.hour, when.minute,
                      when.second);
+            e->resolved[0] = 0;   /* (it's synced now: a mark of resolved has done its part) */
         }
+        c->resolved = 0;
         state_write();
         c->status = ST_UP_TO_DATE;
         sent++;
         format_size(s.sent, t, sizeof(t));
         add_result(COLOR_OK, "%s: %s (%s)", c->base, T(T_UPLOAD_OK), t);
-        if (rotate)
+        if (rotate && !DRY)
             delete_old(c, folderId, id);
         backupSkip = 0;   /* (square while the old backups were deleted: this card was sent already) */
     }
+    for (; k < nSync; k++)   /* cancelled: a card resolved or turned off on the list before its turn still is */
+        if (syncCards[k].state == SY_RESOLVED || syncCards[k].state == SY_OFF)
+            left_out(syncCards[k].c, syncCards[k].state, 0);
     google_set_stop(NULL);
+#ifdef DEBUG_BUILD
+    scriptLive = 0;
+#endif
+    sync_list_end();
     skipOffered = 0;
     backupSkip = 0;
     state_write();

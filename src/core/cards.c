@@ -623,6 +623,9 @@ static void check_one(card_t *c, int *migrated)
         c->status = ST_CHANGED;
     else
         c->status = e->sha[0] ? ST_UP_TO_DATE : ST_NO_BACKUP;
+    c->resolved = e && e->resolved[0] && !strcmp(e->resolved, c->fingerprint);
+    if (c->resolved)
+        log_msg("%s: marked as resolved as it is", c->id);
     log_msg("%s: %d folders, fingerprint %.16s, %s", c->id, saves, c->fingerprint,
             c->status == ST_NEW ? "new" : c->status == ST_CHANGED ? "changed" : c->status == ST_UP_TO_DATE ? "up to date" : "no backup");
 }

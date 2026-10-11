@@ -20,6 +20,10 @@ u32 pad_buttons(void)
     struct padButtonStatus b;
     u32 held;
     int st;
+#ifdef DEBUG_BUILD
+    if (scriptLive)   /* (the script holds the buttons, while what is under way only looks at them) */
+        return script_live_button();
+#endif
     if (!padOpen)
         return 0;
     st = padGetState(0, 0);

@@ -32,6 +32,9 @@ def psu_folder(psu, folder):
 
 # the cards most scenarios start from: two numbered cards and a game's card
 CARDS = {"Card1/Card1-1": "game", "Card2/Card2-1": "empty", "SLUS-21065/SLUS-21065-1": "game"}
+# what the app remembers of the empty card: never sent, marked as resolved as it is (its fingerprint, of no saves)
+RESOLVED = (b"[Card2/Card2-1]\r\nfingerprint = \r\nfingerprint_version = 0\r\nsha256 = \r\nwhen = \r\n"
+            b"resolved = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\r\n")
 # a template that is there when a scenario starts: "Net", with the save of fixtures/save.psu
 TEMPLATE = {"SD2Cloud/templates/Net/save.psu": "save.psu"}
 
@@ -82,6 +85,15 @@ SCENARIOS = [
      "cards": CARDS, "files": {"Files/card.mcd": "game.mcd"}, "script": ">>XXXXXS>>XSXXC"},
     {"name": "settings", "what": "settings changed (how many backups are kept, their format, the language) and About",
      "cards": CARDS, "script": "SDDDDDXDXDXDXUUXUXDDDDDDXOOC"},
+    # (a sync with nothing sent, "B": SELECT shows its cards; X on one still to go: resolved; on the next, its sync off)
+    {"name": "sync-list", "what": "the list of a sync's cards: one card marked as resolved, another's sync turned off",
+     "cards": CARDS, "script": "BLDXDXDXDDXwC"},
+    # (square on the next card: skipped; again: taken back; again: skipped)
+    {"name": "sync-list-skip", "what": "the list of a sync's cards: square skips a card at once, and takes it back",
+     "cards": CARDS, "script": "BLDQQQwC"},
+    # (a card marked as resolved as it is, the empty one: the automatic sync leaves it; a sync of every card sends it)
+    {"name": "sync-resolved", "what": "a card marked as resolved is left out of the automatic sync, until it is sent",
+     "cards": CARDS, "files": {"SD2Cloud/state-debug.ini": RESOLVED}, "script": "BwC"},
     {"name": "card-sync-toggle", "what": "a card's sync turned off in its options, and on again", "cards": CARDS,
      "script": "TDXTDXC"},
     # (the device has another folder for that game now, by its Game2Folder.ini: the card of the game's own folder was

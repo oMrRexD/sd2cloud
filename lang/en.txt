@@ -805,3 +805,31 @@ T_MOVED_N = Saves moved: %d
 T_NOT_MOVED_N = Saves not moved: %d
 # One line.
 T_HELPER_UPDATING = Updating the SAS package...
+# Button.
+T_VIEW = View
+# One line.
+T_SYNC_TITLE = Sync
+# One line.
+T_SYNC_CARD_N = Card %d of %d
+# One line.
+T_SY_WAITING = Waiting
+# One line.
+T_SY_SENDING = Uploading...
+# One line.
+T_SY_SENT = Uploaded
+# One line.
+T_SY_FAILED = Failed
+# One line.
+T_SY_SKIPPED = Skipped
+# One line.
+T_SY_RESOLVED = Marked as resolved
+# One line.
+T_SY_OFF = Sync disabled
+# One line.
+T_MARK_RESOLVED = Mark as resolved
+# Up to 3 lines.
+T_UPLOAD_RESOLVED = marked as resolved
+# Up to 3 lines.
+T_UPLOAD_OFF = sync disabled
+# Button.
+T_UNDO = Undo

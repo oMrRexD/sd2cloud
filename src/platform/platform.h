@@ -82,6 +82,8 @@ void iop_cleanup(int card);
 #ifdef DEBUG_BUILD
 void script_read(void);
 u32 script_next_button(u32 mask);
+extern int scriptLive;
+u32 script_live_button(void);
 extern char script[256];
 extern int scriptPos, hasScript;
 extern int nRescue, rescueSeconds, pastEnd;

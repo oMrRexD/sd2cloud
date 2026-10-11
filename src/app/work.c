@@ -37,7 +37,7 @@ void watch_cancel(void)
     if (down && !circleDown)
         cancelLatched = 1;
     circleDown = down;
-    if (skipOffered && square && !squareDown)
+    if (skipOffered && !syncView && square && !squareDown)   /* (the list of the sync's cards has its own) */
         skipLatched = 1;
     squareDown = square;
 #ifdef DEBUG_BUILD
@@ -146,13 +146,13 @@ void card_reread(void)
 
 /* the icon of the card being sent: on a game's card (Game ID), the 3D icon of its newest save; on a card shared by
  * many games (CardN, named folders, BootCard) or when the save's icon can't be read, the SD2PSX memory card */
-static icon_t *cardIcon;
+icon_t *cardIcon;
 u64 iconStart;
 /* a single save on its way (save_to_cloud): the screen shows its icon (the saves screen's, not freed here) and its
  * name instead of the card's */
 icon_t *saveIcon;
 char saveTitle[100];
-static volatile long long shownDone, shownTotal;
+volatile long long shownDone, shownTotal;
 /* a save on its way into a card (save_into): the same screen, saying that instead of the upload; workFixed = what
  * is being done can't be given up any more, so the legend doesn't offer to */
 const char *workText;
@@ -226,9 +226,9 @@ void scene_upload(float t)
             snprintf(s, sizeof(s), T(T_TIME_LEFT_SEC), (eta.left + 4) / 5 * 5);
         ui_text(FONT_SMALL, x, y + 12, COLOR_DIM, s);
     }
-    if (!workFixed) {
-        legend_t l[2] = {{BUTTON_CIRCLE, T(T_CANCEL)}, {BUTTON_SQUARE, T(T_SKIP)}};
-        look_legend(l, skipOffered ? 2 : 1, 0);
+    if (!workFixed) {   /* (SELECT: the sync's cards, as a list) */
+        legend_t l[3] = {{BUTTON_CIRCLE, T(T_CANCEL)}, {BUTTON_SQUARE, T(T_SKIP)}, {BUTTON_SELECT, T(T_VIEW)}};
+        look_legend(l, syncListed ? 3 : skipOffered ? 2 : 1, 0);
     }
 }
 
@@ -260,7 +260,7 @@ void upload_screen(long long done, long long total)
     eta_note(done, total);
     shownDone = done;
     shownTotal = total;
-    ui_scene(scene_upload);
+    ui_scene(syncView ? scene_sync : scene_upload);
 }
 
 /* A whole card that is not being sent but restored, installed from a file, copied to a device or made: the same

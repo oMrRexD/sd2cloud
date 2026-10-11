@@ -23,6 +23,7 @@ typedef struct {
     int included;          /* part of the backup according to the config */
     char fingerprint[65];
     int status;            /* ST_* */
+    int resolved;          /* marked as resolved as it is now (card_state_t.resolved): the automatic sync leaves it */
     int rereads;           /* ST_ERROR: how many times it was read again while the list of cards waited */
 } card_t;
 /* NEW: a card the app has never seen (e.g. the card of a new game); NO_BACKUP: known and unchanged since it was

@@ -88,6 +88,7 @@ static void on_state(const char *s, const char *k, const char *v, void *u)
         else if (!strcasecmp(k, "fingerprint_version")) e->version = atoi(v);
         else if (!strcasecmp(k, "sha256")) COPY(e->sha, v);
         else if (!strcasecmp(k, "when")) COPY(e->when, v);
+        else if (!strcasecmp(k, "resolved")) COPY(e->resolved, v);
     }
 }
 
@@ -116,6 +117,10 @@ int state_write(void)
         snprintf(t, sizeof(t), "[%s]\r\nfingerprint = %s\r\nfingerprint_version = %d\r\nsha256 = %s\r\nwhen = %s\r\n", states[i].id,
                  states[i].fingerprint, states[i].version, states[i].sha, states[i].when);
         buf_append(&b, t, strlen(t));
+        if (states[i].resolved[0]) {
+            snprintf(t, sizeof(t), "resolved = %s\r\n", states[i].resolved);
+            buf_append(&b, t, strlen(t));
+        }
     }
     snprintf(path, sizeof(path), "%s" STATE_FILE, dataDir);
     ensure_data_dir();

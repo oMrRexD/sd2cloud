@@ -803,3 +803,31 @@ T_MOVED_N = 移動したセーブデータ: %d
 T_NOT_MOVED_N = 移動できなかったセーブデータ: %d
 # One line. English: Updating the SAS package...
 T_HELPER_UPDATING = SAS パッケージを更新しています...
+# Button. English: View
+T_VIEW = 表示切替
+# One line. English: Sync
+T_SYNC_TITLE = 同期
+# One line. English: Card %d of %d
+T_SYNC_CARD_N = カード %d / %d
+# One line. English: Waiting
+T_SY_WAITING = 待機中
+# One line. English: Uploading...
+T_SY_SENDING = アップロード中...
+# One line. English: Uploaded
+T_SY_SENT = アップロード完了
+# One line. English: Failed
+T_SY_FAILED = 失敗
+# One line. English: Skipped
+T_SY_SKIPPED = スキップ
+# One line. English: Marked as resolved
+T_SY_RESOLVED = 解決済み
+# One line. English: Sync disabled
+T_SY_OFF = 同期無効
+# One line. English: Mark as resolved
+T_MARK_RESOLVED = 解決済みにする
+# Up to 3 lines. English: marked as resolved
+T_UPLOAD_RESOLVED = 解決済み
+# Up to 3 lines. English: sync disabled
+T_UPLOAD_OFF = 同期無効
+# Button. English: Undo
+T_UNDO = 元に戻す

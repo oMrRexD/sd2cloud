@@ -387,7 +387,28 @@ void card_work_done(void);
 #ifdef DEBUG_BUILD
 void debug_preview(int k);
 void debug_preview_shown(void);
+extern int debugDry;
+extern int scriptLive;            /* (platform: the script holds the buttons, while the dry sync only looks at them) */
 #endif
+extern icon_t *cardIcon;                 /* the turning icon of the card on its way */
+extern volatile long long shownDone, shownTotal;   /* how far it went */
+
+/* ------------------------------------------------------------ synclist.c */
+/* the cards of the sync under way, in its order, and what became of each */
+enum { SY_WAITING, SY_SENDING, SY_SENT, SY_FAILED, SY_SKIPPED, SY_RESOLVED, SY_OFF };
+typedef struct {
+    card_t *c;
+    int state;   /* SY_*: SKIPPED, RESOLVED and OFF asked from the list (or square) */
+    int taken;   /* its turn came: what was asked of it is done */
+} sync_card_t;
+extern sync_card_t syncCards[MAX_CARDS];
+extern int nSync, syncListed, syncView;
+void sync_list_start(int mode);
+void sync_list_end(void);
+void sync_set(int k, int state);
+int sync_list_poll(void);
+void scene_sync(float t);
+
 void save_into(const card_t *to, const save_view_t *v, int text);
 int save_progress(int phase, long long done, long long total);
 void save_into_fixed(void);

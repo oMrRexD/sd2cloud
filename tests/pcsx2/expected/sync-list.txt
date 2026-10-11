@@ -1,0 +1,37 @@
+# log
+SD2Cloud <version> -- program in host:APPS/SD2Cloud/ (host:SD2CLOUD-DEBUG.ELF), data in host:SD2Cloud/, manual
+settings: [app] app_path = host:SD2CLOUD-DEBUG.ELF (0)
+3 card(s) on the microSD
+Card1/Card1-1: 2 folders, fingerprint 64fbc81ffd3ff7a8, new
+Card2/Card2-1: 0 folders, fingerprint e3b0c44298fc1c14, new
+SLUS-21065/SLUS-21065-1: 2 folders, fingerprint 64fbc81ffd3ff7a8, new
+[script] B: the automatic sync sends Card1/Card1-1
+[script] B: the automatic sync sends Card2/Card2-1
+[script] B: the automatic sync sends SLUS-21065/SLUS-21065-1
+[script] B: a sync with nothing sent
+[script] L (held)
+sync: the list of its cards on screen
+[script] D (held)
+[script] X (held)
+[script] D
+[script] X
+sync: Card2/Card2-1 marked as resolved
+[script] D (held)
+[script] X (held)
+[script] D
+[script] D
+[script] X
+sync: SLUS-21065/SLUS-21065-1 with its sync turned off
+Card1-1: uploaded (2.0 MB)
+Card2-1: marked as resolved
+settings: [cards] exclude = SLUS-21065/SLUS-21065-1 (0)
+SLUS-21065/SLUS-21065-1: left out of the sync by the user (0)
+SLUS-21065-1: sync disabled
+(end: capture)
+
+# files
+e67be4206c58f05d290d04e24ef9bd240e0a329b479dd8d202f12d40f464d347  MemoryCards/PS2/Card1/Card1-1.mcd
+9b26f87a6ae6b13ddf74cec52f77df98dccf3447dd4041c66394f113efddc738  MemoryCards/PS2/Card2/Card2-1.mcd
+e67be4206c58f05d290d04e24ef9bd240e0a329b479dd8d202f12d40f464d347  MemoryCards/PS2/SLUS-21065/SLUS-21065-1.mcd
+9d35b5f2c50e147b21a3f510db7c8e3bacdf14858473bb87c22d0480919664ae  SD2Cloud/sd2cloud.ini
+6fb186ee61c94064105afef13519a6895b2909ff63ad7b8c61f7e739d26c996a  SD2Cloud/state-debug.ini

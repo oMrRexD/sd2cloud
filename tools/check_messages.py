@@ -239,6 +239,12 @@ PLACE = {
     "T_TPL_NO_MAIN": ("small", 212, 1), "T_HELPER_UPDATING": ("text", DIALOG, 1), "T_SYNC_DISABLE": ("text", 320, 1), "T_SYNC_ENABLE": ("text", 320, 1),
     "T_MOVE_SAVES": ("text", 320, 1), "T_CARD_UNUSED": ("small", 244, 1), "T_SKIP_ASK": ("text", WIDE, 1),
     "T_SKIP_TEXT": ("text", WIDE, 1), "T_MOVE_SAVES_ASK": ("text", DIALOG, 2), "T_MOVE_SAVES_NOTE": ("text", DIALOG, 2),
+    # the list of a sync's cards (synclist.c): its title on the left and the count on the right, over the rows; what
+    # became of each card, on the right of its row; what can be done to a card, in the box with a list
+    "T_SYNC_TITLE": ("text", 260, 1), "T_SYNC_CARD_N": ("text", 200, 1), "T_SY_WAITING": ("small", 220, 1),
+    "T_SY_SENDING": ("small", 220, 1), "T_SY_SENT": ("small", 220, 1), "T_SY_FAILED": ("small", 220, 1),
+    "T_SY_SKIPPED": ("small", 220, 1), "T_SY_RESOLVED": ("small", 220, 1), "T_SY_OFF": ("small", 220, 1),
+    "T_MARK_RESOLVED": ("text", 320, 1),
 }
 PARAGRAPH = ("text", DIALOG, 3)     # error messages and the rest: up to 3 lines in a box
 # what only an sd2psx is ever told (being moved to another card, its boot cards, one more channel for a folder): not
@@ -271,6 +277,9 @@ LEGENDS = [
     (("T_BACK", "T_MARK", "T_TPL_APPLY"), False), (("T_BACK", "T_OPEN", "T_OPTIONS"), False),
     (("T_BACK", "T_OPEN", "T_OPTIONS", "T_TPL_MAKE_MAIN"), False),
     (("T_CANCEL", "T_SKIP"), False), (("T_CANCEL_NO", "T_SKIP", "T_SYNC_DISABLE"), False), (("T_BACK", "T_MOVE"), False),
+    # cards sent one after the other: the card on its way, and the list of them all (SELECT goes from one to the other)
+    (("T_CANCEL", "T_SKIP", "T_VIEW"), False), (("T_CANCEL", "T_OPTIONS", "T_SKIP", "T_VIEW"), False),
+    (("T_CANCEL", "T_UNDO", "T_VIEW"), False), (("T_CANCEL", "T_VIEW"), False),
     # saves marked for a copy: on a card's saves, and on the list of cards
     (("T_BACK", "T_MARK", "T_PASTE"), False), (("T_BACK", "T_OPEN", "T_PASTE"), False), (("T_BACK", "T_COPY"), False), (("T_BACK", "T_PASTE"), False),
     # a card's saves, with the options of how they are shown

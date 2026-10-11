@@ -21,7 +21,7 @@
  * in slot 1 is taken as the card in use (PCSX2 has no device to say so), and is changed through the slot; "t" there:
  * the templates are put into the game cards as the automatic sync does after a game (the card active.txt names, in
  * the data folder, stands for the one in the device); "j" there: the question that square brings up while cards are
- * sent. For the rescue (at the end of this file): "@<seconds>" at the very
+ * sent; "B" there: a sync of every card with nothing sent, the script's buttons held while it goes. For the rescue (at the end of this file): "@<seconds>" at the very
  * start is the test's time limit, "Y" hangs and "Z" crashes, to try it. */
 char script[256];
 int scriptPos, hasScript;
@@ -76,6 +76,50 @@ int debug_digit(void)
         return -1;
     scriptPos++;
     return c - '0';
+}
+
+/* While something under way only looks at the buttons, without waiting for one (scriptLive: the dry sync, "B"): the
+ * script's next button is held for a moment, one every 0.4 s; "." waits a second more, "C" captures. A letter that
+ * isn't a button is left for what takes it (debug_take) */
+int scriptLive;
+
+u32 script_live_button(void)
+{
+    static u64 at;
+    static u32 held;
+    u64 now = now_ms();
+    if (held && now - at < 150)
+        return held;
+    if (held) {
+        held = 0;
+        at = now;
+    }
+    if (now < at + 400)
+        return 0;
+    while (script[scriptPos] == ' ' || script[scriptPos] == '\r' || script[scriptPos] == '\n')
+        scriptPos++;
+    switch (script[scriptPos]) {
+        case '.':
+            scriptPos++;
+            at = now + 1000;
+            return 0;
+        case 'C':
+            debug_capture_and_stop();
+            return 0;
+        case 'X': held = PAD_CROSS; break;
+        case 'O': held = PAD_CIRCLE; break;
+        case 'T': held = PAD_TRIANGLE; break;
+        case 'Q': held = PAD_SQUARE; break;
+        case 'L': held = PAD_SELECT; break;
+        case 'U': held = PAD_UP; break;
+        case 'D': held = PAD_DOWN; break;
+        case '<': held = PAD_LEFT; break;
+        case '>': held = PAD_RIGHT; break;
+        default: return 0;
+    }
+    log_msg("[script] %c (held)", script[scriptPos++]);
+    at = now;
+    return held;
 }
 
 void debug_capture_if(char mark)

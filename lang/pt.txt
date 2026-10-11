@@ -800,3 +800,31 @@ T_MOVED_N = Saves movidos: %d
 T_NOT_MOVED_N = Saves não movidos: %d
 # One line. English: Updating the SAS package...
 T_HELPER_UPDATING = Atualizando o pacote SAS...
+# Button. English: View
+T_VIEW = Visualização
+# One line. English: Sync
+T_SYNC_TITLE = Sincronização
+# One line. English: Card %d of %d
+T_SYNC_CARD_N = Cartão %d de %d
+# One line. English: Waiting
+T_SY_WAITING = Aguardando
+# One line. English: Uploading...
+T_SY_SENDING = Enviando...
+# One line. English: Uploaded
+T_SY_SENT = Enviado
+# One line. English: Failed
+T_SY_FAILED = Falhou
+# One line. English: Skipped
+T_SY_SKIPPED = Pulado
+# One line. English: Marked as resolved
+T_SY_RESOLVED = Marcado como resolvido
+# One line. English: Sync disabled
+T_SY_OFF = Sincronização desativada
+# One line. English: Mark as resolved
+T_MARK_RESOLVED = Marcar como resolvido
+# Up to 3 lines. English: marked as resolved
+T_UPLOAD_RESOLVED = marcado como resolvido
+# Up to 3 lines. English: sync disabled
+T_UPLOAD_OFF = sincronização desativada
+# Button. English: Undo
+T_UNDO = Desfazer
