@@ -89,8 +89,13 @@ def fill(s, id_):
             s = s.replace("%s", "v10.10" if "SD2Cloud" in s else "999 MB")
     if id_ in ("T_HELPER_SPACE", "T_HELPER_SPACE_NEED", "T_HELPER_FULL", "T_FREE_KB", "T_SAVE_KB", "T_TPL_SUMMARY"):
         s = s.replace("%d", "8192")   # KB of a memory card
+    if id_ == "T_HELPER_DROPPED_HINT":
+        s = s.replace("%d", "128")    # MB of a big memory card
     return s.replace("%lld", "99999999").replace("%d", "99")
 
+
+# texts that go into another one, in the place of its %s (settings.c, helper_failed): measured there
+INSIDE = {"T_HELPER_ERROR": "T_MC_ERROR", "T_HELPER_DROPPED": "T_MC_ERROR", "T_HELPER_DROPPED_HINT": "T_HELPER_CARD_MB"}
 
 DIALOG, WIDE = 440 - 56, 520 - 56   # the inside of the message boxes (normal and wide)
 # where each text is drawn: (font, width, lines allowed). 1 line = must not overflow; paragraphs wrap by
@@ -395,7 +400,7 @@ def main():
         small = []
         for id_, s in texts.items():
             font, width, max_lines = PLACE.get(id_, PARAGRAPH)
-            s = fill(s, id_)
+            s = fill(s.replace("%s", texts[INSIDE[id_]], 1) if id_ in INSIDE else s, id_)
             w = measure(font, s)
             n = 1 if w <= width else count_lines(font, s, width)
             if n > max_lines:

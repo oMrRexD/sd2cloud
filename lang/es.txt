@@ -115,7 +115,7 @@ T_MC_ERROR = \ (error %d)
 # Up to 3 lines. English: The sd2psx disconnected the memory card during the writing%s.
 T_HELPER_DROPPED = El sd2psx desconectó la tarjeta de memoria durante la escritura%s.
 # One line. English: Try again, or use an 8 MB card%s.
-T_HELPER_DROPPED_HINT = Inténtelo de nuevo o use una tarjeta de 8 MB%s.
+T_HELPER_DROPPED_HINT = Reintente o use una tarjeta de 8 MB%s.
 # Up to 3 lines. English: \ (this one has %d MB)
 T_HELPER_CARD_MB = \ (esta tiene %d MB)
 # Up to 2 lines. English: SD2CLOUD-IGR.ELF was not found in the SD2Cloud folder.
