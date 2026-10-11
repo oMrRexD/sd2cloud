@@ -21,6 +21,7 @@ import argparse
 import difflib
 import gzip
 import hashlib
+import os
 import pathlib
 import re
 import shutil
@@ -84,6 +85,8 @@ def build(scenario, work, elf):
             path.write_bytes(gzip.decompress((HERE / "fixtures" / (source + ".gz")).read_bytes()))
         else:
             shutil.copyfile(HERE / "fixtures" / source, path)
+        os.utime(path, (1767323045, 1767323045))   # always the same date (2026-01-02 03:04:05 UTC): a save copied as a
+                                                    # folder is dated by its files'
     (work / "SD2Cloud" / "sd2cloud.ini").write_bytes((SETTINGS + scenario.get("settings", "")).encode())
     (work / "SD2Cloud" / "script.txt").write_text(scenario["script"], encoding="ascii")
     shutil.copyfile(elf, work / ELF)

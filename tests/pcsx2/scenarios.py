@@ -12,6 +12,24 @@ A script ends in C on the screen it should have reached: a scenario that goes so
 time, or leaves another log.
 """
 
+import pathlib
+
+
+def psu_folder(psu, folder):
+    """the files of a .psu of fixtures/ as a folder of them: a save copied off a card the way a file manager copies it
+    to a USB drive (path -> bytes, for "files"). The saves of fixtures/ have no icon.sys, which tells such a folder"""
+    d = (pathlib.Path(__file__).parent / "fixtures" / psu).read_bytes()
+    files, at = {}, 512
+    for _ in range(int.from_bytes(d[4:8], "little")):
+        e, at = d[at:at + 512], at + 512
+        if e[0] & 0x20:   # "." and "..": folders
+            continue
+        size = int.from_bytes(e[4:8], "little")
+        files[folder + "/" + e[64:96].split(b"\0")[0].decode()] = d[at:at + size]
+        at += (size + 1023) & ~1023
+    return files
+
+
 # the cards most scenarios start from: two numbered cards and a game's card
 CARDS = {"Card1/Card1-1": "game", "Card2/Card2-1": "empty", "SLUS-21065/SLUS-21065-1": "game"}
 # a template that is there when a scenario starts: "Net", with the save of fixtures/save.psu
@@ -37,6 +55,15 @@ SCENARIOS = [
     {"name": "save-new-card", "what": "a save copied to a new card of its game", "cards": CARDS, "script": "XXXS>XXXC"},
     {"name": "psu-import", "what": "a .psu file imported into a card", "cards": CARDS, "files": {"Files/save.psu": "save.psu"},
      "script": ">>XXXXXXXC"},
+    {"name": "psu-folder-import", "what": "a save copied as a folder (its files, as on the card): square on it, its page, installed into a card",
+     "cards": CARDS, "files": dict(psu_folder("save.psu", "Files/BASLUS-21065GAMMA"), **{"Files/BASLUS-21065GAMMA/icon.sys": b"PS2D"}),
+     "script": ">>XXQXXXXC"},
+    {"name": "psu-folder-enter", "what": "X on a folder with an icon.sys goes into it, as into any folder; square there "
+     "installs the folder", "cards": CARDS,
+     "files": dict(psu_folder("save.psu", "Files/BASLUS-21065GAMMA"), **{"Files/BASLUS-21065GAMMA/icon.sys": b"PS2D"}),
+     "script": ">>XXXQXXXXC"},
+    {"name": "psu-folder-not-save", "what": "square on a folder of something else that has an icon.sys: refused, no card touched",
+     "cards": CARDS, "files": {"Files/DVD/icon.sys": b"PS2D", "Files/DVD/Game/a.iso": b"x"}, "script": ">>XXQXC"},
     {"name": "psu-export", "what": "a save exported as a .psu file", "cards": CARDS, "script": "XXXS>>XSXXC"},
     {"name": "card-to-zip", "what": "a whole card copied to a folder, in a .zip", "cards": CARDS, "script": "TDDDXXTXXXC"},
     {"name": "card-file-new", "what": "a card file installed as a new card", "cards": CARDS,

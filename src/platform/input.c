@@ -131,6 +131,29 @@ void local_time(datetime_t *t)
     }
 }
 
+/* a file written now is dated so on a card: the console clock as it is (Japan time, not converted), as the PS2 does */
+void card_time_now(unsigned char t[8])
+{
+    sceCdCLOCK c;
+    int year = 2000;
+#define BCD(x) (((x) >> 4) * 10 + ((x) & 0xF))
+    memset(t, 0, 8);
+    t[4] = t[5] = 1;
+#ifdef DEBUG_BUILD
+    if (hasScript) {   /* (what a test scenario writes doesn't change with the day it runs) */
+        t[1] = 5, t[2] = 4, t[3] = 3, t[4] = 2, t[6] = 2026 & 0xFF, t[7] = 2026 >> 8;
+        return;
+    }
+#endif
+    if (sceCdInit(SCECdINoD) && sceCdReadClock(&c)) {
+        year = 2000 + BCD(c.year);
+        t[1] = BCD(c.second), t[2] = BCD(c.minute), t[3] = BCD(c.hour);
+        t[4] = BCD(c.day), t[5] = BCD(c.month & 0x1F);
+    }
+    t[6] = year & 0xFF, t[7] = year >> 8;
+#undef BCD
+}
+
 void card_time_local(int year, int month, int day, int hour, int minute, int second, datetime_t *t)
 {
     sceCdCLOCK c;

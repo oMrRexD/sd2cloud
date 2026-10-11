@@ -25,6 +25,7 @@ typedef struct {
     char name[256];
     int dir;
     long long size;
+    unsigned char mtime[8];   /* when it was changed, as a memory card keeps it (all 0 = the device didn't say) */
 } dir_entry_t;
 int dir_list(const char *path, dir_entry_t *list, int max);
 void ensure_data_dir(void);                 /* creates <sd>SD2Cloud/ if needed */

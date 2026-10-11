@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -406,12 +407,14 @@ int mcfs_root_signature(const char *path, char hex[65])
 
 #define MAX_FILE (512 * 1024)
 
-static unsigned long long mtime(const unsigned char *e)
+/* a time as a card keeps it (reserved, sec, min, hour, day, month, year in 16 bits) as a number that grows with it */
+static unsigned long long when_of(const unsigned char *t)
 {
-    const unsigned char *t = e + 24;   /* reserved, sec, min, hour, day, month, year (16 bits) */
     return ((unsigned long long)le16(t + 6) << 40) | ((unsigned long long)t[5] << 32) | ((unsigned long long)t[4] << 24) |
            (t[3] << 16) | (t[2] << 8) | t[1];
 }
+
+static unsigned long long mtime(const unsigned char *e) { return when_of(e + 24); }
 
 typedef struct {
     mcfs_save_t *list;
@@ -1278,15 +1281,102 @@ static int name_ok(const unsigned char *e)
     return 1;
 }
 
+/* a date a device gave that is a date: PCSX2's host: gives the year as years since 1900 in one byte, the next one left
+ * as it was, and an sd2psx gives what its firmware sends */
+static int date_ok(const unsigned char *t)
+{
+    unsigned int year = le16(t + 6);
+    return year >= 1980 && year <= 2099 && t[5] >= 1 && t[5] <= 12 && t[4] >= 1 && t[4] <= 31 && t[3] < 24 && t[2] < 60 &&
+           t[1] < 60;
+}
+
+/* A save copied as a folder: its files as they were on the card, the way a file manager copies a save from a memory
+ * card to a USB drive. Read as a .psu is (path ends in /), its entries made from the files and their dates, the
+ * folder's own from the newest of them; checked the same way: names a card can hold, nothing in it but files */
+static int read_folder(const char *path, save_raw_t *s)
+{
+    static dir_entry_t list[MAX_ENTRIES];
+    char file[700];
+    unsigned char now[8];
+    const unsigned char *newest = NULL;
+    const char *end = path + strlen(path) - 1, *name = end;
+    long long total = 0;
+    int n = dir_list(path, list, MAX_ENTRIES), i, k;
+    s->n = 0;
+    if (n < 0)
+        return MCFS_ERR_IO;
+    for (i = k = 0; i < n; i++)   /* what a computer leaves in a folder it opened isn't the save's */
+        if (strncmp(list[i].name, "._", 2) && strcasecmp(list[i].name, ".DS_Store") && strcasecmp(list[i].name, "Thumbs.db") &&
+            strcasecmp(list[i].name, "desktop.ini"))
+            list[k++] = list[i];
+    n = k;
+    while (name > path && name[-1] != '/' && name[-1] != ':')
+        name--;
+    if (!n || n > MAX_ENTRIES - 2 || end - name < 1 || end - name > 32)
+        return MCFS_ERR_BAD;
+    for (i = 0; i < n; i++) {
+        if (list[i].dir || list[i].size > 0x7FFFFFFF || strlen(list[i].name) > 32)
+            return MCFS_ERR_BAD;
+        total += list[i].size;
+        if (date_ok(list[i].mtime) && (!newest || when_of(list[i].mtime) > when_of(newest)))
+            newest = list[i].mtime;
+    }
+    if (!newest) {   /* a device that gives no dates (or none that are): the save is dated now */
+        card_time_now(now);
+        newest = now;
+    }
+    step_phase(MCFS_STEP_READ, total);
+    memset(s->root, 0, ENT);
+    s->root[0] = 0x27, s->root[1] = 0x84;   /* a folder that is there, as a save's is on a card */
+    put32(s->root + 4, n + 2);
+    memcpy(s->root + 8, newest, 8);
+    memcpy(s->root + 24, newest, 8);
+    memcpy(s->root + 64, name, end - name);
+    if (!name_ok(s->root))
+        return MCFS_ERR_BAD;
+    for (i = 0; i < 2; i++) {   /* "." and "..": where they point is set when the save goes into a card */
+        memcpy(s->ent[i], s->root, ENT);
+        put32(s->ent[i] + 4, 0);
+        memset(s->ent[i] + 64, 0, 32);
+        strcpy((char *)s->ent[i] + 64, i ? ".." : ".");
+        buf_free(&s->data[i]);
+    }
+    s->n = 2;
+    for (i = 0; i < n; i++) {
+        unsigned char *e = s->ent[s->n];
+        const unsigned char *t = date_ok(list[i].mtime) ? list[i].mtime : newest;
+        memset(e, 0, ENT);
+        e[0] = 0x97, e[1] = 0x84;   /* a file that is there */
+        put32(e + 4, (unsigned int)list[i].size);
+        memcpy(e + 8, t, 8);
+        memcpy(e + 24, t, 8);
+        memcpy(e + 64, list[i].name, strlen(list[i].name));
+        snprintf(file, sizeof(file), "%s%s", path, list[i].name);
+        buf_free(&s->data[s->n]);
+        if (!name_ok(e) || file_read(file, &s->data[s->n]) != 0 || (long long)s->data[s->n].len != list[i].size) {
+            save_free(s);
+            return name_ok(e) ? MCFS_ERR_IO : MCFS_ERR_BAD;
+        }
+        s->n++;
+        if (step(list[i].size)) {
+            save_free(s);
+            return MCFS_ERR_CANCELLED;
+        }
+    }
+    return MCFS_OK;
+}
+
 /* the .psu as a save read from a card (srcSave), checked whole before anything is written anywhere: the sizes
  * against the file's own, the names, no folder inside it, no name twice. The file is closed again before this
- * returns: on the sd2psx it must not be open while a card is */
+ * returns: on the sd2psx it must not be open while a card is. A path ending in / is a save copied as a folder */
 static int read_psu(const char *path, save_raw_t *s)
 {
     long size, at = ENT;
-    int fd = open(path, O_RDONLY), r = MCFS_ERR_BAD, i, k, n;
+    int fd, r = MCFS_ERR_BAD, i, k, n;
     s->n = 0;
-    if (fd < 0)
+    if (path[0] && path[strlen(path) - 1] == '/')
+        return read_folder(path, s);
+    if ((fd = open(path, O_RDONLY)) < 0)
         return MCFS_ERR_IO;
     size = lseek(fd, 0, SEEK_END);
     lseek(fd, 0, SEEK_SET);

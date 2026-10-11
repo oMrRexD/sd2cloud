@@ -56,7 +56,8 @@ int mcfs_export_psu(const char *path, const char *folder, buffer_t *out);
  * written. 0 = ok (what it has was read back), else MCFS_ERR_* */
 int mcfs_new_card(const char *path, void (*progress)(long long done, long long total));
 /* what a .psu file holds: the save's folder, when it was last saved, its files' sizes added up, and its icon (the
- * buffers stay empty when it has none) */
+ * buffers stay empty when it has none). Here and below, a path ending in / is a save copied as a folder (its files
+ * as they were on the card), which is taken as its .psu would be */
 typedef struct {
     char folder[33];
     unsigned long long when;

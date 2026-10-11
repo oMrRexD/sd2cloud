@@ -1,0 +1,45 @@
+# log
+SD2Cloud <version> -- program in host:APPS/SD2Cloud/ (host:SD2CLOUD-DEBUG.ELF), data in host:SD2Cloud/, manual
+settings: [app] app_path = host:SD2CLOUD-DEBUG.ELF (0)
+3 card(s) on the microSD
+Card1/Card1-1: 2 folders, fingerprint 64fbc81ffd3ff7a8, new
+Card2/Card2-1: 0 folders, fingerprint e3b0c44298fc1c14, new
+SLUS-21065/SLUS-21065-1: 2 folders, fingerprint 64fbc81ffd3ff7a8, new
+3 card(s) seen for the first time: fingerprint kept as the reference (0)
+[script] >
+[script] >
+[script] X
+files: host:: 5 entries
+  0: Files/ (0 bytes)
+  1: MemoryCards/ (0 bytes)
+  2: SD2Cloud/ (0 bytes)
+[script] X
+files: host:Files/: 1 entries
+  0: BASLUS-21065GAMMA/ (0 bytes)
+[script] X
+files: host:Files/BASLUS-21065GAMMA/: 4 entries
+  0: file0.bin (1200 bytes)
+  1: file1.bin (100 bytes)
+  2: file2.bin (9000 bytes)
+  3: icon.sys (4 bytes)
+[script] Q
+files: host:Files/BASLUS-21065GAMMA/: 0 (BASLUS-21065GAMMA, 10304 bytes in 4 files)
+[script] X
+[script] X
+[script] X
+mcfs: import of host:Files/BASLUS-21065GAMMA/: 0, 51 reads and 9 writes of the card in N ms
+import host:Files/BASLUS-21065GAMMA/ into Card1/Card1-1: 0
+Card1/Card1-1: 3 folders, fingerprint 03adc94aa086b795, changed
+[script] X
+(end: capture)
+
+# files
+8f29bb9c22781909a7756a5e73161d46d03dbe78155ffe6f9f4d5313e8718a16  Files/BASLUS-21065GAMMA/file0.bin
+43f57effc6e824964f8fe892759dc540d13e2ac4c7cebcfc33584831ec5f06b6  Files/BASLUS-21065GAMMA/file1.bin
+9519cd3cb1d0b2f7b87699794ace24c78038b52238ab62e0b6d852dabe1ab4af  Files/BASLUS-21065GAMMA/file2.bin
+91ceb7db9517a09e409148d14f34f8ff11d3aa042e8c777a2b2894564e732c24  Files/BASLUS-21065GAMMA/icon.sys
+fcd03ff2274e14064e6387619b6cb907b53e2e07e3c1288a49c7a76f30bc513e  MemoryCards/PS2/Card1/Card1-1.mcd
+9b26f87a6ae6b13ddf74cec52f77df98dccf3447dd4041c66394f113efddc738  MemoryCards/PS2/Card2/Card2-1.mcd
+e67be4206c58f05d290d04e24ef9bd240e0a329b479dd8d202f12d40f464d347  MemoryCards/PS2/SLUS-21065/SLUS-21065-1.mcd
+17df2e2a16cbab4cb8357fe9a735f1765b89ed8fcaf21c00a1634ed98fb36c3e  SD2Cloud/sd2cloud.ini
+5d80b04c692d54f468ed80c2ad845b735c3fe68663e8b45858780407f59b0673  SD2Cloud/state-debug.ini

@@ -53,6 +53,12 @@ void local_time(datetime_t *t)
     *t = when;
 }
 
+void card_time_now(unsigned char t[8])
+{
+    static const unsigned char when[8] = {0, 5, 4, 3, 2, 1, 2026 & 0xFF, 2026 >> 8};
+    memcpy(t, when, 8);
+}
+
 /* the texts, in English */
 const char *T(int id)
 {
@@ -115,6 +121,13 @@ int fileXioDread(int fd, iox_dirent_t *e)
         e->stat.mode = S_ISDIR(st.st_mode) ? FIO_S_IFDIR : 0x2000;
         e->stat.size = (unsigned int)st.st_size;
         e->stat.hisize = (unsigned int)((unsigned long long)st.st_size >> 32);
+        {   /* when it was changed, as fileXio gives it: reserved, sec, min, hour, day, month, year (16 bits) */
+            struct tm tm;
+            gmtime_r(&st.st_mtime, &tm);
+            e->stat.mtime[1] = tm.tm_sec, e->stat.mtime[2] = tm.tm_min, e->stat.mtime[3] = tm.tm_hour;
+            e->stat.mtime[4] = tm.tm_mday, e->stat.mtime[5] = tm.tm_mon + 1;
+            e->stat.mtime[6] = (tm.tm_year + 1900) & 0xFF, e->stat.mtime[7] = (tm.tm_year + 1900) >> 8;
+        }
     }
     return 1;
 }

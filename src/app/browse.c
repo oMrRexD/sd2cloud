@@ -20,6 +20,14 @@ card_t *fbCard;   /* a whole card is being copied to a device: triangle in files
 #define FB_DIM     0x6F7C94   /* a file that isn't a .psu: listed, but there's nothing to do with it */
 
 struct fb_s fb;
+/* the folders of the folder shown that may be saves copied as they were on a card (they have the icon.sys every save
+ * has): square opens the page of the save, from where it is installed as a .psu is, checked the same way. X goes into
+ * it as into any folder (a folder of anything else may have an icon.sys too). 0 = not looked into yet (only the rows
+ * on the screen are: one look per folder would make a folder of hundreds slow to open on the sd2psx), 1 = it isn't
+ * one, 2 = it is */
+static unsigned char fbSave[FB_MAX];
+#define IS_SAVE(i) (fbSave[i] == 2)
+static int fbHereSave;   /* the folder shown is one of those (never the device's root): square there opens its page */
 
 static int is_psu(const char *name)
 {
@@ -105,6 +113,18 @@ static void fb_scroll(void)
         fb.top = fb.cursor - FB_ROWS + 1;
 }
 
+/* whether the folders of the rows from that one on are saves; n = how many rows the list has */
+static void fb_look(int from, int n)
+{
+    int i;
+    for (i = from; i < from + FB_ROWS && i < n; i++)
+        if (!fbSave[i]) {
+            char c[700];
+            snprintf(c, sizeof(c), "%s%s/icon.sys", fb.dir, fb.list[i].name);
+            fbSave[i] = fb.list[i].dir && file_exists(c) ? 2 : 1;
+        }
+}
+
 /* reads the folder shown; on = the name the cursor goes to (NULL = the first one) */
 static void fb_load(const char *on)
 {
@@ -117,6 +137,13 @@ static void fb_load(const char *on)
     for (i = 0; on && i < n; i++)
         if (!strcmp(fb.list[i].name, on))
             cursor = i;
+    memset(fbSave, 0, sizeof(fbSave));   /* the rows it opens on (where fb_scroll puts them) */
+    fb_look(cursor >= FB_ROWS ? cursor - FB_ROWS + 1 : 0, n);
+    {
+        char c[700];
+        snprintf(c, sizeof(c), "%sicon.sys", fb.dir);
+        fbHereSave = n >= 0 && strcmp(fb.dir, fb.root) != 0 && file_exists(c);
+    }
     ui_lock();
     fb.error = n < 0;
     fb.n = n < 0 ? 0 : n;
@@ -223,10 +250,12 @@ static void scene_files(float t)
             l[n].button = BUTTON_START, l[n++].text = T(T_PASTE);
         else if (fbCard)   /* a whole card is */
             l[n].button = BUTTON_TRIANGLE, l[n++].text = T(T_EXPORT);
-        else if (e && !e->dir && is_psu(e->name))   /* what the selected file is good for */
+        else if (e && (e->dir ? IS_SAVE(fb.cursor) : is_psu(e->name)))   /* what the selected file is good for */
             l[n].button = BUTTON_SQUARE, l[n++].text = T(T_INSTALL_SAVE);
         else if (e && !e->dir && is_card_file(e->name, e->size))
             l[n].button = BUTTON_SQUARE, l[n++].text = T(T_INSTALL);
+        else if (fbHereSave)   /* or the folder shown, a save's */
+            l[n].button = BUTTON_SQUARE, l[n++].text = T(T_INSTALL_SAVE);
         look_legend(l, n, 0);
     }
 }
@@ -245,7 +274,7 @@ static int psu_open(const char *file)
     r = mcfs_psu_info(psu.path, &psu.info, &iconsys, &ico);
     log_msg("files: %s: %d (%s, %lld bytes in %d files)", psu.path, r, psu.info.folder, psu.info.bytes, psu.info.files);
     if (r != MCFS_OK) {
-        message_wait(0, NULL, COLOR_ERROR, T(T_ERR_PSU));
+        message_wait(0, NULL, COLOR_ERROR, T(psu.path[strlen(psu.path) - 1] == '/' ? T_ERR_SAVE_FOLDER : T_ERR_PSU));
         return 0;
     }
     ic = iconsys.len ? icon_load(&iconsys, &ico) : NULL;
@@ -298,16 +327,23 @@ static void psu_import(void)
 }
 
 /* X on a .psu file: the page of the save it holds, from where it can be imported into a card. install = square on
- * it: straight to the card it goes into */
+ * it: straight to the card it goes into. A save copied as a folder comes as its name and a /, or "" for the folder
+ * shown, and has its page */
 static void psu_screen(const char *file, int install)
 {
     char name[260];
+    const char *slash;
+    size_t n;
     if (!psu_open(file))
         return;
     if (install)
         psu_import();
     else {
-        snprintf(name, sizeof(name), "%s", file);
+        snprintf(name, sizeof(name), "%s", file[0] ? file : fb.dir);
+        if ((n = strlen(name)) > 1 && name[n - 1] == '/')
+            name[n - 1] = 0;
+        if (!file[0] && (slash = strrchr(name, '/')) != NULL)   /* (the folder shown: its own name) */
+            memmove(name, slash + 1, strlen(slash));
         utf8_fix(name, sizeof(name));
         save_page(&psu.v, name, psu.info.bytes, psuOptions, 1);
         while (save_page_choice())
@@ -515,6 +551,7 @@ void files_screen(int dev)
                 fb_select();
                 ui_unlock();
                 sound_play(SND_MOVE);
+                fb_look(fb.top, fb.n);   /* (the rows that came onto the screen) */
             }
         } else if (b & PAD_CIRCLE) {
             sound_play(SND_BACK);
@@ -550,15 +587,22 @@ void files_screen(int dev)
                     leave(target);
                 }
             }
-        } else if ((b & PAD_SQUARE) && fb.n && !fb.list[fb.cursor].dir && !fbGive.c && !fbCard) {
-            char name[256];   /* the file itself, without opening it first */
-            snprintf(name, sizeof(name), "%s", fb.list[fb.cursor].name);
-            if (is_psu(name)) {
+        } else if ((b & PAD_SQUARE) && !fbGive.c && !fbCard) {
+            const dir_entry_t *e = fb.n ? &fb.list[fb.cursor] : NULL;
+            char name[260];   /* the file itself, without opening it first */
+            snprintf(name, sizeof(name), "%s%s", e ? e->name : "", e && e->dir ? "/" : "");
+            if (e && e->dir && IS_SAVE(fb.cursor)) {   /* a save copied as a folder: its page first */
+                sound_play(SND_CONFIRM);
+                psu_screen(name, 0);
+            } else if (e && !e->dir && is_psu(name)) {
                 sound_play(SND_CONFIRM);
                 psu_screen(name, 1);
-            } else if (is_card_file(name, fb.list[fb.cursor].size)) {
+            } else if (e && !e->dir && is_card_file(name, e->size)) {
                 sound_play(SND_CONFIRM);
                 card_file_screen(name, 1);
+            } else if (fbHereSave) {   /* the folder shown is a save's */
+                sound_play(SND_CONFIRM);
+                psu_screen("", 0);
             }
         } else if ((b & PAD_TRIANGLE) && !fb.error && fbCard) {   /* from a card's options: the whole card goes into this folder */
             sound_play(SND_CONFIRM);

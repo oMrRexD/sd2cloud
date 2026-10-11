@@ -139,6 +139,7 @@ int dir_list(const char *path, dir_entry_t *list, int max)
         snprintf(list[n].name, sizeof(list[0].name), "%s", e.name);
         list[n].dir = FIO_S_ISDIR(e.stat.mode) ? 1 : 0;
         list[n].size = ((long long)e.stat.hisize << 32) | e.stat.size;
+        memcpy(list[n].mtime, e.stat.mtime, sizeof(list[0].mtime));
         n++;
     }
     fileXioDclose(fd);

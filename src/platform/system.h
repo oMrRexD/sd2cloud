@@ -36,6 +36,7 @@ typedef struct {
 void local_time(datetime_t *t);
 /* a memory card's time (the PS2 writes it in the console clock's Japan time) in the console's time zone */
 void card_time_local(int year, int month, int day, int hour, int minute, int second, datetime_t *t);
+void card_time_now(unsigned char t[8]);   /* the console's clock as a card keeps a time (reserved, sec... year) */
 void log_raw(const char *d, size_t n);
 void log_msg(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
 /* a sync started by IGR failed: what the log said of that run goes to <data>sync-error.txt (the last failure only) */

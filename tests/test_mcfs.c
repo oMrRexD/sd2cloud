@@ -1,6 +1,7 @@
-/* SD2Cloud's regression tests -- the memory card's file system (mcfs.c): a new card, a save's way in from a .psu and
- * out to one, from card to card, and off a card; what a card's fingerprint and its root's signature tell apart.
+/* SD2Cloud's regression tests -- the memory card's file system (mcfs.c): a new card, a save's way in from a .psu (or
+ * a folder) and out to one, from card to card, and off a card; what a card's fingerprint and its root's signature tell apart.
  * The cards and the saves are made here: nothing in them comes from a game. */
+#include <utime.h>
 #include "t.h"
 
 #define ENT 512
@@ -232,6 +233,60 @@ static void psu_that_is_not_one(void)
     CHECK_STR(after, before);
 }
 
+/* a save copied as a folder, as a file manager copies one off a card: taken as its .psu would be, dated as the newest
+ * of its files, what a computer leaves in it left out; and folders that aren't one */
+static void save_from_a_folder(void)
+{
+    char path[80], before[65], after[65];
+    mcfs_psu_t info;
+    buffer_t out = {0}, none = {0};
+    struct utimbuf u;
+    int i;
+    t_mkdir("usb/" SAVE);
+    for (i = 0; i < FILES; i++) {
+        unsigned char *d = malloc(SIZES[i] + 1);
+        t_fill(d, SIZES[i], 9 + i);
+        snprintf(path, sizeof(path), "usb/" SAVE "/file%d.bin", i);
+        t_write(path, d, SIZES[i]);
+        free(d);
+        u.actime = u.modtime = 1700000000 + i * 3600;   /* 2023-11-14 22:13:20 UTC, an hour later each */
+        CHECK_INT(utime(path, &u), 0);
+    }
+    t_text("usb/" SAVE "/Thumbs.db", "a computer's");
+    t_text("usb/" SAVE "/._file0.bin", "a computer's");
+    CHECK_INT(mcfs_psu_info("usb/" SAVE "/", &info, &none, &none), 0);
+    CHECK_STR(info.folder, SAVE);
+    CHECK_INT(info.files, FILES);
+    CHECK_INT(info.bytes, 10 + 1024 + 70000 + 0 + 5000);
+    CHECK_INT(info.when, (2023ULL << 40) | (11ULL << 32) | (15 << 24) | (2 << 16) | (13 << 8) | 20);   /* file4.bin's */
+    CHECK_INT(mcfs_new_card("sd/a.mcd", NULL), MCFS_OK);
+    CHECK_INT(mcfs_import_psu("usb/" SAVE "/", "sd/a.mcd", NULL), MCFS_OK);
+    CHECK_INT(mcfs_export_psu("sd/a.mcd", SAVE, &out), MCFS_OK);
+    CHECK(psu_holds(&out, SAVE, SIZES, FILES, 9));
+    buf_free(&out);
+    /* files with no date that is one (1970, before the cards' 1980): dated as the clock says now (host.c) */
+    u.actime = u.modtime = 0;
+    t_mkdir("usb/BASLUS-99999OLD");
+    t_text("usb/BASLUS-99999OLD/icon.sys", "x");
+    CHECK_INT(utime("usb/BASLUS-99999OLD/icon.sys", &u), 0);
+    CHECK_INT(mcfs_psu_info("usb/BASLUS-99999OLD/", &info, &none, &none), 0);
+    CHECK_INT(info.when, (2026ULL << 40) | (1ULL << 32) | (2 << 24) | (3 << 16) | (4 << 8) | 5);
+
+    /* a folder inside it; a name no card can hold; no files; no folder at all: the card is left as it was */
+    CHECK_INT(mcfs_new_card("sd/b.mcd", NULL), MCFS_OK);
+    CHECK_INT(mcfs_fingerprint("sd/b.mcd", before, NULL), 0);
+    t_mkdir("usb/" SAVE "/inner");
+    CHECK_INT(mcfs_import_psu("usb/" SAVE "/", "sd/b.mcd", NULL), MCFS_ERR_BAD);
+    t_mkdir("usb/BASLUS-99999A-NAME-LONGER-THAN-32");
+    t_text("usb/BASLUS-99999A-NAME-LONGER-THAN-32/icon.sys", "x");
+    CHECK_INT(mcfs_import_psu("usb/BASLUS-99999A-NAME-LONGER-THAN-32/", "sd/b.mcd", NULL), MCFS_ERR_BAD);
+    t_mkdir("usb/EMPTY");
+    CHECK_INT(mcfs_import_psu("usb/EMPTY/", "sd/b.mcd", NULL), MCFS_ERR_BAD);
+    CHECK_INT(mcfs_import_psu("usb/MISSING/", "sd/b.mcd", NULL), MCFS_ERR_IO);
+    CHECK_INT(mcfs_fingerprint("sd/b.mcd", after, NULL), 0);
+    CHECK_STR(after, before);
+}
+
 void suite_mcfs(void)
 {
     RUN(new_card);
@@ -239,4 +294,5 @@ void suite_mcfs(void)
     RUN(save_from_card_to_card);
     RUN(save_given_up_and_card_full);
     RUN(psu_that_is_not_one);
+    RUN(save_from_a_folder);
 }
