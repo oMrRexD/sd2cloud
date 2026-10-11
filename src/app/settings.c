@@ -119,8 +119,8 @@ static void sync_all(void)
 }
 
 /* what helper_install's answer means for the user, with the error mcman gave, as it came. -4: the device let go of
- * the card while it was being written, which is said as it is: it isn't SD2Cloud's doing. What may help is said under
- * it, with the card's size when it is a large one */
+ * the card while it was being written, which is said as it is. What may help is said under it, with the card's size
+ * when it is a large one */
 static void helper_failed(int r)
 {
     char t[300], code[24] = "", hint[160], size[40] = "";
