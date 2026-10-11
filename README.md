@@ -84,7 +84,8 @@ on one yet.
   settings: **Stable**, the released versions, and **Beta**, a build made automatically from every change, before it
   is tested the way a version is (the [beta pre-release](../../releases/tag/beta)).
 - Interface inspired by the PlayStation BB Navigator.
-- English, Portuguese and Spanish. Translations are welcome: see [Translating](CONTRIBUTING.md#translating).
+- English, Portuguese, Spanish, Russian and Ukrainian. Translations are welcome: see
+  [Translating](CONTRIBUTING.md#translating).
 
 ## Requirements
 
@@ -204,8 +205,9 @@ and what to check before sending one.
 SD2Cloud is developed by MrRexD and distributed under the [GNU General Public License v3](LICENSE).
 
 The design is inspired by the PlayStation BB Navigator. SD2Cloud uses the
-[Varela Round](https://github.com/alefalefalef/Varela-Round-Hebrew) font (SIL Open Font License) and the libraries
-listed in [THIRD-PARTY-NOTICES.txt](package/THIRD-PARTY-NOTICES.txt).
+[Varela Round](https://github.com/alefalefalef/Varela-Round-Hebrew) font, with the Cyrillic letters of
+[Nunito](https://github.com/googlefonts/nunito) (both under the SIL Open Font License), and the libraries listed in
+[THIRD-PARTY-NOTICES.txt](package/THIRD-PARTY-NOTICES.txt).
 
 PlayStation is a registered trademark of Sony Interactive Entertainment. SD2Cloud is not affiliated with or
 endorsed by Sony or Google.

@@ -1,0 +1,800 @@
+# SD2Cloud -- the texts on screen in Russian. The original is en.txt; how to translate: CONTRIBUTING.md.
+#
+# Tone: a system application's, addressing the user as "вы". Errors use "Не удалось...", buttons are verbs in the
+# infinitive ("Копировать"). A memory card is a "карта памяти" ("карта" when short), a save a "сохранение", a backup a
+# "резервная копия" ("копия" when short), the default template the "основной" one, to upload "загрузить на Google
+# Диск", to download "скачать". A count goes after a colon ("Сохранений: 12"), which reads right with any number. A
+# first translation: corrections by native speakers are welcome.
+
+LANGUAGE_NAME = Русский
+# how a date is written: DMY (31/12/2026), MDY (12/31/2026) or YMD (2026-12-31); with another separator, D.M.Y (31.12.2026)
+DATE_FORMAT = D.M.Y
+
+# One line. English: Searching for memory cards...
+T_SEARCHING = Поиск карт памяти...
+# Up to 3 lines. English: The sd2psx memory card folder was not found (MemoryCards/PS2 on the MMCE).
+T_NO_SD = Папка карт памяти sd2psx не найдена (MemoryCards/PS2 на MMCE).
+# Up to 5 lines. English: No memory cards are included in the sync. Check sd2cloud.ini.
+T_NO_CARDS = Нет карт для синхронизации. Проверьте sd2cloud.ini.
+# Up to 3 lines. English: Checking
+T_CHECKING = Проверка
+# One line. English: Never synced
+T_ST_NEW = Не загружалась
+# One line. English: Not synced
+T_ST_CHANGED = Изменена
+# One line. English: Synced
+T_ST_UP_TO_DATE = Синхронизирована
+# One line. English: Read error
+T_ST_ERROR = Ошибка чтения
+# One line. English: Excluded
+T_ST_SKIPPED = Исключена
+# Up to 3 lines. English: Connecting to the network...
+T_NET_STARTING = Подключение к сети...
+# Up to 3 lines. English: Unable to load the network drivers.
+T_NET_ERR_DRIVERS = Не удалось загрузить сетевые драйверы.
+# Up to 3 lines. English: No network connection. Check the network cable.
+T_NET_ERR_LINK = Нет подключения к сети. Проверьте сетевой кабель.
+# Up to 3 lines. English: Unable to obtain an IP address from the router (DHCP).
+T_NET_ERR_DHCP = Не удалось получить IP-адрес от роутера (DHCP).
+# Up to 3 lines. English: Signing in to Google...
+T_SIGNING_IN = Вход в Google...
+# One line. English: Connect to Google
+T_LOGIN_TITLE = Подключение к Google
+# One line. English: On your phone or PC, visit
+T_LOGIN_OPEN = На телефоне или ПК откройте
+# One line. English: and enter this code
+T_LOGIN_ENTER = и введите этот код
+# One line. English: This code expires in %d min
+T_LOGIN_EXPIRES = Код действует ещё %d мин
+# One line. English: or use the QR code
+T_LOGIN_QR = или QR-код
+# One line. English: Connected to Google.
+T_LOGIN_OK = Подключено к Google.
+# One line. English: Unable to connect to Google.
+T_LOGIN_ERROR = Не удалось подключиться к Google.
+# Up to 3 lines. English: The code has expired. Try again.
+T_LOGIN_EXPIRED = Срок действия кода истёк. Повторите попытку.
+# Up to 3 lines. English: Access was denied on the Google page.
+T_LOGIN_DENIED = Доступ был отклонён на странице Google.
+# Up to 3 lines. English: Google access has expired or was revoked. Please sign in again.
+T_LOGIN_REVOKED = Доступ к Google истёк или был отозван. Войдите снова.
+# One line. English: Initial sync
+T_FIRST_TITLE = Первая синхронизация
+# Up to 2 lines. English: Sync all %d memory cards now? (%s, approx. %d min)
+T_FIRST_QUESTION = Синхронизировать сейчас все карты? Карт: %d (%s, около %d мин).
+# One line. English: After this, only changed cards will be uploaded.
+T_FIRST_AFTER = Дальше загружаются только изменённые карты.
+# Button. English: Yes
+T_YES = Да
+# Button. English: Not now
+T_LATER = Не сейчас
+# One line. English: Update SD2Cloud to %s
+T_MENU_UPDATE = Обновить SD2Cloud до %s
+# One line. English: Update
+T_UPDATE = Обновить
+# Button. English: Exit
+T_MENU_EXIT = Выход
+# One line. English: %d of %d
+T_UPLOADING = %d из %d
+# One line. English: Uploading to Google Drive...
+T_BACKING_UP = Загрузка на Google Диск...
+# Up to 3 lines. English: uploaded
+T_UPLOAD_OK = загружена
+# Up to 3 lines. English: failed
+T_UPLOAD_FAILED = ошибка
+# One line. English: Sync complete
+T_SUMMARY_OK = Синхронизация завершена
+# One line. English: Sync partially completed
+T_SUMMARY_PARTIAL = Синхронизация завершена частично
+# One line. English: Sync failed
+T_SUMMARY_FAILED = Ошибка синхронизации
+# One line. English: Returning in %d s...
+T_RETURNING = Возврат через %d с...
+# Button. English: Back
+T_BACK = Назад
+# One line. English: Automatic sync
+T_IGR_TITLE = Автосинхронизация
+# Up to 3 lines. English: SD2Cloud is not connected to Google. Open SD2Cloud from the Apps tab to set it up.
+T_IGR_NO_LOGIN = SD2Cloud не подключён к Google. Откройте SD2Cloud на вкладке Apps, чтобы настроить его.
+# One line. English: SAS package
+T_HELPER_TITLE = Пакет SAS
+# Up to 2 lines. English: Required for automatic sync via IGR. It also adds a shortcut to the PS2 browser.
+T_HELPER_ABOUT = Нужен для автосинхронизации через IGR. Также добавляет ярлык в браузер PS2.
+# One line. English: Destination (memory card in use):
+T_HELPER_WHERE = Куда (используемая карта памяти):
+# One line. English: If Autoboot is enabled, install it while the BootCard is in use.
+T_HELPER_AUTOBOOT = С включённым Autoboot устанавливайте на BootCard.
+# Button. English: Install
+T_HELPER_INSTALL = Установить
+# One line. English: SAS package installed
+T_HELPER_OK = Пакет SAS установлен
+# Up to 2 lines. English: Unable to install the SAS package on the memory card%s.
+T_HELPER_ERROR = Не удалось установить пакет SAS на карту памяти%s.
+# Up to 3 lines. English: \ (error %d)
+T_MC_ERROR = \ (ошибка %d)
+# Up to 3 lines. English: The sd2psx disconnected the memory card during the writing%s.
+T_HELPER_DROPPED = sd2psx отключил карту памяти во время записи%s.
+# One line. English: Try again, or use an 8 MB card%s.
+T_HELPER_DROPPED_HINT = Повторите попытку или используйте карту на 8 МБ%s.
+# Up to 3 lines. English: \ (this one has %d MB)
+T_HELPER_CARD_MB = \ (у этой %d МБ)
+# Up to 2 lines. English: SD2CLOUD-IGR.ELF was not found in the SD2Cloud folder.
+T_HELPER_MISSING = Файл SD2CLOUD-IGR.ELF не найден в папке SD2Cloud.
+# Up to 3 lines. English: Unable to connect to Google:
+T_ERR_INTERNET = Не удалось подключиться к Google:
+# Up to 3 lines. English: the upload was interrupted
+T_ERR_UPLOAD_STOPPED = загрузка прервана
+# Up to 3 lines. English: Google Drive did not return a file ID
+T_ERR_NO_FILE_ID = Google Диск не вернул ID файла
+# Up to 3 lines. English: the file on Google Drive does not match (SHA-256)
+T_ERR_CHECKSUM = файл на Google Диске не совпадает (SHA-256)
+# Up to 3 lines. English: Google Drive: unexpected position (%lld)
+T_ERR_POSITION = Google Диск: неожиданная позиция (%lld)
+# Up to 3 lines. English: the PS2's clock is ahead (%s): set the console's date and time
+T_ERR_CLOCK_AHEAD = часы PS2 спешат (%s): установите дату и время консоли
+# Up to 3 lines. English: Checking for updates...
+T_UPDATE_CHECKING = Проверка обновлений...
+# Up to 3 lines. English: Updating SD2Cloud...
+T_UPDATE_RUNNING = Обновление SD2Cloud...
+# Up to 3 lines. English: Update complete. Starting the new version...
+T_UPDATE_DONE = Обновление завершено. Запуск новой версии...
+# Up to 3 lines. English: The update failed. The current version was kept.
+T_UPDATE_ERROR = Не удалось обновить. Текущая версия сохранена.
+# Button. English: Enter
+T_SELECT = Выбрать
+# Button. English: Cancel
+T_CANCEL = Отмена
+# One line. English: Cancel the sync?
+T_CANCEL_TITLE = Отменить синхронизацию?
+# Up to 2 lines. English: Cards already uploaded will remain on Google Drive. SD2Cloud will close.
+T_CANCEL_TEXT = Уже загруженные карты останутся на Google Диске. SD2Cloud закроется.
+# Button. English: Yes, cancel
+T_CANCEL_YES = Да, отменить
+# Button. English: Continue
+T_CANCEL_NO = Продолжить
+# One line. English: Last backup: %s
+T_CARD_LAST = Копия от %s
+# One line. English: %s backups
+T_HIST_TITLE = Копии карты %s
+# One line. English: Loading backups...
+T_HIST_LOADING = Загрузка списка копий...
+# Up to 3 lines. English: No backups of this card on Google Drive.
+T_HIST_EMPTY = Копий этой карты на Диске нет.
+# One line. English: Same as current
+T_HIST_SAME = Как текущая
+# Button. English: Restore
+T_RESTORE = Восстановить
+# One line. English: Restore %s?
+T_RESTORE_TITLE = Восстановить %s?
+# One line. English: Backup from %s
+T_RESTORE_FROM = Копия от %s
+# Up to 2 lines. English: The memory card on the MMCE will be replaced with this backup.
+T_RESTORE_TEXT = Карта памяти на MMCE будет заменена этой копией.
+# One line. English: The current card will be synced first.
+T_RESTORE_SAVE_FIRST = Сначала текущая карта будет синхронизирована.
+# Up to 2 lines. English: %s is currently in use by the sd2psx. Switch it to another card, then press X again.
+T_RESTORE_IN_USE = %s сейчас используется в sd2psx. Переключите его на другую карту и снова нажмите X.
+# Up to 2 lines. English: Unable to determine which card the sd2psx is using. If it is this card, switch to another card first.
+T_RESTORE_UNKNOWN = Не удалось определить, какую карту использует sd2psx. Если эту, сначала переключитесь на другую.
+# One line. English: Downloading the backup...
+T_RESTORE_STEP_DOWNLOAD = Скачивание копии...
+# One line. English: Writing to the MMCE...
+T_RESTORE_STEP_WRITE = Запись на MMCE...
+# One line. English: Memory card restored
+T_RESTORE_OK = Карта памяти восстановлена
+# One line. English: Restore failed
+T_RESTORE_FAILED = Ошибка восстановления
+# One line. English: Cancel the restore?
+T_RESTORE_CANCEL_TITLE = Отменить восстановление?
+# One line. English: The memory card will not be changed.
+T_RESTORE_CANCEL_TEXT = Карта памяти не будет изменена.
+# Up to 3 lines. English: this backup is too large to restore on the PS2
+T_ERR_TOO_BIG = эта копия слишком велика для восстановления на PS2
+# Up to 3 lines. English: the backup failed verification (SHA-256)
+T_ERR_BAD_BACKUP = копия не прошла проверку (SHA-256)
+# Up to 3 lines. English: unable to write the memory card to the MMCE
+T_ERR_WRITE = не удалось записать карту памяти на MMCE
+# Up to 3 lines. English: the download was interrupted
+T_ERR_DOWNLOAD = скачивание прервано
+# Button. English: Options
+T_OPTIONS = Опции
+# One line. English: %d KB free
+T_FREE_KB = Свободно: %d КБ
+# One line. English: This memory card contains no saved data.
+T_CARD_EMPTY = На этой карте памяти нет сохранений.
+# One line. English: Upload complete
+T_IGR_DONE = Загрузка завершена
+# Up to 2 lines. English: No memory cards have changed.
+T_IGR_NOTHING = Ни одна карта памяти не изменилась.
+# One line. English: Sync now
+T_SYNC_NOW = Синхронизировать сейчас
+# One line. English: Restore a backup
+T_RESTORE_BACKUP = Восстановить из копии
+# Button. English: Copy
+T_COPY = Копировать
+# Button. English: Move
+T_MOVE = Переместить
+# Button. English: Delete
+T_DELETE = Удалить
+# One line. English: Upload to Drive
+T_TO_CLOUD = Загрузить на Диск
+# One line. English: %d KB
+T_SAVE_KB = %d КБ
+# One line. English: Copy to
+T_COPY_TO = Копировать в
+# One line. English: Move to
+T_MOVE_TO = Переместить в
+# Up to 3 lines. English: No other memory cards were found on the MMCE.
+T_NO_OTHER_CARDS = Других карт памяти на MMCE не найдено.
+# Up to 3 lines. English: %s is currently in use by the sd2psx. Switch to another card on the sd2psx first.
+T_CARD_IN_USE = %s сейчас используется в sd2psx. Сначала переключите sd2psx на другую карту.
+# Up to 3 lines. English: Copying...
+T_WORKING_COPY = Копирование...
+# Up to 3 lines. English: Moving...
+T_WORKING_MOVE = Перемещение...
+# Up to 3 lines. English: Deleting...
+T_WORKING_DELETE = Удаление...
+# Up to 3 lines. English: Copied to %s.
+T_DONE_COPY = Скопировано в %s.
+# Up to 3 lines. English: Moved to %s.
+T_DONE_MOVE = Перемещено в %s.
+# One line. English: Deleted.
+T_DONE_DELETE = Удалено.
+# Up to 3 lines. English: Delete "%s"?
+T_DELETE_ASK = Удалить «%s»?
+# Up to 3 lines. English: It will be permanently removed from %s. This action cannot be undone.
+T_DELETE_TEXT = Данные будут безвозвратно удалены с %s. Это действие нельзя отменить.
+# Up to 3 lines. English: %s already contains data with the same name.
+T_ERR_EXISTS = На %s уже есть данные с таким именем.
+# Up to 3 lines. English: There is not enough free space on %s.
+T_ERR_FULL = На %s недостаточно свободного места.
+# Up to 3 lines. English: Unable to write to the memory card.
+T_ERR_MC_WRITE = Не удалось выполнить запись на карту памяти.
+# Up to 3 lines. English: The copy on %s failed verification.
+T_ERR_MC_CHECK = Копия на %s не прошла проверку.
+# One line. English: Uploaded to Google Drive.
+T_CLOUD_DONE = Загружено на Google Диск.
+# Up to 3 lines. English: Upload failed:
+T_CLOUD_FAILED = Ошибка загрузки:
+# Up to 3 lines. English: Cards already uploaded will remain on Google Drive.
+T_CANCEL_TEXT_MANUAL = Уже загруженные карты останутся на Google Диске.
+# Up to 3 lines. English: Sync %s now?
+T_CONFIRM_BACKUP_ONE = Синхронизировать %s сейчас?
+# Up to 3 lines. English: Sync the %d unsynced cards now?
+T_CONFIRM_BACKUP_CHANGED = Синхронизировать сейчас несинхронизированные карты (%d)?
+# Up to 3 lines. English: Sync all %d cards again? A new backup of each card will be created on Google Drive.
+T_SYNC_AGAIN_ALL = Снова синхронизировать все карты (%d)? Для каждой карты на Google Диске будет создана новая копия.
+# Up to 3 lines. English: The data will be uploaded to your Google Drive. Press the Circle button to cancel at any time.
+T_CONFIRM_BACKUP_TEXT = Данные будут загружены на ваш Google Диск. Чтобы отменить, нажмите кнопку «Круг» в любой момент.
+# Up to 3 lines. English: SD2Cloud will download and start the new version.
+T_CONFIRM_UPDATE_TEXT = SD2Cloud скачает и запустит новую версию.
+# Up to 3 lines. English: Copy "%s" to %s?
+T_CONFIRM_COPY = Скопировать «%s» на %s?
+# Up to 2 lines. English: Copy %d saves to %s?
+T_CONFIRM_COPY_N = Скопировать сохранения (%d) на %s?
+# Button. English: Paste
+T_PASTE = Вставить
+# One line. English: Sort by
+T_SORT_BY = Сортировка
+# One line. English: Date, descending
+T_SORT_NEWEST = Сначала новые
+# One line. English: Date, ascending
+T_SORT_OLDEST = Сначала старые
+# One line. English: Name
+T_SORT_NAME = По имени
+# One line. English: Duplicates
+T_REPEATED = Дубликаты
+# One line. English: Hidden
+T_REPEATED_HIDDEN = Скрыты
+# One line. English: Shown
+T_REPEATED_SHOWN = Показаны
+# One line. English: Device
+T_SET_DEVICE = Устройство
+# One line. English: Which device is in use?
+T_DEVICE_ASK = Какое устройство используется?
+# Up to 3 lines. English: This can be changed in Settings.
+T_DEVICE_NOTE = Это можно изменить в настройках.
+# Up to 3 lines. English: Move "%s" to %s?
+T_CONFIRM_MOVE = Переместить «%s» на %s?
+# Up to 3 lines. English: Upload "%s" to Google Drive?
+T_CONFIRM_CLOUD = Загрузить «%s» на Google Диск?
+# Up to 3 lines. English: A .psu file will be created in the Saves folder, next to this card's backups.
+T_CONFIRM_CLOUD_TEXT = В папке Saves, рядом с копиями этой карты, будет создан файл .psu.
+# One line. English: Cards
+T_TAB_CARDS = Карты
+# One line. English: Games
+T_TAB_GAMES = Игры
+# One line. English: Boot
+T_TAB_BOOT = Boot
+# One line. English: Files
+T_TAB_FILES = Файлы
+# One line. English: All saves
+T_ALL_SAVES = Все сохранения
+# One line. English: %d saves
+T_SAVES_COUNT = Сохранений: %d
+# One line. English: %d cards
+T_GAME_CARDS_N = Карт: %d
+# One line. English: Not enough free space
+T_NO_ROOM = Недостаточно места
+# Button. English: Open
+T_OPEN = Открыть
+# Button. English: Sync
+T_SYNC = Синхронизировать
+# Button. English: Settings
+T_SETTINGS = Настройки
+# Button. English: Tools
+T_TOOLS = Сервис
+# Up to 3 lines. English: %s is already synced.
+T_ALREADY_SYNCED = %s уже синхронизирована.
+# Up to 3 lines. English: Sync it again? A new backup will be created on Google Drive.
+T_SYNC_AGAIN_ONE = Синхронизировать снова? На Google Диске будет создана новая копия.
+# One line. English: All cards are synced.
+T_ALL_SYNCED = Все карты синхронизированы.
+# One line. English: Sync all cards
+T_SET_SYNC_ALL = Синхронизировать все
+# Up to 3 lines. English: 1 pending
+T_PENDING_ONE = Ожидает: 1
+# One line. English: %d pending
+T_PENDING_N = Ожидают: %d
+# One line. English: All synced
+T_NONE_PENDING = Ожидающих нет
+# One line. English: IGR path
+T_SET_IGR_RETURN = Выход из IGR
+# One line. English: Language
+T_SET_LANGUAGE = Язык
+# One line. English: Backups kept per card
+T_SET_KEEP = Хранить копий на карту
+# One line. English: Backup format
+T_SET_FORMAT = Формат копий
+# One line. English: Check for updates
+T_SET_UPDATES = Проверять обновления
+# Up to 3 lines. English: Update channel
+T_SET_CHANNEL = Канал обновлений
+# Up to 3 lines. English: Stable
+T_CHANNEL_STABLE = Стабильный
+# Up to 3 lines. English: Use the beta channel?
+T_CHANNEL_BETA_ASK = Использовать бета-канал?
+# Up to 3 lines. English: The beta channel gets every change before final testing and may contain bugs.
+T_CHANNEL_BETA_TEXT = Бета-канал получает каждое изменение до финального тестирования и может содержать ошибки.
+# One line. English: Google account
+T_SET_ACCOUNT = Аккаунт Google
+# One line. English: About SD2Cloud
+T_SET_ABOUT = О программе SD2Cloud
+# Up to 3 lines. English: Automatic
+T_AUTO = Автоматически
+# Up to 3 lines. English: PS2 Browser
+T_RET_OSD = Браузер PS2
+# Button. English: Return to Browser
+T_EXIT_BROWSER = Вернуться в браузер
+# One line. English: Run an ELF...
+T_EXIT_FILES = Запустить ELF...
+# Up to 3 lines. English: sd2psx disconnected
+T_DEVICE_GONE = sd2psx отключён
+# Up to 3 lines. English: Reconnect the sd2psx to continue.
+T_DEVICE_GONE_TEXT = Подключите sd2psx снова, чтобы продолжить.
+# Button. English: Run
+T_RUN = Запустить
+# One line. English: Start application
+T_START_APP = Запустить приложение
+# One line. English: No limit
+T_KEEP_ALL = Без ограничений
+# Up to 3 lines. English: Installed
+T_HELPER_INSTALLED = Установлен
+# Up to 3 lines. English: Outdated
+T_HELPER_OUTDATED = Устарел
+# One line. English: Not installed
+T_HELPER_NOT_INSTALLED = Не установлен
+# Up to 3 lines. English: Unavailable
+T_HELPER_NA = Недоступен
+# Up to 3 lines. English: Connected
+T_ACCOUNT_ON = Подключён
+# One line. English: Not connected
+T_ACCOUNT_OFF = Не подключён
+# Up to 3 lines. English: Disconnect the Google account?
+T_LOGOUT_ASK = Отключить аккаунт Google?
+# Up to 3 lines. English: SD2Cloud will not be able to upload data until you connect again. Backups on Google Drive are kept.
+T_LOGOUT_TEXT = SD2Cloud не сможет загружать данные, пока вы не подключитесь снова. Копии на Google Диске сохранятся.
+# Button. English: Disconnect
+T_LOGOUT_YES = Отключить
+# Up to 3 lines. English: Google account disconnected.
+T_LOGOUT_DONE = Аккаунт Google отключён.
+# Up to 3 lines. English: Manage and back up your sd2psx memory cards, right on your PS2.
+T_ABOUT_TEXT = Управление картами памяти sd2psx и их резервное копирование прямо на PS2.
+# Up to 3 lines. English: Design inspired by the PlayStation BB Navigator. Fonts: Varela Round and Nunito (SIL Open Font License).
+T_ABOUT_CREDITS = Дизайн вдохновлён PlayStation BB Navigator. Шрифты: Varela Round и Nunito (SIL Open Font License).
+# One line. English: Third-party licenses: see THIRD-PARTY-NOTICES.txt.
+T_ABOUT_LICENSES = Сторонние лицензии: см. THIRD-PARTY-NOTICES.txt.
+# Up to 3 lines. English: Developed by MrRexD.
+T_ABOUT_AUTHOR = Разработчик: MrRexD.
+# One line. English: Exit to
+T_EXIT_TO = Выйти в
+# Up to 3 lines. English: Connect a Google account now to sync your memory cards?
+T_CONNECT_ASK = Подключить аккаунт Google сейчас, чтобы синхронизировать карты памяти?
+# Up to 2 lines. English: You can also connect later in Settings (START).
+T_CONNECT_HINT = Подключиться можно и позже в настройках (START).
+# Button. English: Connect
+T_CONNECT = Подключить
+# One line. English: Copy to a device
+T_COPY_DEVICE = Копировать на устройство
+# Button. English: Don't ask again
+T_NEVER_ASK = Не спрашивать
+# Up to 3 lines. English: To connect later, open Settings (START) and choose Google account.
+T_CONNECT_WHERE = Чтобы подключиться позже, откройте настройки (START) и выберите «Аккаунт Google».
+# Up to 3 lines. English: memory card
+T_DEV_MC = карта памяти
+# Up to 3 lines. English: HDD
+T_DEV_HDD = HDD
+# Up to 3 lines. English: Turn on automatic sync? When you exit a game using IGR, changed memory cards will be uploaded to Google Drive.
+T_AUTO_ASK = Включить автосинхронизацию? При выходе из игры через IGR изменённые карты памяти будут загружаться на Google Диск.
+# Up to 2 lines. English: The SAS package will be installed on the memory card in use (with Autoboot enabled, use the BootCard).
+T_AUTO_WHERE = Пакет SAS будет установлен на используемую карту памяти (с включённым Autoboot — на BootCard).
+# Button. English: Turn on
+T_AUTO_ON = Включить
+# Up to 3 lines. English: Automatic sync can be turned on later in Settings (START), under SAS package.
+T_AUTO_LATER = Автосинхронизацию можно включить позже в настройках (START), в разделе «Пакет SAS».
+# Up to 3 lines. English: Installing the SAS package...
+T_AUTO_INSTALLING = Установка пакета SAS...
+# One line. English: Automatic sync turned on
+T_AUTO_DONE = Автосинхронизация включена
+# One line. English: In OPL, set "IGR Path" to:
+T_AUTO_OPL = В OPL укажите в «IGR Path»:
+# One line. English: Write down the path above. It is also in README.txt.
+T_AUTO_NOTE = Запишите путь выше. Он также есть в README.txt.
+# One line. English: Insert into sd2psx
+T_INSERT = Вставить в sd2psx
+# One line. English: Insert this card (experimental)
+T_INSERT_PREVIEW = Вставить карту (эксперимент)
+# Button. English: Insert
+T_INSERT_YES = Вставить
+# Up to 2 lines. English: From now on, the sd2psx will start from this BootCard.
+T_INSERT_BOOT_ASK = Теперь sd2psx будет запускаться с этой BootCard.
+# One line. English: Switching cards on the sd2psx...
+T_SWITCHING = Смена карты в sd2psx...
+# Up to 2 lines. English: %s inserted into the sd2psx.
+T_INSERT_DONE = %s вставлена в sd2psx.
+# Up to 2 lines. English: Unable to switch the sd2psx to %s.
+T_INSERT_FAILED = Не удалось переключить sd2psx на %s.
+# Up to 2 lines. English: Requires Autoboot enabled in the sd2psx settings.
+T_INSERT_NEEDS_BOOT = Нужен включённый Autoboot в настройках sd2psx.
+# Up to 2 lines. English: Requires Game ID enabled in the sd2psx settings.
+T_INSERT_NEEDS_GAMEID = Нужен включённый Game ID в настройках sd2psx.
+# Up to 3 lines. English: %s is in use by the sd2psx. To change it, the sd2psx will be switched to another card temporarily.
+T_SWITCH_ASK = %s используется в sd2psx. Чтобы изменить её, sd2psx временно переключится на другую карту.
+# Button. English: Continue
+T_CONTINUE = Продолжить
+# Up to 3 lines. English: Unable to switch the card on the sd2psx. Nothing was changed.
+T_SWITCH_FAILED = Не удалось сменить карту в sd2psx. Ничего не изменено.
+# Up to 3 lines. English: Unable to switch the sd2psx back to %s. Select it on the sd2psx.
+T_SWITCH_BACK_FAILED = Не удалось вернуть sd2psx на %s. Выберите её в sd2psx.
+# One line. English: On
+T_SYNC_ON = Вкл.
+# One line. English: Off
+T_SYNC_OFF = Выкл.
+# Up to 3 lines. English: Without a Google account connected, automatic sync stays off.
+T_SYNC_NO_ACCOUNT = Без подключённого аккаунта Google автосинхронизация остаётся выключенной.
+# Button. English: Done
+T_FINISH = Готово
+# One line. English: %s available
+T_UPDATE_AVAILABLE = Доступна %s
+# Up to 3 lines. English: SD2Cloud is up to date (v%s).
+T_UPDATE_NONE = У вас последняя версия SD2Cloud (v%s).
+# Up to 3 lines. English: Unable to check for updates.
+T_UPDATE_CHECK_FAILED = Не удалось проверить обновления.
+# Up to 3 lines. English: Not enough free space on the memory card in use (%d KB needed, %d KB free). Nothing was changed.
+T_HELPER_FULL = На используемой карте недостаточно места (нужно %d КБ, свободно %d КБ). Ничего не изменено.
+# One line. English: Space required: %d KB (%d KB free).
+T_HELPER_SPACE = Нужно места: %d КБ (свободно %d КБ).
+# One line. English: Space required: %d KB.
+T_HELPER_SPACE_NEED = Нужно места: %d КБ.
+# One line. English: Reinstall
+T_HELPER_REINSTALL = Переустановить
+# Button. English: Uninstall
+T_HELPER_UNINSTALL = Удалить
+# One line. English: Uninstall the SAS package?
+T_HELPER_UNINSTALL_ASK = Удалить пакет SAS?
+# Up to 3 lines. English: Automatic sync will stop working, and the shortcut leaves the PS2 browser. In OPL, change "IGR Path" as well.
+T_HELPER_UNINSTALL_TEXT = Автосинхронизация перестанет работать, а ярлык исчезнет из браузера PS2. В OPL также измените «IGR Path».
+# Up to 3 lines. English: SAS package uninstalled.
+T_HELPER_UNINSTALLED = Пакет SAS удалён.
+# Up to 3 lines. English: Unable to remove the SAS package from the memory card.
+T_HELPER_UNINSTALL_ERROR = Не удалось удалить пакет SAS с карты памяти.
+# Up to 2 lines. English: The earlier path (BOOT/SD2CLOUD-IGR.ELF) still works.
+T_HELPER_OLD_PATH = Старый путь (BOOT/SD2CLOUD-IGR.ELF) тоже работает.
+# Up to 3 lines. English: The SAS package is already on the memory card, next to SD2Cloud. No installation is needed.
+T_HELPER_ON_CARD = Пакет SAS уже есть на карте памяти, рядом с SD2Cloud. Установка не требуется.
+# One line. English: MMCE
+T_DEV_SD = MMCE
+# One line. English: USB drive
+T_DEV_USB = USB-накопитель
+# Up to 5 lines. English: Install or open .psu saves and memory card files (.mcd, .mc2, .ps2, .bin, .zip).
+T_FILES_HINT = Установка и открытие сохранений .psu и файлов карт памяти (.mcd, .mc2, .ps2, .bin, .zip).
+# One line. English: Loading...
+T_LOADING = Загрузка...
+# One line. English: Looking for a USB drive...
+T_USB_SEARCHING = Поиск USB-накопителя...
+# Up to 3 lines. English: No USB drive was found. It must be formatted as FAT32 or exFAT.
+T_USB_NONE = USB-накопитель не найден. Он должен быть в формате FAT32 или exFAT.
+# One line. English: Unable to read this folder.
+T_DIR_ERROR = Не удалось прочитать эту папку.
+# One line. English: This folder is empty.
+T_DIR_EMPTY = Эта папка пуста.
+# Button. English: Export
+T_EXPORT = Экспортировать
+# Up to 3 lines. English: Export "%s" to this folder?
+T_CONFIRM_EXPORT = Экспортировать «%s» в эту папку?
+# Up to 2 lines. English: Export %d saves to this folder?
+T_CONFIRM_EXPORT_N = Экспортировать сохранения (%d) в эту папку?
+# Up to 2 lines. English: File: %s
+T_EXPORT_FILE = Файл: %s
+# Up to 3 lines. English: %s already exists in this folder. Replace it?
+T_EXPORT_REPLACE = %s уже есть в этой папке. Заменить?
+# Button. English: Replace
+T_REPLACE = Заменить
+# One line. English: Exporting...
+T_WORKING_EXPORT = Экспорт...
+# Up to 2 lines. English: Exported as %s.
+T_DONE_EXPORT = Экспортировано как %s.
+# Up to 3 lines. English: Unable to write the file.
+T_ERR_EXPORT = Не удалось записать файл.
+# One line. English: Import to card
+T_IMPORT = Импорт на карту
+# Button. English: Import
+T_IMPORT_YES = Импортировать
+# One line. English: Import to
+T_IMPORT_TO = Импортировать на
+# Up to 3 lines. English: this file is not a PS2 memory card
+T_ERR_NOT_CARD = этот файл не является картой памяти PS2
+# Up to 3 lines. English: unable to read the file
+T_ERR_READ_FILE = не удалось прочитать файл
+# Up to 3 lines. English: This file is not a PS2 memory card.
+T_ERR_CARD_FILE = Этот файл не является картой памяти PS2.
+# Up to 3 lines. English: This memory card is too large to open on the PS2. Install it on the MMCE?
+T_FILE_TOO_BIG = Эта карта памяти слишком велика, чтобы открыть её на PS2. Установить её на MMCE?
+# Button. English: Install card
+T_INSTALL = Установить карту
+# Button. English: Install
+T_INSTALL_YES = Установить
+# Button. English: Install save
+T_INSTALL_SAVE = Установить сохранение
+# One line. English: Install to
+T_INSTALL_TO = Установить на
+# One line. English: New card
+T_NEW_CARD = Новая карта
+# One line. English: Install as a new card?
+T_INSTALL_NEW_ASK = Установить как новую карту?
+# One line. English: Replace %s?
+T_INSTALL_REPLACE_ASK = Заменить %s?
+# Up to 2 lines. English: Its contents will be replaced with the card in this file. This action cannot be undone.
+T_INSTALL_REPLACE_TEXT = Её содержимое будет заменено картой из этого файла. Это действие нельзя отменить.
+# Up to 2 lines. English: This is a BootCard: it may hold the files your console starts from.
+T_INSTALL_BOOT_WARN = Это BootCard: на ней могут быть файлы, с которых запускается консоль.
+# Up to 3 lines. English: If the file can't be read to the end and the installation is cancelled, %s will be left empty.
+T_INSTALL_BIG_WARN = Если файл не удастся прочитать до конца и установка будет отменена, %s останется пустой.
+# Up to 4 lines. English: Unable to tell which game this card is for. Install it under Cards, or rename the file to the game's ID (SLUS-21065-1.mcd).
+T_INSTALL_NO_GAME = Не удалось определить, для какой игры эта карта. Установите её в разделе «Карты» или назовите файл по ID игры (SLUS-21065-1.mcd).
+# One line. English: Which game is this card for?
+T_INSTALL_WHICH_GAME = Для какой игры эта карта?
+# Up to 3 lines. English: This folder already has %d cards, the limit set on the sd2psx. Raise the limit to %d and install?
+T_INSTALL_RAISE_ASK = В этой папке уже есть карты (%d): это предел, заданный в sd2psx. Увеличить предел до %d и установить?
+# Up to 3 lines. English: This folder has reached its limit of %d cards. Replace one of them instead.
+T_INSTALL_NO_CHANNEL = В этой папке достигнут предел карт (%d). Вместо этого замените одну из них.
+# One line. English: Memory card installed
+T_INSTALL_OK = Карта памяти установлена
+# One line. English: Installation failed
+T_INSTALL_FAILED = Ошибка установки
+# One line. English: Cancel the installation?
+T_INSTALL_CANCEL_TITLE = Отменить установку?
+# One line. English: Nothing has been written to the MMCE.
+T_INSTALL_CANCEL_TEXT = На MMCE ничего не записано.
+# Up to 3 lines. English: The new memory card will not be created.
+T_INSTALL_CANCEL_NEW = Новая карта памяти не будет создана.
+# Up to 3 lines. English: Unable to read the file.
+T_INSTALL_LOST = Не удалось прочитать файл.
+# Up to 3 lines. English: %s is incomplete until the rest of the file is written.
+T_INSTALL_LOST_TEXT = %s останется неполной, пока не будет записана оставшаяся часть файла.
+# Up to 3 lines. English: Try again
+T_TRY_AGAIN = Повторить
+# Button. English: Keep both
+T_KEEP_BOTH = Оставить оба
+# Up to 3 lines. English: Import "%s" to %s?
+T_CONFIRM_IMPORT = Импортировать «%s» на %s?
+# One line. English: Importing...
+T_WORKING_IMPORT = Импорт...
+# One line. English: Cancel?
+T_WORK_CANCEL_TITLE = Отменить?
+# One line. English: Cancelling...
+T_CANCELLING = Отмена...
+# One line. English: Imported to %s.
+T_DONE_IMPORT = Импортировано на %s.
+# Up to 3 lines. English: This file is not a valid .psu save file.
+T_ERR_PSU = Этот файл не является корректным сохранением .psu.
+# Up to 3 lines. English: This folder is not a valid memory card save.
+T_ERR_SAVE_FOLDER = Эта папка не является корректным сохранением карты памяти.
+# Up to 3 lines. English: No memory cards were found on the MMCE.
+T_NO_CARDS_SD = На MMCE не найдено карт памяти.
+# Up to 2 lines. English: A new 8 MB memory card will be created for this game.
+T_NEWCARD_NOTE = Для этой игры будет создана новая карта памяти на 8 МБ.
+# One line. English: Creating the memory card...
+T_NEWCARD_MAKING = Создание карты памяти...
+# Up to 2 lines. English: Unable to create the memory card.
+T_NEWCARD_FAILED = Не удалось создать карту памяти.
+# Up to 3 lines. English: This game's folder has reached its limit of %d cards.
+T_NEWCARD_NO_CHANNEL = В папке этой игры достигнут предел карт (%d).
+# Up to 3 lines. English: Choose an ELF...
+T_PICK_ELF = Выберите ELF...
+# Up to 3 lines. English: Unable to read this memory card.
+T_CARD_UNREADABLE = Не удалось прочитать эту карту памяти.
+# Button. English: Type
+T_KB_TYPE = Ввести
+# Button. English: Erase
+T_KB_ERASE = Стереть
+# One line. English: Templates
+T_TEMPLATES = Шаблоны
+# One line. English: New template
+T_TPL_NEW = Новый шаблон
+# One line. English: Template name
+T_TPL_NAME = Имя шаблона
+# Up to 3 lines. Latin letters only: it becomes a folder's name, and the keyboard that edits it has no others. English: Template %d
+T_TPL_DEFAULT = Template %d
+# Up to 3 lines. English: Invalid name.
+T_TPL_BAD_NAME = Недопустимое имя.
+# Up to 3 lines. English: A template with this name already exists.
+T_TPL_TAKEN = Шаблон с таким именем уже существует.
+# Up to 3 lines. English: The limit of %d templates has been reached.
+T_TPL_MANY = Достигнут предел шаблонов: %d.
+# Button. English: Select
+T_MARK = Отметить
+# One line. English: Selected: %d
+T_MARKED_N = Отмечено: %d
+# One line. English: Select saves
+T_TPL_MARK_TITLE = Выбор сохранений
+# Up to 3 lines. English: Discard the selected saves?
+T_MARK_DROP = Снять отметки с сохранений?
+# Button. English: Discard
+T_MARK_DROP_YES = Снять
+# Up to 3 lines. English: Create the template "%s"?
+T_TPL_CREATE_ASK = Создать шаблон «%s»?
+# Button. English: Create
+T_TPL_CREATE = Создать
+# One line. English: Copying to the template...
+T_TPL_COPYING = Копирование в шаблон...
+# Up to 3 lines. English: Unable to create the template.
+T_TPL_FAILED = Не удалось создать шаблон.
+# Up to 3 lines. English: Template "%s" created.
+T_TPL_CREATED = Шаблон «%s» создан.
+# Up to 3 lines. English: Saves copied: %d
+T_TPL_COPIED_N = Скопировано сохранений: %d
+# Up to 3 lines. English: Saves not copied: %d
+T_TPL_NOT_COPIED = Не скопировано сохранений: %d
+# One line. English: Saves: %d (%d KB)
+T_TPL_SUMMARY = Сохранений: %d, %d КБ
+# One line. English: This template has no saves.
+T_TPL_EMPTY = В этом шаблоне нет сохранений.
+# One line. English: Remove from template
+T_TPL_REMOVE = Убрать из шаблона
+# Up to 3 lines. English: Remove "%s" from the template?
+T_TPL_REMOVE_ASK = Убрать «%s» из шаблона?
+# Button. English: Remove
+T_TPL_REMOVE_YES = Убрать
+# One line. English: Add saves
+T_TPL_ADD_SAVES = Добавить сохранения
+# One line. English: Rename
+T_TPL_RENAME = Переименовать
+# One line. English: Delete template
+T_TPL_DELETE = Удалить шаблон
+# Up to 3 lines. English: Delete the template "%s"?
+T_TPL_DELETE_ASK = Удалить шаблон «%s»?
+# Up to 3 lines. English: Saves already applied to cards are kept.
+T_TPL_DELETE_NOTE = Сохранения, уже применённые к картам, останутся.
+# Up to 3 lines. English: Unable to delete the template.
+T_TPL_DELETE_FAILED = Не удалось удалить шаблон.
+# Button. English: Apply
+T_TPL_APPLY = Применить
+# One line. English: Applying the template...
+T_TPL_APPLYING = Применение шаблона...
+# Up to 3 lines. English: Add the selected saves to the template "%s"?
+T_TPL_ADD_ASK = Добавить отмеченные сохранения в шаблон «%s»?
+# Button. English: Add
+T_TPL_ADD = Добавить
+# Up to 3 lines. English: The template already has %d of the selected saves. Replace them?
+T_TPL_REPLACE_ASK = В шаблоне уже есть отмеченные сохранения (%d). Заменить их?
+# Button. English: Keep existing
+T_TPL_KEEP = Оставить текущие
+# Up to 3 lines. English: A template holds %d saves at most.
+T_TPL_FULL = Максимум сохранений в шаблоне: %d.
+# Up to 3 lines. English: Saves added to the template: %d
+T_TPL_ADDED = Сохранений добавлено в шаблон: %d
+# One line. English: Renaming...
+T_TPL_RENAMING = Переименование...
+# Up to 3 lines. English: Unable to rename the template.
+T_TPL_RENAME_FAILED = Не удалось переименовать шаблон.
+# One line. English: Apply template...
+T_TPL_APPLY_MENU = Применить шаблон...
+# One line. English: Apply template
+T_TPL_APPLY_TITLE = Применить шаблон
+# One line. English: All game cards
+T_TPL_ALL_CARDS = Все карты игр
+# One line. English: Select cards
+T_TPL_PICK_CARDS = Выбрать карты
+# Up to 3 lines. English: Apply the template "%s" to the selected cards?
+T_TPL_PICK_ASK = Применить шаблон «%s» к отмеченным картам?
+# Button. English: Set as default
+T_TPL_MAKE_MAIN = Сделать основным
+# One line. English: Remove as default
+T_TPL_UNMAKE_MAIN = Снять статус основного
+# One line. English: Default
+T_TPL_MAIN = Основной
+# Up to 3 lines. English: "%s" set as the default template.
+T_TPL_MAIN_NOW = «%s» теперь основной шаблон.
+# Up to 3 lines. English: Apply the template "%s" to the game cards?
+T_TPL_GAMES_ASK = Применить шаблон «%s» к картам игр?
+# Up to 3 lines. English: Cards without the template's saves: %d
+T_TPL_GAMES_N = Карт без сохранений шаблона: %d
+# Up to 3 lines. English: Every game card already has the saves of this template.
+T_TPL_GAMES_NONE = На всех картах игр уже есть сохранения этого шаблона.
+# Up to 3 lines. English: There are no game cards on the MMCE.
+T_TPL_NO_GAME_CARDS = На MMCE нет карт игр.
+# One line. English: Checking the game cards...
+T_TPL_CHECKING = Проверка карт игр...
+# Up to 3 lines. English: Cards that got saves: %d
+T_TPL_GAMES_GOT = Карт, получивших сохранения: %d
+# Up to 3 lines. English: Cards not changed: %d
+T_TPL_GAMES_LEFT = Карт без изменений: %d
+# Up to 2 lines. English: Game cards without their template: %d
+T_TPL_WARN = Карт игр без их шаблона: %d
+# Button. English: Don't warn
+T_TPL_NO_WARN = Не предупреждать
+# One line. English: Linked games
+T_TPL_GAMES = Связанные игры
+# One line. English: Update existing saves
+T_TPL_UPDATE = Обновить сохранения
+# Up to 3 lines. English: Update the saves of the template "%s" on the game cards?
+T_TPL_UPDATE_ASK = Обновить сохранения шаблона «%s» на картах игр?
+# Up to 4 lines. English: Only the saves of this template that a card already has are replaced, with the template's version. No other save is changed.
+T_TPL_UPDATE_NOTE = Заменяются только те сохранения этого шаблона, которые уже есть на карте, версией из шаблона. Другие сохранения не меняются.
+# Button. English: Update
+T_TPL_UPDATE_YES = Обновить
+# Up to 3 lines. English: Cards updated: %d
+T_TPL_UPDATED_N = Обновлено карт: %d
+# One line. English: Auto-apply
+T_TPL_AFTER_GAME = Автоприменение
+# Up to 6 lines. English: With the automatic sync on, a game's card gets the default template when the game is left, with no question asked.
+T_TPL_AFTER_HINT = При включённой автосинхронизации карта игры получает основной шаблон после выхода из игры, без вопросов.
+# One line. English: No default template
+T_TPL_NO_MAIN = Нет основного шаблона
+# One line. English: On
+T_TPL_ON = Вкл.
+# One line. English: Off
+T_TPL_OFF = Выкл.
+# Button. English: Change
+T_TPL_CHANGE = Изменить
+# Button. English: Disable sync
+T_SYNC_DISABLE = Отключить синхронизацию
+# One line. English: Enable sync
+T_SYNC_ENABLE = Включить синхронизацию
+# Button. English: Skip
+T_SKIP = Пропустить
+# One line. English: Skip %s?
+T_SKIP_ASK = Пропустить %s?
+# One line. English: The card will not be uploaded this time.
+T_SKIP_TEXT = В этот раз карта не будет загружена.
+# Up to 3 lines. English: %d min left
+T_TIME_LEFT_MIN = Осталось %d мин
+# Up to 3 lines. English: %d s left
+T_TIME_LEFT_SEC = Осталось %d с
+# Up to 3 lines. English: skipped
+T_UPLOAD_SKIPPED = пропущена
+# One line. English: Not used by the sd2psx
+T_CARD_UNUSED = Игнорируется sd2psx
+# One line. English: Move saves to %s
+T_MOVE_SAVES = Переместить в %s
+# Up to 2 lines. English: Move the saves of %s to %s?
+T_MOVE_SAVES_ASK = Переместить сохранения из %s в %s?
+# Up to 2 lines. English: The sd2psx uses the folder %s for this game.
+T_MOVE_SAVES_NOTE = Для этой игры sd2psx использует папку %s.
+# Up to 3 lines. English: Saves moved: %d
+T_MOVED_N = Перемещено сохранений: %d
+# Up to 3 lines. English: Saves not moved: %d
+T_NOT_MOVED_N = Не перемещено сохранений: %d
+# One line. English: Updating the SAS package...
+T_HELPER_UPDATING = Обновление пакета SAS...
