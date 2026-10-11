@@ -19,21 +19,25 @@ GSGLOBAL *ui_gs_global(void);
 void log_msg(const char *fmt, ...);
 
 #define ATLAS 256
-#define MAX_ATLASES 6
+#define MAX_ATLASES 16   /* (made as they are needed: a font with Japanese on screen may fill several) */
 #define MAX_FONTS 10
 #define DIRECT 0x180   /* glyphs of codes below this have a slot of their own, as do the Cyrillic letters; the others
-                         share a short list */
+                         (Japanese, a few symbols) go in a table that grows as they are drawn */
 #define CYRILLIC 0x400
 #define N_CYRILLIC 0x130   /* Cyrillic and Cyrillic Supplement, the ones the font has (tools/make_font.py) */
-#define EXTRA 48
 
 typedef struct {
     short x, y, w, h;      /* where the bitmap is in the atlas */
     short left, top;       /* the bitmap's corner from the pen (top = above the baseline) */
     int advance;           /* 1/64 pixel */
     unsigned int index;    /* FreeType's glyph index (kerning) */
-    unsigned char atlas, ok;
+    unsigned char atlas, ok;   /* ok: 1 = made, 2 = it can't be (no room left): not tried again */
 } glyph_t;
+
+typedef struct {
+    unsigned int code;     /* 0 = a free place */
+    glyph_t g;
+} slot_t;
 
 typedef struct {
     GSTEXTURE tex;
@@ -45,11 +49,8 @@ typedef struct {
     int bold, line, ascent, kerning;
     glyph_t direct[DIRECT];
     glyph_t cyrillic[N_CYRILLIC];
-    struct {
-        unsigned int code;
-        glyph_t g;
-    } extra[EXTRA];
-    int nextra, natlases;
+    slot_t *table;              /* the other glyphs: open addressing, a power of two places (NULL until one is needed) */
+    int tableSize, tableUsed, natlases;
     atlas_t *atlases[MAX_ATLASES];
 } fnt_t;
 
@@ -134,6 +135,37 @@ static int render(fnt_t *f, unsigned int code, unsigned int *index)
     return 0;
 }
 
+static unsigned int slot_of(unsigned int code, int size) { return (code * 2654435761u >> 12) & (size - 1); }
+
+/* a code's place in the table (taken for it if it isn't there); NULL = no memory. The table doubles when it is 3/4
+ * full, which moves the glyphs: a pointer to one lasts until the next call */
+static glyph_t *table_glyph(fnt_t *f, unsigned int code)
+{
+    unsigned int i;
+    if (f->tableUsed * 4 >= f->tableSize * 3) {
+        int size = f->tableSize ? f->tableSize * 2 : 64, k;
+        slot_t *t = calloc(size, sizeof(slot_t));
+        if (!t)
+            return NULL;
+        for (k = 0; k < f->tableSize; k++)
+            if (f->table[k].code) {
+                for (i = slot_of(f->table[k].code, size); t[i].code; i = (i + 1) & (size - 1))
+                    ;
+                t[i] = f->table[k];
+            }
+        free(f->table);
+        f->table = t;
+        f->tableSize = size;
+    }
+    for (i = slot_of(code, f->tableSize); f->table[i].code && f->table[i].code != code; i = (i + 1) & (f->tableSize - 1))
+        ;
+    if (!f->table[i].code) {
+        f->table[i].code = code;
+        f->tableUsed++;
+    }
+    return &f->table[i].g;
+}
+
 static glyph_t *glyph(fnt_t *f, unsigned int code)
 {
     glyph_t *g = NULL;
@@ -143,19 +175,14 @@ static glyph_t *glyph(fnt_t *f, unsigned int code)
         g = &f->direct[code];
     else if (code - CYRILLIC < N_CYRILLIC)
         g = &f->cyrillic[code - CYRILLIC];
-    else {
-        for (i = 0; i < f->nextra; i++)
-            if (f->extra[i].code == code)
-                return &f->extra[i].g;
-        if (f->nextra == EXTRA)
-            return NULL;
-        f->extra[f->nextra].code = code;
-        g = &f->extra[f->nextra++].g;
-    }
-    if (g->ok)
-        return g;
-    if (render(f, code, &g->index) != 0)
+    else if (!code || !(g = table_glyph(f, code)))
         return NULL;
+    if (g->ok)
+        return g->ok == 1 ? g : NULL;
+    if (render(f, code, &g->index) != 0) {
+        g->ok = 2;
+        return NULL;
+    }
     g->w = s->bitmap.width;
     g->h = s->bitmap.rows;
     g->left = s->bitmap_left;
@@ -164,8 +191,10 @@ static glyph_t *glyph(fnt_t *f, unsigned int code)
     if (g->w && g->h) {
         atlas_t *a;
         unsigned char *dst;
-        if (place(f, g->w, g->h, &atlas, &x, &y) != 0)
+        if (place(f, g->w, g->h, &atlas, &x, &y) != 0) {
+            g->ok = 2;
             return NULL;
+        }
         a = f->atlases[atlas];
         dst = (unsigned char *)a->tex.Mem + y * ATLAS + x;
         for (i = 0; i < g->h; i++)
@@ -262,4 +291,5 @@ static int walk(int id, float x, float y, u64 color, const char *utf8, int draw)
 
 int font_draw(int id, float x, float y, u64 color, const char *utf8) { return walk(id, x, y, color, utf8, 1); }
 int font_width(int id, const char *utf8) { return walk(id, 0, 0, 0, utf8, 0); }
+int font_has(unsigned int code) { return nfonts && FT_Get_Char_Index(fonts[0]->face, code) != 0; }
 int font_line(int id) { return id >= 0 && id < nfonts ? fonts[id]->line : 0; }

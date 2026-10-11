@@ -3,6 +3,10 @@
 
 char padArea[256] __attribute__((aligned(64)));
 int padOpen;
+static int circleConfirms;   /* the buttons as in Japan: circle confirms, cross goes back */
+
+void pad_set_circle_confirms(int on) { circleConfirms = on; }
+int pad_circle_confirms(void) { return circleConfirms; }
 
 /* ------------------------------------------------------------ time and controller */
 
@@ -14,6 +18,7 @@ u32 pad_buttons(void)
 {
     static u64 lost;   /* since when the controller hasn't answered (0 = it answers) */
     struct padButtonStatus b;
+    u32 held;
     int st;
     if (!padOpen)
         return 0;
@@ -35,7 +40,10 @@ u32 pad_buttons(void)
     lost = 0;
     if (padRead(0, 0, &b) == 0)
         return 0;
-    return 0xffff ^ b.btns;
+    held = 0xffff ^ b.btns;
+    if (circleConfirms)   /* the program asks for cross to confirm: it gets the circle, and the other way around */
+        held = (held & ~(PAD_CROSS | PAD_CIRCLE)) | (held & PAD_CROSS ? PAD_CIRCLE : 0) | (held & PAD_CIRCLE ? PAD_CROSS : 0);
+    return held;
 }
 
 void (*idleHook)(void);

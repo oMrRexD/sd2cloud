@@ -21,6 +21,7 @@ static const char *const ids[T_COUNT] = {
 static struct {
     const char *code, *name;
     char date[6];                    /* how a date is written: D/M/Y, M/D/Y, Y-M-D, D.M.Y... */
+    int circle;                      /* circle confirms and cross goes back, as in Japan (CONFIRM_BUTTON = CIRCLE) */
     const char *text[T_COUNT];
     const char *renamed[T_COUNT];    /* the texts that name the sd2psx, naming another device (i18n_device) */
 } langs[MAX_LANGS];
@@ -46,6 +47,10 @@ static void on_text(const char *key, const char *value, void *u)
                      value[1], value[0] == 'Y' ? '-' : '/', value[2]);
         else if (strlen(value) == 5)
             strcpy(langs[r->k].date, value);
+        return;
+    }
+    if (!strcmp(key, "CONFIRM_BUTTON")) {
+        langs[r->k].circle = !strcasecmp(value, "CIRCLE");
         return;
     }
     if (!value[0])   /* (not translated yet) */
@@ -128,6 +133,7 @@ void i18n_select(const char *language)
     if (k < 0)
         k = i18n_find(console_language());
     current = k < 0 ? english : k;
+    pad_set_circle_confirms(langs[current].circle);
 }
 
 void i18n_device(const char *name)

@@ -12,6 +12,8 @@
 LANGUAGE_NAME = English
 # how a date is written: DMY (31/12/2026), MDY (12/31/2026) or YMD (2026-12-31); with another separator, D.M.Y (31.12.2026)
 DATE_FORMAT = YMD
+# the button that confirms: CROSS, or CIRCLE as in Japan (the other one goes back)
+CONFIRM_BUTTON = CROSS
 
 # One line.
 T_SEARCHING = Searching for memory cards...
@@ -404,7 +406,7 @@ T_LOGOUT_DONE = Google account disconnected.
 # Up to 3 lines.
 T_ABOUT_TEXT = Manage and back up your sd2psx memory cards, right on your PS2.
 # Up to 3 lines.
-T_ABOUT_CREDITS = Design inspired by the PlayStation BB Navigator. Fonts: Varela Round and Nunito (SIL Open Font License).
+T_ABOUT_CREDITS = Design inspired by the PlayStation BB Navigator. Fonts: Varela Round, Nunito and M PLUS Rounded 1c (SIL Open Font License).
 # One line.
 T_ABOUT_LICENSES = Third-party licenses: see THIRD-PARTY-NOTICES.txt.
 # Up to 3 lines.

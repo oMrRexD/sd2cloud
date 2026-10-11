@@ -25,6 +25,10 @@ void system_init(int argc, char *argv[]);
 u64 now_ms(void);
 void sleep_ms(int ms);
 u32 pad_buttons(void);                      /* buttons held right now (PAD_*) */
+/* on = the buttons as in Japan: the controller's circle is what the program calls cross (confirm), and its cross the
+ * circle (back); the legends draw them swapped too. The language says (i18n_select) */
+void pad_set_circle_confirms(int on);
+int pad_circle_confirms(void);
 u32 wait_button(u32 mask, int seconds);     /* 0 = timed out; seconds = 0 waits forever */
 u32 wait_nav(u32 mask);                     /* for lists: like wait_button, but the arrows repeat while held */
 u32 wait_nav_ms(u32 mask, int ms);          /* the same, giving up after ms (0 = no press) */

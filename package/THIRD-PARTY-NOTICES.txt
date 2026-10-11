@@ -4,6 +4,8 @@ It includes or links the following third-party software:
 - Varela Round font - Copyright 2023 The Varela Round Project Authors. SIL Open Font License 1.1, see OFL.txt.
 - Nunito font (its Cyrillic letters, added to Varela Round in the font SD2Cloud draws with) - Copyright 2014 The
     Nunito Project Authors (https://github.com/googlefonts/nunito). SIL Open Font License 1.1, see OFL.txt.
+- M PLUS Rounded 1c font (its Japanese characters, added the same way) - Copyright 2016 The Rounded M+ Project
+    Authors (https://github.com/coz-m/MPLUS_FONTS). SIL Open Font License 1.1, see OFL.txt.
 - FreeType - Portions of this software are copyright (C) The FreeType Project (www.freetype.org). All rights
     reserved. Used under the FreeType License (FTL).
 - libpng - Copyright (c) the PNG Reference Library Authors. PNG Reference Library License version 2

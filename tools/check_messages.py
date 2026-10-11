@@ -42,13 +42,39 @@ def measure(font, s):
     return (pen + 32) >> 6
 
 
+# Japanese: its words aren't apart, so a line may end between two of its characters, but doesn't start with these
+# nor end with those (ui.c, word_length)
+NO_START = set("、。，．・：；？！ー」』）〕］｝〉》】っゃゅょぁぃぅぇぉゎッャュョァィゥェォヮヵヶ゛゜々〟")
+NO_END = set("「『（〔［｛〈《【〝")
+
+
+def japanese(c):
+    return 0x3000 <= ord(c) <= 0x9FFF or 0xFF00 <= ord(c) <= 0xFFEF
+
+
+def words(part):
+    """the words of a line of text as ui.c lays them out, each with whether a space comes before it"""
+    out, i, apart = [], 0, False
+    while i < len(part):
+        if part[i].isspace():
+            i, apart = i + 1, True
+            continue
+        j = i + 1
+        while j < len(part) and not part[j].isspace() and not (
+                (japanese(part[j - 1]) or japanese(part[j])) and part[j - 1] not in NO_END and part[j] not in NO_START):
+            j += 1
+        out.append((part[i:j], apart))
+        i, apart = j, False
+    return out
+
+
 def count_lines(font, s, width):
     """how many lines ui_paragraph uses (wraps at words and at line breaks)"""
     n = 0
     for part in s.split("\n"):
         line = ""
-        for word in part.split():
-            test = f"{line} {word}" if line else word
+        for word, apart in words(part):
+            test = f"{line}{' ' if line and apart else ''}{word}"
             if line and measure(font, test) > width:
                 n, line = n + 1, word
             else:
@@ -246,6 +272,7 @@ LEGENDS = [
 
 LANG = ROOT / "lang"
 REQUIRED = ("en", "pt")   # the languages that have every text
+OWN = ("LANGUAGE_NAME", "DATE_FORMAT", "CONFIRM_BUTTON")   # what each language says of itself, beside its texts
 DATE_FORMATS = ("DMY", "MDY", "YMD")   # or one of them with a separator of its own: D.M.Y, Y.M.D, D-M-Y...
 
 
@@ -323,13 +350,15 @@ def sync(ids, files):
         while top < len(lines) and (not lines[top].strip() or lines[top].lstrip()[0] in "#!"):
             top += 1
         texts = dict(parse(path.read_text(encoding="utf-8")))
-        gone = [k for k in texts if k not in ids and k not in ("LANGUAGE_NAME", "DATE_FORMAT")]
+        gone = [k for k in texts if k not in ids and k not in OWN]
         if gone:
             print(f"  {code}.txt: left out, as no text has these ids: {', '.join(gone)}")
         out = lines[:top] + [f"LANGUAGE_NAME = {texts.get('LANGUAGE_NAME', code)}",
                              "# how a date is written: DMY (31/12/2026), MDY (12/31/2026) or YMD (2026-12-31); with"
                              " another separator, D.M.Y (31.12.2026)",
-                             f"DATE_FORMAT = {texts.get('DATE_FORMAT', 'YMD')}", ""]
+                             f"DATE_FORMAT = {texts.get('DATE_FORMAT', 'YMD')}",
+                             "# the button that confirms: CROSS, or CIRCLE as in Japan (the other one goes back)",
+                             f"CONFIRM_BUTTON = {texts.get('CONFIRM_BUTTON', 'CROSS')}", ""]
         for id_ in ids:
             out.append(f"# {kind(id_)}" if code == "en" else f"# {kind(id_)} English: {escape(english.get(id_, ''))}")
             value = texts.get(id_, "")
@@ -359,16 +388,18 @@ def main():
         for k in sorted({k for k in keys if keys.count(k) > 1}):
             bad += 1
             print(f"  TWICE        {k} [{code}]")
-        for k in [k for k in keys if k not in ids and k not in ("LANGUAGE_NAME", "DATE_FORMAT")]:
+        for k in [k for k in keys if k not in ids and k not in OWN]:
             bad += 1
             print(f"  UNKNOWN ID   {k} [{code}] (not in messages.def)")
         texts = dict(pairs)
         if not re.fullmatch(r"[a-z]+", code):
             bad += 1
             print(f"  FILE NAME    {path.name}: a language's code is letters only (es.txt, fr.txt)")
-        if not texts.get("LANGUAGE_NAME") or not date_ok(texts.get("DATE_FORMAT", "")):
+        if not texts.get("LANGUAGE_NAME") or not date_ok(texts.get("DATE_FORMAT", "")) or \
+                texts.get("CONFIRM_BUTTON", "CROSS").upper() not in ("CROSS", "CIRCLE"):
             bad += 1
-            print(f"  [{code}] needs LANGUAGE_NAME, and DATE_FORMAT = {', '.join(DATE_FORMATS)} (or D.M.Y...)")
+            print(f"  [{code}] needs LANGUAGE_NAME, DATE_FORMAT = {', '.join(DATE_FORMATS)} (or D.M.Y...) and "
+                  f"CONFIRM_BUTTON = CROSS or CIRCLE")
         for k, s in pairs:
             if k in LATIN_ONLY and not s.isascii():
                 bad += 1

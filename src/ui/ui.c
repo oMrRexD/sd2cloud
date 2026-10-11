@@ -26,6 +26,7 @@
 
 void log_msg(const char *fmt, ...);
 u64 now_ms(void);
+int pad_circle_confirms(void);
 
 static GSGLOBAL *gs;
 static int alpha = 0x80;
@@ -427,26 +428,75 @@ static void put_line(int font, float x, float y, u32 color, const char *line, in
         ui_text(font, x, y, color, line);
 }
 
+/* the character at *p (UTF-8), and *p past it */
+static unsigned int next_char(const unsigned char **p)
+{
+    unsigned int c = *(*p)++;
+    int more = c >= 0xF0 ? 3 : c >= 0xE0 ? 2 : c >= 0xC0 ? 1 : 0;
+    if (more)
+        c &= 0x3F >> more;
+    while (more-- && (**p & 0xC0) == 0x80)
+        c = (c << 6) | (*(*p)++ & 0x3F);
+    return c;
+}
+
+/* Japanese: its words aren't apart, so a line may end between any two of its characters (kana, kanji, its
+ * punctuation and full-width forms)... but it doesn't start with a closing mark, a small kana or the long vowel mark,
+ * and doesn't end with an opening mark */
+static int japanese(unsigned int c) { return (c >= 0x3000 && c <= 0x9FFF) || (c >= 0xFF00 && c <= 0xFFEF); }
+
+static int in(unsigned int c, const unsigned short *list)
+{
+    for (; *list; list++)
+        if (*list == c)
+            return 1;
+    return 0;
+}
+
+static const unsigned short noStart[] = {
+    0x3001, 0x3002, 0xFF0C, 0xFF0E, 0x30FB, 0xFF1A, 0xFF1B, 0xFF1F, 0xFF01, 0x30FC, 0x300D, 0x300F, 0xFF09, 0x3015,
+    0xFF3D, 0xFF5D, 0x3009, 0x300B, 0x3011, 0x3063, 0x3083, 0x3085, 0x3087, 0x3041, 0x3043, 0x3045, 0x3047, 0x3049,
+    0x308E, 0x30C3, 0x30E3, 0x30E5, 0x30E7, 0x30A1, 0x30A3, 0x30A5, 0x30A7, 0x30A9, 0x30EE, 0x30F5, 0x30F6, 0x309B,
+    0x309C, 0x3005, 0x301F, 0};   /* 、。，．・：；？！ー」』）〕］｝〉》】 っゃゅょぁぃぅぇぉゎ ッャュョァィゥェォヮヵヶ ゛゜々〟 */
+static const unsigned short noEnd[] = {0x300C, 0x300E, 0xFF08, 0x3014, 0xFF3B, 0xFF5B, 0x3008, 0x300A, 0x3010,
+                                       0x301D, 0};   /* 「『（〔［｛〈《【〝 */
+
+/* how long the word at p is: up to a space or a line break, or to where a line may end inside Japanese */
+static size_t word_length(const char *text)
+{
+    const unsigned char *s = (const unsigned char *)text, *q = s, *r;
+    unsigned int a = 0, b;
+    while (*q && *q != ' ' && *q != '\n') {
+        r = q;
+        b = next_char(&r);
+        if (q > s && (japanese(a) || japanese(b)) && !in(a, noEnd) && !in(b, noStart))
+            break;
+        a = b;
+        q = r;
+    }
+    return q - s;
+}
+
 /* lays a text out in lines of at most width; draw = draw them (1 = from x on, 2 = each one with its middle at x;
  * else only count). Returns the number of lines */
 static int lay_out(int font, float x, float y, int width, u32 color, const char *text, int draw)
 {
-    char line[256], word[128];
+    char line[256];
     const char *p = text;
-    int lines = 0, lh = ui_line_height(font) + 2;
+    int lines = 0, lh = ui_line_height(font) + 2, apart = 0;   /* apart: a space before the next word */
     line[0] = 0;
     while (*p) {
-        size_t n = strcspn(p, " \n");
+        size_t n = word_length(p);
         char test[400];
-        snprintf(word, sizeof(word), "%.*s", (int)n, p);
-        snprintf(test, sizeof(test), "%s%s%s", line, line[0] ? " " : "", word);
+        snprintf(test, sizeof(test), "%s%s%.*s", line, line[0] && apart ? " " : "", (int)n, p);
         if (line[0] && ui_measure(font, test) > width) {
             put_line(font, x, y + lines * lh, color, line, draw);
             lines++;
-            snprintf(line, sizeof(line), "%s", word);
+            snprintf(line, sizeof(line), "%.*s", (int)n, p);
         } else
             snprintf(line, sizeof(line), "%s", test);
         p += n;
+        apart = 0;
         if (*p == '\n') {   /* a line break in the text itself */
             put_line(font, x, y + lines * lh, color, line, draw);
             lines++;
@@ -454,8 +504,10 @@ static int lay_out(int font, float x, float y, int width, u32 color, const char 
             p++;
             continue;
         }
-        while (*p == ' ')
+        while (*p == ' ') {
             p++;
+            apart = 1;
+        }
     }
     if (line[0]) {
         put_line(font, x, y + lines * lh, color, line, draw);
@@ -552,7 +604,11 @@ void ui_light(float cx, float cy, float rx, float ry, u32 color, int a)
 
 void ui_button(int button, float x, float y, float size)
 {
-    int u = button % 4 * 32, v = button / 4 * 32;   /* (four to a row) */
+    int u, v;
+    if (pad_circle_confirms() && (button == BUTTON_CROSS || button == BUTTON_CIRCLE))   /* (the buttons as in Japan) */
+        button = button == BUTTON_CROSS ? BUTTON_CIRCLE : BUTTON_CROSS;
+    u = button % 4 * 32;   /* (four to a row) */
+    v = button / 4 * 32;
     ui_image_part(IMG_BUTTONS, x, y, size, size, u, v, u + 32, v + 32, 0xFFFFFF, 0x80);
 }
 

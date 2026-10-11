@@ -33,12 +33,13 @@ def version():
 
 
 def ofl():
-    """the license of the fonts the program draws with (tools/make_font.py): the same one for both, under the
+    """the license of the fonts the program draws with (tools/make_font.py): the same one for all, under the
     copyright of each"""
     varela = (ROOT / "third_party/varelaround/OFL.txt").read_text(encoding="utf-8")
-    nunito = (ROOT / "third_party/nunito/OFL.txt").read_text(encoding="utf-8").splitlines()[0]
+    others = [(ROOT / "third_party" / d / "OFL.txt").read_text(encoding="utf-8").splitlines()[0]
+              for d in ("nunito", "mplusrounded1c")]
     first, rest = varela.split("\n", 1)
-    return f"{first}\n{nunito}\n{rest}".encode("utf-8")
+    return "\n".join([first] + others + [rest]).encode("utf-8")
 
 
 def crlf(b):

@@ -9,6 +9,8 @@
 LANGUAGE_NAME = Українська
 # how a date is written: DMY (31/12/2026), MDY (12/31/2026) or YMD (2026-12-31); with another separator, D.M.Y (31.12.2026)
 DATE_FORMAT = D.M.Y
+# the button that confirms: CROSS, or CIRCLE as in Japan (the other one goes back)
+CONFIRM_BUTTON = CROSS
 
 # One line. English: Searching for memory cards...
 T_SEARCHING = Пошук карток пам’яті...
@@ -400,8 +402,8 @@ T_LOGOUT_YES = Від’єднати
 T_LOGOUT_DONE = Акаунт Google від’єднано.
 # Up to 3 lines. English: Manage and back up your sd2psx memory cards, right on your PS2.
 T_ABOUT_TEXT = Керування картками пам’яті sd2psx і їх резервне копіювання просто на PS2.
-# Up to 3 lines. English: Design inspired by the PlayStation BB Navigator. Fonts: Varela Round and Nunito (SIL Open Font License).
-T_ABOUT_CREDITS = Дизайн натхненний PlayStation BB Navigator. Шрифти: Varela Round і Nunito (SIL Open Font License).
+# Up to 3 lines. English: Design inspired by the PlayStation BB Navigator. Fonts: Varela Round, Nunito and M PLUS Rounded 1c (SIL Open Font License).
+T_ABOUT_CREDITS = Дизайн натхненний PlayStation BB Navigator. Шрифти: Varela Round, Nunito і M PLUS Rounded 1c (SIL Open Font License).
 # One line. English: Third-party licenses: see THIRD-PARTY-NOTICES.txt.
 T_ABOUT_LICENSES = Сторонні ліцензії: див. THIRD-PARTY-NOTICES.txt.
 # Up to 3 lines. English: Developed by MrRexD.

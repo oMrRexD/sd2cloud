@@ -15,7 +15,8 @@ typedef struct {
 extern const lang_file_t langFiles[];
 extern const int nLangFiles;
 
-void i18n_select(const char *language);    /* "auto" (the PS2's language) or a language's code */
+void i18n_select(const char *language);    /* "auto" (the PS2's language) or a language's code; also which button
+                                               confirms, the language's CONFIRM_BUTTON */
 const char *T(int id);
 /* the texts name the sd2psx: on another device, they name that one instead (once, before the first screen) */
 void i18n_device(const char *name);

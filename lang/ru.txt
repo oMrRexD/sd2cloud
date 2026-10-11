@@ -9,6 +9,8 @@
 LANGUAGE_NAME = Русский
 # how a date is written: DMY (31/12/2026), MDY (12/31/2026) or YMD (2026-12-31); with another separator, D.M.Y (31.12.2026)
 DATE_FORMAT = D.M.Y
+# the button that confirms: CROSS, or CIRCLE as in Japan (the other one goes back)
+CONFIRM_BUTTON = CROSS
 
 # One line. English: Searching for memory cards...
 T_SEARCHING = Поиск карт памяти...
@@ -355,7 +357,7 @@ T_CHANNEL_STABLE = Стабильный
 # Up to 3 lines. English: Use the beta channel?
 T_CHANNEL_BETA_ASK = Использовать бета-канал?
 # Up to 3 lines. English: The beta channel gets every change before final testing and may contain bugs.
-T_CHANNEL_BETA_TEXT = Бета-канал получает каждое изменение до финального тестирования и может содержать ошибки.
+T_CHANNEL_BETA_TEXT = Бета-канал получает изменения до финального тестирования и может содержать ошибки.
 # One line. English: Google account
 T_SET_ACCOUNT = Аккаунт Google
 # One line. English: About SD2Cloud
@@ -393,15 +395,15 @@ T_ACCOUNT_OFF = Не подключён
 # Up to 3 lines. English: Disconnect the Google account?
 T_LOGOUT_ASK = Отключить аккаунт Google?
 # Up to 3 lines. English: SD2Cloud will not be able to upload data until you connect again. Backups on Google Drive are kept.
-T_LOGOUT_TEXT = SD2Cloud не сможет загружать данные, пока вы не подключитесь снова. Копии на Google Диске сохранятся.
+T_LOGOUT_TEXT = SD2Cloud не сможет загружать данные до повторного подключения. Копии на Google Диске сохранятся.
 # Button. English: Disconnect
 T_LOGOUT_YES = Отключить
 # Up to 3 lines. English: Google account disconnected.
 T_LOGOUT_DONE = Аккаунт Google отключён.
 # Up to 3 lines. English: Manage and back up your sd2psx memory cards, right on your PS2.
 T_ABOUT_TEXT = Управление картами памяти sd2psx и их резервное копирование прямо на PS2.
-# Up to 3 lines. English: Design inspired by the PlayStation BB Navigator. Fonts: Varela Round and Nunito (SIL Open Font License).
-T_ABOUT_CREDITS = Дизайн вдохновлён PlayStation BB Navigator. Шрифты: Varela Round и Nunito (SIL Open Font License).
+# Up to 3 lines. English: Design inspired by the PlayStation BB Navigator. Fonts: Varela Round, Nunito and M PLUS Rounded 1c (SIL Open Font License).
+T_ABOUT_CREDITS = Дизайн вдохновлён PlayStation BB Navigator. Шрифты: Varela Round, Nunito и M PLUS Rounded 1c (SIL Open Font License).
 # One line. English: Third-party licenses: see THIRD-PARTY-NOTICES.txt.
 T_ABOUT_LICENSES = Сторонние лицензии: см. THIRD-PARTY-NOTICES.txt.
 # Up to 3 lines. English: Developed by MrRexD.
@@ -493,7 +495,7 @@ T_HELPER_UNINSTALL = Удалить
 # One line. English: Uninstall the SAS package?
 T_HELPER_UNINSTALL_ASK = Удалить пакет SAS?
 # Up to 3 lines. English: Automatic sync will stop working, and the shortcut leaves the PS2 browser. In OPL, change "IGR Path" as well.
-T_HELPER_UNINSTALL_TEXT = Автосинхронизация перестанет работать, а ярлык исчезнет из браузера PS2. В OPL также измените «IGR Path».
+T_HELPER_UNINSTALL_TEXT = Автосинхронизация перестанет работать, ярлык исчезнет из браузера PS2. В OPL измените и «IGR Path».
 # Up to 3 lines. English: SAS package uninstalled.
 T_HELPER_UNINSTALLED = Пакет SAS удалён.
 # Up to 3 lines. English: Unable to remove the SAS package from the memory card.

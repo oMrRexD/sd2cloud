@@ -12,5 +12,6 @@ int font_load(const void *ttf, int ttfSize, int pixels, int bold);
 int font_draw(int id, float x, float y, u64 color, const char *utf8);
 int font_width(int id, const char *utf8);
 int font_line(int id);     /* line height in pixels */
+int font_has(unsigned int code);   /* 1 = the font has this character (a Unicode code) */
 
 #endif

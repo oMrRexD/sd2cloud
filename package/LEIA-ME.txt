@@ -318,7 +318,8 @@ atualizações": para saber se há uma versão mais recente e baixá-la, se voc�
 
 CRÉDITOS
 O visual é inspirado no PlayStation BB Navigator e no navegador de cartões de memória do PS2; todas as
-imagens do SD2Cloud são geradas pelo próprio aplicativo. Fontes: Varela Round e Nunito (SIL Open Font License).
+imagens do SD2Cloud são geradas pelo próprio aplicativo. Fontes: Varela Round, Nunito e M PLUS Rounded 1c (SIL
+Open Font License).
 Desenvolvido por MrRexD.
 
 Software de terceiros: veja THIRD-PARTY-NOTICES.txt.
