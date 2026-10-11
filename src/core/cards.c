@@ -15,6 +15,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <dirent.h>
+#include <zlib.h>
 #include "common.h"
 
 card_t cards[MAX_CARDS];
@@ -114,11 +115,79 @@ static int compare(const void *a, const void *b)
 }
 
 /* The game of each game card. The sd2psx names a game's folder by its ID and shows the game's name on its own
- * screen, from a list in its firmware; the same list is embedded here (assets/gamenames.txt, one "ID<TAB>name" per
- * line: tools/make_gamenames.py). A folder that isn't an ID in it is named as the group of games Game2Folder.ini
- * gives it to (group_names, below), or keeps no name */
-extern unsigned char asset_gamenames_txt[];
-extern unsigned int size_asset_gamenames_txt;
+ * screen, from a list in its firmware; the same list is embedded here (assets/gamenames.bin: tools/make_gamenames.py).
+ * A folder that isn't an ID in it is named as the group of games Game2Folder.ini gives it to (group_names, below), or
+ * keeps no name.
+ * The list: lines "ID<TAB>name", sorted by ID, in blocks of about 16 KB, each compressed by itself. A block is
+ * unpacked when it is needed, into one place (the last one stays there): 20 KB of memory instead of the whole list's
+ * 619 KB, which a big card file opened in Files needs for its saves' icons */
+extern unsigned char asset_gamenames_bin[];
+extern unsigned int size_asset_gamenames_bin;
+#define NAMES_TEXT 20000
+static char namesText[NAMES_TEXT];
+static int namesAt = -1;   /* the block in namesText */
+
+static unsigned int le32(const unsigned char *p) { return p[0] | p[1] << 8 | p[2] << 16 | (unsigned)p[3] << 24; }
+
+static int names_blocks(void)
+{
+    return size_asset_gamenames_bin >= 8 && !memcmp(asset_gamenames_bin, "GNB1", 4) ? (int)le32(asset_gamenames_bin + 4) : 0;
+}
+
+/* block b of the list (its first ID, then where its data is, how long, and how long unpacked) */
+static const unsigned char *names_entry(int b) { return asset_gamenames_bin + 8 + b * 22; }
+
+/* block b's text, unpacked (NULL = it can't be) */
+static const char *names_block(int b, size_t *len)
+{
+    const unsigned char *e = names_entry(b);
+    unsigned int at = le32(e + 10), size = le32(e + 14), raw = le32(e + 18);
+    uLongf out = raw;
+    if (raw > NAMES_TEXT || at + size > size_asset_gamenames_bin)
+        return NULL;
+    if (namesAt != b) {
+        namesAt = -1;
+        if (size == raw)   /* (stored as it is) */
+            memcpy(namesText, asset_gamenames_bin + at, raw);
+        else if (uncompress((Bytef *)namesText, &out, asset_gamenames_bin + at, size) != Z_OK || out != raw)
+            return NULL;
+        namesAt = b;
+    }
+    *len = raw;
+    return namesText;
+}
+
+/* the lines of the list, one after the other (it starts as {0}). 1 = one more: its ID and its name, not ended by a 0 */
+typedef struct {
+    int b;
+    const char *p, *end;
+} names_t;
+
+static int names_next(names_t *it, const char **id, int *idLen, const char **name, int *nameLen)
+{
+    const char *tab, *nl;
+    size_t len;
+    for (;;) {
+        if (it->p >= it->end) {
+            if (it->b >= names_blocks() || !(it->p = names_block(it->b++, &len)))
+                return 0;
+            it->end = it->p + len;
+            continue;
+        }
+        if (!(tab = memchr(it->p, '\t', it->end - it->p))) {
+            it->p = it->end;
+            continue;
+        }
+        if (!(nl = memchr(tab, '\n', it->end - tab)))
+            nl = it->end;
+        *id = it->p;
+        *idLen = (int)(tab - it->p);
+        *name = tab + 1;
+        *nameLen = (int)(nl - tab - 1);
+        it->p = nl + 1;
+        return 1;
+    }
+}
 
 /* -------- A folder Game2Folder.ini gives to several games (a series whose games read each other's saves: the list
  * most people use, SD2PSX-VMC-Groups, has over a hundred of them, "MCCG-10045" and so on) is no game's ID, and the
@@ -256,9 +325,9 @@ static void group_label(const group_t *g, char *out, size_t size)
  * game another folder (moved) */
 static void group_names(void)
 {
-    const char *p = (const char *)asset_gamenames_txt, *end = p + size_asset_gamenames_txt, *tab, *nl;
+    const char *p, *name;
     char path[64];
-    int i, k, pass, ids = 0;
+    int i, k, pass, ids = 0, n, nameLen;
     nGroups = nGroupIds = 0;
     for (i = 0; i < nCards; i++) {
         cards[i].moved[0] = 0;
@@ -279,17 +348,17 @@ static void group_names(void)
     ini_read(path, on_group_id, NULL);
     if (!nGroupIds)
         return;
-    for (pass = 0; pass < 2; pass++)   /* (SLUS, SCES and the like first) */
-        for (p = (const char *)asset_gamenames_txt; p < end && (tab = memchr(p, '\t', end - p)) != NULL; p = nl + 1) {
-            if (!(nl = memchr(tab, '\n', end - tab)))
-                nl = end;
-            if (tab - p != 10 || (p[2] == 'U' || p[2] == 'E') == pass || !isdigit((unsigned char)p[7]) ||
+    for (pass = 0; pass < 2; pass++) {   /* (SLUS, SCES and the like first) */
+        names_t it = {0};
+        while (names_next(&it, &p, &n, &name, &nameLen)) {
+            if (n != 10 || (p[2] == 'U' || p[2] == 'E') == pass || !isdigit((unsigned char)p[7]) ||
                 !isdigit((unsigned char)p[8]) || !isdigit((unsigned char)p[9]) || !groupKey[id_key(p)])
                 continue;
             for (k = 0; k < nGroupIds; k++)
                 if (!strncasecmp(groupIds[k].id, p, 10))
-                    group_add(&groups[groupIds[k].group], tab + 1, (int)(nl - tab - 1));
+                    group_add(&groups[groupIds[k].group], name, nameLen);
         }
+    }
     for (i = 0; i < nCards; i++)
         for (k = 0; k < nGroups && cards[i].type == TYPE_GAMEID && !cards[i].game[0]; k++)
             if (groups[k].n && !strcasecmp(groups[k].folder, cards[i].folder)) {
@@ -300,30 +369,39 @@ static void group_names(void)
 
 static void game_names(void)
 {
-    const char *p = (const char *)asset_gamenames_txt, *end = p + size_asset_gamenames_txt, *tab, *nl;
-    int i, any = 0;
+    names_t it = {0};
+    const char *p, *name;
+    int i, any = 0, n, nameLen;
     for (i = 0; i < nCards; i++)
         any |= cards[i].type == TYPE_GAMEID;
-    for (; any && p < end && (tab = memchr(p, '\t', end - p)) != NULL; p = nl + 1) {
-        if (!(nl = memchr(tab, '\n', end - tab)))
-            nl = end;
+    while (any && names_next(&it, &p, &n, &name, &nameLen))
         for (i = 0; i < nCards; i++) {
             card_t *c = &cards[i];
-            if (c->type != TYPE_GAMEID || strlen(c->folder) != (size_t)(tab - p) || strncasecmp(c->folder, p, tab - p))
+            if (c->type != TYPE_GAMEID || strlen(c->folder) != (size_t)n || strncasecmp(c->folder, p, n))
                 continue;
-            snprintf(c->game, sizeof(c->game), "%.*s", (int)(nl - tab - 1), tab + 1);
+            snprintf(c->game, sizeof(c->game), "%.*s", nameLen, name);
             utf8_fix(c->game, sizeof(c->game));
         }
-    }
     if (any)
         group_names();
 }
 
 int game_title(const char *id, char *out, size_t size)
 {
-    const char *p = (const char *)asset_gamenames_txt, *end = p + size_asset_gamenames_txt, *tab, *nl;
-    size_t n = strlen(id);
-    for (; p < end && (tab = memchr(p, '\t', end - p)) != NULL; p = nl + 1) {
+    const char *p, *end, *tab, *nl;
+    size_t n = strlen(id), len;
+    int lo = 0, hi = names_blocks() - 1, mid;
+    while (lo < hi) {   /* the last block whose first ID isn't after it */
+        mid = (lo + hi + 1) / 2;
+        if (strncasecmp((const char *)names_entry(mid), id, 10) <= 0)
+            lo = mid;
+        else
+            hi = mid - 1;
+    }
+    out[0] = 0;
+    if (hi < 0 || !(p = names_block(lo, &len)))
+        return 0;
+    for (end = p + len; p < end && (tab = memchr(p, '\t', end - p)) != NULL; p = nl + 1) {
         if (!(nl = memchr(tab, '\n', end - tab)))
             nl = end;
         if ((size_t)(tab - p) == n && !strncasecmp(id, p, n)) {

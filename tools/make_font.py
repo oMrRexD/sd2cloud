@@ -1,4 +1,5 @@
-"""The font of the screen: Varela Round, with the Cyrillic letters and the Japanese characters it doesn't have.
+"""The fonts of the screen: Varela Round, with the Cyrillic letters it doesn't have; and the Japanese characters, in a
+font of their own.
 
 Varela Round (third_party/varelaround) has the Latin letters and no others. The rest comes from two round fonts of
 the same kind, matched to it:
@@ -14,23 +15,30 @@ the same kind, matched to it:
   gave them beside the Latin letters. Its regular weight, whose strokes are a little thinner than Varela Round's: a
   kanji has many of them, and the program makes every letter bolder still.
 
-Writes assets/font.ttf, which the program embeds (src/ui/ui.c) and tools/check_messages.py measures with. It is kept
-in the repository, so this only runs when one of the fonts, or a character of lang/ja.txt, changes (it needs
-fontTools). The fonts are under the SIL Open Font License, and so is what comes out of them; the license keeps the
+Writes assets/font.ttf, the font the program draws with (src/ui/ui.c), which also has the characters of every
+language's name (日本語, for the list of languages); and assets/font-ja.ttf.gz, the Japanese characters alone, with
+Varela Round's lines, which the program keeps compressed and reads into memory only when one is needed (src/ui/font.c,
+font_japanese): 1.5 MB that a big card file opened in Files needs for its saves' icons. tools/check_messages.py
+measures with both. They are kept in the repository, so this only runs when one of the fonts, or a character of
+lang/ja.txt or of a language's name, changes (it needs fontTools). The fonts are under the SIL Open Font License, and so is what comes out of them; the license keeps the
 name "Varela Round" for the font as its authors made it, so this one has a name of its own.
 
-usage: python tools/make_font.py [<out file>]
+usage: python tools/make_font.py [<out folder>]
 """
+import gzip
+import io
 import pathlib
 import sys
 import unicodedata
 
+from fontTools import subset
 from fontTools.misc.roundTools import otRound
 from fontTools.pens.boundsPen import BoundsPen
 from fontTools.pens.recordingPen import DecomposingRecordingPen
 from fontTools.pens.transformPen import TransformPen
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.ttLib import TTFont
+from fontTools.ttLib.tables._c_m_a_p import cmap_format_4
 from fontTools.varLib import instancer
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -95,9 +103,51 @@ def add(base, font, code, scale):
     return name
 
 
+def finish(font, name, description, copyright, added, out):
+    """the cmap, the tables a glyph more breaks, the names; saved (gzip'd, when out ends with .gz: the same bytes each
+    time)"""
+    font.setGlyphOrder(font["glyf"].glyphOrder)
+    if not any(table.isUnicode() for table in font["cmap"].tables):   # (the Japanese font, cut down to nothing)
+        table = cmap_format_4(4)
+        table.platformID, table.platEncID, table.language, table.cmap = 3, 1, 0, {}
+        font["cmap"].tables.append(table)
+    for table in font["cmap"].tables:
+        if table.isUnicode():
+            table.cmap.update(added)
+    for tag in ("hdmx", "LTSH", "VDMX"):   # tables with a row per glyph, made for the glyphs it had
+        if tag in font:
+            del font[tag]
+    font["post"].formatType = 3.0   # (no glyph names: the program doesn't need them, and there are thousands)
+    names = font["name"]
+    for record in list(names.names):
+        if record.nameID in (16, 17, 21, 22):
+            names.removeNames(nameID=record.nameID)
+    for nid, text in ((0, copyright), (1, name), (3, f"{name} Regular"), (4, f"{name} Regular"),
+                      (6, name.replace(" ", "") + "-Regular"), (10, description)):
+        names.setName(text, nid, 3, 1, 0x409)
+        names.setName(text, nid, 1, 0, 0)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    if out.suffix == ".gz":
+        data = io.BytesIO()
+        font.save(data)
+        out.write_bytes(gzip.compress(data.getvalue(), compresslevel=9, mtime=0))
+    else:
+        font.save(out)
+
+
 def main():
-    out = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "assets/font.ttf"
+    folder = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "assets"
+    out, outJa = folder / "font.ttf", folder / "font-ja.ttf.gz"
     base = TTFont(VARELA, recalcTimestamp=False)
+    # the Japanese font: Varela Round with no glyph but the one of a missing character (its lines, its size), and then
+    # the Japanese characters
+    ja = TTFont(VARELA, recalcTimestamp=False)
+    options = subset.Options()
+    options.notdef_outline, options.glyph_names, options.name_IDs, options.layout_features = True, False, ["*"], []
+    options.hinting = False
+    cut = subset.Subsetter(options)
+    cut.populate(unicodes=[])
+    cut.subset(ja)
     nunito = instancer.instantiateVariableFont(TTFont(NUNITO), {"wght": WEIGHT})
     mplus = TTFont(MPLUS)
     have = base.getBestCmap()
@@ -114,32 +164,22 @@ def main():
     kanji = top(base, "H") / top(mplus, "H")
     theirs = mplus.getBestCmap()
     texts = {ord(c) for c in JAPANESE_TEXTS.read_text(encoding="utf-8") if ord(c) > 0x7F} if JAPANESE_TEXTS.is_file() else set()
-    lacking = sorted(c for c in texts if c not in theirs and c not in have and c not in added)   # (no font has them)
-    for code in sorted(c for c in japanese() if c in theirs and c not in have and c not in added):
+    lacking = sorted(c for c in texts if c not in theirs and c not in have)   # (no font has them)
+    # the main font has the characters of the languages' names too: the list of languages shows them all
+    names = {ord(c) for f in (ROOT / "lang").glob("*.txt") for line in f.read_text(encoding="utf-8").splitlines()
+             if line.startswith("LANGUAGE_NAME") for c in line.split("=", 1)[1].strip()}
+    for code in sorted(c for c in names if c in theirs and c not in have and c not in added):
         added[code] = add(base, mplus, code, kanji)
-    base.setGlyphOrder(base["glyf"].glyphOrder)
-    for table in base["cmap"].tables:
-        if table.isUnicode():
-            table.cmap.update(added)
-    for tag in ("hdmx", "LTSH", "VDMX"):   # tables with a row per glyph, made for the glyphs it had
-        if tag in base:
-            del base[tag]
-    base["post"].formatType = 3.0   # (no glyph names: the program doesn't need them, and there are thousands)
-    names = base["name"]
+    inJa = {}
+    for code in sorted(c for c in japanese() if c in theirs and c not in have and c not in added):
+        inJa[code] = add(ja, mplus, code, kanji)
     copyright = "\n".join(f["name"].getDebugName(0) for f in (base, nunito, mplus))
-    for record in list(names.names):
-        if record.nameID in (16, 17, 21, 22):
-            names.removeNames(nameID=record.nameID)
-    for nid, text in ((0, copyright), (1, NAME), (3, f"{NAME} Regular"), (4, f"{NAME} Regular"),
-                      (6, NAME.replace(" ", "") + "-Regular"),
-                      (10, "Varela Round with the Cyrillic letters of Nunito and the Japanese characters of M PLUS "
-                           "Rounded 1c, for SD2Cloud")):
-        names.setName(text, nid, 3, 1, 0x409)
-        names.setName(text, nid, 1, 0, 0)
-    out.parent.mkdir(parents=True, exist_ok=True)
-    base.save(out)
+    finish(base, NAME, "Varela Round with the Cyrillic letters of Nunito, for SD2Cloud", copyright, added, out)
+    finish(ja, NAME + " Japanese", "The Japanese characters of M PLUS Rounded 1c, with the lines of Varela Round, for "
+           "SD2Cloud", "\n".join(f["name"].getDebugName(0) for f in (base, mplus)), inJa, outJa)
     print(f"{out}: {cyrillic} Cyrillic letters (Nunito at {WEIGHT}, capitals x{capitals:.3f}, small letters "
-          f"x{small:.3f}), {len(added) - cyrillic} Japanese characters (x{kanji:.3f}); {out.stat().st_size // 1024} KB")
+          f"x{small:.3f}), {len(added) - cyrillic} of the languages' names; {out.stat().st_size // 1024} KB")
+    print(f"{outJa}: {len(inJa)} Japanese characters (M PLUS Rounded 1c x{kanji:.3f}); {outJa.stat().st_size // 1024} KB")
     if lacking:
         print(f"lang/ja.txt has {len(lacking)} characters no font has: {''.join(chr(c) for c in lacking)}")
 

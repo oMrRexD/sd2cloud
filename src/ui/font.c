@@ -4,11 +4,16 @@
  * turns the coverage into white with that much alpha), and every letter is a sprite of that texture, tinted by the
  * text's color. gsKit's texture manager sends the textures to the GS when they're drawn, and again after a new glyph
  * was added to one.
+ * The Japanese characters are in a font of their own (assets/font-ja.ttf.gz), 1.5 MB once read: it is read into memory
+ * only when they are needed (font_japanese), and then each font has a face of it beside its own.
  * Not thread-safe: only the drawing thread uses it (or the main thread with the screen locked, see ui.c).
  */
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <malloc.h>
+#include <kernel.h>
+#include <zlib.h>
 #include <gsKit.h>
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -32,6 +37,8 @@ typedef struct {
     int advance;           /* 1/64 pixel */
     unsigned int index;    /* FreeType's glyph index (kerning) */
     unsigned char atlas, ok;   /* ok: 1 = made, 2 = it can't be (no room left): not tried again */
+    unsigned char ja;      /* of the Japanese face */
+    unsigned char stand;   /* a '?' in its place: no face had it (the Japanese one, read later, may) */
 } glyph_t;
 
 typedef struct {
@@ -45,8 +52,8 @@ typedef struct {
 } atlas_t;
 
 typedef struct {
-    FT_Face face;
-    int bold, line, ascent, kerning;
+    FT_Face face, ja;      /* ja: of the Japanese characters (NULL until they are read) */
+    int pixels, bold, line, ascent, kerning;
     glyph_t direct[DIRECT];
     glyph_t cyrillic[N_CYRILLIC];
     slot_t *table;              /* the other glyphs: open addressing, a power of two places (NULL until one is needed) */
@@ -57,6 +64,10 @@ typedef struct {
 static FT_Library lib;
 static fnt_t *fonts[MAX_FONTS];
 static int nfonts;
+extern unsigned char asset_fontja_gz[];
+extern unsigned int size_asset_fontja_gz;
+static unsigned char *jaTtf;   /* the Japanese characters' font, read (NULL = not now) */
+static unsigned int jaSize;
 static u32 clut[256] __attribute__((aligned(64)));
 
 int font_init(void)
@@ -119,20 +130,30 @@ static int place(fnt_t *f, int w, int h, int *atlas, int *x, int *y)
     return 0;
 }
 
-/* loads the glyph into FreeType's slot: outline, emboldened, rendered to coverage */
-static int render(fnt_t *f, unsigned int code, unsigned int *index)
+/* loads the glyph into the slot of the face that has it (the font's own, or the Japanese one): outline, emboldened,
+ * rendered to coverage. g gets which face and glyph it was. NULL = it couldn't be */
+static FT_GlyphSlot render(fnt_t *f, unsigned int code, glyph_t *g)
 {
-    FT_GlyphSlot s = f->face->glyph;
-    *index = FT_Get_Char_Index(f->face, code);
-    if (!*index)
-        *index = FT_Get_Char_Index(f->face, '?');
-    if (FT_Load_Glyph(f->face, *index, FT_LOAD_NO_BITMAP))
-        return -1;
+    FT_Face face = f->face;
+    FT_GlyphSlot s;
+    g->ja = g->stand = 0;
+    if (!(g->index = FT_Get_Char_Index(face, code))) {
+        if (f->ja && (g->index = FT_Get_Char_Index(f->ja, code)) != 0) {
+            face = f->ja;
+            g->ja = 1;
+        } else {
+            g->index = FT_Get_Char_Index(face, '?');
+            g->stand = 1;
+        }
+    }
+    s = face->glyph;
+    if (FT_Load_Glyph(face, g->index, FT_LOAD_NO_BITMAP))
+        return NULL;
     if (f->bold && s->format == FT_GLYPH_FORMAT_OUTLINE)
         FT_Outline_Embolden(&s->outline, f->bold);
     if (FT_Render_Glyph(s, FT_RENDER_MODE_NORMAL))
-        return -1;
-    return 0;
+        return NULL;
+    return s;
 }
 
 static unsigned int slot_of(unsigned int code, int size) { return (code * 2654435761u >> 12) & (size - 1); }
@@ -169,7 +190,7 @@ static glyph_t *table_glyph(fnt_t *f, unsigned int code)
 static glyph_t *glyph(fnt_t *f, unsigned int code)
 {
     glyph_t *g = NULL;
-    FT_GlyphSlot s = f->face->glyph;
+    FT_GlyphSlot s;
     int i, atlas = 0, x = 0, y = 0;
     if (code < DIRECT)
         g = &f->direct[code];
@@ -179,7 +200,7 @@ static glyph_t *glyph(fnt_t *f, unsigned int code)
         return NULL;
     if (g->ok)
         return g->ok == 1 ? g : NULL;
-    if (render(f, code, &g->index) != 0) {
+    if (!(s = render(f, code, g))) {
         g->ok = 2;
         return NULL;
     }
@@ -208,6 +229,66 @@ static glyph_t *glyph(fnt_t *f, unsigned int code)
     return g;
 }
 
+/* the Japanese face of a font, when they are read */
+static void japanese_face(fnt_t *f)
+{
+    if (jaTtf && (FT_New_Memory_Face(lib, jaTtf, jaSize, 0, &f->ja) || FT_Set_Pixel_Sizes(f->ja, 0, f->pixels)))
+        f->ja = NULL;
+}
+
+int font_japanese(long spare)
+{
+    const unsigned char *gz = asset_fontja_gz;
+    unsigned int n = size_asset_fontja_gz, size = gz[n - 4] | gz[n - 3] << 8 | gz[n - 2] << 16 | (unsigned)gz[n - 1] << 24;
+    struct mallinfo m = mallinfo();
+    z_stream z;
+    int i, k, r;
+    if (jaTtf)
+        return 0;
+    /* (gzip's last 4 bytes: how long it is unpacked) what is left must be more than that and spare */
+    if (spare && (long)((char *)EndOfHeap() - (char *)sbrk(0)) + (long)m.fordblks < (long)size + spare)
+        return -1;
+    if (!(jaTtf = malloc(size)))
+        return -1;
+    memset(&z, 0, sizeof(z));
+    z.next_in = (unsigned char *)gz;
+    z.avail_in = n;
+    z.next_out = jaTtf;
+    z.avail_out = size;
+    r = inflateInit2(&z, 16 + MAX_WBITS) == Z_OK ? inflate(&z, Z_FINISH) : Z_DATA_ERROR;
+    inflateEnd(&z);
+    if (r != Z_STREAM_END || z.total_out != size) {
+        log_msg("font: the Japanese characters couldn't be unpacked (%d)", r);
+        free(jaTtf);
+        jaTtf = NULL;
+        return -1;
+    }
+    jaSize = size;
+    for (i = 0; i < nfonts; i++) {
+        japanese_face(fonts[i]);
+        for (k = 0; k < fonts[i]->tableSize; k++)   /* the '?' put in place of theirs: made again, now with theirs */
+            if (fonts[i]->table[k].code && fonts[i]->table[k].g.stand)
+                fonts[i]->table[k].g.ok = 0;
+    }
+    log_msg("font: the Japanese characters read (%u bytes)", size);
+    return 0;
+}
+
+void font_japanese_free(void)
+{
+    int i;
+    if (!jaTtf)
+        return;
+    for (i = 0; i < nfonts; i++)   /* (the glyphs made with it are drawn as they were: they are in the atlases) */
+        if (fonts[i]->ja) {
+            FT_Done_Face(fonts[i]->ja);
+            fonts[i]->ja = NULL;
+        }
+    free(jaTtf);
+    jaTtf = NULL;
+    log_msg("font: the Japanese characters let go of");
+}
+
 int font_load(const void *ttf, int ttfSize, int pixels, int bold)
 {
     fnt_t *f;
@@ -219,8 +300,10 @@ int font_load(const void *ttf, int ttfSize, int pixels, int bold)
         free(f);
         return -1;
     }
+    f->pixels = pixels;
     f->bold = bold;
     f->kerning = FT_HAS_KERNING(f->face);
+    japanese_face(f);
     f->line = (f->face->size->metrics.height + 63) >> 6;
     f->ascent = (f->face->size->metrics.ascender + 63) >> 6;
     fonts[nfonts] = f;
@@ -257,7 +340,7 @@ static int walk(int id, float x, float y, u64 color, const char *utf8, int draw)
     GSGLOBAL *gs = ui_gs_global();
     const unsigned char *p = (const unsigned char *)utf8;
     int pen = 0, base;   /* pen in 1/64 pixel */
-    unsigned int prev = 0;
+    unsigned int prev = 0;   /* (the glyph before, of the font's own face: kerning is between two of those) */
     if (id < 0 || id >= nfonts || !utf8)
         return 0;
     f = fonts[id];
@@ -267,12 +350,12 @@ static int walk(int id, float x, float y, u64 color, const char *utf8, int draw)
         glyph_t *g = glyph(f, c);
         if (!g)
             continue;
-        if (f->kerning && prev && g->index) {
+        if (f->kerning && prev && g->index && !g->ja) {
             FT_Vector k;
             if (!FT_Get_Kerning(f->face, prev, g->index, FT_KERNING_DEFAULT, &k))
                 pen += k.x;
         }
-        prev = g->index;
+        prev = g->ja ? 0 : g->index;
         if (draw && g->w) {
             atlas_t *a = f->atlases[g->atlas];
             float gx = (float)((int)x + ((pen + 32) >> 6) + g->left), gy = (float)(base - g->top);
@@ -291,5 +374,8 @@ static int walk(int id, float x, float y, u64 color, const char *utf8, int draw)
 
 int font_draw(int id, float x, float y, u64 color, const char *utf8) { return walk(id, x, y, color, utf8, 1); }
 int font_width(int id, const char *utf8) { return walk(id, 0, 0, 0, utf8, 0); }
-int font_has(unsigned int code) { return nfonts && FT_Get_Char_Index(fonts[0]->face, code) != 0; }
+int font_has(unsigned int code)
+{
+    return nfonts && (FT_Get_Char_Index(fonts[0]->face, code) || (fonts[0]->ja && FT_Get_Char_Index(fonts[0]->ja, code)));
+}
 int font_line(int id) { return id >= 0 && id < nfonts ? fonts[id]->line : 0; }

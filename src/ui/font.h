@@ -12,6 +12,10 @@ int font_load(const void *ttf, int ttfSize, int pixels, int bold);
 int font_draw(int id, float x, float y, u64 color, const char *utf8);
 int font_width(int id, const char *utf8);
 int font_line(int id);     /* line height in pixels */
-int font_has(unsigned int code);   /* 1 = the font has this character (a Unicode code) */
+int font_has(unsigned int code);   /* 1 = the font has this character (a Unicode code), as things are now */
+/* the Japanese characters read, for every font (also the ones loaded after): 0 = they are. spare = only if that much
+ * memory is still left after them (0 = whatever is left) */
+int font_japanese(long spare);
+void font_japanese_free(void);     /* let go of: their glyphs already drawn stay, any other is a '?' until read again */
 
 #endif

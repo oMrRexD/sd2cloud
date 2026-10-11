@@ -107,8 +107,8 @@ int main(int argc, char *argv[])
         token_read();
         google_forget();
         state_read();
+        ui_lock();   /* (the screen is drawn meanwhile: what language reads, it reads locked) */
         i18n_select(cfg.language);
-        ui_lock();
         i18n_device(dev->name);   /* (it may be another device, or the user said it is) */
         sd2psxIcon = icon_make_sd2psx();   /* and its memory card's model */
         ui_unlock();

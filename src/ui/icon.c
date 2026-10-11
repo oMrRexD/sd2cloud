@@ -163,7 +163,9 @@ static int sjis_to_utf8(const unsigned char *s, int n, char *out, int size, int 
             }
             u = sjis_unicode(c >> 8, c & 0xFF);
         }
-        if (!u || !font_has(u) || k + 4 > size)
+        /* (a Japanese title reads the Japanese characters, when there is memory to spare: a big card file opened in
+         * Files needs it for its saves' icons, and their titles are then the games' names) */
+        if (!u || (!font_has(u) && (ui_japanese(3 << 20) != 0 || !font_has(u))) || k + 4 > size)
             return -1;
         if (u < 0x800) {
             out[k++] = 0xC0 | u >> 6;

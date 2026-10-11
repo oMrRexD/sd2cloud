@@ -9,12 +9,13 @@
 /* the files of lang/ built into the program, one per language (the Makefile writes the list: langs.c) */
 typedef struct {
     const char *code;            /* the file's name: en, pt, es... (what sd2cloud.ini's language takes) */
-    const unsigned char *text;
-    const unsigned int *size;
+    unsigned char *text;         /* its text, and a 0 after it: read where it is (lang_parse writes into it) */
+    const unsigned int *size;    /* with that 0 */
 } lang_file_t;
 extern const lang_file_t langFiles[];
 extern const int nLangFiles;
 
+int i18n_japanese(void);                    /* the language chosen has Japanese characters */
 void i18n_select(const char *language);    /* "auto" (the PS2's language) or a language's code; also which button
                                                confirms, the language's CONFIRM_BUTTON */
 const char *T(int id);

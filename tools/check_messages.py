@@ -20,15 +20,21 @@ import pathlib
 import re
 import sys
 
+import gzip
+import io
+
 from fontTools.ttLib import TTFont
 from PIL import ImageFont
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 TTF = str(ROOT / "assets/font.ttf")
-LETTERS = set(TTFont(TTF).getBestCmap())   # what the font has
+JA = gzip.decompress((ROOT / "assets/font-ja.ttf.gz").read_bytes())   # the Japanese characters' font (font.c)
+BASE_LETTERS = set(TTFont(TTF).getBestCmap())
+LETTERS = BASE_LETTERS | set(TTFont(io.BytesIO(JA)).getBestCmap())   # what the fonts have
 # the fonts of ui.c: pixels, emboldening in 1/64 pixel
 SPEC = {"text": (18, 40), "small": (15, 24), "title": (26, 52), "browser": (23, 56)}
 fonts = {k: ImageFont.truetype(TTF, px) for k, (px, bold) in SPEC.items()}
+jaFonts = {k: ImageFont.truetype(io.BytesIO(JA), px) for k, (px, bold) in SPEC.items()}
 
 
 def measure(font, s):
@@ -36,7 +42,7 @@ def measure(font, s):
     whole pixel (the pen is rounded up after each space)"""
     pen = 0
     for ch in s:
-        pen += round(fonts[font].getlength(ch) * 64) + SPEC[font][1]
+        pen += round((fonts if ord(ch) in BASE_LETTERS else jaFonts)[font].getlength(ch) * 64) + SPEC[font][1]
         if ch == " ":
             pen = (pen + 63) // 64 * 64
     return (pen + 32) >> 6
@@ -368,12 +374,6 @@ def sync(ids, files):
         path.write_text("\n".join(out) + "\n", encoding="utf-8", newline="\n")
 
 
-def legend_width(texts, apart, font="text"):
-    """each button is a 20 px symbol, 6 px and its text; the last apart of them stand apart from the others, by a
-    wider gap, and always 18 px from each other; five of them stand closer together (look_legend)"""
-    gap, wide = (18, 34) if len(texts) > 4 else (26, 70)
-    inner = apart - 1 if apart else 0
-    w = sum(measure(font, t) + 26 for t in texts) + 18 * inner + gap * (len(texts) - 1 - inner)
 def line_height(font):
     """a line of a paragraph, as ui.c spaces them: the font's height (FreeType's, rounded up) and 2 pixels"""
     hhea, upm = TTFont(TTF)["hhea"], TTFont(TTF)["head"].unitsPerEm
@@ -391,6 +391,12 @@ def about_height(texts):
     return 2 * 28 + sum(count_lines(font, s, 520 - 56) * line_height(font) + gap for font, s, gap in rows)
 
 
+def legend_width(texts, apart, font="text"):
+    """each button is a 20 px symbol, 6 px and its text; the last apart of them stand apart from the others, by a
+    wider gap, and always 18 px from each other; five of them stand closer together (look_legend)"""
+    gap, wide = (18, 34) if len(texts) > 4 else (26, 70)
+    inner = apart - 1 if apart else 0
+    w = sum(measure(font, t) + 26 for t in texts) + 18 * inner + gap * (len(texts) - 1 - inner)
     return w + (wide - gap if apart and len(texts) > apart else 0)
 
 
@@ -466,16 +472,16 @@ def main():
                           f"the small letters: {' / '.join(texts[i] for i in row)}")
                 elif w > 596 - 40:
                     small.append(" / ".join(texts[i] for i in row))
+        h = about_height(texts)
+        if h > 372 - 74:   # (LOOK_BOTTOM - LOOK_TOP: between the header's line and the legend's)
+            bad += 1
+            print(f"  ABOUT TOO TALL [{code}] {h} px / {372 - 74} px: Settings > About")
         if small:
             print(f"  [{code}] {len(small)} legend(s) in the small letters, longer than the line: {'; '.join(small)}")
     print(f"{len(ids)} texts x {len(langs)} languages ({', '.join(langs)}) and {len(LEGENDS)} legends checked; "
           f"{bad} problem(s)")
     return 1 if bad else 0
 
-        h = about_height(texts)
-        if h > 372 - 74:   # (LOOK_BOTTOM - LOOK_TOP: between the header's line and the legend's)
-            bad += 1
-            print(f"  ABOUT TOO TALL [{code}] {h} px / {372 - 74} px: Settings > About")
 
 if __name__ == "__main__":
     sys.exit(main())

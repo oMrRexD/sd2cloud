@@ -53,6 +53,10 @@ void ui_flush(void);               /* sends what was queued to the GS */
 
 int ui_text(int font, float x, float y, u32 color, const char *utf8);   /* returns the width */
 int ui_measure(int font, const char *utf8);
+/* the Japanese characters (font.c, font_japanese), with the screen locked: 0 = read. spare = only if that much memory
+ * is left after them */
+int ui_japanese(long spare);
+void ui_japanese_free(void);
 int ui_line_height(int font);
 void ui_text_center(int font, float cx, float y, u32 color, const char *utf8);
 void ui_text_right(int font, float right, float y, u32 color, const char *utf8);

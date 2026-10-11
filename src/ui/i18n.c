@@ -8,6 +8,7 @@
 #include <osd_config.h>
 #include "common.h"
 #include "lang.h"
+#include "font.h"
 
 #define MAX_LANGS 16
 
@@ -22,6 +23,7 @@ static struct {
     const char *code, *name;
     char date[6];                    /* how a date is written: D/M/Y, M/D/Y, Y-M-D, D.M.Y... */
     int circle;                      /* circle confirms and cross goes back, as in Japan (CONFIRM_BUTTON = CIRCLE) */
+    int japanese;                    /* some text has Japanese characters (they are in a font of their own) */
     const char *text[T_COUNT];
     const char *renamed[T_COUNT];    /* the texts that name the sd2psx, naming another device (i18n_device) */
 } langs[MAX_LANGS];
@@ -32,6 +34,16 @@ static int nLangs, current, english;
 typedef struct {
     int k, next;
 } reading_t;
+
+/* a kana, kanji or their punctuation (U+3000..U+9FFF, U+FF00..U+FFEF): the Japanese font's (font.c) */
+static int has_japanese(const char *s)
+{
+    const unsigned char *p;
+    for (p = (const unsigned char *)s; *p; p++)
+        if ((*p >= 0xE3 && *p <= 0xE9) || (*p == 0xEF && p[1] >= 0xBC && p[1] <= 0xBF))
+            return 1;
+    return 0;
+}
 
 static void on_text(const char *key, const char *value, void *u)
 {
@@ -62,6 +74,7 @@ static void on_text(const char *key, const char *value, void *u)
             ;
     if (id < T_COUNT) {
         langs[r->k].text[id] = value;
+        langs[r->k].japanese |= has_japanese(value);
         r->next = id + 1;
     }
 }
@@ -72,13 +85,11 @@ static void load(void)
     if (nLangs)
         return;
     for (k = 0; k < nLangFiles && nLangs < MAX_LANGS; k++) {
-        unsigned int n = *langFiles[k].size;
-        char *text = malloc(n + 1);   /* (kept for good: the texts are in it) */
+        /* read where it is, not copied: the values are left in the text, each one ended by a 0 (a copy of each
+         * language was memory a big card file opened in Files needs) */
+        unsigned int n = *langFiles[k].size - 1;
+        char *text = (char *)langFiles[k].text;
         reading_t r = {nLangs, 1};
-        if (!text)
-            continue;
-        memcpy(text, langFiles[k].text, n);
-        text[n] = 0;
         langs[nLangs].code = langs[nLangs].name = langFiles[k].code;
         strcpy(langs[nLangs].date, "Y-M-D");
         lang_parse(text, n, on_text, &r);
@@ -134,6 +145,14 @@ void i18n_select(const char *language)
         k = i18n_find(console_language());
     current = k < 0 ? english : k;
     pad_set_circle_confirms(langs[current].circle);
+    if (langs[current].japanese)
+        font_japanese(0);   /* (the screen is locked, or not drawn yet) */
+}
+
+int i18n_japanese(void)
+{
+    load();
+    return langs[current].japanese;
 }
 
 void i18n_device(const char *name)

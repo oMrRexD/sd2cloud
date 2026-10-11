@@ -387,6 +387,22 @@ static int text_a(int font, float x, float y, u32 color, int a, const char *utf8
 }
 
 int ui_measure(int font, const char *utf8) { return font_width(fontId[font], utf8); }
+
+int ui_japanese(long spare)
+{
+    int r;
+    ui_lock();
+    r = font_japanese(spare);
+    ui_unlock();
+    return r;
+}
+
+void ui_japanese_free(void)
+{
+    ui_lock();
+    font_japanese_free();
+    ui_unlock();
+}
 int ui_line_height(int font) { return font_line(fontId[font]); }
 
 void ui_text_center(int font, float cx, float y, u32 color, const char *utf8)

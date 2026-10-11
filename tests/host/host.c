@@ -97,7 +97,7 @@ int google_download(const char *id, int (*sink)(const unsigned char *d, size_t n
 }
 
 /* the files the build embeds in the program: here, just enough of each */
-unsigned char asset_gamenames_txt[] = "SLUS-21065\tA Game For The Tests\nSLES-50000\tAnother Game\n"
+static const char gamenames[] = "SLUS-21065\tA Game For The Tests\nSLES-50000\tAnother Game\n"
     /* three series, for the folders Game2Folder.ini gives to more than one game */
     "SLES-30001\tRacing Series - First Lap\nSLUS-30001\tRacing Series - First Lap\n"
     "SLUS-30002\tRacing Series - Second Lap [Gold Edition]\nSLUS-30003\tRacing Series - The Third Lap Of Them All\n"
@@ -106,7 +106,20 @@ unsigned char asset_gamenames_txt[] = "SLUS-21065\tA Game For The Tests\nSLES-50
     "SLUS-30024\tA Game With A Name That Goes On And On\n"
     "SLPM-30031\tOneechanbara\nSLES-30032\tZombie Zone Deluxe\n"
     "SLUS-30041\tAvatar - The Last One\nSLUS-30042\tAvatar - The Legend That Goes On And On And On\n";
-unsigned int size_asset_gamenames_txt = sizeof(asset_gamenames_txt) - 1;
+/* (as tools/make_gamenames.py writes the list: here, a single block, stored as it is) */
+unsigned char asset_gamenames_bin[30 + sizeof(gamenames)];
+unsigned int size_asset_gamenames_bin = 30 + sizeof(gamenames) - 1;
+__attribute__((constructor)) static void gamenames_bin(void)
+{
+    unsigned int at = 30, n = sizeof(gamenames) - 1, i;
+    memcpy(asset_gamenames_bin, "GNB1\1\0\0\0SLUS-21065", 18);
+    for (i = 0; i < 4; i++) {
+        asset_gamenames_bin[18 + i] = at >> (8 * i);
+        asset_gamenames_bin[22 + i] = n >> (8 * i);
+        asset_gamenames_bin[26 + i] = n >> (8 * i);
+    }
+    memcpy(asset_gamenames_bin + at, gamenames, n);
+}
 unsigned char ini_default[] = "; SD2Cloud settings\n[general]\nlanguage = auto\n\n[igr]\nreturn = auto\n";
 unsigned int size_ini_default = sizeof(ini_default) - 1;
 

@@ -51,6 +51,7 @@ void debug_capture_and_stop(void)
 {
     if (logFd >= 0)
         ui_capture("host:screen.tga");
+    debug_log_memory("at the capture");   /* (what the screen captured needed, with all it shows loaded) */
     log_msg("(end: capture)");
     for (;;)
         sleep_ms(1000);

@@ -292,6 +292,8 @@ void card_file_screen(const char *file, int install)
     }
     dlg_show();
     cancelLatched = 0;
+    if (!i18n_japanese())   /* (a card of 16 MB leaves little memory: its saves' icons need what the Japanese font had) */
+        ui_japanese_free();
     r = card_file_open(&cardFile, path, open_progress);
     if (r == -2) {
         sound_play(SND_BACK);
