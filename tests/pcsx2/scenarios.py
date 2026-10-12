@@ -81,6 +81,12 @@ SCENARIOS = [
     # (circle goes back to the folder with the saves marked, the card file kept open: START there pastes them)
     {"name": "card-file-held", "what": "a save of a card file marked, circle back to its folder, pasted there as a .psu",
      "cards": CARDS, "files": {"Files/card.mcd": "game.mcd"}, "script": ">>XXXXXOSXXC"},
+    # (circle up out of the MMCE with them marked: the list of cards, where START pastes them into one)
+    {"name": "card-file-held-out", "what": "a save of a card file marked, out of the MMCE to the list of cards, pasted into "
+     "an empty card", "cards": CARDS, "files": {"Files/card.mcd": "game.mcd"}, "script": ">>XXXXXOOODSXXC"},
+    # (a card's save marked, its copy picked into the MMCE: X opens a card file there, START pastes into it)
+    {"name": "card-file-paste-in", "what": "a save of a card copied into a card file of the MMCE, opened with X during the "
+     "copy", "cards": CARDS, "files": {"Files/card.mcd": "empty.mcd"}, "script": "XXXS>>XXXSXXC"},
     {"name": "card-file-export", "what": "a save of a card file opened in Files, copied to a folder of the MMCE as a .psu",
      "cards": CARDS, "files": {"Files/card.mcd": "game.mcd"}, "script": ">>XXXXXS>>XSXXC"},
     # The Memory Card: a PS2 memory card in the console's other slot, in the Files group (run.py puts

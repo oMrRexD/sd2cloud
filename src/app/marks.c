@@ -126,7 +126,10 @@ static int mark_cards(const card_t *at)
     tabs_show(&mk.g, mk.g.tab);
     if (at == &allGames)
         tabs_show(&mk.g, TAB_GAMES);
-    else if (at) {   /* (a game's card is inside its folder) */
+    else if (at == &slotCard && mk.g.memcard) {   /* the Memory Card: the Files group's last row */
+        tabs_show(&mk.g, TAB_FILES);
+        mk.g.cursor = mk.g.n - 1;
+    } else if (at && at >= cards && at < cards + nCards) {   /* (a game's card is inside its folder) */
         tabs_show(&mk.g, tab_of(at));
         tabs_find(&mk.g, (int)(at - cards));
         if (tabs_on_folders(&mk.g)) {
@@ -170,6 +173,8 @@ static int mark_cards(const card_t *at)
             sound_play(marks.n ? SND_CONFIRM : SND_BACK);
             if (marks.n && copy_to_device(mk.g.cursor))
                 r = 2;
+            else if (marks.done)   /* (START on the saves of a card file opened there: they go into it) */
+                r = 1;
         } else if (b & PAD_START) {
             sound_play(marks.n ? SND_CONFIRM : SND_BACK);
             if (marks.n) {   /* (on a card: that is the card a copy pastes them into) */
@@ -342,8 +347,9 @@ int copy_marked(card_t *into)
     int i, n = 0, k = 0, total = 0, one = 0, last = MCFS_OK, r = MCFS_OK;
     if (marks.n > 1)   /* (each save's size is read from its card) */
         message(0, NULL, COLOR_TEXT, T(T_LOADING));
-    if (into && (into < cards || into >= cards + nCards) && into != &slotCard)
-        into = NULL;   /* (not one of the cards, nor the Memory Card: nothing is pasted into it) */
+    if (into && (into < cards || into >= cards + nCards) && into != &slotCard && !(into == &fileCard && card_file_writable()))
+        into = NULL;   /* (not one of the cards, the Memory Card or a card file that can be written: nothing is pasted
+                          into it) */
     save_game_id(game, first);
     for (i = 0; i < marks.n; i++) {
         int files = 0;
@@ -375,8 +381,17 @@ int copy_marked(card_t *into)
         /* they can also go to a folder of the microSD or of a USB drive, as .psu files (from a card file opened in
          * Files too: the folders are browsed over the ones underneath, which come back as they were) */
         destFiles = 1;
-        if (!(to = choose_dest(from, T_COPY_TO, need, game)))
-            return destDevice >= 0 && copy_to_device(destDevice);
+        if (!(to = choose_dest(from, T_COPY_TO, need, game))) {
+            if (destDevice < 0)
+                return 0;
+            if (copy_to_device(destDevice))
+                return 1;
+            if (marks.done && marks.into) {   /* START on the saves of a card file opened in that device: into it */
+                marks.done = 0;
+                return copy_marked(marks.into);
+            }
+            return 0;
+        }
     }
     for (i = 0; i < marks.n; i++)   /* how many go: the ones that card doesn't have already */
         if (marks.save[i].card != to) {
@@ -430,15 +445,30 @@ int copy_marked(card_t *into)
  * A card file's: the screen closes, and its folder is shown with them still marked (card_file_held): START there
  * pastes them, as .psu files. 1 = the screen is left. 0 = the screen stays: nothing was marked any more, and the
  * marking is over */
+int marks_of(const card_t *c)
+{
+    int i, n = 0;
+    for (i = 0; i < marks.n; i++)
+        n += marks.save[i].card == c;
+    return n;
+}
+
+/* the list of cards, with the Files group and the Memory Card, for the copy to go on (at = the card it opens on): until
+ * the saves were pasted somewhere, or let go of */
+void copy_go_on(const card_t *at)
+{
+    while (mark_cards(at) == 1 && !copy_marked(marks.into))
+        ;   /* (back from where they were to go: the cards again. 0 = let go of, 2 = written to a folder) */
+    marks_reset();
+}
+
 int copy_leave(const card_t *c)
 {
     if (marks.n && c == &fileCard)   /* back to the card file's folder, with them (card_file_held) */
         return 1;
     if (marks.n && c != &fileCard) {
         browser_close();
-        while (mark_cards(c) == 1 && !copy_marked(marks.into))
-            ;   /* (back from where they were to go: the cards again. 0 = let go of, 2 = written to a folder) */
-        marks_reset();
+        copy_go_on(c);
         return 1;
     }
     if (!marks.n || confirm(T(T_MARK_DROP), NULL, T_MARK_DROP_YES))

@@ -315,8 +315,8 @@ int card_free(const card_t *c, const card_t *other)
 {
     char t[400];
     int channel = 0, active, r;
-    if (mcfs_slot_port(c->path) >= 0)
-        return 0;   /* (the Memory Card in the other slot: not the device's) */
+    if (mcfs_slot_port(c->path) >= 0 || c == &fileCard)
+        return 0;   /* (the Memory Card in the other slot, or a card file: not the device's) */
     active = active_card(&channel);
     r = card_in_use(c, active, channel);
     if (r == 0)

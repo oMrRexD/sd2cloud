@@ -750,12 +750,19 @@ void card_screen(card_t *c)
                 sound_play(mark_toggle(&brw.saves[brw.cursor]) ? SND_CONFIRM : SND_BACK);
             else if ((b & PAD_START) && marks.n && mine) {
                 sound_play(SND_CONFIRM);
+                int at = brw.cursor;
                 transferDest = NULL;
                 if (copy_marked(all ? NULL : c)) {   /* copied: this is a card's saves again, with the card they went to read again */
                     marks_reset();
                     mine = 0;
-                    if (all && transferDest && transferDest->type == TYPE_GAMEID)
+                    if (all && transferDest && transferDest->type == TYPE_GAMEID && brw.card == c)
                         browser_refresh(transferDest);
+                }
+                if (brw.card != c) {   /* (a card file opened on the way, in a device's folders, had the list) */
+                    if (all)
+                        browser_load_all();
+                    else
+                        browser_load(c, at);
                 }
                 ui_scene(scene_browser);
             } else if ((b & PAD_START) && marks.n) {

@@ -280,7 +280,23 @@ static int open_progress(int phase, long long done, long long total)
 static char openPath[660];
 static int held;
 
-int card_file_held(void) { return held && marks.n; }
+int card_file_held(void) { return held && marks_of(&fileCard); }
+
+/* A card file without the ECC bytes and outside a .zip is a card as the device's are: saves are pasted into it by its
+ * path (fileCard.path, which then is it). Not one of the device's own cards (found among its files): those are written
+ * through it, as cards (card_free) */
+int card_file_writable(void) { return strcmp(fileCard.path, MCFS_IMAGE) != 0; }
+
+static int writable_path(const char *path)
+{
+    int i;
+    if (cardFile.zip || cardFile.ecc || strlen(path) >= sizeof(fileCard.path))
+        return 0;
+    for (i = 0; i < nCards; i++)
+        if (!strcasecmp(cards[i].path, path))
+            return 0;
+    return 1;
+}
 
 void card_file_let_go(void)
 {
@@ -350,7 +366,7 @@ static void card_file_shown(const char *file, int install)
     utf8_fix(fileCard.base, sizeof(fileCard.base));
     fit(FONT_BROWSER, fileCard.base, sizeof(fileCard.base), 250);   /* a save's name goes on its right */
     snprintf(fileCard.id, sizeof(fileCard.id), "file/%.80s", file);
-    snprintf(fileCard.path, sizeof(fileCard.path), "%s", MCFS_IMAGE);
+    snprintf(fileCard.path, sizeof(fileCard.path), "%s", writable_path(cardFile.path) ? cardFile.path : MCFS_IMAGE);
     fileCard.size = cardFile.size;
     fileCard.type = TYPE_NORMAL;
     ui_unlock();
@@ -360,8 +376,7 @@ static void card_file_shown(const char *file, int install)
         card_screen(&fileCard);
     else if (confirm(T(T_FILE_TOO_BIG), NULL, T_INSTALL_YES))
         install_card();
-    if (marks.n && marks.save[0].card == &fileCard) {   /* left with saves marked: kept, for its folder to paste
-                                                           them into */
+    if (marks_of(&fileCard)) {   /* left with saves of it marked: kept, for wherever they are pasted */
         held = 1;
         return;
     }

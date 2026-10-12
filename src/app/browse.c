@@ -73,7 +73,7 @@ static int fb_opens(const dir_entry_t *e)
         return FB_ELF;
     if (is_psu(e->name) && !fbGive.c)
         return FB_PSU;
-    if (is_card_file(e->name, e->size) && !fbGive.c && !fbCard)
+    if (is_card_file(e->name, e->size) && !fbCard)   /* (during a copy too: to mark saves of it, or paste into it) */
         return FB_CARD;
     return 0;
 }
@@ -564,12 +564,11 @@ static void browse(int dev)
             sound_play(SND_BACK);
             if (fb_up())
                 continue;
-            if (!card_file_held())
-                return;
-            if (confirm(T(T_MARK_DROP), NULL, T_MARK_DROP_YES)) {   /* (a card file's saves marked: they stay only here) */
-                card_file_let_go();
-                return;
+            if (card_file_held() && !fbGive.c) {   /* a card file's saves marked: on to every place they can be pasted */
+                copy_go_on(NULL);
+                card_file_let_go();   /* (the copy is over: pasted, or let go of) */
             }
+            return;
         } else if (b & PAD_CROSS) {
             char name[256];
             if (!fb.n)
@@ -581,8 +580,11 @@ static void browse(int dev)
                 fb_enter(name);
             else if (k == FB_PSU)
                 psu_screen(name, 0);
-            else if (k == FB_CARD)
+            else if (k == FB_CARD) {
                 card_file_screen(name, 0);
+                if (marks.done)   /* START on its saves, marked for a copy: the copy goes on into it */
+                    return;
+            }
             else if (k == FB_ELF) {   /* SD2Cloud leaves, as for a program picked in "Exit to" */
                 char path[660], target[200];
                 snprintf(path, sizeof(path), "%s%s", fb.dir, name);
