@@ -93,17 +93,16 @@ def build(scenario, work, elf):
 
 
 def memcard_in(exe, fixture):
-    """a memory card (fixtures/<fixture>.gz, a .ps2) in the emulator's slot 1 for the run, in the place of its own:
-    PCSX2's slot 2 answers mcman with an error (-11). The scenario's script starts with "J", for the device to be taken
-    to be in slot 2 and this one to be the Memory Card. Returns what to put back: the settings as they were (None =
-    nothing was changed)"""
+    """a memory card (fixtures/<fixture>.gz, a .ps2) in the emulator's slot 2 for the run: the Memory Card, beside
+    the device (which PCSX2 hasn't: the program takes slot 1 as its slot). Returns what to put back: the settings as
+    they were (None = nothing was changed)"""
     if not fixture:
         return None
     ini = exe.parent / "inis" / "PCSX2.ini"
     before = ini.read_text(encoding="utf-8")
     card = exe.parent / "memcards" / "sd2cloud-test-memcard.ps2"
     card.write_bytes(gzip.decompress((HERE / "fixtures" / (fixture + ".gz")).read_bytes()))
-    ini.write_text(re.sub(r"(?m)^Slot1_Filename = .*$", "Slot1_Filename = " + card.name, before), encoding="utf-8")
+    ini.write_text(re.sub(r"(?m)^Slot2_Filename = .*$", "Slot2_Filename = " + card.name, before), encoding="utf-8")
     return before
 
 

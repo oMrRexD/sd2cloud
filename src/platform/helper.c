@@ -358,18 +358,7 @@ int helper_space(void)
 
 /* ------------------------------------------------------------ a save, into the card in a slot */
 
-#ifdef DEBUG_BUILD
-int debugDeviceSlot2;   /* (script "J") */
-#endif
-
-int mc_slot(void)
-{
-#ifdef DEBUG_BUILD
-    if (debugDeviceSlot2)
-        return 1;
-#endif
-    return strncmp(sdRoot, "mmce", 4) ? 0 : sdRoot[4] - '0';
-}
+int mc_slot(void) { return strncmp(sdRoot, "mmce", 4) ? 0 : sdRoot[4] - '0'; }
 
 int mc_has_folder(int port, const char *folder)
 {

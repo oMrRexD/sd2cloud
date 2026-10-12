@@ -33,12 +33,6 @@ int main(int argc, char *argv[])
 #ifdef DEBUG_BUILD
     if (!igrMode && debug_has_script())
         igrMode = debug_take('I');   /* (script: an "I" at the start runs it as IGR does) */
-    /* (script: a "J" at the start takes the device to be in slot 2, PCSX2 having none: the Memory Card is then the one
-     * in PCSX2's slot 1, which its mcman reads; its slot 2 answers mcman with -11) */
-    if (debug_has_script() && debug_take('J')) {
-        debugDeviceSlot2 = 1;
-        log_msg("[script] J: the device is taken to be in slot 2");
-    }
 #endif
     /* IGR with no sync to do, and no templates to put into the game cards: straight to what comes after it, before the
      * screen and the sound are even started. The helper does this by itself when it can (igr/igr.c); this is for when
