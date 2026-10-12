@@ -1,17 +1,14 @@
-# SD2Cloud v1.7
+# SD2Cloud v1.7.1
 
 **Manage and back up your sd2psx memory cards, right on your PS2.**
 
-### What's new in 1.7
-- **Three more languages and Japanese titles.** Spanish, Russian, Ukrainian and Japanese, with their own fonts (Cyrillic letters, Japanese characters). In Japanese, CIRCLE confirms and CROSS goes back, as on a Japanese PS2. The saves of Japanese games show their titles in Japanese. The README is in English, Portuguese, Spanish, Russian and Ukrainian.
-- **The Memory Card.** A regular PS2 memory card in the console's other slot is in the Files tab: its saves are shown, copied, moved, deleted and sent to Drive as a card's are, and saves go into it from the sd2psx's cards or from `.psu` files. Thanks to nuno6573 for the idea :)
-- **The sync's cards, as a list.** While several cards are sent, SELECT shows the list of them, with what became of each, and goes back. On it, SQUARE skips a card (SQUARE again takes it back) and X offers to skip it, mark it as resolved (the automatic sync leaves it alone until it changes again) or turn its sync off.
-- **Copying with card files (VMCs).** Saves of a card file opened in the Files tab go anywhere: back in its folder, START pastes them as `.psu` files; out of the MMCE, they can be pasted into a card, the Memory Card, a folder or another card file. During a copy, X opens a card file: to mark saves of it, or START to paste into it (`.mcd`, `.mc2` and `.bin`).
-- **The SAS package in slot 2.** With the sd2psx in slot 2 and another memory card in slot 1, the package went to that other card. It goes to the sd2psx's slot now, and the path for OPL is shown (`mc1:`). Thanks to nuno6573 for the report :)
-- **Downloads that break off.** An update (from GitHub) or a backup being restored (from Drive) that breaks off is taken up where it stopped, on a new connection, up to three times. It was seen on a console as "AES-GCM Authentication check fail" (#2). Thanks to @Lithium-ps for the log :)
-- **Re-enable warnings**, in a template's options: the game cards you said "Don't warn" about are warned about again.
-- **Everything up to date.** The newest toolchain (ps2sdk, ps2sdk-ports, gsKit), wolfSSL 5.9.4, curl 8.22.0 and mmceman, which also fixes reading a memory card in slot 2.
-- A card file of 16 MB opened in the Files tab has its memory back; the About box fits the screen again; a save can be copied from a card file to a folder.
+### What's new in 1.7.1
+- **Pasting, without the "Copy to" box.** After Copy, the saves are pasted from the list of cards: START on the card they all came from, or in All saves, goes to that list. In its Games tab, the folder of their game comes first, highlighted, with "New card" in it; a new card made for them gets the game's templates too. START on a memory card file in the Files tab pastes into it.
+- **Back where you were.** Answering Circle to the question after a card was picked (importing a .psu, moving a save, pasting) goes back to the same tab, folder and card.
+- **The whole Memory Card to Drive.** "Upload to Drive", in the Memory Card's options, sends the whole card as a backup with its own history, in the "Memory Card" folder on Drive. While it is read and sent, the screen shows the PS2's own memory card.
+- **Templates.** A template's saves no longer take a card out of the sync: a card that was synced stays synced. A game card's icon is its own game's save, not a template's.
+- **Settings.** A long list of cards left out of the sync could be cut when written to `sd2cloud.ini`, breaking the line after it. It is written whole now.
+- The README is in Japanese too.
 
 To update, use Settings > Check for updates, or copy the new files over the old ones.
 
@@ -32,7 +29,7 @@ SD2Cloud runs on the PS2 itself and works with the memory cards on the microSD o
 - Organizes the cards in tabs: numbered cards, game (Game ID) cards, in folders named after each game, and boot cards.
 - Marks the card the sd2psx is using and can make it take another one.
 - Imports `.psu` files into any card and exports any item of a card as a `.psu`, from and to the MMCE or a USB drive (the Files tab).
-- Manages a regular Memory Card in the console's other slot (the Files tab).
+- Manages a regular Memory Card in the console's other slot (the Files tab), and uploads it whole to Drive.
 - Keeps templates: sets of saves to put into cards (Tools, on SELECT).
 - Shows every game card's saves on one screen, sorted by date or by name.
 
@@ -44,20 +41,17 @@ SD2Cloud runs on the PS2 itself and works with the memory cards on the microSD o
 - Interface inspired by the PlayStation BB Navigator, with sound effects.
 - English, Portuguese, Spanish, Russian, Ukrainian and Japanese.
 
-**Installation:** extract `SD2Cloud-v1.7.zip` to the root of the sd2psx microSD and open SD2Cloud from the OPL Apps tab. See README.txt for details.
+**Installation:** extract `SD2Cloud-v1.7.1.zip` to the root of the sd2psx microSD and open SD2Cloud from the OPL Apps tab. See README.txt for details.
 
 ---
 
 **Gerencie e proteja os cartões de memória do seu sd2psx, direto no PS2.**
 
-**Novidades da 1.7**
-- Mais três idiomas: espanhol, russo, ucraniano e japonês (no japonês, CÍRCULO confirma e XIS volta, como num PS2 japonês). Os saves de jogos japoneses mostram o título em japonês. O LEIA-ME do GitHub está em inglês, português, espanhol, russo e ucraniano.
-- **Memory Card:** um cartão de memória comum no outro slot do console aparece na aba Arquivos; os saves dele são exibidos, copiados, movidos, eliminados e enviados ao Drive como os de um cartão, e recebem saves dos cartões do sd2psx ou de arquivos `.psu`. Obrigado ao nuno6573 pela ideia :)
-- **Lista da sincronização:** com vários cartões sendo enviados, o SELECT mostra a lista deles, com a situação de cada um, e volta. Nela, QUADRADO pula um cartão (de novo: desfaz) e X oferece pular, marcar como resolvido (a sincronização automática o deixa de lado até ele mudar de novo) ou desativar a sincronização dele.
-- **Cópia com arquivos de cartão (VMC):** os saves de um VMC aberto na aba Arquivos vão para qualquer lugar: na pasta dele, START cola como `.psu`; saindo do MMCE, podem ir para um cartão, o Memory Card, uma pasta ou outro VMC. Durante uma cópia, X abre um VMC, para selecionar saves dele ou colar dentro dele com START (`.mcd`, `.mc2` e `.bin`).
-- **Pacote SAS no slot 2:** com o sd2psx no slot 2 e outro cartão no slot 1, o pacote ia para o outro cartão; agora vai para o slot do sd2psx, e o caminho para o OPL aparece (`mc1:`). Obrigado ao nuno6573 pelo relato :)
-- **Downloads que caem:** uma atualização (GitHub) ou uma restauração (Drive) que cai no meio continua de onde parou, numa conexão nova, até três vezes (o erro "AES-GCM Authentication check fail", #2). Obrigado ao @Lithium-ps pelo log :)
-- **Reativar avisos**, nas opções do template: os cartões de jogo marcados como "Não avisar" voltam a ser avisados.
-- **Tudo atualizado:** a toolchain mais nova, wolfSSL 5.9.4, curl 8.22.0 e o mmceman, que também corrige a leitura de um cartão no slot 2.
-- Um VMC de 16 MB aberto na aba Arquivos tem a memória de volta; a caixa "Sobre" cabe na tela de novo; um save de um VMC pode ser copiado para uma pasta.
-**Instalação:** extraia o `SD2Cloud-v1.7.zip` na raiz do microSD do sd2psx e abra o SD2Cloud pela aba Apps do OPL. Consulte o LEIA-ME.txt para mais detalhes.
+**Novidades da 1.7.1**
+- **Colar sem a janela "Copiar para":** depois de Copiar, os saves são colados pela lista de cartões; START no cartão de onde todos vieram, ou em Todos os saves, leva à lista. Na aba Jogos, a pasta do jogo vem primeiro, em destaque, com "Novo cartão" dentro; o cartão novo criado para eles recebe também os templates do jogo. START em um arquivo de cartão de memória na aba Arquivos cola dentro dele.
+- **De volta onde estava:** responder O à pergunta depois de escolher um cartão (importar .psu, mover, colar) volta para a mesma aba, pasta e cartão.
+- **Memory Card inteiro no Drive:** "Enviar ao Drive", nas opções do Memory Card, envia o cartão inteiro como um backup com histórico próprio, na pasta "Memory Card" do Drive. Durante a leitura e o envio, a tela mostra o Memory Card do PS2.
+- **Templates:** os saves de um template não tiram mais o cartão da sincronização; um cartão sincronizado continua sincronizado. O ícone de um cartão de jogo é o save do próprio jogo, não o de um template.
+- **Ajustes:** uma lista longa de cartões fora da sincronização podia ser cortada ao ser gravada no `sd2cloud.ini`, estragando a linha seguinte. Agora é gravada inteira.
+- O LEIA-ME do GitHub também está em japonês.
+**Instalação:** extraia o `SD2Cloud-v1.7.1.zip` na raiz do microSD do sd2psx e abra o SD2Cloud pela aba Apps do OPL. Consulte o LEIA-ME.txt para mais detalhes.
