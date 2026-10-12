@@ -228,6 +228,7 @@ AUTOMATIC SYNC AFTER A GAME (IGR)
    card in use (about 240 KB) and how much is free, and asks before installing. It writes the APP_SD2CLOUD
    folder (mc0:/APP_SD2CLOUD). If your sd2psx uses Autoboot, install it while the BootCard is in use.
 2. In OPL Settings, set "IGR Path" to: mc0:/APP_SD2CLOUD/IGR.ELF
+   (mc1: with the sd2psx in slot 2: SD2Cloud shows the path to use when it installs the package)
    If a version up to 1.5 left its helper on the card (mc0:/BOOT/SD2CLOUD-IGR.ELF), that path keeps working:
    installing the package also brings that file up to date.
 3. In OPL, also turn on "IGR Bootcard Slot(s)" (MMCE page), set to the sd2psx slot or BOTH: when you exit a

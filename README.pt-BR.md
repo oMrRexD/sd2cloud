@@ -148,7 +148,8 @@ O [LEIA-ME.txt](package/LEIA-ME.txt) incluído na release explica cada tela em d
    você conectar a conta). O SD2Cloud informa o espaço necessário (cerca de 240 KB) e pede confirmação antes de
    gravar a pasta `APP_SD2CLOUD` no cartão de memória em uso; com o Autoboot, faça a instalação com o BootCard em
    uso.
-2. Nas configurações do OPL, em **Definir saída do IGR**, informe `mc0:/APP_SD2CLOUD/IGR.ELF`. Se uma versão até a
+2. Nas configurações do OPL, em **Definir saída do IGR**, informe `mc0:/APP_SD2CLOUD/IGR.ELF` (`mc1:` com o sd2psx
+   no slot 2: o SD2Cloud mostra o caminho certo ao instalar o pacote). Se uma versão até a
    1.5 deixou o assistente dela no cartão (`mc0:/BOOT/SD2CLOUD-IGR.ELF`), esse caminho continua valendo: instalar
    o pacote também atualiza esse arquivo.
 3. No OPL, ative também **Slot(s) de Bootcard IGR** (página MMCE), no slot do sd2psx ou em BOTH: ao sair do jogo,

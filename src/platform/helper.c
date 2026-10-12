@@ -163,7 +163,10 @@ int mc_card_state(int port)
 
    Up to version 1.5 only the helper went to the card, as mc0:/BOOT/SD2CLOUD-IGR.ELF, and OPL was given that path.
    One that is there stays there (helperLegacy says so) and is written again whenever the folder is, so that path
-   keeps working; without the folder, the card counts as having an outdated package. */
+   keeps working; without the folder, the card counts as having an outdated package.
+
+   The memory card in use is the one in the slot the device is in (mc_slot): up to version 1.6.2 the package always
+   went to slot 1, and with the sd2psx in slot 2 it went to the memory card that was in slot 1. */
 
 extern unsigned char card_igr_elf[], card_open_elf[], card_icon_sys[], card_icon_icn[], card_title_cfg[];
 extern unsigned int size_card_igr_elf, size_card_open_elf, size_card_icon_sys, size_card_icon_icn, size_card_title_cfg;
@@ -221,7 +224,7 @@ static void folder_list(folder_file_t f[FOLDER_FILES], buffer_t *title)
 static int mc_size(const char *path)
 {
     static sceMcTblGetDir e[1];
-    mcGetDir(0, 0, path, 0, 1, e);
+    mcGetDir(mc_slot(), 0, path, 0, 1, e);
     return mc_wait() == 1 ? (int)e[0].FileSizeByte : -1;
 }
 
@@ -230,7 +233,7 @@ static int mc_same(const char *path, const unsigned char *d, int n)
 {
     static unsigned char block[16 * 1024] __attribute__((aligned(64)));
     int fd, done = 0, k, same = 1;
-    mcOpen(0, 0, path, MC_RDONLY);
+    mcOpen(mc_slot(), 0, path, MC_RDONLY);
     if ((fd = mc_wait()) < 0)
         return -1;
     for (;;) {
@@ -260,7 +263,7 @@ int helper_status(void)
     helperLegacy = 0;
     if (appOnCard)   /* the helper OPL runs is the one next to the program: there, it is the right one */
         return card_app_helper() ? HELPER_SAME : HELPER_NO_FILE;
-    if (memcard_ready(0) != 0)
+    if (memcard_ready(mc_slot()) != 0)
         return HELPER_NOT_INSTALLED;
     same = mc_same(CARD_HELPER, card_igr_elf, (int)size_card_igr_elf);
     if (same < 0 && mc_size(CARD_HELPER_BEFORE) >= 0)
@@ -332,10 +335,10 @@ static int room_kb(void)
 {
     static sceMcTblGetDir list[32];
     int type = 0, freeKb = 0, format = 0, n, i;
-    mcGetInfo(0, 0, &type, &freeKb, &format);
+    mcGetInfo(mc_slot(), 0, &type, &freeKb, &format);
     if (mc_wait() < -1)   /* 0 and -1 (a card was changed) both come with the information */
         return -1;
-    mcGetDir(0, 0, CARD_DIR "/*", 0, 32, list);
+    mcGetDir(mc_slot(), 0, CARD_DIR "/*", 0, 32, list);
     n = mc_wait();
     for (i = 0; i < n; i++)
         if (list[i].AttrFile & MC_ATTR_FILE)
@@ -346,7 +349,7 @@ static int room_kb(void)
 int helper_space(void)
 {
     helperNeedKb = install_kb();
-    helperFreeKb = memcard_ready(0) == 0 ? room_kb() : -1;
+    helperFreeKb = memcard_ready(mc_slot()) == 0 ? room_kb() : -1;
     return 0;
 }
 
@@ -476,14 +479,14 @@ static void folder_clear(void)
     static sceMcTblGetDir list[32];
     char path[100];
     int n, i;
-    mcGetDir(0, 0, CARD_DIR "/*", 0, 32, list);
+    mcGetDir(mc_slot(), 0, CARD_DIR "/*", 0, 32, list);
     n = mc_wait();
     for (i = 0; i < n; i++) {
         const char *name = (const char *)list[i].EntryName;
         if (!strcmp(name, ".") || !strcmp(name, ".."))
             continue;
         snprintf(path, sizeof(path), CARD_DIR "/%.32s", name);
-        mcDelete(0, 0, path);
+        mcDelete(mc_slot(), 0, path);
         mc_wait();
     }
 }
@@ -501,7 +504,7 @@ static void folder_date(void)
     e._Create.Month = 12;
     e._Create.Year = 2098;
     e._Modify = e._Create;
-    mcSetFileInfo(0, 0, CARD_DIR, &e, sceMcFileInfoCreate | sceMcFileInfoModify);
+    mcSetFileInfo(mc_slot(), 0, CARD_DIR, &e, sceMcFileInfoCreate | sceMcFileInfoModify);
     log_msg("helper: the folder's date set (%d)", mc_wait());
 }
 
@@ -528,7 +531,7 @@ static int same_card_back(const char *before)
 #endif
     for (i = 1; i <= 20; i++) {
         sleep_ms(500);
-        if (root_signature(0, CARD_DIR + 1, now) == 0) {
+        if (root_signature(mc_slot(), CARD_DIR + 1, now) == 0) {
             log_msg("helper: the card answers again after %d ms: %s", i * 500, strcmp(now, before) ? "ANOTHER card" : "the same one");
             cardDropped |= strcmp(now, before) != 0;
             return !strcmp(now, before);
@@ -544,21 +547,22 @@ int helper_install(void)
     folder_file_t f[FOLDER_FILES];
     buffer_t title = {0};
     char path[100], before[65];
-    int i, k, r = 0, known;
-    if (appOnCard || memcard_ready(0) != 0)
+    int i, k, r = 0, known, port = mc_slot();
+    if (appOnCard || memcard_ready(port) != 0)
         return -1;
-    known = root_signature(0, CARD_DIR + 1, before) == 0;
+    log_msg("helper: installing to the memory card in slot %d", port + 1);
+    known = root_signature(port, CARD_DIR + 1, before) == 0;
     cardDropped = helperMcError = 0;
     /* a helper in BOOT, from a version up to 1.5: this version's, in its place (it takes no more room there), so the
      * path OPL was given keeps working whatever happens to the folder */
     if (mc_size(LEGACY) >= 0 && mc_same(LEGACY, card_igr_elf, (int)size_card_igr_elf) != 1)
-        log_msg("helper: the one in BOOT written again (%d)", mc_write_file(0, LEGACY, card_igr_elf, (int)size_card_igr_elf));
+        log_msg("helper: the one in BOOT written again (%d)", mc_write_file(port, LEGACY, card_igr_elf, (int)size_card_igr_elf));
     helperNeedKb = install_kb();
     helperFreeKb = room_kb();
     log_msg("helper: %d KB needed, %d KB available", helperNeedKb, helperFreeKb);
     if (helperFreeKb >= 0 && helperFreeKb < helperNeedKb)
         return -3;   /* not enough room: the folder wasn't touched */
-    mcMkDir(0, 0, CARD_DIR);
+    mcMkDir(port, 0, CARD_DIR);
     log_msg("helper: mkdir %d (fine if it exists)", mc_wait());
     folder_clear();
     folder_list(f, &title);
@@ -571,11 +575,11 @@ int helper_install(void)
             r = mc_failed(-51);   /* (what mcman said on a console when it happened) */
         } else
 #endif
-            r = mc_write_file(0, path, f[i].data, (int)f[i].len);
+            r = mc_write_file(port, path, f[i].data, (int)f[i].len);
         /* the card dropped and shown again: once the same one is back, the file is written again, twice at most */
         for (k = 1; r != 0 && k <= 2 && known && same_card_back(before); k++) {
             log_msg("helper: %s written again (%d)", path, k);
-            r = mc_write_file(0, path, f[i].data, (int)f[i].len);
+            r = mc_write_file(port, path, f[i].data, (int)f[i].len);
         }
     }
     buf_free(&title);
@@ -588,16 +592,16 @@ int helper_install(void)
 int helper_uninstall(void)
 {
     int r, ok = 1;
-    if (appOnCard || memcard_ready(0) != 0)
+    if (appOnCard || memcard_ready(mc_slot()) != 0)
         return -1;
     if (mc_size(CARD_DIR) >= 0) {
         folder_clear();
-        mcDelete(0, 0, CARD_DIR);
+        mcDelete(mc_slot(), 0, CARD_DIR);
         r = mc_wait();
         log_msg("helper: folder removed (%d)", r);
         ok &= r == 0 || r == -4;   /* -4: it wasn't there */
     }
-    mcDelete(0, 0, LEGACY);
+    mcDelete(mc_slot(), 0, LEGACY);
     r = mc_wait();
     log_msg("helper: the one in BOOT removed (%d)", r);
     ok &= r == 0 || r == -4;

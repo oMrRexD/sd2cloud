@@ -173,7 +173,8 @@ static void helper_install_now(int doneTitle)
         helper_failed(r);
         return;
     }
-    snprintf(path, sizeof(path), "mc0:%s", helper_path());   /* (OPL didn't find it as "mc?:" when it was typed so) */
+    /* (the slot's number: OPL didn't find it as "mc?:" when it was typed so) */
+    snprintf(path, sizeof(path), "mc%d:%s", mc_slot(), helper_path());
     dlg_new(COLOR_OK, T(doneTitle));
     dlg_line(FONT_TEXT, COLOR_TEXT, 2, T(T_AUTO_OPL));
     dlg_line(FONT_TEXT, COLOR_ACCENT, 10, path);
@@ -248,7 +249,7 @@ static int helper_screen(void)
             return 1;
         }
     }
-    snprintf(place, sizeof(place), "mc0:%s", helper_place());
+    snprintf(place, sizeof(place), "mc%d:%s", mc_slot(), helper_place());
     dlg_new(COLOR_TITLE, T(T_HELPER_TITLE));
     dlg_line(FONT_TEXT, COLOR_TEXT, 10, T(T_HELPER_ABOUT));
     dlg_line(FONT_TEXT, COLOR_TEXT, 2, T(T_HELPER_WHERE));
