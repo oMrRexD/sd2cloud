@@ -158,6 +158,14 @@ volatile long long shownDone, shownTotal;
 const char *workText;
 int workFixed;
 
+/* the model a card that has no save of its own to turn shows: the device's memory card, or the console's own for the
+ * Memory Card in the other slot (its saves, or the card file it is read into to be sent: "slot/...") */
+static icon_t *model_of(const card_t *c)
+{
+    icon_t *ic = c && !strncmp(c->id, "slot/", 5) ? icon_make_memcard() : NULL;
+    return ic ? ic : sd2psxIcon;
+}
+
 void load_card_icon(const card_t *c)
 {
     buffer_t iconsys = {0}, ico = {0};
@@ -170,7 +178,7 @@ void load_card_icon(const card_t *c)
     ui_lock();
     if (cardIcon != sd2psxIcon)
         icon_free(cardIcon);
-    cardIcon = ic ? ic : sd2psxIcon;
+    cardIcon = ic ? ic : model_of(c);
     current = c;
     iconStart = now_ms();
     ui_unlock();
@@ -274,7 +282,7 @@ void card_work(const card_t *c, int own, const char *text, int fixed)
     if (!own) {
         if (cardIcon != sd2psxIcon)
             icon_free(cardIcon);
-        cardIcon = sd2psxIcon;
+        cardIcon = model_of(c);
         current = c;
         iconStart = now_ms();
     }

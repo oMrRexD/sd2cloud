@@ -311,17 +311,21 @@ static void psu_import(void)
 {
     char name[160], t[300], game[12];
     card_t *to;
-    int r, made;
+    int r, made, again;
     if (!nCards && !save_game_id(psu.info.folder, game)) {
         message_wait(0, NULL, COLOR_WARN, T(T_NO_CARDS_SD));
         return;
     }
-    if (!(to = choose_dest(NULL, T_IMPORT_TO, psu.info.bytes, psu.info.folder)))
-        return;
     save_name(&psu.v, name, sizeof(name));
-    snprintf(t, sizeof(t), T(T_CONFIRM_IMPORT), name, to->base);
-    made = to == &destNew;
-    if (!confirm(t, made ? T(T_NEWCARD_NOTE) : NULL, T_IMPORT_YES) || !(to = dest_real(to)) || card_free(to, NULL))
+    for (again = 0;; again = 1) {   /* (circle on the question: back to the cards, where they were) */
+        if (!(to = choose_dest(NULL, T_IMPORT_TO, psu.info.bytes, psu.info.folder, again)))
+            return;
+        snprintf(t, sizeof(t), T(T_CONFIRM_IMPORT), name, to->base);
+        made = to == &destNew;
+        if (confirm(t, made ? T(T_NEWCARD_NOTE) : NULL, T_IMPORT_YES))
+            break;
+    }
+    if (!(to = dest_real(to)) || card_free(to, NULL))
         return;
     save_into(to, &psu.v, T_WORKING_IMPORT);
     r = mcfs_import_psu(psu.path, to->path, save_progress);

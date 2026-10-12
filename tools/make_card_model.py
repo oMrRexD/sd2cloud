@@ -6,7 +6,8 @@ opening with its eight gold contacts.
 
 Writes assets/sd2psx.icn: the model and its 128x128 texture, in the PS2's icon format, which the program embeds and
 reads as it reads a save's icon (icon_make_sd2psx in src/ui/icon.c). And assets/memcardpro2.icn, a MemCard PRO2 (see
-"the MemCard PRO2" below), which the program shows on that device. They are kept in the repository, so this only
+"the MemCard PRO2" below), which the program shows on that device; and assets/memcard.icn, the console's own memory
+card (see "the PS2 Memory Card"), for the Memory Card in the other slot. They are kept in the repository, so this only
 runs when a model changes (it needs Pillow, and numpy for the previews).
 
 usage: python tools/make_card_model.py [<out folder> [<a folder for a preview of each, to look at>]]
@@ -606,6 +607,219 @@ def pro2_texture():
     return im
 
 
+# ------------------------------------------------------------ the PS2 Memory Card
+
+# The console's own memory card, the SCPH-10020 (8 MB, black), for the Memory Card in the other slot when it is sent to
+# Drive whole. Measured on photos of one, from the front: narrower than the other models (as tall, 0.72 of its height
+# wide) and thinner, with small round corners. At the top, the two small holes and the arrow of the way in, raised;
+# under them the PlayStation symbol and "PlayStation 2" in blue, then "8MB", "MEMORY CARD" and "MAGICGATE" in grey;
+# the label's wide recess down to the grip's waves on both sides, and "SONY" moulded at the bottom. The opening with
+# its eight gold contacts is at the top. The face takes the texture's first 120 rows; the last ones hold the plain
+# colors of the parts with no drawing
+M_W, M_T = 3.2, 0.5                        # its width and thickness (its height is H, as the others')
+M_ZF = M_T / 2                             # its face
+M_R_TOP, M_R_BOTTOM = 0.12, 0.2            # its corners
+M_WAVES, M_WAVE_Y, M_WAVE_PITCH, M_WAVE_DEPTH = 4, 0.92, 0.355, 0.05   # the grip's waves, on both sides
+M_SLOT_X, M_SLOT_Z = 1.12, 0.12            # the opening at the top: half its width, half its depth
+M_ROWS = 120                               # the texture's rows the face takes
+M_BODY = (50, 52, 58)                      # the black plastic, where the light falls on it most (lighter than black: on
+                                           # the screen's dark blue a black card would be a hole)
+M_GREY = (146, 150, 158)                   # what is printed in grey
+M_BLUE = (44, 124, 232)                    # and in blue
+M_COLORS = {"back": (36, 37, 42), "rim": (44, 46, 52), "groove": (14, 15, 17), "bevel": (62, 65, 72),
+            "slot": (8, 9, 11), "gold": (222, 176, 78), "arrow": (84, 88, 98)}
+
+# where things are on the face, as fractions of its width (from the left) and height (from the top), measured on a
+# photo of one from the front
+M_HOLES = ((0.088, 0.055), (0.912, 0.055))
+M_ARROW = (0.5, 0.02, 0.272, 0.041)        # its middle's x, its apex's y, its width, its height
+M_LABEL = (0.032, 0.463, 0.968, 0.793)     # the recess: left, top, right, bottom
+M_PS = (0.087, 0.086, 0.261, 0.179)        # the PlayStation symbol: its box's left, top, right, bottom
+M_WORDMARK = (0.384, 0.925, 0.146)         # "PlayStation 2": from, to, and its middle's height
+M_8MB = (0.377, 0.638, 0.307, 0.106)       # "8MB": from, to, its line, how tall the 8 is
+M_MEMORY = (0.236, 0.756, 0.35)            # "MEMORY CARD": from, to, its middle's height
+M_MAGICGATE = (0.302, 0.686, 0.421)        # "MAGICGATE"
+M_SONY = (0.31, 0.69, 0.867)               # "SONY", moulded
+
+# the PlayStation symbol, 160x123, one bit a pixel (zlib, base64): the P standing and the S lying in front of it,
+# traced from the symbol itself, so that the card shows it as it is printed on one
+PS_SYMBOL = (160, 123, (
+    "eNrt1jFuxSAMAFAQUlmqn/UPVTlKLlY1HC1H4QiMGRBusHFIwEOkfqlLM/3/JMBgwCiF30ON3xQEy4JBECwLBqtgm2DgBYuCZcH6UdCiYFmwbmSy"
+    "INgmWBYMJPOChd6mLur9fzbdwNVSZ0l3wRRTsoFk/qatNy38wuKLbfu3P7NX5/LuHrq7T/3N83HrbC3DWU1qvkzjgWYvoXxP3XlWyuTRnGAwmhHM"
+    "sem2CMDWrifL5tp9N7O1e0xDtXqPRWpK5sgSNb3Y3lhDb4Fuw3S2iE0hsm1YNKgLthJ3MjRUtT3gBbI9ei22FgNHo5NlnDzMFCVZpFkttJnI/HFR"
+    "Q82ly3VWdXXQatNMTd/QatNEC/ZZ7ENhJLBRd5wjnEFcilk2HDWgzWwLzmAfe9WcN0MFiBatWk2cPRtQhTQns1y7Tnbk3DUDLq4tb7aVvWt+aZfr"
+    "Sy49b0ngfFwODVsUzI821Dw31tBifrT+iBTr3jBLseFxkVz/WtG7Dc8fl9zw+jHpOT6dvoRn1/vx6wct3pdY"
+))
+
+
+def mc_patch(i):
+    """the i-th plain color's place: a 4x6 texel block in the rows under the face's"""
+    return (2 + 6 * i, M_ROWS + 2, 6 + 6 * i, M_ROWS + 8)
+
+
+def mc_color(name):
+    b = mc_patch(list(M_COLORS).index(name))
+    return ((b[0] + b[2]) / 2 / 128, (b[1] + b[3]) / 2 / 128)
+
+
+def mc_face_uv(x, y):
+    return ((0.5 + (x + M_W / 2) / M_W * 127) / 128, (0.5 + (1 - y / H) * (M_ROWS - 1)) / 128)
+
+
+def mc_bright(y):
+    """the shell a little lighter toward the top (in the corners' brightness: 16-bit color would band it)"""
+    return int(round(0x80 * (0.72 + 0.28 * y / H)))
+
+
+def mc_outline():
+    """the card from the front, counterclockwise from its bottom right corner, the grip's waves on both sides; and
+    which of its edges is the top"""
+    pts = []
+
+    def corner(cx, cy, r, a0):
+        for k in range(7):
+            a = math.radians(a0 + 15 * k)
+            pts.append((cx + r * math.cos(a), cy + r * math.sin(a)))
+    grip = [(M_W / 2 - M_WAVE_DEPTH * (1 - math.cos(2 * math.pi * j / 8)), M_WAVE_Y + M_WAVE_PITCH * j / 8)
+            for j in range(M_WAVES * 8 + 1)]
+    corner(M_W / 2 - M_R_BOTTOM, M_R_BOTTOM, M_R_BOTTOM, -90)
+    pts += grip
+    corner(M_W / 2 - M_R_TOP, H - M_R_TOP, M_R_TOP, 0)
+    top = len(pts) - 1
+    corner(-M_W / 2 + M_R_TOP, H - M_R_TOP, M_R_TOP, 90)
+    pts += [(-x, y) for x, y in reversed(grip)]
+    corner(-M_W / 2 + M_R_BOTTOM, M_R_BOTTOM, M_R_BOTTOM, 180)
+    return pts, top
+
+
+def mc_model():
+    col = mc_color
+    pts, top = mc_outline()
+    out = outward(pts)
+    bw = 0.05   # the round edge between the face and the rim
+    inner = [(p[0] - n[0] * bw, p[1] - n[1] * bw) for p, n in zip(pts, out)]
+    middle, zr, k = (0.0, H / 2), M_ZF - bw, 0.4
+    rim = ((zr, SEAM, col("rim")), (SEAM, -SEAM, col("groove")), (-SEAM, -zr, col("rim")))
+    for i, a in enumerate(pts):
+        j = (i + 1) % len(pts)
+        b, ia, ib, na, nb = pts[j], inner[i], inner[j], out[i], out[j]
+        tri([middle + (M_ZF,), ia + (M_ZF,), ib + (M_ZF,)], (0, 0, 1), [mc_face_uv(*middle), mc_face_uv(*ia), mc_face_uv(*ib)],
+            [mc_bright(middle[1]), mc_bright(ia[1]), mc_bright(ib[1])])
+        tri([middle + (-M_ZF,), ia + (-M_ZF,), ib + (-M_ZF,)], (0, 0, -1), col("back"))
+        for s in (1, -1):   # the round edge, front and back
+            quad([ia + (s * M_ZF,), ib + (s * M_ZF,), b + (s * zr,), a + (s * zr,)],
+                 [(na[0] * k, na[1] * k, s), (nb[0] * k, nb[1] * k, s), (nb[0], nb[1], s * k), (na[0], na[1], s * k)], col("bevel"))
+        if i == top:   # (that edge has the opening in it)
+            continue
+        for z0, z1, color in rim:
+            quad([a + (z0,), b + (z0,), b + (z1,), a + (z1,)], [na + (0,), nb + (0,), nb + (0,), na + (0,)], color)
+    # the opening at the top, with its contacts
+    x1, sx, sz, floor, y, up = pts[top][0], M_SLOT_X, M_SLOT_Z, H - SLOT_DEPTH, H, (0, 1, 0)
+    for xa, xb in ((-x1, -sx), (sx, x1)):
+        for z0, z1, color in rim:
+            quad([(xa, y, z0), (xb, y, z0), (xb, y, z1), (xa, y, z1)], up, color)
+    for za, zb in ((zr, sz), (-sz, -zr)):
+        quad([(-sx, y, za), (sx, y, za), (sx, y, zb), (-sx, y, zb)], up, col("rim"))
+    for z, n in ((sz, (0, 0, -1)), (-sz, (0, 0, 1))):
+        quad([(-sx, y, z), (sx, y, z), (sx, floor, z), (-sx, floor, z)], n, col("slot"))
+    for x, n in ((-sx, (1, 0, 0)), (sx, (-1, 0, 0))):
+        quad([(x, y, -sz), (x, y, sz), (x, floor, sz), (x, floor, -sz)], n, col("slot"))
+    quad([(-sx, floor, -sz), (sx, floor, -sz), (sx, floor, sz), (-sx, floor, sz)], up, col("slot"))
+    for xa, xb, gold in contacts(sx):
+        if gold:
+            box((xa, floor, -0.06), (xb, y - 0.035, 0.06), col("gold"))
+        else:
+            box((xa, floor, -sz), (xb, y, sz), col("rim"))
+    # the arrow of the way in: a low ridge, its two slopes catching the light differently
+    ax, ay, aw, ah = M_ARROW
+    apex, left, right = (0.0, H - ay * H), (-aw * M_W / 2, H - (ay + ah) * H), (aw * M_W / 2, H - (ay + ah) * H)
+    ridge = (0.0, (apex[1] + left[1]) / 2)
+    hz = 0.03
+    tri([left + (M_ZF,), ridge + (M_ZF + hz,), apex + (M_ZF,)], unit((-0.4, 0.5, 1)), col("arrow"))
+    tri([right + (M_ZF,), apex + (M_ZF,), ridge + (M_ZF + hz,)], unit((0.4, 0.5, 1)), col("arrow"))
+    tri([left + (M_ZF,), right + (M_ZF,), ridge + (M_ZF + hz,)], unit((0, -0.6, 1)), col("arrow"), 0x60)
+    return [((x, y + BASE, z), *rest) for (x, y, z), *rest in verts]
+
+
+def ps_symbol():
+    """the PlayStation symbol's bitmap, as an image (white where it is)"""
+    import base64
+    import zlib
+    w, h, data = PS_SYMBOL
+    return Image.frombytes("1", (w, h), zlib.decompress(base64.b64decode("".join(data)))).convert("L")
+
+
+def mc_texture():
+    """the face as on the photos, then the plain colors"""
+    k = 8
+    w = 128 * k
+    px = w / M_W
+    h = int(round(H * px))
+
+    def fx(f):   # a fraction of the width, from the left, as a column of the drawing
+        return f * w
+
+    def fy(f):   # a fraction of the height, from the top
+        return f * h
+    face = Image.new("RGB", (w, h), M_BODY)
+    d = ImageDraw.Draw(face)
+
+    def font(size, weight="Bold"):
+        f = ImageFont.truetype(str(ROOT / "third_party/nunito/Nunito[wght].ttf"), int(size * h))
+        f.set_variation_by_name(weight)
+        return f
+
+    # the two small holes at the top corners
+    for hx, hy in M_HOLES:
+        r = 0.016 * h
+        d.ellipse((fx(hx) - r, fy(hy) - r, fx(hx) + r, fy(hy) + r), fill=(14, 15, 17), outline=(70, 73, 80), width=k // 2)
+    # the PlayStation symbol and "PlayStation 2", in blue
+    x0, y0, x1, y1 = M_PS
+    mask = ps_symbol().resize((int(fx(x1) - fx(x0)), int(fy(y1) - fy(y0))), Image.LANCZOS)
+    face.paste(Image.new("RGB", mask.size, M_BLUE), (int(fx(x0)), int(fy(y0))), mask)
+
+    def fitted(s, x0, x1, y, fill, weight, anchor="lm", spacing=0.0):
+        """s across from x0 to x1 (fractions of the width), its middle at y"""
+        size = 0.1
+        f = font(size, weight)
+        width = sum(d.textlength(c, font=f) for c in s) + spacing * h * (len(s) - 1)
+        f = font(size * (x1 - x0) * w / width, weight)
+        sp = spacing * (x1 - x0) * w / width
+        left = fx(x0)
+        for c in s:
+            d.text((left, fy(y)), c, font=f, anchor=anchor, fill=fill)
+            left += d.textlength(c, font=f) + sp * h
+    fitted("PlayStation 2", *M_WORDMARK, M_BLUE, "SemiBold")
+    # "8MB" (a big 8, a smaller MB on its line), "MEMORY CARD" and "MAGICGATE", in grey
+    x0, x1, base, tall = M_8MB
+    big = font(tall / 0.72)
+    d.text((fx(x0), fy(base)), "8", font=big, anchor="ls", fill=M_GREY)
+    left = fx(x0) + d.textlength("8", font=big) + 0.012 * w
+    small = font(0.058)
+    small = font(0.058 * (fx(x1) - left) / d.textlength("MB", font=small))
+    d.text((left, fy(base)), "MB", font=small, anchor="ls", fill=M_GREY)
+    fitted("MEMORY CARD", *M_MEMORY, M_GREY, "SemiBold", spacing=0.004)
+    fitted("MAGICGATE", *M_MAGICGATE, M_GREY, "Bold", spacing=0.004)
+    # the label's recess: a shadow along its top and left edges, a light line along its bottom one
+    x0, y0, x1, y1 = M_LABEL
+    d.rounded_rectangle((fx(x0), fy(y0), fx(x1), fy(y1)), radius=0.012 * h, fill=(42, 44, 49))
+    d.line((fx(x0) + 0.01 * w, fy(y0), fx(x1) - 0.01 * w, fy(y0)), fill=(12, 12, 14), width=int(0.008 * h))
+    d.line((fx(x0), fy(y0) + 0.01 * h, fx(x0), fy(y1) - 0.01 * h), fill=(16, 16, 19), width=int(0.006 * h))
+    d.line((fx(x0) + 0.01 * w, fy(y1), fx(x1) - 0.01 * w, fy(y1)), fill=(80, 84, 92), width=int(0.005 * h))
+    # "SONY", moulded: the same black, a light edge under the letters and a dark one over them
+    x0, x1, y = M_SONY
+    for dy, c in ((0.005, (84, 88, 97)), (-0.004, (20, 21, 24)), (0.0, (46, 48, 54))):
+        fitted("SONY", x0, x1, y + dy, c, "Black", spacing=0.02)
+    tex = Image.new("RGB", (128, 128), M_BODY)
+    tex.paste(face.resize((128, M_ROWS), Image.LANCZOS), (0, 0))
+    tex.paste(tex.crop((0, M_ROWS - 1, 128, M_ROWS)), (0, M_ROWS))   # (a row as the face's last, before the colors)
+    d = ImageDraw.Draw(tex)
+    for i, c in enumerate(M_COLORS.values()):
+        b = mc_patch(i)
+        d.rectangle((b[0], b[1], b[2] - 1, b[3] - 1), fill=c)
+    return tex
+
+
 # ------------------------------------------------------------ the preview
 
 def preview(vertices, tex, path):
@@ -679,7 +893,8 @@ def preview(vertices, tex, path):
 
 
 out = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "assets"
-for file, build, paint in (("sd2psx.icn", model, texture), ("memcardpro2.icn", pro2_model, pro2_texture)):
+for file, build, paint in (("sd2psx.icn", model, texture), ("memcardpro2.icn", pro2_model, pro2_texture),
+                           ("memcard.icn", mc_model, mc_texture)):
     verts.clear()
     vertices = build()
     tex = paint()

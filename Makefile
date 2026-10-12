@@ -42,11 +42,12 @@ PORTS_BUILT = $(wildcard $(PORTS4096)/include/wolfssl/options.h $(PORTS4096)/inc
 # characters in assets/font-ja.ttf.gz)
 IMAGES = space glow buttons card minicard
 SOUNDS = startup exit move confirm back
-# the games' names by their ID (assets/gamenames.bin, made by tools/make_gamenames.py), the models of an sd2psx
-# and of a MemCard PRO2 (assets/*.icn, made by tools/make_card_model.py), and the table that reads the Japanese in a
-# save's title (assets/sjis.bin, made by tools/make_sjis.py)
+# the games' names by their ID (assets/gamenames.bin, made by tools/make_gamenames.py), the models of an sd2psx,
+# of a MemCard PRO2 and of the console's own memory card (assets/*.icn, made by tools/make_card_model.py), and the table
+# that reads the Japanese in a save's title (assets/sjis.bin, made by tools/make_sjis.py)
 ASSET_OBJS = $(addprefix asset_, $(addsuffix _png.o, $(IMAGES)) $(addsuffix _adp.o, $(SOUNDS))) asset_font_ttf.o \
-             asset_gamenames_bin.o asset_sd2psx_icn.o asset_memcardpro2_icn.o asset_sjis_bin.o asset_fontja_gz.o
+             asset_gamenames_bin.o asset_sd2psx_icn.o asset_memcardpro2_icn.o asset_memcard_icn.o asset_sjis_bin.o \
+             asset_fontja_gz.o
 # the IOP modules embedded in the program: mmceman (the sd2psx), and the drivers of the other devices a program can be
 # opened from after SD2Cloud (loaded only for that, see run_elf)
 EMBEDDED_IRX = mmceman mcman mcserv usbd usbmass_bd bdm bdmfs_fatfs mx4sio_bd ata_bd ps2dev9 ps2atad ps2hdd ps2fs
@@ -136,6 +137,10 @@ $(OBJ_DIR)/asset_sd2psx_icn.c: assets/sd2psx.icn
 $(OBJ_DIR)/asset_memcardpro2_icn.c: assets/memcardpro2.icn
 	@mkdir -p $(OBJ_DIR)
 	bin2c $< $@ asset_memcardpro2_icn
+
+$(OBJ_DIR)/asset_memcard_icn.c: assets/memcard.icn
+	@mkdir -p $(OBJ_DIR)
+	bin2c $< $@ asset_memcard_icn
 
 $(OBJ_DIR)/asset_sjis_bin.c: assets/sjis.bin
 	@mkdir -p $(OBJ_DIR)

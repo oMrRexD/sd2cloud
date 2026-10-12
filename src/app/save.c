@@ -113,19 +113,23 @@ static int save_move(card_t *c, save_view_t *v)
     card_t *to;
     char game[12], name[100], t[200];
     long long bytes = 0;
-    int files = 0, r, made;
+    int files = 0, r, made, again;
     save_game_id(v->s.folder, game);   /* (a save that tells its game can always go to a new card of that game) */
     if (nCards < 2 && !game[0]) {
         message_wait(0, NULL, COLOR_WARN, T(T_NO_OTHER_CARDS));
         return 0;
     }
     mcfs_save_info(c->path, v->s.folder, &bytes, &files);
-    if (!(to = choose_dest(c, T_MOVE_TO, bytes, v->s.folder)))
-        return 0;
     save_name(v, name, sizeof(name));
-    snprintf(t, sizeof(t), T(T_CONFIRM_MOVE), name, to->base);
-    made = to == &destNew;
-    if (!confirm(t, made ? T(T_NEWCARD_NOTE) : NULL, T_MOVE) || !(to = dest_real(to)))
+    for (again = 0;; again = 1) {   /* (circle on the question: back to the cards, where they were) */
+        if (!(to = choose_dest(c, T_MOVE_TO, bytes, v->s.folder, again)))
+            return 0;
+        snprintf(t, sizeof(t), T(T_CONFIRM_MOVE), name, to->base);
+        made = to == &destNew;
+        if (confirm(t, made ? T(T_NEWCARD_NOTE) : NULL, T_MOVE))
+            break;
+    }
+    if (!(to = dest_real(to)))
         return 0;
     if (card_free(to, c) || card_free(c, to)) {
         card_back();

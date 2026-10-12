@@ -68,6 +68,13 @@ SCENARIOS = [
      "script": "QXXXS>XXXXC"},
     {"name": "psu-import", "what": "a .psu file imported into a card", "cards": CARDS, "files": {"Files/save.psu": "save.psu"},
      "script": ">>XXXXXXXC"},
+    # (circle on the question of where it goes: the cards as they were left, not from the start)
+    {"name": "psu-import-back", "what": "a .psu's card picked, its question answered with circle: back on that card, "
+     "picked again and imported", "cards": CARDS, "files": {"Files/save.psu": "save.psu"}, "script": ">>XXXXDXOXXXC"},
+    {"name": "save-move-back", "what": "a save's move: a game card picked in its folder, the question answered with "
+     "circle, back on that card in its folder, moved", "cards": CARDS, "script": "XXDX>XDXOXXXC"},
+    {"name": "save-copy-back", "what": "a copy's paste on a card of the list given up at its question: the list as it "
+     "was, pasted there", "cards": CARDS, "script": "XXXSDSOSXXC"},
     {"name": "psu-folder-import", "what": "a save copied as a folder (its files, as on the card): square on it, its page, installed into a card",
      "cards": CARDS, "files": dict(psu_folder("save.psu", "Files/BASLUS-21065GAMMA"), **{"Files/BASLUS-21065GAMMA/icon.sys": b"PS2D"}),
      "script": ">>XXQXXXXC"},
@@ -120,6 +127,8 @@ SCENARIOS = [
     # (its options, "Upload to Drive": read into a card file, sent as a dry sync sends, "B": nothing goes)
     {"name": "memcard-upload", "what": "the whole Memory Card uploaded to Drive (dry: PCSX2 has no Google account)",
      "cards": CARDS, "memcard": "memcard.ps2", "script": ">>DDXTXXBwC"},
+    {"name": "memcard-paste-back", "what": "a paste on the Memory Card given up at its question: back on the Memory Card, "
+     "pasted there", "cards": CARDS, "memcard": "memcard.ps2", "script": "XXXO>>DDSOSXXC"},
     {"name": "memcard-paste-list", "what": "a save marked on a card, pasted with START on the Memory Card in the list of "
      "cards", "cards": CARDS, "memcard": "memcard.ps2", "script": "XXXO>>DDSXXC"},
     {"name": "settings", "what": "settings changed (how many backups are kept, their format, the language) and About",

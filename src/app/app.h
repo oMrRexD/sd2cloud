@@ -193,7 +193,7 @@ extern card_t destNew;
 void scene_dest(float t);
 void dest_info(void);
 int save_game_id(const char *folder, char id[12]);
-card_t *choose_dest(const card_t *from, int title, long long need, const char *save);
+card_t *choose_dest(const card_t *from, int title, long long need, const char *save, int again);
 int new_card(int tab, const char *gameFolder, int max, char folder[48], char base[56]);
 const char *dest_game_folder(void);
 void dest_new_name(void);

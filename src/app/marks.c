@@ -182,13 +182,19 @@ static int mark_folder(void)
 
 /* The list, until START with something marked (1) or circle with the marks let go of (0). at = the card it opens on
  * (&allGames = "All saves"; NULL = the first one). For a copy the list has the Files group too: X or START on a
- * device opens its folders, where START writes the marked saves as .psu files (2 = that was done) */
-static int mark_cards(const card_t *at)
+ * device opens its folders, where START writes the marked saves as .psu files (2 = that was done). again = back from
+ * pasting them, given up (circle on its question): the list as it was left, the group, the folder and the cursor */
+static int mark_cards(const card_t *at, int again)
 {
     int r = -1;
     ui_lock();
     marks.done = 0;
     marks.into = NULL;
+    if (again) {
+        if (mark_game() || cardsUnsorted)   /* (a card made, and the rows with it) */
+            tabs_redo(&mk.g);
+        goto shown;
+    }
     tabs_init(&mk.g, NULL, marks.copy);
     mk.g.all = 1;
     mark_game();
@@ -207,6 +213,7 @@ static int mark_cards(const card_t *at)
             tabs_find(&mk.g, (int)(at - cards));
         }
     }
+shown:
     snprintf(mk.title, sizeof(mk.title), "%s", T(T_TPL_MARK_TITLE));
     mk.icon = NULL;
     mk.iconCard = -1;
@@ -293,7 +300,7 @@ int mark_saves(void)
     brwIcon = NULL;   /* (the cards' saves have their own icons: not the ones of a template that is open) */
     marks_reset();
     marks.on = 1;
-    r = mark_cards(NULL);
+    r = mark_cards(NULL, 0);
     ui_lock();
     marks.on = 0;
     if (!r)
@@ -530,8 +537,10 @@ int marks_of(const card_t *c)
  * the saves were pasted somewhere, or let go of */
 void copy_go_on(const card_t *at)
 {
-    while (mark_cards(at) == 1 && !copy_marked(marks.into))
-        ;   /* (back from where they were to go: the cards again. 0 = let go of, 2 = written to a folder) */
+    int again = 0;
+    while (mark_cards(at, again) == 1 && !copy_marked(marks.into))
+        again = 1;   /* (back from where they were to go: the cards again, as they were. 0 = let go of, 2 = written to a
+                        folder) */
     marks_reset();
 }
 

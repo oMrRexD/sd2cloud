@@ -105,13 +105,16 @@ int save_game_id(const char *folder, char id[12])
 
 /* the card picked (NULL = circle). from = a card to leave out, title = the text over the card, need = the save's size,
  * save = the save's folder (NULL = none): when its name tells the game, the Games group also offers a new card for
- * that game, and &destNew comes back when that is what was picked */
-card_t *choose_dest(const card_t *from, int title, long long need, const char *save)
+ * that game, and &destNew comes back when that is what was picked. again = back from the question about the card
+ * picked, answered with circle: the cards are as they were left (the group, the folder that was open, the cursor) */
+card_t *choose_dest(const card_t *from, int title, long long need, const char *save, int again)
 {
     card_t *c = NULL;
     char id[12];
     int i;
     ui_lock();
+    if (again)
+        goto shown;
     tabs_init(&dst.g, from, 0);
     if (!dst.g.memcard && from != &slotCard && memcard_there()) {   /* (moved or installed into it too) */
         dst.g.memcard = 1;
@@ -123,10 +126,11 @@ card_t *choose_dest(const card_t *from, int title, long long need, const char *s
         /* (counted again: the Games group may be there only for this, and is then the one to open on) */
         tabs_show(&dst.g, dst.g.tab == TAB_FILES ? TAB_GAMES : dst.g.tab);
     }
-    dst.title = T(title);
-    dst.need = need;
     for (i = 0; i < MAX_CARDS; i++)
         dst.freeBytes[i] = -2;
+shown:
+    dst.title = T(title);
+    dst.need = need;
     dst.icon = NULL;
     dst.iconCard = -1;
     dest_new_name();
