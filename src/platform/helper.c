@@ -109,6 +109,8 @@ static int mc_write_file(int port, const char *path, const unsigned char *d, int
     return 0;
 }
 
+static const mcfs_slot_t slotCalls;
+
 /* loads mcman/mcserv, once. 0 = they are there */
 static int memcard_start(void)
 {
@@ -122,6 +124,7 @@ static int memcard_start(void)
             log_msg("helper: mcInit %d", r);
             return -1;
         }
+        mcfs_slot(&slotCalls);   /* (the Memory Card in the other slot, read and written by the engine through them) */
         started = 1;
     }
     return 0;
@@ -355,7 +358,18 @@ int helper_space(void)
 
 /* ------------------------------------------------------------ a save, into the card in a slot */
 
-int mc_slot(void) { return strncmp(sdRoot, "mmce", 4) ? 0 : sdRoot[4] - '0'; }
+#ifdef DEBUG_BUILD
+int debugDeviceSlot2;   /* (script "J") */
+#endif
+
+int mc_slot(void)
+{
+#ifdef DEBUG_BUILD
+    if (debugDeviceSlot2)
+        return 1;
+#endif
+    return strncmp(sdRoot, "mmce", 4) ? 0 : sdRoot[4] - '0';
+}
 
 int mc_has_folder(int port, const char *folder)
 {
@@ -783,3 +797,103 @@ int card_app_update(const buffer_t *app, const buffer_t *helper, const char *ver
     log_msg("helper: update of %s %s; the folder's dates put back (%d)", appCardDir, r == 0 ? "written and verified" : "FAILED", mc_wait());
     return r;
 }
+
+/* ------------------------------------------------------------ the Memory Card (memcard.c)
+
+   A PS2 memory card in the slot the device isn't in, read and written for the engine (mcfs.c, "mc0:"/"mc1:") by
+   mcman's calls: its folders and files with their modes and dates, as a card has them, a file of it read, a .psu
+   written into it (mc_put_save) and a save deleted (mc_delete_save). */
+
+int mc_other_slot(void)
+{
+    int port = 1 - mc_slot(), type = 0, freeKb = 0, format = 0, r;
+    if (memcard_start() != 0)
+        return -1;
+    static int told = -100;
+    int got;
+    mcGetInfo(port, 0, &type, &freeKb, &format);
+    got = mc_wait();   /* (0, or -1: another card than when it was last asked; both come with what it is) */
+    r = (got == 0 || got == -1) && type == 2 && format ? port : -1;
+    if (r != told) {   /* (said when it changes: it is asked each time the Files group is shown) */
+        told = r;
+        log_msg("memory card: slot %d %s (%d: type %d, formatted %d, %d KB free)", port + 1, r >= 0 ? "has one" : "has none",
+                got, type, format, freeKb);
+    }
+    return r;
+}
+
+static int slot_dir(int port, const char *folder, unsigned char (*ent)[MCFS_ENT], int max)
+{
+    static sceMcTblGetDir table[512];
+    char path[48];
+    int n, i;
+    if (memcard_start() != 0)
+        return -1;
+    if (folder)
+        snprintf(path, sizeof(path), "/%.32s/*", folder);
+    else
+        snprintf(path, sizeof(path), "/*");
+    mcGetDir(port, 0, path, 0, max < 512 ? max : 512, table);
+    if ((n = mc_wait()) < 0) {
+        log_msg("memory card: mc%d %s couldn't be listed (%d)", port, path, n);
+        return -1;
+    }
+    for (i = 0; i < n; i++) {   /* (as a card's entry: the mode, the length, the dates and the name) */
+        unsigned char *e = ent[i];
+        unsigned int len = table[i].FileSizeByte;
+        memset(e, 0, MCFS_ENT);
+        e[0] = table[i].AttrFile & 0xFF;
+        e[1] = table[i].AttrFile >> 8;
+        e[4] = len, e[5] = len >> 8, e[6] = len >> 16, e[7] = len >> 24;
+        memcpy(e + 8, &table[i]._Create, 8);
+        memcpy(e + 24, &table[i]._Modify, 8);
+        memcpy(e + 64, table[i].EntryName, strnlen((const char *)table[i].EntryName, 32));
+    }
+    return n;
+}
+
+static int slot_read(int port, const char *folder, const char *name, buffer_t *out)
+{
+    static unsigned char block[16 * 1024] __attribute__((aligned(64)));
+    char path[80];
+    int fd, k, r = 0;
+    buf_free(out);
+    if (memcard_start() != 0)
+        return -1;
+    snprintf(path, sizeof(path), "/%.32s/%.32s", folder, name);
+    mcOpen(port, 0, path, MC_RDONLY);
+    if ((fd = mc_wait()) < 0)
+        return -1;
+    for (;;) {
+        mcRead(fd, block, sizeof(block));
+        if ((k = mc_wait()) <= 0) {
+            r = k;
+            break;
+        }
+        if (buf_append(out, block, k)) {
+            r = -1;
+            break;
+        }
+    }
+    mcClose(fd);
+    mc_wait();
+    if (r < 0) {
+        log_msg("memory card: mc%d %s couldn't be read (%d)", port, path, r);
+        buf_free(out);
+    }
+    return r < 0 ? -1 : 0;
+}
+
+static long long slot_free(int port)
+{
+    int type = 0, freeKb = 0, format = 0, r;
+    if (memcard_start() != 0)
+        return -1;
+    mcGetInfo(port, 0, &type, &freeKb, &format);
+    r = mc_wait();
+    return (r == 0 || r == -1) && type == 2 ? (long long)freeKb * 1024 : -1;
+}
+
+static int slot_remove(int port, const char *folder) { return mc_delete_save(port, folder) == 0 ? MCFS_OK : MCFS_ERR_IO; }
+
+static const mcfs_slot_t slotCalls = {slot_dir, slot_read, slot_free, mc_put_save, slot_remove};

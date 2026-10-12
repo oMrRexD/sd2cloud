@@ -7,6 +7,11 @@
 static void start_app(card_t *c, const char *folder, const char *boot)
 {
     char path[160];
+    if (mcfs_slot_port(c->path) >= 0) {   /* (the Memory Card: from its slot, as it is) */
+        snprintf(path, sizeof(path), "%s/%s/%s", c->path, folder, boot);
+        log_msg("starting %s of the Memory Card", path);
+        leave(path);
+    }
     find_active();
     if (!(activeCard >= 0 && &cards[activeCard] == c)) {
         if (can_insert(c))

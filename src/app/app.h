@@ -62,7 +62,8 @@ typedef struct {
     int cursor, top;          /* in the list */
     int keep[TABS][2];        /* each group's cursor and top: switching back lands on the same card */
     const card_t *skip;       /* a card left out (the one a save is copied from) */
-    int files;                /* the Files group is offered too */
+    int files;                /* the Files group is offered too, with the devices */
+    int memcard;              /* the Files group offers the Memory Card (memcard.c), after the devices if they are there */
     int games[MAX_CARDS], nGames;         /* the game cards, by game and then as they come in cards[] */
     int first[MAX_CARDS + 1], folders;    /* where each folder starts in games[] (first[folders] = nGames) */
     char label[MAX_CARDS][64];            /* each folder's name, cut to fit the list */
@@ -162,12 +163,19 @@ extern struct psu_s psu;
 void psu_close(void);
 void files_screen(int dev);
 
+/* ------------------------------------------------------------ memcard.c */
+extern card_t slotCard;                  /* the Memory Card, in the console's other slot */
+int memcard_there(void);
+void memcard_screen(void);
+void memcard_hint(void);
+
 /* ------------------------------------------------------------ dest.c */
 struct dst_s {
     tabs_t g;
     const char *title;
     long long need;                   /* the save's size (0 = the card is only being picked, nothing goes into it) */
     long long freeBytes[MAX_CARDS];   /* each card's free space, once read (-2 = not yet, -1 = unknown) */
+    long long memFree;                /* the Memory Card's, the same way */
     icon_t *icon;                     /* the selected game card's icon, once read */
     int iconCard;                     /* which card that icon is of (-1 = none) */
     char newName[56];                 /* on "New card": the card it would make ("" = not known before asking) */
@@ -353,6 +361,7 @@ void tabs_find(tabs_t *g, int card);
 int tabs_folder_nav(tabs_t *g, u32 b);
 int tabs_nav(tabs_t *g, u32 b);
 void tabs_draw(const tabs_t *g, int dots);
+int tabs_device(const tabs_t *g);        /* the Files group's device under the cursor (-1 = the Memory Card) */
 
 /* ------------------------------------------------------------ tools.c */
 int templates_startup(void);              /* the warning of game cards that lack their templates: how many (0 = none) */

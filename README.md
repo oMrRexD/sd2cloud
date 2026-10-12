@@ -64,6 +64,9 @@ on one yet.
 - Imports and exports `.psu` files: the **Files** tab browses the folders of the MMCE and of a USB drive (FAT32
   or exFAT), installs a `.psu` into any card and saves any item of a card as a `.psu`. What is written is read back
   and compared.
+- Manages a regular **Memory Card** in the console's other slot, from the **Files** tab: its saved data is shown,
+  copied, moved and deleted as a card's are, and saved data goes into it from the device's cards or from `.psu`
+  files.
 - Keeps **templates**: sets of saved data you mark on your cards, kept on the MMCE and put into any card in one
   go. The device makes the card of a new game empty; a template gives it what every card of yours should have, as
   the network settings an online game asks for. Saved data the card already has is never touched. One template can

@@ -67,6 +67,9 @@ SD2Cloud ainda não foi testado em um.
 - Importa e exporta arquivos `.psu`: a aba **Arquivos** navega pelas pastas do MMCE e de um pendrive USB (FAT32
   ou exFAT), instala um `.psu` em qualquer cartão e grava qualquer item de um cartão como `.psu`. O que é gravado
   é lido de volta e comparado.
+- Gerencia um **Memory Card** comum no outro slot do console, pela aba **Arquivos**: os dados salvos dele são
+  exibidos, copiados, movidos e eliminados como os de um cartão, e dados salvos entram nele vindos dos cartões do
+  dispositivo ou de arquivos `.psu`.
 - Mantém **templates**: conjuntos de dados salvos que você marca nos seus cartões, guardados no MMCE e
   aplicados a qualquer cartão de uma vez. O aparelho cria vazio o cartão de um jogo novo; um template dá a ele o
   que todo cartão seu deve ter, como o network settings que um jogo online pede. Dados salvos que o cartão já tem

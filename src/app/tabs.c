@@ -204,10 +204,12 @@ void tabs_show(tabs_t *g, int tab)
     }
     if (g->newGame[0] && !g->count[TAB_GAMES])   /* no game card yet: the group is there for the new one */
         g->count[TAB_GAMES] = 1;
-    if (g->files)
-        g->count[TAB_FILES] = FDEVS;
+    if (tab == TAB_FILES && g->files)   /* (one put in or taken out meanwhile: asked again each time) */
+        g->memcard = g->skip != &slotCard && memcard_there();
+    if (g->files || g->memcard)
+        g->count[TAB_FILES] = (g->files ? FDEVS : 0) + g->memcard;
     if (tab == TAB_FILES)
-        g->n = FDEVS;
+        g->n = g->count[TAB_FILES];
     g->tab = tab;
     if (tab == TAB_GAMES)
         tabs_games(g);
@@ -224,6 +226,7 @@ void tabs_init(tabs_t *g, const card_t *skip, int files)
     memset(g, 0, sizeof(*g));
     g->skip = skip;
     g->files = files;
+    g->memcard = files && skip != &slotCard && memcard_there();
     g->open = -1;
     g->moved = -1;
     tabs_show(g, TAB_CARDS);
@@ -241,6 +244,9 @@ static int tabs_next(const tabs_t *g, int dir)
             return k;
     return -1;
 }
+
+/* in the Files group: the device the cursor is on (FDEV_*), or -1 on the Memory Card */
+int tabs_device(const tabs_t *g) { return g->files && g->cursor < FDEVS ? g->cursor : -1; }
 
 /* the selected card, or the first card of the selected folder (NULL = the group has none, or it's the Files group) */
 card_t *tabs_card(const tabs_t *g)
@@ -315,7 +321,7 @@ static const char *tabs_text(int i, char *buf)
 {
     (void)buf;
     if (rowsOf->tab == TAB_FILES)
-        return T(deviceText[i]);
+        return i < (rowsOf->files ? FDEVS : 0) ? T(deviceText[i]) : T(T_MEMCARD);
     if (rowsOf->idx[i] < 0)
         return T(rowsOf->add || rowsOf->newGame[0] ? T_NEW_CARD : T_ALL_SAVES);
     return tabs_on_folders(rowsOf) ? rowsOf->label[i - tabs_lead(rowsOf)] : cards[rowsOf->idx[i]].base;

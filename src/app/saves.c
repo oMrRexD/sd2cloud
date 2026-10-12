@@ -671,7 +671,7 @@ static int browser_options(const card_t *c)
     int r = 0;
     ui_lock();
     opt.n = opt.cursor = 0;
-    if (c != &allGames && c != &fileCard)
+    if (c != &allGames && c != &fileCard && c != &slotCard)   /* (the device's cards are the ones synced) */
         opt.id[opt.n++] = OPT_SYNC;
     opt.id[opt.n++] = OPT_SORT;
     if (c == &allGames)

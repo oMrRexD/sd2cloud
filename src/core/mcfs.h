@@ -76,6 +76,24 @@ int mcfs_psu_files(const char *psu, mcfs_psu_cb cb, void *u);
  * functions that only read a card take MCFS_IMAGE as its path from then on; it is never written to */
 #define MCFS_IMAGE "image:"
 void mcfs_image(const char *file, const unsigned char *mem, size_t len);
+/* A PS2 memory card in a slot of the console, not a file: "mc0:" or "mc1:" as its path. It is read and written through
+ * mcman's own calls (the platform's, given once with mcfs_slot), never by its pages: the functions above that take a
+ * card's path take it too, and it is written to (a save copied, moved or imported into it, or deleted from it) */
+#define MCFS_ENT 512
+typedef struct {
+    /* the entries of its root (folder NULL) or of a save's folder, as a card has them: the mode, the length, the two
+     * dates and the name, the rest zeros. Returns how many, or -1 */
+    int (*dir)(int port, const char *folder, unsigned char (*ent)[MCFS_ENT], int max);
+    int (*read)(int port, const char *folder, const char *name, buffer_t *out);   /* a file of a save: 0 = ok */
+    long long (*free_bytes)(int port);                                            /* -1 = unknown */
+    int (*put)(int port, const char *psu);                                         /* a .psu into it: MCFS_OK or MCFS_ERR_* */
+    int (*remove)(int port, const char *folder);                                   /* a save out of it: MCFS_OK or MCFS_ERR_* */
+} mcfs_slot_t;
+void mcfs_slot(const mcfs_slot_t *ops);
+int mcfs_slot_port(const char *path);   /* 0 or 1 for "mc0:" and "mc1:"; -1 = a card's file */
+/* a .psu held in memory: MCFS_PSU_MEMORY is taken as its path by the functions that read a .psu (until the next call) */
+#define MCFS_PSU_MEMORY "psu:"
+void mcfs_psu_memory(const unsigned char *d, size_t len);
 /* what a card's first 340 bytes (its superblock) say: its size as a .mcd and its pages'. 0 = not a PS2 memory card */
 long long mcfs_card_size(const unsigned char *sb, int *page);
 

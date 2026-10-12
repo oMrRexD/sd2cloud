@@ -21,6 +21,16 @@
 #include <wolfssl/wolfcrypt/sha256.h>
 #include "common.h"
 
+/* a memory card in a slot of the console (mcfs_slot): the functions that take a card's path send it there */
+static int slot_list(int port, mcfs_save_t *list, int max, long long *freeBytes);
+static int slot_icon(int port, const mcfs_save_t *s, buffer_t *iconsys, buffer_t *ico);
+static int slot_app(int port, const mcfs_save_t *s, char *boot, size_t size);
+static int slot_info(int port, const char *folder, long long *bytes, int *files);
+static int slot_copy(const char *from, const char *folder, const char *to, mcfs_step_cb progress);
+static int slot_delete(int port, const char *folder);
+static int slot_export(int port, const char *folder, buffer_t *out);
+static int slot_import(const char *psu, int port);
+
 #define MAGIC         "Sony PS2 Memory Card Format "
 #define MAX_CLUSTER   2048     /* bytes */
 #define CACHE         32
@@ -458,7 +468,10 @@ static int newer_first(const void *a, const void *b)
 int mcfs_list_saves(const char *path, mcfs_save_t *list, int max, long long *freeBytes)
 {
     list_ctx_t x = {list, 0, max};
-    int rootdir = mc_open(&mc, path), r = -1;
+    int rootdir, r = -1;
+    if (mcfs_slot_port(path) >= 0)
+        return slot_list(mcfs_slot_port(path), list, max, freeBytes);
+    rootdir = mc_open(&mc, path);
     if (rootdir < 0)
         return -1;
     if (walk_root(&mc, rootdir, on_save_dir, &x) == 0) {
@@ -597,24 +610,34 @@ static int on_find_name(mc_t *m, const unsigned char *e, void *u)
     return 0;
 }
 
+/* the file a title.cfg's "boot" line names ("" = none) */
+static void cfg_boot(const buffer_t *cfg, char name[64])
+{
+    char *line, *end;
+    name[0] = 0;
+    for (line = (char *)cfg->data; line && *line && !name[0]; line = end ? end + 1 : NULL) {
+        end = strchr(line, '\n');
+        if (!strncmp(line, "boot=", 5)) {   /* as OPL reads it: "boot", in lowercase, at the start of a line */
+            size_t n = strcspn(line + 5, "\r\n");
+            while (n && line[5 + n - 1] == ' ')
+                n--;
+            snprintf(name, 64, "%.*s", (int)(n < 63 ? n : 63), line + 5);
+        }
+    }
+}
+
 int mcfs_save_app(const char *path, const mcfs_save_t *s, char *boot, size_t size)
 {
     buffer_t cfg = {0};
-    char name[64] = "", *line, *end;
+    char name[64] = "";
     find_name_t f = {name, boot, size};
     boot[0] = 0;
+    if (mcfs_slot_port(path) >= 0)
+        return slot_app(mcfs_slot_port(path), s, boot, size);
     if (mc_open(&mc, path) < 0)
         return 0;
     if (read_file(&mc, s, "title.cfg", &cfg) == 0 && cfg.len < 16 * 1024) {
-        for (line = (char *)cfg.data; line && *line && !name[0]; line = end ? end + 1 : NULL) {
-            end = strchr(line, '\n');
-            if (!strncmp(line, "boot=", 5)) {   /* as OPL reads it: "boot", in lowercase, at the start of a line */
-                size_t n = strcspn(line + 5, "\r\n");
-                while (n && line[5 + n - 1] == ' ')
-                    n--;
-                snprintf(name, sizeof(name), "%.*s", (int)(n < sizeof(name) - 1 ? n : sizeof(name) - 1), line + 5);
-            }
-        }
+        cfg_boot(&cfg, name);
         if (name[0])
             walk_dir(&mc, s->cluster, s->count, on_find_name, &f);
     }
@@ -681,6 +704,8 @@ int mcfs_save_signatures(const char *path, const mcfs_save_t *saves, int n, unsi
 int mcfs_save_icon(const char *path, const mcfs_save_t *s, buffer_t *iconsys, buffer_t *ico)
 {
     int r;
+    if (mcfs_slot_port(path) >= 0)
+        return slot_icon(mcfs_slot_port(path), s, iconsys, ico);
     if (mc_open(&mc, path) < 0)
         return -1;
     r = read_icon(&mc, s, iconsys, ico);
@@ -1043,6 +1068,8 @@ int mcfs_save_info(const char *path, const char *folder, long long *bytes, int *
 {
     int r, i;
     *bytes = 0, *files = 0;
+    if (mcfs_slot_port(path) >= 0)
+        return slot_info(mcfs_slot_port(path), folder, bytes, files);
     if (mc_open(&mc, path) < 0)
         return MCFS_ERR_IO;
     r = read_entries(&mc, folder, &srcSave);   /* the sizes are in the entries: the files themselves aren't read */
@@ -1172,6 +1199,8 @@ int mcfs_copy_save(const char *from, const char *folder, const char *to, mcfs_st
 {
     u64 start = now_ms();
     int r, i;
+    if (mcfs_slot_port(from) >= 0 || mcfs_slot_port(to) >= 0)   /* (to or from a memory card in a slot) */
+        return slot_copy(from, folder, to, progress);
     /* the save, from its card */
     if (mc_open(&mc, from) < 0)
         return MCFS_ERR_IO;
@@ -1203,6 +1232,8 @@ int mcfs_delete_save(const char *path, const char *folder)
     u64 start = now_ms();
     int r = MCFS_ERR_IO, i;
     srcSave.n = 0;
+    if (mcfs_slot_port(path) >= 0)
+        return slot_delete(mcfs_slot_port(path), folder);
     if (mc_open_mode(&mc, path, O_RDWR) < 0)
         return MCFS_ERR_IO;
     ioReads = ioWrites = 0;
@@ -1233,33 +1264,42 @@ out:
 
 /* a .psu (the format uLaunchELF and others use): the folder's entry, "." and "..", then each file's entry followed by
  * its contents padded to 1 KB */
-int mcfs_export_psu(const char *path, const char *folder, buffer_t *out)
+/* a save as it was read (s), as a .psu */
+static int psu_of(const save_raw_t *s, buffer_t *out)
 {
     static const unsigned char pad[1024];
     static unsigned char e[ENT];
-    int r, i;
+    int i;
+    for (i = -1; i < s->n; i++) {
+        unsigned int len;
+        memcpy(e, i < 0 ? s->root : s->ent[i], ENT);
+        if (i < 0)
+            put32(e + 4, s->n);
+        put32(e + 16, 0);
+        put32(e + 20, 0);
+        if (buf_append(out, e, ENT))
+            return MCFS_ERR_IO;
+        if (i < 2 || (le16(e) & DF_DIRECTORY))
+            continue;
+        len = le32(e + 4);
+        if ((len && buf_append(out, s->data[i].data, len)) || (len % 1024 && buf_append(out, pad, 1024 - len % 1024)))
+            return MCFS_ERR_IO;
+    }
+    return MCFS_OK;
+}
+
+int mcfs_export_psu(const char *path, const char *folder, buffer_t *out)
+{
+    int r;
     buf_free(out);
+    if (mcfs_slot_port(path) >= 0)
+        return slot_export(mcfs_slot_port(path), folder, out);
     if (mc_open(&mc, path) < 0)
         return MCFS_ERR_IO;
     r = read_save(&mc, folder, &srcSave);
     mc_close();
-    for (i = -1; r == MCFS_OK && i < srcSave.n; i++) {
-        unsigned int len;
-        memcpy(e, i < 0 ? srcSave.root : srcSave.ent[i], ENT);
-        if (i < 0)
-            put32(e + 4, srcSave.n);
-        put32(e + 16, 0);
-        put32(e + 20, 0);
-        if (buf_append(out, e, ENT)) {
-            r = MCFS_ERR_IO;
-            break;
-        }
-        if (i < 2 || (le16(e) & DF_DIRECTORY))
-            continue;
-        len = le32(e + 4);
-        if ((len && buf_append(out, srcSave.data[i].data, len)) || (len % 1024 && buf_append(out, pad, 1024 - len % 1024)))
-            r = MCFS_ERR_IO;
-    }
+    if (r == MCFS_OK)
+        r = psu_of(&srcSave, out);
     save_free(&srcSave);
     if (r != MCFS_OK)
         buf_free(out);
@@ -1369,6 +1409,37 @@ static int read_folder(const char *path, save_raw_t *s)
 /* the .psu as a save read from a card (srcSave), checked whole before anything is written anywhere: the sizes
  * against the file's own, the names, no folder inside it, no name twice. The file is closed again before this
  * returns: on the sd2psx it must not be open while a card is. A path ending in / is a save copied as a folder */
+static const unsigned char *psuMem;   /* a .psu held in memory (MCFS_PSU_MEMORY) */
+static size_t psuMemLen, psuAt;
+
+void mcfs_psu_memory(const unsigned char *d, size_t len)
+{
+    psuMem = d;
+    psuMemLen = len;
+}
+
+/* (read and lseek, on a .psu's file or on the one held in memory: fd = -2) */
+static int psu_read(int fd, void *d, size_t n)
+{
+    if (fd != -2)
+        return read(fd, d, n);
+    if (psuAt >= psuMemLen)
+        return 0;
+    if (n > psuMemLen - psuAt)
+        n = psuMemLen - psuAt;
+    memcpy(d, psuMem + psuAt, n);
+    psuAt += n;
+    return (int)n;
+}
+
+static long psu_seek(int fd, long at)
+{
+    if (fd != -2)
+        return lseek(fd, at, SEEK_SET);
+    psuAt = (size_t)at;
+    return at;
+}
+
 static int read_psu(const char *path, save_raw_t *s)
 {
     long size, at = ENT;
@@ -1376,12 +1447,20 @@ static int read_psu(const char *path, save_raw_t *s)
     s->n = 0;
     if (path[0] && path[strlen(path) - 1] == '/')
         return read_folder(path, s);
-    if ((fd = open(path, O_RDONLY)) < 0)
-        return MCFS_ERR_IO;
-    size = lseek(fd, 0, SEEK_END);
-    lseek(fd, 0, SEEK_SET);
+    if (!strcmp(path, MCFS_PSU_MEMORY)) {
+        if (!psuMem)
+            return MCFS_ERR_IO;
+        fd = -2;
+        psuAt = 0;
+        size = (long)psuMemLen;
+    } else {
+        if ((fd = open(path, O_RDONLY)) < 0)
+            return MCFS_ERR_IO;
+        size = lseek(fd, 0, SEEK_END);
+        lseek(fd, 0, SEEK_SET);
+    }
     step_phase(MCFS_STEP_READ, size);
-    if (size < 3 * ENT || read(fd, s->root, ENT) != ENT)
+    if (size < 3 * ENT || psu_read(fd, s->root, ENT) != ENT)
         goto out;
     n = (int)le32(s->root + 4);
     if (!(le16(s->root) & DF_DIRECTORY) || !name_ok(s->root) || n < 2 || n > MAX_ENTRIES)
@@ -1390,7 +1469,7 @@ static int read_psu(const char *path, save_raw_t *s)
     for (i = 0; i < n; i++) {
         unsigned char *e = s->ent[i];
         unsigned int len, done;
-        if (at + ENT > size || read(fd, e, ENT) != ENT)
+        if (at + ENT > size || psu_read(fd, e, ENT) != ENT)
             goto out;
         at += ENT;
         s->n = i + 1;
@@ -1419,7 +1498,7 @@ static int read_psu(const char *path, save_raw_t *s)
             }
             s->data[i].cap = len + 1;
             for (done = 0; done < len;) {
-                int got = read(fd, s->data[i].data + done, len - done > 64 * 1024 ? 64 * 1024 : len - done);
+                int got = psu_read(fd, s->data[i].data + done, len - done > 64 * 1024 ? 64 * 1024 : len - done);
                 if (got <= 0)
                     goto out;
                 done += got;
@@ -1431,12 +1510,13 @@ static int read_psu(const char *path, save_raw_t *s)
             s->data[i].len = len;
         }
         at += (len + 1023) & ~1023u;   /* each file is padded to 1 KB (the last one's padding may be missing) */
-        if (len % 1024 && at <= size && lseek(fd, at, SEEK_SET) < 0)
+        if (len % 1024 && at <= size && psu_seek(fd, at) < 0)
             goto out;
     }
     r = MCFS_OK;
 out:
-    close(fd);
+    if (fd >= 0)
+        close(fd);
     if (r != MCFS_OK)
         save_free(s);
     return r;
@@ -1494,6 +1574,8 @@ int mcfs_import_psu(const char *psu, const char *to, mcfs_step_cb progress)
 {
     u64 start = now_ms();
     int r;
+    if (mcfs_slot_port(to) >= 0)
+        return slot_import(psu, mcfs_slot_port(to));
     ioReads = ioWrites = 0;
     onStep = progress;
     stepStop = 0;
@@ -1637,5 +1719,228 @@ int mcfs_new_card(const char *path, void (*progress)(long long done, long long t
     free(piece);
     free(back);
     log_msg("mcfs: new card %s: %d", path, r);
+    return r;
+}
+
+/* ------------------------------------------------------------ a memory card in a slot of the console
+
+   Not a file: mcman's own calls read and write it (mcfs_slot, the platform's), by its files and folders. Its saves are
+   listed from its root's entries, and a save is read whole into srcSave, its entries as the card has them (their
+   modes and dates), to go into a card's file the way a save of another card does. What goes into it goes as a .psu,
+   which mcman writes file by file. */
+
+static const mcfs_slot_t *slotOps;
+static unsigned char slotRoot[MAX_ROOT][ENT], slotDir[MAX_ENTRIES][ENT];
+
+void mcfs_slot(const mcfs_slot_t *ops) { slotOps = ops; }
+
+int mcfs_slot_port(const char *path)
+{
+    return path && path[0] == 'm' && path[1] == 'c' && (path[2] == '0' || path[2] == '1') && path[3] == ':' && !path[4]
+               ? path[2] - '0' : -1;
+}
+
+static int slot_list(int port, mcfs_save_t *list, int max, long long *freeBytes)
+{
+    int n, i, k = 0;
+    if (!slotOps || (n = slotOps->dir(port, NULL, slotRoot, MAX_ROOT)) < 0)
+        return -1;
+    for (i = 0; i < n && k < max; i++) {
+        const unsigned char *e = slotRoot[i];
+        if (!is_live(e) || !(le16(e) & DF_DIRECTORY) || is_system_dir((const char *)e + 64))
+            continue;
+        memset(&list[k], 0, sizeof(list[0]));
+        snprintf(list[k].folder, sizeof(list[0].folder), "%.32s", (const char *)e + 64);
+        list[k].when = mtime(e);
+        k++;
+    }
+    if (list)
+        qsort(list, k, sizeof(list[0]), newer_first);
+    if (freeBytes)
+        *freeBytes = slotOps->free_bytes(port);
+    return k;
+}
+
+static int slot_icon(int port, const mcfs_save_t *s, buffer_t *iconsys, buffer_t *ico)
+{
+    char icoName[65];
+    buf_free(iconsys);
+    buf_free(ico);
+    if (!slotOps || slotOps->read(port, s->folder, "icon.sys", iconsys) != 0 || iconsys->len < 964 ||
+        memcmp(iconsys->data, "PS2D", 4) != 0) {
+        buf_free(iconsys);
+        return -1;
+    }
+    snprintf(icoName, sizeof(icoName), "%.64s", (const char *)iconsys->data + 260);
+    if (slotOps->read(port, s->folder, icoName, ico) != 0 || !ico->len) {
+        buf_free(iconsys);
+        buf_free(ico);
+        return -1;
+    }
+    return 0;
+}
+
+/* the save's own files, as entries (".", ".." and folders left out). -1 = it couldn't be read */
+static int slot_files(int port, const char *folder)
+{
+    int n, i, k = 0;
+    if (!slotOps || (n = slotOps->dir(port, folder, slotDir, MAX_ENTRIES)) < 0)
+        return -1;
+    for (i = 0; i < n; i++)
+        if (is_live(slotDir[i]) && !(le16(slotDir[i]) & DF_DIRECTORY))
+            memmove(slotDir[k++], slotDir[i], ENT);
+    return k;
+}
+
+static int slot_app(int port, const mcfs_save_t *s, char *boot, size_t size)
+{
+    buffer_t cfg = {0};
+    char name[64] = "";
+    int n, i;
+    boot[0] = 0;
+    if (slotOps && slotOps->read(port, s->folder, "title.cfg", &cfg) == 0 && cfg.len < 16 * 1024)
+        cfg_boot(&cfg, name);
+    buf_free(&cfg);
+    if (name[0] && (n = slot_files(port, s->folder)) > 0)
+        for (i = 0; i < n && !boot[0]; i++)   /* (whatever its letters' case, as on a card's file) */
+            if (le32(slotDir[i] + 4) && !strncasecmp((const char *)slotDir[i] + 64, name, 32))
+                snprintf(boot, size, "%.32s", (const char *)slotDir[i] + 64);
+    return boot[0] != 0;
+}
+
+static int slot_info(int port, const char *folder, long long *bytes, int *files)
+{
+    int n = slot_files(port, folder), i;
+    if (n < 0)
+        return MCFS_ERR_IO;
+    for (i = 0; i < n; i++)
+        *bytes += le32(slotDir[i] + 4), (*files)++;
+    return MCFS_OK;
+}
+
+/* the save whole into s: its entry in the root, ".", ".." and its files, read; their bytes told to the progress */
+static int slot_read(int port, const char *folder, save_raw_t *s)
+{
+    long long total = 0;
+    int n, i, k;
+    s->n = 0;
+    if (!slotOps || (n = slotOps->dir(port, NULL, slotRoot, MAX_ROOT)) < 0)
+        return MCFS_ERR_IO;
+    for (i = 0; i < n && (!is_live(slotRoot[i]) || strncmp((const char *)slotRoot[i] + 64, folder, 32)); i++)
+        ;
+    if (i == n || !(le16(slotRoot[i]) & DF_DIRECTORY))
+        return MCFS_ERR_NOT_FOUND;
+    memcpy(s->root, slotRoot[i], ENT);
+    if ((n = slot_files(port, folder)) < 0 || n > MAX_ENTRIES - 2)
+        return MCFS_ERR_IO;
+    for (i = 0; i < 2; i++) {   /* "." and "..": where they point is set when the save goes into a card */
+        memcpy(s->ent[i], s->root, ENT);
+        put32(s->ent[i] + 4, 0);
+        memset(s->ent[i] + 64, 0, 32);
+        strcpy((char *)s->ent[i] + 64, i ? ".." : ".");
+    }
+    for (i = 0; i < n; i++)
+        total += le32(slotDir[i] + 4);
+    step_phase(stepPhase, total);
+    s->n = 2;
+    for (i = 0; i < n; i++) {
+        unsigned int len = le32(slotDir[i] + 4);
+        char name[33];
+        k = s->n++;
+        memcpy(s->ent[k], slotDir[i], ENT);
+        buf_free(&s->data[k]);
+        snprintf(name, sizeof(name), "%.32s", (const char *)slotDir[i] + 64);
+        if (len && (slotOps->read(port, folder, name, &s->data[k]) != 0 || s->data[k].len != len)) {
+            save_free(s);
+            s->n = 0;
+            return MCFS_ERR_IO;
+        }
+        if (step(len)) {
+            save_free(s);
+            s->n = 0;
+            return MCFS_ERR_CANCELLED;
+        }
+    }
+    put32(s->root + 4, s->n);
+    return MCFS_OK;
+}
+
+/* a save from a memory card in a slot into a card's file (written as any copy is: read back and compared), or from a
+ * card's file (or a card held in memory) into the memory card, as a .psu */
+static int slot_copy(const char *from, const char *folder, const char *to, mcfs_step_cb progress)
+{
+    int fromPort = mcfs_slot_port(from), toPort = mcfs_slot_port(to), r, i;
+    buffer_t psu = {0};
+    u64 start = now_ms();
+    if (fromPort >= 0 && toPort >= 0)
+        return MCFS_ERR_IO;   /* (there is one memory card besides the device's: never both ends) */
+    onStep = progress;
+    stepStop = 0;
+    step_phase(MCFS_STEP_READ, 0);
+    if (fromPort >= 0) {
+        r = slot_read(fromPort, folder, &srcSave);
+        for (i = 2; r == MCFS_OK && i < srcSave.n; i++)
+            if (le16(srcSave.ent[i]) & DF_DIRECTORY)
+                r = MCFS_ERR_IO;
+        if (r == MCFS_OK)
+            r = write_save(to);
+        save_free(&srcSave);
+    } else {
+        if (mc_open(&mc, from) < 0) {
+            onStep = NULL;
+            return MCFS_ERR_IO;
+        }
+        r = read_save(&mc, folder, &srcSave);
+        mc_close();
+        if (stepStop)
+            r = MCFS_ERR_CANCELLED;
+        if (r == MCFS_OK)
+            r = psu_of(&srcSave, &psu);
+        save_free(&srcSave);
+        if (r == MCFS_OK) {
+            /* mcman writes it and reads it back, file by file: nothing to give up any more (and what it reads of the
+             * .psu, through these same functions, isn't the copy's progress) */
+            onStep = NULL;
+            if (progress)
+                progress(MCFS_STEP_CHECK, 0, (long long)psu.len);
+            mcfs_psu_memory(psu.data, psu.len);
+            r = slotOps ? slotOps->put(toPort, MCFS_PSU_MEMORY) : MCFS_ERR_IO;
+            mcfs_psu_memory(NULL, 0);
+            if (progress)
+                progress(MCFS_STEP_CHECK, (long long)psu.len, (long long)psu.len);
+        }
+        buf_free(&psu);
+    }
+    if (r == MCFS_OK && stepStop)
+        r = MCFS_ERR_CANCELLED;
+    onStep = NULL;
+    log_msg("mcfs: copy of %s from %s to %s: %d in %u ms", folder, from, to, r, (unsigned)(now_ms() - start));
+    return r;
+}
+
+static int slot_delete(int port, const char *folder)
+{
+    int r = slotOps ? slotOps->remove(port, folder) : MCFS_ERR_IO;
+    log_msg("mcfs: %s deleted from mc%d: %d", folder, port, r);
+    return r;
+}
+
+static int slot_export(int port, const char *folder, buffer_t *out)
+{
+    int r = slot_read(port, folder, &srcSave);
+    if (r == MCFS_OK)
+        r = psu_of(&srcSave, out);
+    save_free(&srcSave);
+    if (r != MCFS_OK)
+        buf_free(out);
+    return r;
+}
+
+static int slot_import(const char *psu, int port)
+{
+    int r;
+    onStep = NULL;
+    r = slotOps ? slotOps->put(port, psu) : MCFS_ERR_IO;
+    log_msg("mcfs: import of %s into mc%d: %d", psu, port, r);
     return r;
 }

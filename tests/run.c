@@ -49,7 +49,8 @@ int main(void)
         const char *name;
         void (*run)(void);
     } suites[] = {{"host", suite_host},   {"json", suite_json},   {"ini", suite_ini},             {"state", suite_state},
-                  {"mcfs", suite_mcfs},   {"cards", suite_cards}, {"card file", suite_card_file}, {"templates", suite_templates}};
+                  {"mcfs", suite_mcfs},   {"cards", suite_cards}, {"card file", suite_card_file}, {"templates", suite_templates},
+                  {"slot", suite_slot}};
     size_t i;
     for (i = 0; i < sizeof(suites) / sizeof(suites[0]); i++) {
         int before = tChecks, failed = tFailed;

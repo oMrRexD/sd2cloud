@@ -25,7 +25,7 @@ EE_BIN = $(OBJ_DIR)/sd2cloud-unpacked.elf
 EE_BIN_PACKED = $(DIST)/SD2CLOUD.ELF
 endif
 # (one name each, whatever the folder: the objects all go to the same place)
-SOURCES = main format dialog leave work synclist account backup tabs history active saves save dest install browse menu settings autosync \
+SOURCES = main format dialog leave work synclist account backup tabs memcard history active saves save dest install browse menu settings autosync \
           keyboard tools marks \
           boot log input net mmce usb launch debug helper ui font image look sound icon i18n files json config state cards mcfs stream google update restore templates \
           lang

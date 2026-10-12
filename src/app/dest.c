@@ -28,6 +28,16 @@ void scene_dest(float t)
         look_legend(l, 2, 0);
     }
     look_title(CARD_CX, 82, dst.title, 1);
+    if (dst.g.tab == TAB_FILES && tabs_device(&dst.g) < 0) {   /* the Memory Card: its free space, as a card's */
+        look_card(CARD_X, CARD_Y, NULL, T(T_MEMCARD));
+        if ((f = dst.memFree) >= 0) {
+            char l[64];
+            snprintf(l, sizeof(l), T(T_FREE_KB), (int)(f / 1024));
+            ui_text_center(FONT_SMALL, CARD_CX, CARD_Y + LOOK_CARD_H + 24, f < dst.need ? COLOR_WARN : COLOR_DIM,
+                           f < dst.need ? T(T_NO_ROOM) : l);
+        }
+        return;
+    }
     if (!(c = tabs_card(&dst.g))) {
         if (dst.g.tab != TAB_FILES && dst.g.n && dst.g.idx[dst.g.cursor] < 0) {   /* "New card": the card to be, and its name when it is known */
             look_card(CARD_X, CARD_Y, "+", NULL);
@@ -56,6 +66,14 @@ void dest_info(void)
     card_t *c = tabs_card(&dst.g);
     icon_t *ic;
     int k;
+    if (dst.g.tab == TAB_FILES && tabs_device(&dst.g) < 0 && dst.memFree == -2) {   /* (the Memory Card's) */
+        long long f = -1;
+        if (mcfs_list_saves(slotCard.path, NULL, 0, &f) < 0)
+            f = -1;
+        ui_lock();
+        dst.memFree = f;
+        ui_unlock();
+    }
     if (!c)
         return;
     k = dst.g.idx[dst.g.cursor];
@@ -99,6 +117,11 @@ card_t *choose_dest(const card_t *from, int title, long long need, const char *s
     int i;
     ui_lock();
     tabs_init(&dst.g, from, destFiles);
+    if (!dst.g.memcard && from != &slotCard && memcard_there()) {   /* (moved or installed into it too) */
+        dst.g.memcard = 1;
+        tabs_show(&dst.g, dst.g.tab);
+    }
+    dst.memFree = -2;
     if (save && save_game_id(save, id)) {
         game_folder(id, dst.g.newGame, sizeof(dst.g.newGame));
         /* (counted again: the Games group may be there only for this, and is then the one to open on) */
@@ -139,6 +162,17 @@ card_t *choose_dest(const card_t *from, int title, long long need, const char *s
             }
             ui_scene(scene_dest);   /* back from a question: the cards again */
             continue;
+        }
+        if ((b & PAD_CROSS) && dst.g.tab == TAB_FILES && tabs_device(&dst.g) < 0) {   /* the Memory Card */
+            if (dst.memFree == -2)
+                dest_info();
+            if (dst.memFree >= 0 && dst.memFree < dst.need) {   /* (no room: said on the screen) */
+                sound_play(SND_BACK);
+                continue;
+            }
+            sound_play(SND_CONFIRM);
+            c = &slotCard;
+            break;
         }
         if ((b & PAD_CROSS) && dst.g.tab == TAB_FILES) {   /* a device: its folders are browsed next */
             sound_play(SND_CONFIRM);

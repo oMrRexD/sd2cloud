@@ -72,5 +72,6 @@ void suite_mcfs(void);
 void suite_cards(void);
 void suite_card_file(void);
 void suite_templates(void);
+void suite_slot(void);
 
 #endif

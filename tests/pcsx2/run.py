@@ -39,7 +39,7 @@ ELF = "SD2CLOUD-DEBUG.ELF"
 SETTINGS = "[general]\r\nlanguage = en\r\nask_connect = no\r\n"
 # lines of the log that tell of the PC or of the emulator's own memory card, not of what SD2Cloud did
 DROP = ("frames:", "helper:", "SAS package", "root signature:", "sound:", "semaphores:", "drawing thread:", "memory ",
-        "usb:", "network:", "sd2psx:", "device:")
+        "usb:", "network:", "sd2psx:", "device:", "memory card: slot")
 # files of a scenario's folder that aren't its result
 NOT_RESULT = {ELF, "log.txt", "screen.tga", "SD2Cloud/script.txt", "SD2Cloud/debug-log.txt"}
 # and, in a folder's listing, the two files that are of the run itself (the program, which every build changes, and
@@ -92,10 +92,26 @@ def build(scenario, work, elf):
     shutil.copyfile(elf, work / ELF)
 
 
-def run(exe, work, seconds):
-    """1 = the program got to the end of its script"""
+def memcard_in(exe, fixture):
+    """a memory card (fixtures/<fixture>.gz, a .ps2) in the emulator's slot 1 for the run, in the place of its own:
+    PCSX2's slot 2 answers mcman with an error (-11). The scenario's script starts with "J", for the device to be taken
+    to be in slot 2 and this one to be the Memory Card. Returns what to put back: the settings as they were (None =
+    nothing was changed)"""
+    if not fixture:
+        return None
+    ini = exe.parent / "inis" / "PCSX2.ini"
+    before = ini.read_text(encoding="utf-8")
+    card = exe.parent / "memcards" / "sd2cloud-test-memcard.ps2"
+    card.write_bytes(gzip.decompress((HERE / "fixtures" / (fixture + ".gz")).read_bytes()))
+    ini.write_text(re.sub(r"(?m)^Slot1_Filename = .*$", "Slot1_Filename = " + card.name, before), encoding="utf-8")
+    return before
+
+
+def run(exe, work, seconds, memcard=None):
+    """1 = the program got to the end of its script. memcard = the Memory Card (a fixture's name, memcard_in)"""
     log = work / "log.txt"
     info = None
+    before = memcard_in(exe, memcard)
     if sys.platform == "win32":   # minimized, and without taking the keyboard from whoever is at the PC
         info = subprocess.STARTUPINFO()
         info.dwFlags |= subprocess.STARTF_USESHOWWINDOW
@@ -114,6 +130,8 @@ def run(exe, work, seconds):
     finally:
         p.kill()
         p.wait()
+        if before is not None:
+            (exe.parent / "inis" / "PCSX2.ini").write_text(before, encoding="utf-8")
     return ended
 
 
@@ -184,7 +202,7 @@ def main():
         work = HERE / "work" / s["name"]
         expected = HERE / "expected" / (s["name"] + ".txt")
         build(s, work, args.elf)
-        ended = run(args.pcsx2.resolve(), work, s.get("seconds", 90))
+        ended = run(args.pcsx2.resolve(), work, s.get("seconds", 90), s.get("memcard"))
         got = result(work)
         if args.show:
             print(got)

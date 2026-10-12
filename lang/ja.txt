@@ -831,3 +831,9 @@ T_UPLOAD_RESOLVED = 解決済み
 T_UPLOAD_OFF = 同期無効
 # Button. English: Undo
 T_UNDO = 元に戻す
+# One line. English: Memory Card
+T_MEMCARD = メモリーカード
+# Up to 5 lines. English: Copy saves between the Memory Card and the sd2psx's cards.
+T_MEMCARD_HINT = メモリーカードと sd2psx のカードの間でセーブデータをコピーできます。
+# Up to 3 lines. English: No Memory Card was found.
+T_MEMCARD_NONE = メモリーカードが見つかりません。

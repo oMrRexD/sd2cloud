@@ -828,3 +828,9 @@ T_UPLOAD_RESOLVED = marcado como resolvido
 T_UPLOAD_OFF = sincronização desativada
 # Button. English: Undo
 T_UNDO = Desfazer
+# One line. English: Memory Card
+T_MEMCARD = Memory Card
+# Up to 5 lines. English: Copy saves between the Memory Card and the sd2psx's cards.
+T_MEMCARD_HINT = Copie saves entre o Memory Card e os cartões do sd2psx.
+# Up to 3 lines. English: No Memory Card was found.
+T_MEMCARD_NONE = Nenhum Memory Card foi encontrado.

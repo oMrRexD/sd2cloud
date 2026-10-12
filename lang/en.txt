@@ -833,3 +833,9 @@ T_UPLOAD_RESOLVED = marked as resolved
 T_UPLOAD_OFF = sync disabled
 # Button.
 T_UNDO = Undo
+# One line.
+T_MEMCARD = Memory Card
+# Up to 5 lines.
+T_MEMCARD_HINT = Copy saves between the Memory Card and the sd2psx's cards.
+# Up to 3 lines.
+T_MEMCARD_NONE = No Memory Card was found.

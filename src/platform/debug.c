@@ -10,7 +10,7 @@
  * download (to test cancelling). "C" captures the screen that is waiting for a button to host:screen.tga
  * and STOPS there: the SDK's capture leaves PATH3 stuck on PCSX2 and gsKit draws nothing after it. "P" and "E" capture
  * the next progress screen (P = checking the cards, E = uploading or downloading, W = writing a restored card, halfway
- * through); an "I" at the start runs as IGR; an "A" right after the cards are checked shows the questions that
+ * through); an "I" at the start runs as IGR, a "J" there takes the device to be in slot 2; an "A" right after the cards are checked shows the questions that
  * follow the first sign-in (the automatic sync).
  * Without a script it is the program as it is, with the real controller: only the log tells it apart.
  * "." waits a second on the screen it is on. Right after the cards are checked: "N" = the first try at the network

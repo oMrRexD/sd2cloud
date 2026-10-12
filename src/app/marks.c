@@ -82,8 +82,11 @@ static void scene_mark(float t)
     look_title(CARD_CX, 82, mk.title, 1);
     snprintf(s, sizeof(s), T(T_MARKED_N), marks.n);
     ui_text_center(FONT_TEXT, CARD_CX, CARD_Y + LOOK_CARD_H + 2, marks.n ? COLOR_OK : COLOR_DIM, s);
-    if (mk.g.tab == TAB_FILES)   /* a device: the marked saves can go to a folder of it */
+    if (mk.g.tab == TAB_FILES) {   /* a device: the marked saves can go to a folder of it; the Memory Card, into it */
+        if (tabs_device(&mk.g) < 0)
+            look_card(CARD_X, CARD_Y, NULL, T(T_MEMCARD));
         return;
+    }
     if (mk.g.n && mk.g.idx[mk.g.cursor] < 0) {   /* "All saves": the game cards together */
         look_card(CARD_X, CARD_Y, NULL, T(T_TAB_GAMES));
         return;
@@ -149,6 +152,20 @@ static int mark_cards(const card_t *at)
             sound_play(SND_BACK);
             if (!marks.n || confirm(T(T_MARK_DROP), NULL, T_MARK_DROP_YES))
                 r = 0;
+        } else if (mk.g.tab == TAB_FILES && tabs_device(&mk.g) < 0 && (b & PAD_START)) {   /* into the Memory Card */
+            sound_play(marks.n ? SND_CONFIRM : SND_BACK);
+            if (marks.n) {
+                marks.into = &slotCard;
+                r = 1;
+            }
+        } else if (mk.g.tab == TAB_FILES && tabs_device(&mk.g) < 0) {   /* its saves, to mark some */
+            sound_play(SND_CONFIRM);
+            memcard_screen();
+            if (marks.done)
+                r = 1;
+            ui_lock();
+            tabs_show(&mk.g, TAB_FILES);
+            ui_unlock();
         } else if (mk.g.tab == TAB_FILES) {
             sound_play(marks.n ? SND_CONFIRM : SND_BACK);
             if (marks.n && copy_to_device(mk.g.cursor))
@@ -325,8 +342,8 @@ int copy_marked(card_t *into)
     int i, n = 0, k = 0, total = 0, one = 0, last = MCFS_OK, r = MCFS_OK;
     if (marks.n > 1)   /* (each save's size is read from its card) */
         message(0, NULL, COLOR_TEXT, T(T_LOADING));
-    if (into && (into < cards || into >= cards + nCards))
-        into = NULL;   /* (not one of the cards: nothing is pasted into it) */
+    if (into && (into < cards || into >= cards + nCards) && into != &slotCard)
+        into = NULL;   /* (not one of the cards, nor the Memory Card: nothing is pasted into it) */
     save_game_id(game, first);
     for (i = 0; i < marks.n; i++) {
         int files = 0;

@@ -83,6 +83,23 @@ SCENARIOS = [
      "cards": CARDS, "files": {"Files/card.mcd": "game.mcd"}, "script": ">>XXXXXOSXXC"},
     {"name": "card-file-export", "what": "a save of a card file opened in Files, copied to a folder of the MMCE as a .psu",
      "cards": CARDS, "files": {"Files/card.mcd": "game.mcd"}, "script": ">>XXXXXS>>XSXXC"},
+    # The Memory Card: a PS2 memory card in the console's other slot, in the Files group. "J" takes the device to be
+    # in slot 2, so that it is the one in PCSX2's slot 1 (run.py puts fixtures/memcard.ps2.gz there): PCSX2's slot 2
+    # answers mcman with an error
+    {"name": "memcard-open", "what": "the Memory Card in the Files group, opened: its saves", "cards": CARDS,
+     "memcard": "memcard.ps2", "script": "J>>DDXC"},
+    {"name": "memcard-copy-out", "what": "a save of the Memory Card copied to a card", "cards": CARDS,
+     "memcard": "memcard.ps2", "script": "J>>DDXXXSXXXC"},
+    {"name": "memcard-copy-in", "what": "a save of a card copied to the Memory Card, picked in the Files group",
+     "cards": CARDS, "memcard": "memcard.ps2", "script": "JXXXS>>DDXXXC"},
+    {"name": "memcard-move-out", "what": "a save of the Memory Card moved to a card", "cards": CARDS,
+     "memcard": "memcard.ps2", "script": "J>>DDXXDXXXXC"},
+    {"name": "memcard-delete", "what": "a save of the Memory Card deleted", "cards": CARDS, "memcard": "memcard.ps2",
+     "script": "J>>DDXXDDXXXC"},
+    {"name": "memcard-psu-in", "what": "a .psu file imported into the Memory Card", "cards": CARDS,
+     "memcard": "memcard.ps2", "files": {"Files/save.psu": "save.psu"}, "script": "J>>XXXX>>XXXC"},
+    {"name": "memcard-paste-list", "what": "a save marked on a card, pasted with START on the Memory Card in the list of "
+     "cards", "cards": CARDS, "memcard": "memcard.ps2", "script": "JXXXO>>DDSXXC"},
     {"name": "settings", "what": "settings changed (how many backups are kept, their format, the language) and About",
      "cards": CARDS, "script": "SDDDDDXDXDXDXUUXUXDDDDDDXOOC"},
     # (a sync with nothing sent, "B": SELECT shows its cards; X on one still to go: resolved; on the next, its sync off)
