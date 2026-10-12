@@ -832,8 +832,8 @@ T_UPLOAD_OFF = синхронизация отключена
 T_UNDO = Отменить
 # One line. English: Memory Card
 T_MEMCARD = Карта памяти
-# Up to 5 lines. English: Transfer saves between the Memory Card and the sd2psx's cards, and back up individual saves or the entire card to Google Drive.
-T_MEMCARD_HINT = Перенос сохранений между картой памяти и картами sd2psx. Резервная копия сохранения или всей карты на Диске.
+# Up to 5 lines. English: Transfer saves between the Memory Card and the sd2psx's cards, and back up a save or the entire card to Google Drive.
+T_MEMCARD_HINT = Перенос сохранений между картой памяти и sd2psx. Резервная копия сохранения или всей карты на Диске.
 # Up to 3 lines. English: No Memory Card was found.
 T_MEMCARD_NONE = Карта памяти не найдена.
 # One line. English: Reading the Memory Card...
