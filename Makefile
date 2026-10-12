@@ -35,6 +35,8 @@ SRC_DIRS = src src/app src/core src/platform src/ui
 vpath %.c $(SRC_DIRS)
 # (any header changed rebuilds everything: there are few enough of them)
 HEADERS = $(wildcard src/*.h src/*/*.h) src/ui/messages.def
+# (wolfSSL's and curl's: other versions of them, in ports4096, make the program again)
+PORTS_BUILT = $(wildcard $(PORTS4096)/include/wolfssl/options.h $(PORTS4096)/include/curl/curlver.h)
 # the interface's images, sounds and font, embedded in the program (assets/ is made by tools/make_assets.py; the sounds
 # by tools/make_sounds.py, the fonts by tools/make_font.py: Varela Round with Cyrillic letters, and the Japanese
 # characters in assets/font-ja.ttf.gz)
@@ -90,6 +92,9 @@ $(MMCEMAN):
 src/credentials.h:
 	@echo "src/credentials.h is missing: python tools/make_credentials.py <client_secret.json> src/credentials.h" && false
 
+# the program is linked again when wolfSSL or curl is another build (the SDK's rule only knows the objects)
+$(EE_BIN): $(wildcard $(PORTS4096)/lib/libwolfssl.a $(PORTS4096)/lib/libcurl.a)
+
 $(EE_BIN_PACKED): $(EE_BIN)
 	@mkdir -p $(DIST)
 	ps2-packer $< $@ > /dev/null
@@ -103,7 +108,7 @@ igr: igr/SD2CLOUD-IGR.ELF
 	@mkdir -p $(DIST)
 	cp igr/SD2CLOUD-IGR.ELF $(DIST)/
 
-$(OBJ_DIR)/%.o: %.c $(HEADERS)
+$(OBJ_DIR)/%.o: %.c $(HEADERS) $(PORTS_BUILT)
 	@mkdir -p $(OBJ_DIR)
 	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
 

@@ -1,5 +1,5 @@
 #!/bin/sh
-# wolfSSL 5.8.2 + curl 8.17.0 with the same recipe as ps2sdk-ports (build-cmakelibs.sh), but with SP_INT_BITS=4096:
+# wolfSSL 5.9.4 + curl 8.22.0 (the newest releases, 09/2026) with the same recipe as ps2sdk-ports (build-cmakelibs.sh), but with SP_INT_BITS=4096:
 # outside the PC wolfSSL defaults to 3072, and then it rejects the 4096-bit RSA roots (Google's GTS Root R1, ISRG Root
 # X1) with error -155. Installs into ports4096/ in the project, without touching the toolchain.
 #
@@ -12,18 +12,33 @@ P=${PORTS4096:-$ROOT/ports4096}
 OPTS="-Wno-dev -DCMAKE_TOOLCHAIN_FILE=$PS2DEV/share/ps2dev.cmake -DCMAKE_INSTALL_PREFIX=$P -DBUILD_SHARED_LIBS=OFF -DCMAKE_BUILD_TYPE=RelWithDebInfo"
 
 mkdir -p "$SRC"
-[ -d "$SRC/wolfssl" ] || git clone --depth 1 --branch v5.8.2-stable https://github.com/wolfSSL/wolfssl.git "$SRC/wolfssl"
-[ -d "$SRC/curl" ] || git clone --depth 1 --branch curl-8_17_0 https://github.com/curl/curl.git "$SRC/curl"
+[ -d "$SRC/wolfssl" ] || git clone --depth 1 --branch v5.9.4-stable https://github.com/wolfSSL/wolfssl.git "$SRC/wolfssl"
+[ -d "$SRC/curl" ] || git clone --depth 1 --branch curl-8_22_0 https://github.com/curl/curl.git "$SRC/curl"
 
 rm -rf "$P" "$SRC/wolfssl/build" "$SRC/curl/build"
 
+# The PS2's lwIP has no IPv6, and so no struct sockaddr_in6: wolfSSL's matching of a certificate's IPv6 addresses
+# (since 5.9) gets a struct of its own. It never matches anything (XINET_PTON is 0): SD2Cloud connects by name
+cat > "$SRC/wolfssl-ps2.h" <<'END'
+struct wolfssl_ps2_in6 {
+    unsigned short sin6_family, sin6_port;
+    unsigned int sin6_flowinfo;
+    struct { unsigned char s6_addr[16]; } sin6_addr;
+    unsigned int sin6_scope_id;
+};
+#define WOLFSSL_SOCKADDR_IN6 struct wolfssl_ps2_in6
+END
+
 mkdir -p "$SRC/wolfssl/build" && cd "$SRC/wolfssl/build"
-CFLAGS="-DWOLFSSL_GETRANDOM -DNO_WRITEV -DXINET_PTON\\(...\\)=0 -DSP_INT_BITS=4096" \
+CFLAGS="-DWOLFSSL_GETRANDOM -DNO_WRITEV -DXINET_PTON\\(...\\)=0 -DSP_INT_BITS=4096 -DWOLFSSL_NO_ATOMICS -include $SRC/wolfssl-ps2.h" \
   cmake $OPTS "-DCMAKE_PREFIX_PATH=$P;$PS2SDK/ports" -DWOLFSSL_CRYPT_TESTS=OFF -DWOLFSSL_EXAMPLES=OFF \
   -DWOLFSSL_CURL=ON -DWARNING_C_FLAGS=-w .. > ../../wolfssl-cmake.log
 make -j8 all install > ../../wolfssl-make.log
-# whoever includes the headers (curl and the app) must see the same number size as the library
-printf '\n#undef SP_INT_BITS\n#define SP_INT_BITS 4096\n' >> "$P/include/wolfssl/options.h"
+# whoever includes the headers (curl and the app) must see the same number size as the library, and its counters
+# without atomics: the EE has no instructions for them, and since 5.9 GCC's would call __atomic_* functions the PS2
+# has none of (wolfSSL runs on SD2Cloud's main thread only)
+printf '\n#undef SP_INT_BITS\n#define SP_INT_BITS 4096\n#ifndef WOLFSSL_NO_ATOMICS\n#define WOLFSSL_NO_ATOMICS\n#endif\n' \
+  >> "$P/include/wolfssl/options.h"
 
 mkdir -p "$SRC/curl/build" && cd "$SRC/curl/build"
 CFLAGS="-DSIZEOF_LONG=4 -DSIZEOF_LONG_LONG=8 -DNO_WRITEV" \

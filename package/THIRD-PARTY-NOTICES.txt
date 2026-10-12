@@ -11,9 +11,9 @@ It includes or links the following third-party software:
 - libpng - Copyright (c) the PNG Reference Library Authors. PNG Reference Library License version 2
     (https://www.libpng.org/pub/png/src/libpng-LICENSE.txt).
 - zlib - Copyright (C) Jean-loup Gailly and Mark Adler. zlib License (https://zlib.net/zlib_license.html).
-- wolfSSL 5.8.2 (built with 4096-bit RSA support) - Copyright wolfSSL Inc. GNU General Public License v3
+- wolfSSL 5.9.4 (built with 4096-bit RSA support) - Copyright wolfSSL Inc. GNU General Public License v3
     (https://www.wolfssl.com).
-- curl 8.17.0 - Copyright Daniel Stenberg and many contributors. curl License, MIT-style (https://curl.se/docs/copyright.html).
+- curl 8.22.0 - Copyright Daniel Stenberg and many contributors. curl License, MIT-style (https://curl.se/docs/copyright.html).
 - QR Code generator library (C) - Copyright (c) Project Nayuki. MIT License:
     Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
     associated documentation files (the "Software"), to deal in the Software without restriction,

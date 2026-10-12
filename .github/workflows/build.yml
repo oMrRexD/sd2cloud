@@ -21,21 +21,23 @@ jobs:
   build:
     runs-on: ubuntu-latest
     # the ps2dev toolchain (ps2sdk, ps2sdk-ports, gsKit) the releases are built and tested with, pinned by digest, so
-    # that every build links the same SDK
-    container: ps2dev/ps2dev@sha256:c64ae69c9817865ed98ff054e4ae5360b9e280ed952c97946bca95d9d35be995
+    # that every build links the same SDK: the newest image when it was pinned (2026-10-06). The other versions this
+    # build fixes (wolfSSL and curl in tools/build_ports.sh, mmceman in tools/build_mmceman.sh, the actions here) are
+    # the newest ones published when they were fixed, looked up then, not taken from memory
+    container: ps2dev/ps2dev@sha256:2729b842a9fb61c8b694215c5c58ea1c6a3de7ad65e000640836ec312ebe072b
     steps:
       # tar: actions/cache needs GNU tar to save, the image only has BusyBox's
       - name: Install the build tools
         run: apk add --no-cache build-base cmake git python3 tar zip
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # wolfSSL and curl with 4096-bit RSA (tools/build_ports.sh): built once, then kept
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         id: ports
         with:
           path: ports4096
-          key: ports4096-c64ae69c-${{ hashFiles('tools/build_ports.sh') }}
+          key: ports4096-2729b842-${{ hashFiles('tools/build_ports.sh') }}
 
       - name: Build wolfSSL and curl
         if: steps.ports.outputs.cache-hit != 'true'
@@ -69,7 +71,7 @@ jobs:
       - name: Package
         run: python3 tools/make_release.py
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: SD2Cloud
           if-no-files-found: error
@@ -86,7 +88,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install what the tests are built with
         run: sudo apt-get update -qq && sudo apt-get install -y -qq zlib1g-dev python3-pil python3-fonttools
@@ -104,7 +106,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: SD2Cloud
           path: dist
@@ -129,7 +131,7 @@ jobs:
       contents: write
     concurrency: beta
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: SD2Cloud
           path: dist
