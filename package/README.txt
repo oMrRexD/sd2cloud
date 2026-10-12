@@ -23,7 +23,7 @@ Memory card manager
 - Organizes the cards in tabs: numbered cards, game (Game ID) cards, in folders named after each game, and
   boot cards.
 - Imports .psu files into any card and exports any item of a card as a .psu file, from and to the MMCE or
-  a USB drive. An item copied off a card as a folder, its files as they were, is imported too (see FILES).
+  a USB drive. Saves in folder format are imported too (see FILES).
 - Opens memory card files from the MMCE or a USB drive (.mcd, a MemCard PRO2's .mc2, PCSX2's .ps2, OPL's
   virtual memory cards (.bin), or the .zip SD2Cloud itself writes) and installs them as cards of the sd2psx
   (see FILES).
@@ -148,10 +148,9 @@ screen are the ones that do something with the selected entry.
   before the card is touched, and what is written is read back and compared. A card that already has data
   with the same name, or without enough space, is left as it is: delete or move that item first.
   SQUARE on the file, in the list, goes straight to the card, without opening the page.
-- Items copied as a folder: a folder with an icon.sys (an item a file manager such as wLaunchELF copied off a
-  card, its files as they were) has SQUARE "Install save", on it in the list and inside it. SQUARE opens the
-  page of the item, and "Import to card" puts it into a card as a .psu's is, checked the same way. X still
-  goes into the folder. What a computer leaves in a folder (Thumbs.db, desktop.ini, .DS_Store) is left out.
+- Saves in folder format are installed like a .psu. Select the folder, or go into it, and press SQUARE
+  ("Install save"): the save's page opens, and "Import to card" puts it on a card. X still opens the folder
+  as usual. Files a computer adds to a folder (Thumbs.db, desktop.ini, .DS_Store) are ignored.
 - Exporting: Copy, on an item's page (X on it, in a card), also lists the Files tab among the destinations of
   the marked items, and the list of cards they are marked on has that tab too; pick the device, go to the folder where the files should go and press START. Each file
   gets its item's folder name (BASLUS-21065SAVE.psu, for example), is read back and compared. When a file
