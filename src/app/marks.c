@@ -445,6 +445,14 @@ int copy_marked(card_t *into)
  * A card file's: the screen closes, and its folder is shown with them still marked (card_file_held): START there
  * pastes them, as .psu files. 1 = the screen is left. 0 = the screen stays: nothing was marked any more, and the
  * marking is over */
+void marks_move(const card_t *from, card_t *to)
+{
+    int i;
+    for (i = 0; i < marks.n; i++)
+        if (marks.save[i].card == from)
+            marks.save[i].card = to;
+}
+
 int marks_of(const card_t *c)
 {
     int i, n = 0;

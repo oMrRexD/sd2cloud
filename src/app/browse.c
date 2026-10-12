@@ -197,7 +197,7 @@ static void scene_files(float t)
     look_frame();
     ui_alpha(look_fade(t));
     look_title(FB_X, 82, fb.title, 0);
-    if (card_file_held()) {   /* a card file's saves marked, on their way here: how many (as on a screen of saves) */
+    if (card_file_marks()) {   /* card files' saves marked, on their way here: how many (as on a screen of saves) */
         char s[64];
         snprintf(s, sizeof(s), T(T_MARKED_N), marks.n);
         ui_text_right(FONT_TEXT, FB_RIGHT, 82, COLOR_OK, s);
@@ -251,7 +251,7 @@ static void scene_files(float t)
         int n = 1;
         if (e && fb_opens(e))
             l[n].button = BUTTON_CROSS, l[n++].text = T(fb_opens(&fb.list[fb.cursor]) == FB_ELF ? T_RUN : T_OPEN);
-        if (fbGive.c || card_file_held())   /* saves marked for a copy are on their way to the folder shown: START
+        if (fbGive.c || card_file_marks())   /* saves marked for a copy are on their way to the folder shown: START
                                                 pastes them, as on a card */
             l[n].button = BUTTON_START, l[n++].text = T(T_PASTE);
         else if (fbCard)   /* a whole card is */
@@ -538,7 +538,7 @@ static void browse(int dev)
         u32 b;
         ui_scene(scene_files);
         b = wait_nav(PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT | PAD_CROSS | PAD_CIRCLE | PAD_TRIANGLE | PAD_SQUARE |
-                     (fbGive.c || card_file_held() ? PAD_START : 0));
+                     (fbGive.c || card_file_marks() ? PAD_START : 0));
         if (b & (PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT)) {   /* left and right: a screenful at a time */
             int k = fb.cursor;
             if (!fb.n)
@@ -564,7 +564,7 @@ static void browse(int dev)
             sound_play(SND_BACK);
             if (fb_up())
                 continue;
-            if (card_file_held() && !fbGive.c) {   /* a card file's saves marked: on to every place they can be pasted */
+            if (card_file_marks() && !fbGive.c) {   /* card files' saves marked: on to every place they can be pasted */
                 copy_go_on(NULL);
                 card_file_let_go();   /* (the copy is over: pasted, or let go of) */
             }
@@ -582,8 +582,14 @@ static void browse(int dev)
                 psu_screen(name, 0);
             else if (k == FB_CARD) {
                 card_file_screen(name, 0);
-                if (marks.done)   /* START on its saves, marked for a copy: the copy goes on into it */
+                if (marks.done && fbGive.c)   /* START on its saves, in a copy's choosing: the copy goes on into it */
                     return;
+                if (marks.done) {   /* START on its saves, with card files' saves marked here: they go into it */
+                    marks.done = 0;
+                    if (copy_marked(marks.into))
+                        card_file_let_go();
+                    fb_load(name);
+                }
             }
             else if (k == FB_ELF) {   /* SD2Cloud leaves, as for a program picked in "Exit to" */
                 char path[660], target[200];
@@ -629,7 +635,7 @@ static void browse(int dev)
                 fbGive.done = 1;
                 return;   /* back to the saves they are of */
             }
-        } else if ((b & PAD_START) && !fb.error && card_file_held()) {   /* the same, a card file's saves, back here */
+        } else if ((b & PAD_START) && !fb.error && card_file_marks()) {   /* the same, card files' saves, back here */
             sound_play(SND_CONFIRM);
             if (export_marked()) {
                 card_file_let_go();

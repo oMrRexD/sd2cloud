@@ -232,6 +232,8 @@ int install_card(void);
 void card_file_screen(const char *file, int install);
 int card_file_held(void);       /* a card file's saves are marked, back in its folder (it is kept open for them) */
 int card_file_writable(void);   /* saves can be pasted into the card file that is open (fileCard) */
+int card_file_marks(void);      /* saves of card files are marked (the one open, and the ones kept by their paths) */
+int card_file_card(const card_t *c);   /* that card is a card file's (fileCard, or one kept for its marked saves) */
 void card_file_let_go(void);    /* those marks let go of, and the card file closed */
 
 /* ------------------------------------------------------------ keyboard.c */
@@ -294,6 +296,7 @@ int copy_start(const save_view_t *v);
 int copy_marked(card_t *into);
 int copy_leave(const card_t *c);
 int marks_of(const card_t *c);           /* how many of the marked saves are of that card */
+void marks_move(const card_t *from, card_t *to);   /* the marked saves of one card, taken as another's */
 void copy_go_on(const card_t *at);       /* the marking of a copy goes on in the list of cards, until it is over */
 
 /* ------------------------------------------------------------ menu.c */

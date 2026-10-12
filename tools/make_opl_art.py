@@ -8,7 +8,8 @@ the zip. That name leaves room for one language only, so the same two files with
 Portuguese are written to package/art/pt-BR, and the zip has them aside, to copy over the others.
 
 The same logo, larger, is the one at the top of the README: docs/logo/dark.png and docs/logo/light.png, for the page
-it is shown on, and docs/logo/pt-BR for the README in Portuguese.
+it is shown on, and docs/logo/<language> for the README in each other language (README_LINES: only for the README).
+A line in Cyrillic letters is drawn with Nunito, one in Japanese with M PLUS Rounded 1c, as the app draws them.
 
 All of them are kept in the repository, so this only runs when the art changes (it needs Pillow and numpy).
 
@@ -25,6 +26,9 @@ TTF = str(ROOT / "third_party/varelaround/VarelaRound-Regular.ttf")
 ELF = "SD2CLOUD.ELF"             # the name OPL looks the art up by: the "boot" of APPS/SD2Cloud/title.cfg
 NAME = "SD2Cloud"
 LINES = {"": "cloud backup", "pt-BR": "backup na nuvem"}     # the line under the name, by the folder it is written to
+README_LINES = {"es": "copia en la nube", "ru": "копия в облаке", "uk": "копія в хмарі", "ja": "クラウドバックアップ"}
+NUNITO = str(ROOT / "third_party/nunito/Nunito[wght].ttf")
+MPLUS = str(ROOT / "third_party/mplusrounded1c/MPLUSRounded1c-Regular.ttf")
 E = 6                            # everything is drawn this many times larger, then scaled down
 PALE = (178, 206, 255)           # the line under the name
 INK = {"dark": ((255, 255, 255), PALE), "light": ((22, 32, 76), (56, 96, 196))}     # the name and its line, by the page
@@ -89,10 +93,23 @@ def arrow(d, cx, cy, h, width, color):
             d.ellipse([(x - r) * E, (y - r) * E, (x + r) * E, (y + r) * E], fill=color)
 
 
+def font(s, size):
+    """the font a text is drawn with: Varela Round, or for Cyrillic letters Nunito (Regular), for Japanese M PLUS"""
+    if any("Ѐ" <= ch <= "ӿ" for ch in s):
+        f = ImageFont.truetype(NUNITO, size)
+        try:
+            f.set_variation_by_name("Regular")
+        except (OSError, ValueError):
+            pass
+        return f
+    if any(ord(ch) >= 0x3000 for ch in s):
+        return ImageFont.truetype(MPLUS, size)
+    return ImageFont.truetype(TTF, size)
+
+
 def text(W, H, s, size, x, y, color, anchor="mm"):
     im = Image.new("RGBA", (W * E, H * E), (0, 0, 0, 0))
-    ImageDraw.Draw(im).text((x * E, y * E), s, font=ImageFont.truetype(TTF, round(size * E)), fill=color + (255,),
-                            anchor=anchor)
+    ImageDraw.Draw(im).text((x * E, y * E), s, font=font(s, round(size * E)), fill=color + (255,), anchor=anchor)
     return im
 
 
@@ -208,7 +225,10 @@ def logo(line, page="dark", scale=1):
     if page == "dark":
         c.alpha_composite(faded(blur(name, 2.5), 0.6))
     c.alpha_composite(name)
-    c.alpha_composite(text(W, H, line, 17, x + 2, 83, pale, "lm"))
+    size = 17
+    while font(line, round(size * E)).getlength(line) / E > W - x - 8:   # the line fits to the right too
+        size -= 0.5
+    c.alpha_composite(text(W, H, line, size, x + 2, 83, pale, "lm"))
     return c.resize((W * scale, H * scale), Image.LANCZOS)
 
 
@@ -230,6 +250,11 @@ def main():
         for path, im in made:
             im.save(path, optimize=True)
             print(f"{path}: {im.width}x{im.height}")
+    for folder, line in README_LINES.items():   # (the README only: OPL's art has room for one language and pt-BR)
+        (top / folder).mkdir(parents=True, exist_ok=True)
+        for page, im in page_logos(line).items():
+            im.save(top / folder / f"{page}.png", optimize=True)
+            print(f"{top / folder / page}.png: {im.width}x{im.height}")
 
 
 if __name__ == "__main__":

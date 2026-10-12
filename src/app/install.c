@@ -282,6 +282,44 @@ static int held;
 
 int card_file_held(void) { return held && marks_of(&fileCard); }
 
+/* Saves marked on a card file read by its path (card_file_writable) stay marked when another card file is opened:
+ * they go to a card of their own here (a copy of fileCard: its path is the file's), and are read from the file. A
+ * card file read from memory (a .zip's card, a .ps2's) can't be left so: one at a time, then */
+#define KEPT 4
+static card_t keptCards[KEPT];
+
+int card_file_card(const card_t *c) { return c == &fileCard || (c >= keptCards && c < keptCards + KEPT); }
+
+int card_file_marks(void)
+{
+    int i, n = held ? marks_of(&fileCard) : 0;
+    for (i = 0; i < KEPT; i++)
+        n += marks_of(&keptCards[i]);
+    return n;
+}
+
+/* fileCard's marked saves moved to a kept card. 1 = done (or none to move) */
+static int keep_marks(void)
+{
+    int i, k = -1;
+    if (!marks_of(&fileCard))
+        return 1;
+    if (!card_file_writable())
+        return 0;
+    for (i = 0; i < KEPT && k < 0; i++)   /* (the same file's place, else a place none of the marks are of) */
+        if (!strcmp(keptCards[i].path, fileCard.path))
+            k = i;
+    for (i = 0; i < KEPT && k < 0; i++)
+        if (!marks_of(&keptCards[i]))
+            k = i;
+    if (k < 0)
+        return 0;
+    keptCards[k] = fileCard;
+    marks_move(&fileCard, &keptCards[k]);
+    log_msg("card file %s: its %d marked save(s) kept by its path", keptCards[k].path, marks_of(&keptCards[k]));
+    return 1;
+}
+
 /* A card file without the ECC bytes and outside a .zip is a card as the device's are: saves are pasted into it by its
  * path (fileCard.path, which then is it). Not one of the device's own cards (found among its files): those are written
  * through it, as cards (card_free) */
@@ -301,6 +339,7 @@ static int writable_path(const char *path)
 void card_file_let_go(void)
 {
     marks_reset();
+    memset(keptCards, 0, sizeof(keptCards));
     card_file_close(&cardFile);
     held = 0;
     openPath[0] = 0;
@@ -325,9 +364,15 @@ void card_file_screen(const char *file, int install)
             card_file_shown(file, install);
             return;
         }
-        if (!confirm(T(T_MARK_DROP), NULL, T_MARK_DROP_YES))   /* another one: a card file at a time */
-            return;
-        card_file_let_go();
+        if (keep_marks()) {   /* another one: this one's marked saves are read by its path from now on */
+            card_file_close(&cardFile);
+            held = 0;
+            openPath[0] = 0;
+        } else {   /* (a .zip's or a .ps2's: a card file at a time) */
+            if (!confirm(T(T_MARK_DROP), NULL, T_MARK_DROP_YES))
+                return;
+            card_file_let_go();
+        }
     }
     dlg_new(0, NULL);
     dlg_line(FONT_TEXT, COLOR_TEXT, 0, T(T_LOADING));
@@ -359,6 +404,7 @@ void card_file_screen(const char *file, int install)
 static void card_file_shown(const char *file, int install)
 {
     size_t n = strlen(file);
+    int i;
     snprintf(cardFileName, sizeof(cardFileName), "%s", file);
     ui_lock();
     memset(&fileCard, 0, sizeof(fileCard));
@@ -370,6 +416,11 @@ static void card_file_shown(const char *file, int install)
     fileCard.size = cardFile.size;
     fileCard.type = TYPE_NORMAL;
     ui_unlock();
+    for (i = 0; i < KEPT; i++)   /* one whose marked saves were kept: open again, with them */
+        if (keptCards[i].path[0] && !strcmp(keptCards[i].path, fileCard.path)) {
+            marks_move(&keptCards[i], &fileCard);
+            memset(&keptCards[i], 0, sizeof(keptCards[i]));
+        }
     if (install)
         install_card();
     else if (!cardFile.zip || cardFile.image)

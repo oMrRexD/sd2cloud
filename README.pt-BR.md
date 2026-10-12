@@ -19,7 +19,7 @@ família sd2psx com o firmware [sd2psXtd](https://github.com/sd2psXtd/firmware) 
 Gen2, PicoMemcard+/Zero), sem necessidade de um PC. O MemCard PRO2 também é reconhecido, de forma experimental: o
 SD2Cloud ainda não foi testado em um.
 
-[English](README.md)
+[English](README.md) · **Português** · [Español](README.es.md) · [Русский](README.ru.md) · [Українська](README.uk.md)
 
 <p>
   <img src="docs/screens/menu-pt.png" width="49%" alt="Tela principal">
@@ -140,10 +140,10 @@ O [LEIA-ME.txt](package/LEIA-ME.txt) incluído na release explica cada tela em d
 | Tela principal | Cima/Baixo: cartão · Esquerda/Direita ou L1/R1: aba · X: abrir o cartão · TRIÂNGULO: opções do cartão (sincronizar agora, restaurar backup, copiar para dispositivo, inserir no sd2psx) · SELECT: ferramentas · START: ajustes · O: sair |
 | Dentro de um cartão | X: abrir um item · TRIÂNGULO: opções (sincronizar este cartão; os itens por nome ou por data; em Todos os saves, repetidos ocultos ou exibidos) · O: voltar |
 | Página de um item | Copiar · Mover · Eliminar · Enviar ao Drive |
-| Depois de Copiar | O item fica selecionado, e outros também podem ficar: X seleciona ou desmarca um item · O: sair do cartão, para selecionar itens de outros cartões também · START: colar todos no cartão sob o cursor, ou no cartão que está aberto; em um dispositivo da aba Arquivos, X abre as pastas e START cola todos ali como arquivos `.psu` (no cartão de onde vieram, START pergunta o destino: outro cartão, um cartão novo do jogo deles, ou uma pasta) |
+| Depois de Copiar | O item fica selecionado, e outros também podem ficar: X seleciona ou desmarca um item · O: sair do cartão, para selecionar itens de outros cartões também · START: colar todos no cartão sob o cursor, ou no cartão que está aberto. Na aba Arquivos, X abre as pastas de um dispositivo: START cola todos ali como arquivos `.psu`, e X em um arquivo de cartão de memória o abre, para selecionar itens dele ou colar dentro dele com START; START no Memory Card cola todos nele (no cartão de onde vieram, START pergunta o destino: outro cartão, um cartão novo do jogo deles, ou uma pasta) |
 | Aba Arquivos | X: abrir o dispositivo, uma pasta, um arquivo `.psu` ou um arquivo de cartão de memória · QUADRADO: instalar o `.psu` selecionado em um cartão, ou o arquivo de cartão selecionado no MMCE · Esquerda/Direita: uma página acima ou abaixo · O: voltar. Para exportar itens, use o **Copiar** da página de um deles: esta aba está entre os lugares onde eles podem ser colados, e START grava cada `.psu` na pasta exibida |
 | Ferramentas (SELECT) > Templates | X: um template novo (o nome é digitado; depois os saves são marcados nos cartões: X marca, START conclui) ou um existente · Em um template: X: um save, para removê-lo · TRIÂNGULO (sobre um template da lista, ou com ele aberto): definir como padrão, adicionar saves, aplicar template (a todos os cartões de jogo, aos cartões que você selecionar, ou só atualizando os saves que os cartões de jogo já têm), jogos vinculados, renomear, eliminar |
-| Durante um envio | O: cancelar |
+| Durante uma sincronização | O: cancelar · QUADRADO: pular o cartão que está sendo enviado · SELECT: a lista dos cartões da sincronização, com a situação de cada um, e de volta. Nela, QUADRADO pula um cartão (de novo: desfaz) e X oferece pular, marcar como resolvido (a sincronização automática o deixa de lado até ele mudar de novo) ou desativar a sincronização dele |
 
 ## Sincronização automática após o jogo (IGR)
 
