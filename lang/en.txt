@@ -836,6 +836,12 @@ T_UNDO = Undo
 # One line.
 T_MEMCARD = Memory Card
 # Up to 5 lines.
-T_MEMCARD_HINT = Copy saves between the Memory Card and the sd2psx's cards.
+T_MEMCARD_HINT = Transfer saves between the Memory Card and the sd2psx's cards, and back up individual saves or the entire card to Google Drive.
 # Up to 3 lines.
 T_MEMCARD_NONE = No Memory Card was found.
+# One line.
+T_MEMCARD_READING = Reading the Memory Card...
+# Up to 3 lines.
+T_MEMCARD_READ_FAILED = Unable to read the Memory Card.
+# Up to 4 lines.
+T_CARD_FILE_READ_ONLY = Saves can't be pasted into this file. Here, only a .mcd, .mc2 or .bin card outside a .zip can take them.

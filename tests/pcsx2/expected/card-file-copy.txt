@@ -24,8 +24,14 @@ file/card.mcd: 2 saves, 8270848 bytes free
 [script] >
 [script] X
 [script] S
+[script] O
+files: host:: 5 entries
+  0: Files/ (0 bytes)
+  1: MemoryCards/ (0 bytes)
+  2: SD2Cloud/ (0 bytes)
+[script] O
 [script] D
-[script] X
+[script] S
 [script] X
 mcfs: copy of BASLUS-21065ALPHA: 0, 54 reads and 7 writes of the cards in N ms
 copy BASLUS-21065ALPHA from file/card.mcd to Card2/Card2-1: 0

@@ -18,10 +18,12 @@ templates: 1
 [script] D
 [script] X
 [script] X
+SLUS-21065/SLUS-21065-1: 2 folders, fingerprint 64fbc81ffd3ff7a8, no backup
 mcfs: BASLUS-21065ALPHA deleted: 0, 6 reads and 2 writes of the card in N ms
 mcfs: import of host:SD2Cloud/templates/Net/alpha.psu: 0, 46 reads and 5 writes of the card in N ms
 templates: Net updated on host:MemoryCards/PS2/SLUS-21065/SLUS-21065-1.mcd: 1 save(s) written, 0
 SLUS-21065/SLUS-21065-1: 2 folders, fingerprint 64fbc81ffd3ff7a8, no backup
+SLUS-21065/SLUS-21065-1: a template's saves only: still synced
 [script] X
 (end: capture)
 

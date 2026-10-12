@@ -208,12 +208,34 @@ void browser_close(void)
 }
 
 /* the newest save's icon, for the big card (history) */
+/* How much a save of a game card is what the card is of, for its icon: its game's (2), another one (1), a template's
+ * (0). A template's save put into a card is the newest one there, but the card isn't of it */
+static const card_t *iconOf;
+
+static int own_save(const char *folder)
+{
+    char id[12];
+    int k;
+    if (save_game_id(folder, id) && !strcasecmp(id, iconOf->folder))
+        return 2;
+    for (k = 0; k < nTemplates; k++)
+        if (template_find_save(&templates[k], folder) >= 0)
+            return 0;
+    return 1;
+}
+
+int card_icon_read(const card_t *c, char folder[33], buffer_t *iconsys, buffer_t *ico)
+{
+    iconOf = c;
+    return c->type == TYPE_GAMEID ? mcfs_newest_save_icon(c->path, own_save, folder, iconsys, ico) : -1;
+}
+
 icon_t *newest_icon(const card_t *c)
 {
     buffer_t iconsys = {0}, ico = {0};
     char folder[33];
     icon_t *ic = NULL;
-    if (c->type == TYPE_GAMEID && mcfs_newest_save_icon(c->path, folder, &iconsys, &ico) == 0)
+    if (card_icon_read(c, folder, &iconsys, &ico) == 0)
         ic = icon_load(&iconsys, &ico);
     buf_free(&iconsys);
     buf_free(&ico);
@@ -645,7 +667,8 @@ static void scene_options(float t)
     look_panel(x, y, w, h);
     look_title(W / 2.0f, y + 20, T(T_OPTIONS), 1);
     for (i = 0; i < opt.n; i++) {   /* what it is on the left, how it is now on the right */
-        const char *label = T(opt.id[i] == OPT_SYNC ? T_SYNC_NOW : opt.id[i] == OPT_SORT ? T_SORT_BY : T_REPEATED);
+        const char *label = T(opt.id[i] == OPT_SYNC ? (brw.card == &slotCard ? T_TO_CLOUD : T_SYNC_NOW)
+                              : opt.id[i] == OPT_SORT ? T_SORT_BY : T_REPEATED);
         const char *value = opt.id[i] == OPT_SORT ? T(sortText[opt.sort])
                             : opt.id[i] == OPT_REPEATED ? T(opt.repeated ? T_REPEATED_SHOWN : T_REPEATED_HIDDEN) : "";
         float ry = y + 56 + i * 32;
@@ -671,7 +694,7 @@ static int browser_options(const card_t *c)
     int r = 0;
     ui_lock();
     opt.n = opt.cursor = 0;
-    if (c != &allGames && c != &fileCard && c != &slotCard)   /* (the device's cards are the ones synced) */
+    if (c != &allGames && c != &fileCard)   /* (the device's cards are synced; the Memory Card is sent whole) */
         opt.id[opt.n++] = OPT_SYNC;
     opt.id[opt.n++] = OPT_SORT;
     if (c == &allGames)
@@ -748,11 +771,22 @@ void card_screen(card_t *c)
         if (marks.on) {   /* X marks and unmarks, START ends the marking (with something marked) */
             if ((b & PAD_CROSS) && n)
                 sound_play(mark_toggle(&brw.saves[brw.cursor]) ? SND_CONFIRM : SND_BACK);
-            else if ((b & PAD_START) && marks.n && mine) {
+            else if ((b & PAD_START) && marks.n && marks.copy && !paste_here(c)) {
+                /* nowhere here to paste them (every game card's saves aren't a card, and this card has them all):
+                 * on to the list of cards, to paste them into another, as circle goes */
+                sound_play(SND_CONFIRM);
+                if (mine && !copy_leave(c)) {
+                    mine = marks.on;
+                    ui_scene(scene_browser);
+                    continue;
+                }
+                browser_close();
+                return;
+            } else if ((b & PAD_START) && marks.n && mine) {
                 sound_play(SND_CONFIRM);
                 int at = brw.cursor;
                 transferDest = NULL;
-                if (copy_marked(all ? NULL : c)) {   /* copied: this is a card's saves again, with the card they went to read again */
+                if (copy_marked(c)) {   /* copied: this is a card's saves again, with the card they went to read again */
                     marks_reset();
                     mine = 0;
                     if (all && transferDest && transferDest->type == TYPE_GAMEID && brw.card == c)
@@ -805,7 +839,9 @@ void card_screen(card_t *c)
                         cfg.sort == SORT_NAME ? ", by name" : cfg.sort == SORT_OLDEST ? ", the oldest first" : "");
             } else if (k & 1)   /* a card's, read again */
                 browser_load(c, 0);
-            if (k & 2)
+            if ((k & 2) && c == &slotCard)
+                memcard_upload();
+            else if (k & 2)
                 sync_card(c);
             ui_scene(scene_browser);
         } else if (b & PAD_SQUARE) {   /* (a card file's saves) */

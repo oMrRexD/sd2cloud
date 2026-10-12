@@ -19,7 +19,7 @@ família sd2psx com o firmware [sd2psXtd](https://github.com/sd2psXtd/firmware) 
 Gen2, PicoMemcard+/Zero), sem necessidade de um PC. O MemCard PRO2 também é reconhecido, de forma experimental: o
 SD2Cloud ainda não foi testado em um.
 
-[English](README.md) · **Português** · [Español](README.es.md) · [Русский](README.ru.md) · [Українська](README.uk.md)
+[English](README.md) · **Português** · [Español](README.es.md) · [Русский](README.ru.md) · [Українська](README.uk.md) · [日本語](README.ja.md)
 
 <p>
   <img src="docs/screens/menu-pt.png" width="49%" alt="Tela principal">
@@ -52,7 +52,8 @@ SD2Cloud ainda não foi testado em um.
 - Copia, move e elimina dados salvos entre os cartões do MMCE (o espaço livre do destino é exibido), e envia
   um item avulso ao Google Drive como arquivo `.psu`. Vários itens podem ser copiados de uma vez, selecionados
   em um cartão ou em mais de um. Os dados salvos também podem ir para um cartão novo do
-  próprio jogo, criado na hora ("Novo cartão", na aba Jogos): um cartão vazio de 8 MB, como o aparelho cria.
+  próprio jogo, criado na hora ("Novo cartão", na aba Jogos): um cartão vazio de 8 MB, como o aparelho cria,
+  que recebe também os templates do jogo.
 - Exibe os dados salvos de todos os cartões de jogo em uma só tela (**Todos os saves**, na aba Jogos), como se fossem
   um único cartão.
 - Organiza os cartões em abas: cartões numerados, cartões de jogos (Game ID), em pastas com o nome de cada jogo,
@@ -69,7 +70,7 @@ SD2Cloud ainda não foi testado em um.
   é lido de volta e comparado.
 - Gerencia um **Memory Card** comum no outro slot do console, pela aba **Arquivos**: os dados salvos dele são
   exibidos, copiados, movidos e eliminados como os de um cartão, e dados salvos entram nele vindos dos cartões do
-  dispositivo ou de arquivos `.psu`.
+  dispositivo ou de arquivos `.psu`. Os dados salvos dele, ou o cartão inteiro, podem ser enviados ao Google Drive.
 - Mantém **templates**: conjuntos de dados salvos que você marca nos seus cartões, guardados no MMCE e
   aplicados a qualquer cartão de uma vez. O aparelho cria vazio o cartão de um jogo novo; um template dá a ele o
   que todo cartão seu deve ter, como o network settings que um jogo online pede. Dados salvos que o cartão já tem
@@ -77,6 +78,7 @@ SD2Cloud ainda não foi testado em um.
   todos de uma vez, e quando o SD2Cloud abre e encontra um cartão de jogo sem ele (o cartão de um jogo novo),
   avisa e oferece colocá-lo. Um template também pode ser só de alguns jogos. Com a sincronização automática, o
   cartão que um jogo usou recebe os templates dele sozinho ao sair do jogo. Ficam em **Ferramentas** (SELECT).
+  Os saves de um template não contam como mudança: um cartão sincronizado continua sincronizado.
 
 **E também**
 - Pede confirmação antes de qualquer operação que envia, grava ou elimina dados.
@@ -138,9 +140,9 @@ O [LEIA-ME.txt](package/LEIA-ME.txt) incluído na release explica cada tela em d
 | Tela | Botões |
 |---|---|
 | Tela principal | Cima/Baixo: cartão · Esquerda/Direita ou L1/R1: aba · X: abrir o cartão · TRIÂNGULO: opções do cartão (sincronizar agora, restaurar backup, copiar para dispositivo, inserir no sd2psx) · SELECT: ferramentas · START: ajustes · O: sair |
-| Dentro de um cartão | X: abrir um item · TRIÂNGULO: opções (sincronizar este cartão; os itens por nome ou por data; em Todos os saves, repetidos ocultos ou exibidos) · O: voltar |
+| Dentro de um cartão | X: abrir um item · TRIÂNGULO: opções (sincronizar este cartão, ou enviar o Memory Card inteiro ao Drive; os itens por nome ou por data; em Todos os saves, repetidos ocultos ou exibidos) · O: voltar |
 | Página de um item | Copiar · Mover · Eliminar · Enviar ao Drive |
-| Depois de Copiar | O item fica selecionado, e outros também podem ficar: X seleciona ou desmarca um item · O: sair do cartão, para selecionar itens de outros cartões também · START: colar todos no cartão sob o cursor, ou no cartão que está aberto. Na aba Arquivos, X abre as pastas de um dispositivo: START cola todos ali como arquivos `.psu`, e X em um arquivo de cartão de memória o abre, para selecionar itens dele ou colar dentro dele com START; START no Memory Card cola todos nele (no cartão de onde vieram, START pergunta o destino: outro cartão, um cartão novo do jogo deles, ou uma pasta) |
+| Depois de Copiar | O item fica selecionado, e outros também podem ficar: X seleciona ou desmarca um item · O: sair do cartão para a lista de cartões, para selecionar itens de outros cartões também · START: colar todos no cartão que está aberto, ou no que está sob o cursor na lista (onde eles não podem ir, como no cartão de onde todos vieram, ele vai para a lista). Na aba Jogos da lista, a pasta do jogo deles vem primeiro, em destaque, com "Novo cartão" dentro (entre as pastas, enquanto o jogo não tem uma): um cartão vazio de 8 MB criado para eles, com os templates do jogo. Na aba Arquivos, X abre as pastas de um dispositivo: START cola os itens ali como arquivos `.psu`, ou dentro do arquivo de cartão de memória sob o cursor; X nesse arquivo o abre, para selecionar itens dele ou colar dentro dele com START. START no Memory Card cola os itens nele |
 | Aba Arquivos | X: abrir o dispositivo, uma pasta, um arquivo `.psu` ou um arquivo de cartão de memória · QUADRADO: instalar o `.psu` selecionado em um cartão, ou o arquivo de cartão selecionado no MMCE · Esquerda/Direita: uma página acima ou abaixo · O: voltar. Para exportar itens, use o **Copiar** da página de um deles: esta aba está entre os lugares onde eles podem ser colados, e START grava cada `.psu` na pasta exibida |
 | Ferramentas (SELECT) > Templates | X: um template novo (o nome é digitado; depois os saves são marcados nos cartões: X marca, START conclui) ou um existente · Em um template: X: um save, para removê-lo · TRIÂNGULO (sobre um template da lista, ou com ele aberto): definir como padrão, adicionar saves, aplicar template (a todos os cartões de jogo, aos cartões que você selecionar, ou só atualizando os saves que os cartões de jogo já têm), jogos vinculados, renomear, eliminar |
 | Durante uma sincronização | O: cancelar · QUADRADO: pular o cartão que está sendo enviado · SELECT: a lista dos cartões da sincronização, com a situação de cada um, e de volta. Nela, QUADRADO pula um cartão (de novo: desfaz) e X oferece pular, marcar como resolvido (a sincronização automática o deixa de lado até ele mudar de novo) ou desativar a sincronização dele |

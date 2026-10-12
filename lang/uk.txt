@@ -832,7 +832,13 @@ T_UPLOAD_OFF = синхронізацію вимкнено
 T_UNDO = Скасувати
 # One line. English: Memory Card
 T_MEMCARD = Картка пам’яті
-# Up to 5 lines. English: Copy saves between the Memory Card and the sd2psx's cards.
-T_MEMCARD_HINT = Копіювання збережень між карткою пам’яті та картками sd2psx.
+# Up to 5 lines. English: Transfer saves between the Memory Card and the sd2psx's cards, and back up individual saves or the entire card to Google Drive.
+T_MEMCARD_HINT = Перенесення збережень між карткою пам’яті та картками sd2psx. Резервна копія збереження або всієї картки на Google Диску.
 # Up to 3 lines. English: No Memory Card was found.
 T_MEMCARD_NONE = Картку пам’яті не знайдено.
+# One line. English: Reading the Memory Card...
+T_MEMCARD_READING = Читання картки пам’яті...
+# Up to 3 lines. English: Unable to read the Memory Card.
+T_MEMCARD_READ_FAILED = Не вдалося прочитати картку пам’яті.
+# Up to 4 lines. English: Saves can't be pasted into this file. Here, only a .mcd, .mc2 or .bin card outside a .zip can take them.
+T_CARD_FILE_READ_ONLY = У цей файл не можна вставити збереження. Тут їх може прийняти лише картка .mcd, .mc2 або .bin поза архівом .zip.

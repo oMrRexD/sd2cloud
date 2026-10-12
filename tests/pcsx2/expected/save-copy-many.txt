@@ -13,6 +13,7 @@ Card1/Card1-1: 2 saves, 8270848 bytes free
 [script] O
 [script] >
 [script] X
+[script] D
 [script] X
 SLUS-21065/SLUS-21065-1: 2 saves, 8270848 bytes free
 [script] >

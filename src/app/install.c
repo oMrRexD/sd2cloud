@@ -298,6 +298,17 @@ int card_file_marks(void)
     return n;
 }
 
+/* Are all the marked saves of that card file (a path of the folder shown)? START on it pastes them into its folder
+ * then, as .psu files: they can't go into the card they are on */
+int card_file_all_marked(const char *path)
+{
+    int i, n = held && !strcmp(openPath, path) ? marks_of(&fileCard) : 0;
+    for (i = 0; i < KEPT; i++)
+        if (keptCards[i].path[0] && !strcmp(keptCards[i].path, path))
+            n += marks_of(&keptCards[i]);
+    return marks.n && n == marks.n;
+}
+
 /* fileCard's marked saves moved to a kept card. 1 = done (or none to move) */
 static int keep_marks(void)
 {
@@ -349,7 +360,8 @@ static void card_file_shown(const char *file, int install);
 
 /* X on a card file: the card it holds, shown as the cards of the microSD are. Its saves can be copied to those, and □
  * installs it as one of them (install_card). A .zip's card that doesn't fit in memory can't be shown: installing it
- * is offered right away. install = square on the file itself: installed without being shown first */
+ * is offered right away. install = 1: square on the file itself, installed without being shown first; 2: START on it
+ * with saves marked for a copy, the card they are pasted into (marks.into, marks.done) when it can be written */
 void card_file_screen(const char *file, int install)
 {
     char path[660];
@@ -421,7 +433,13 @@ static void card_file_shown(const char *file, int install)
             marks_move(&keptCards[i], &fileCard);
             memset(&keptCards[i], 0, sizeof(keptCards[i]));
         }
-    if (install)
+    if (install == 2) {
+        if (card_file_writable()) {
+            marks.into = &fileCard;
+            marks.done = 1;
+        } else
+            message_wait(0, NULL, COLOR_WARN, T(T_CARD_FILE_READ_ONLY));
+    } else if (install)
         install_card();
     else if (!cardFile.zip || cardFile.image)
         card_screen(&fileCard);

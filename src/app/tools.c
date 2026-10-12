@@ -242,12 +242,18 @@ static int template_into(const template_t *t, card_t *c, int replace, int show, 
     *put = 0;
     ap.to = c;
     if (!in_slot(c)) {
+        int synced, resolved;
         /* (the device is asked, and what the PS2 sees in the slot compared with this card: it is moved off this one
          * if it has to be) */
         if (card_free(c, NULL))
             return TPL_LEFT;
+        cards_recheck(c);   /* (as it is now: synced or not, before the template's saves) */
+        synced = c->status == ST_UP_TO_DATE || c->status == ST_NO_BACKUP;
+        resolved = c->resolved;
         r = (replace ? template_update : template_apply)(t, c->path, show ? apply_before : NULL, show ? save_progress : NULL, put);
         cards_recheck(c);
+        if (*put)   /* a template's saves are no change to send: a card that was synced still is */
+            card_keep_synced(c, synced, resolved);
         card_back();
         return r;
     }
@@ -525,6 +531,31 @@ void templates_after_game(int alone)
     }
     if (changed)
         templates_save();
+}
+
+/* A game card made for a save (a copy's, a move's or an import's "New card"): the saves of its templates go into it
+ * too, as into a card the device made for a new game, and it is settled */
+void templates_new_card(card_t *c)
+{
+    const template_t *list[TPL_MAX];
+    int k, count, put, total = 0, r = MCFS_OK;
+    if (!c || c->type != TYPE_GAMEID || !templates_in_use())
+        return;
+    templates_scan();
+    if (!(count = templates_of_game(c->folder, list)))
+        return;
+    cancelLatched = 0;
+    ap.cards = 0;
+    for (k = 0; k < count && r == MCFS_OK; k++) {
+        r = template_into(list[k], c, 0, 1, &put);
+        total += put;
+    }
+    apply_done();
+    log_msg("templates into the new card %s: %d save(s) (%d)", c->id, total, r);
+    if (r == MCFS_OK) {
+        templates_settle(c->id, c->folder);
+        templates_save();
+    }
 }
 
 /* a template is made the main one, or stops being it */

@@ -1,0 +1,35 @@
+# log
+SD2Cloud <version> -- program in host:APPS/SD2Cloud/ (host:SD2CLOUD-DEBUG.ELF), data in host:SD2Cloud/, manual
+settings: [app] app_path = host:SD2CLOUD-DEBUG.ELF (0)
+3 card(s) on the microSD
+Card1/Card1-1: 2 folders, fingerprint 64fbc81ffd3ff7a8, new
+Card2/Card2-1: 0 folders, fingerprint e3b0c44298fc1c14, new
+SLUS-21065/SLUS-21065-1: 2 folders, fingerprint 64fbc81ffd3ff7a8, new
+3 card(s) seen for the first time: fingerprint kept as the reference (0)
+[script] >
+[script] >
+[script] D
+[script] D
+[script] X
+slot/mc1: 1 saves, 7931904 bytes free
+[script] T
+[script] X
+[script] X
+mcfs: new card host:SD2Cloud/memcard-upload.mcd: 0
+mcfs: copy of BASLUS-99999TESTS from mc1: to host:SD2Cloud/memcard-upload.mcd: 0 in N ms
+mcfs: copy of BADATA-SYSTEM from mc1: to host:SD2Cloud/memcard-upload.mcd: -4 in N ms
+mcfs: copy of BEDATA-SYSTEM from mc1: to host:SD2Cloud/memcard-upload.mcd: -4 in N ms
+mcfs: copy of BIDATA-SYSTEM from mc1: to host:SD2Cloud/memcard-upload.mcd: -4 in N ms
+mcfs: copy of BCDATA-SYSTEM from mc1: to host:SD2Cloud/memcard-upload.mcd: -4 in N ms
+mcfs: copy of BKDATA-SYSTEM from mc1: to host:SD2Cloud/memcard-upload.mcd: -4 in N ms
+slot/memcard: 1 folders, fingerprint 2fac2c97bf0c3537, new
+Memory Card: uploaded (2.0 MB)
+(end: capture)
+
+# files
+e67be4206c58f05d290d04e24ef9bd240e0a329b479dd8d202f12d40f464d347  MemoryCards/PS2/Card1/Card1-1.mcd
+9b26f87a6ae6b13ddf74cec52f77df98dccf3447dd4041c66394f113efddc738  MemoryCards/PS2/Card2/Card2-1.mcd
+e67be4206c58f05d290d04e24ef9bd240e0a329b479dd8d202f12d40f464d347  MemoryCards/PS2/SLUS-21065/SLUS-21065-1.mcd
+54e2249dcf502a33d779212845fd3ba31d46628391ec4bc51e16b10b6d092221  SD2Cloud/memcard-upload.mcd
+17df2e2a16cbab4cb8357fe9a735f1765b89ed8fcaf21c00a1634ed98fb36c3e  SD2Cloud/sd2cloud.ini
+b16e380dd7f8b6ff6ad7ff119b160a71fec43ba9194259934096466a90c0429c  SD2Cloud/state-debug.ini

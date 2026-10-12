@@ -117,7 +117,8 @@ cinza, e as opções dele oferecem mover os saves para o cartão que o sd2psx ab
   nome aparece no topo da página do item, e o que se faz com um item é feito nesse cartão. Um item que mais de
   um cartão tem (a mesma pasta com os mesmos arquivos, byte a byte, como um template aplicado a todos os
   cartões) aparece uma vez só.
-- TRIÂNGULO, com os itens de um cartão na tela, abre as opções: "Sincronizar agora", para esse cartão;
+- TRIÂNGULO, com os itens de um cartão na tela, abre as opções: "Sincronizar agora", para esse cartão
+  ("Enviar ao Drive" no lugar dele, no Memory Card: veja ARQUIVOS);
   "Ordenar por" (data decrescente, data crescente ou o nome do jogo), para qualquer cartão; e, em "Todos os
   saves", "Repetidos", ocultos ou exibidos. X altera um valor, e os itens são listados do novo jeito quando as
   opções são fechadas. As duas escolhas ficam gravadas nos ajustes.
@@ -127,21 +128,25 @@ cinza, e as opções dele oferecem mover os saves para o cartão que o sd2psx ab
 - Copiar seleciona o item (um visto verde sobre o ícone) e volta para os itens do cartão, onde X passa a
   selecionar e desmarcar outros; O sai do cartão para a lista de cartões, para selecionar itens de outros
   cartões também. A seleção se mantém de um cartão para outro, e a quantidade aparece na tela. START (Colar)
-  cola todos no cartão em que é pressionado: o que está sob o cursor na lista de cartões, ou o que está
-  aberto. Pressionado no cartão de onde todos vieram, ele pede o destino: um cartão do MMCE, escolhido nas
-  mesmas abas da tela principal
-  (o espaço livre do cartão de destino é exibido e um cartão sem espaço suficiente não pode ser escolhido;
-  quando os itens são todos de um mesmo jogo, a aba Jogos traz também "Novo cartão", na pasta desse jogo ou
-  entre as pastas enquanto o jogo não tem uma: um cartão vazio de 8 MB é criado para eles, como o aparelho
-  cria), ou uma pasta de um dispositivo (veja ARQUIVOS).
+  cola todos no cartão em que é pressionado: o que está aberto, ou o que está sob o cursor na lista de
+  cartões (um cartão sem espaço suficiente para eles fica como está). Pressionado onde eles não podem ir (o
+  cartão de onde todos vieram, ou "Todos os saves"), ele vai para a lista de cartões. Na aba Jogos da lista,
+  quando os itens são todos de um mesmo jogo, a pasta desse jogo vem primeiro, em verde, com "Novo cartão"
+  dentro; enquanto o jogo não tem pasta, "Novo cartão" vem primeiro entre as pastas. Um cartão vazio de 8 MB
+  é criado para eles, como o aparelho cria, e recebe também os templates do jogo. START em uma pasta cola no
+  cartão dela (uma pasta com mais de um cartão se abre). A aba Arquivos da lista leva às pastas de um
+  dispositivo (veja ARQUIVOS) e ao Memory Card.
 - Mover leva o item para outro cartão, escolhido da mesma forma. Enviar ao Drive envia apenas esse item, em
   formato .psu, para a pasta "Saves" ao lado dos backups do cartão. Para alterar o cartão que está em uso no
   sd2psx, o SD2Cloud pergunta antes, troca o sd2psx para outro cartão, faz a alteração e volta; só para uma
   pasta com nome personalizado é preciso trocar o cartão no próprio sd2psx antes.
 Toda operação que envia, grava ou elimina dados pede confirmação antes de começar. Durante uma
 sincronização, o botão O permite cancelar o envio; os cartões já enviados permanecem no Drive. Quando vários
-cartões são enviados, QUADRADO pergunta sobre o que está sendo enviado: X o pula desta vez, QUADRADO o pula e
-desativa a sincronização dele.
+cartões são enviados, QUADRADO pergunta sobre o que está sendo enviado: QUADRADO de novo o pula desta vez,
+TRIÂNGULO o pula e desativa a sincronização dele. SELECT mostra a lista dos cartões da sincronização, com a
+situação de cada um, e volta: nela, QUADRADO pula um cartão na hora (de novo: desfaz), e X oferece pular,
+marcar como resolvido (a sincronização automática o deixa de lado até ele mudar de novo) ou desativar a
+sincronização dele.
 
 ARQUIVOS
 A última aba da tela principal, Arquivos, lista os dispositivos cujas pastas podem ser percorridas: o MMCE
@@ -162,9 +167,16 @@ com o item selecionado.
   QUADRADO mantém os dois (o novo recebe um número: BASLUS-21065SAVE (2).psu).
 - Arquivos de cartão de memória: X em um .mcd, um .mc2 (MemCard PRO2), um .ps2 (PCSX2), um .bin (um cartão
   virtual do OPL, VMC) ou um .zip gravado pelo "Copiar para dispositivo" abre o cartão que ele contém,
-  exibido como os cartões do MMCE. O arquivo é apenas lido. X em um item abre a página dele, de onde ele
-  pode ser copiado para um cartão do MMCE, sozinho ou com outros itens desse arquivo (Copiar seleciona o
-  item, START cola todos em um cartão).
+  exibido como os cartões do MMCE. X em um item abre a página dele, de onde ele pode ser copiado para
+  qualquer lugar, sozinho ou com outros itens desse arquivo (Copiar seleciona o item, START cola todos). Um
+  cartão .mcd, .mc2 ou .bin fora de um .zip também recebe itens: durante uma cópia, X no arquivo o abre e
+  START ali cola os itens dentro dele, assim como START no arquivo na lista. Um .ps2 (as páginas dele têm os
+  bytes de ECC) e o cartão de um .zip são apenas lidos.
+- Memory Card: um cartão de memória comum de PS2 no outro slot do console é a última linha da aba Arquivos.
+  X mostra os itens dele, que são copiados, movidos, eliminados e enviados ao Drive como os de um cartão, e
+  itens entram nele vindos dos cartões ou de arquivos .psu. TRIÂNGULO, nos itens dele, tem "Enviar ao Drive":
+  o cartão inteiro é lido para um arquivo de cartão no MMCE e enviado como um backup próprio, guardado com
+  o histórico dele na pasta "Memory Card" do Drive (o arquivo é apagado depois).
 - Instalar um arquivo de cartão: QUADRADO, no arquivo na lista ou na tela do cartão dele, pergunta para onde
   o cartão vai, nas mesmas abas da tela principal. "Novo cartão", no topo de cada lista, cria um cartão novo:
   o menor número livre em Cartões, o próximo canal do BootCard em Boot e, em Jogos, o próximo canal da pasta
@@ -200,7 +212,8 @@ a primeira.
   Selecionar cartões: o mesmo, para os cartões que você marcar, de jogo ou não (X marca e desmarca, START
   aplica). Atualizar saves existentes é o único modo que substitui: nos cartões de jogo, os itens do
   template que o cartão já tem em outra versão dão lugar aos do template. Nenhum outro item do cartão é
-  alterado, um item que falta no cartão não é adicionado, e o SD2Cloud pergunta antes.
+  alterado, um item que falta no cartão não é adicionado, e o SD2Cloud pergunta antes. Os itens de um
+  template não contam como mudança para a sincronização: um cartão sincronizado continua sincronizado.
 - Definir como padrão: o template padrão é o que todo cartão de jogo deve ter (uma luz amarela o marca na
   lista). Quando o SD2Cloud abre e falta ele em um cartão de jogo, como no cartão de um jogo novo, o SD2Cloud
   diz em qual e espera a resposta: X aplica, O deixa para depois, QUADRADO deixa de avisar sobre esses

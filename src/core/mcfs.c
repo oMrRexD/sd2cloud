@@ -717,21 +717,27 @@ int mcfs_save_icon(const char *path, const mcfs_save_t *s, buffer_t *iconsys, bu
     return r;
 }
 
-int mcfs_newest_save_icon(const char *path, char folder[33], buffer_t *iconsys, buffer_t *ico)
+int mcfs_newest_save_icon(const char *path, int (*rank)(const char *folder), char folder[33], buffer_t *iconsys, buffer_t *ico)
 {
     static mcfs_save_t list[MCFS_MAX_SAVES];
+    static unsigned char ranks[MCFS_MAX_SAVES];
     list_ctx_t x = {list, 0, MCFS_MAX_SAVES};
-    int rootdir = mc_open(&mc, path), r = -1, i;
+    int rootdir = mc_open(&mc, path), r = -1, i, top;
     if (rootdir < 0)
         return -1;
-    /* the newest save that has an icon (a folder without icon.sys, like some games' extra data, is skipped) */
+    /* the newest save that has an icon (a folder without icon.sys, like some games' extra data, is skipped), of the
+     * highest rank there is */
     if (walk_root(&mc, rootdir, on_save_dir, &x) == 0) {
         qsort(list, x.n, sizeof(list[0]), newer_first);
-        for (i = 0; i < x.n && r != 0; i++)
-            if (read_icon(&mc, &list[i], iconsys, ico) == 0) {
-                snprintf(folder, 33, "%s", list[i].folder);
-                r = 0;
-            }
+        for (i = 0, top = 0; i < x.n; i++)
+            if ((ranks[i] = rank ? rank(list[i].folder) : 0) > top)
+                top = ranks[i];
+        for (; top >= 0 && r != 0; top--)
+            for (i = 0; i < x.n && r != 0; i++)
+                if (ranks[i] == top && read_icon(&mc, &list[i], iconsys, ico) == 0) {
+                    snprintf(folder, 33, "%s", list[i].folder);
+                    r = 0;
+                }
     }
     mc_close();
     if (r != 0) {

@@ -7,10 +7,6 @@
 
 struct dst_s dst;
 
-/* "Copy" also offers the Files group: a device picked there (destDevice) is browsed for the folder the save goes to,
- * as a .psu (fbGive = the save being given to files_screen) */
-int destFiles, destDevice = -1;
-static int dest_new_place(void);
 /* "New card", picked as where a save goes (choose_dest): the card it will be, which is only made once the question
  * that follows is answered (dest_real) */
 card_t destNew;
@@ -39,7 +35,7 @@ void scene_dest(float t)
         return;
     }
     if (!(c = tabs_card(&dst.g))) {
-        if (dst.g.tab != TAB_FILES && dst.g.n && dst.g.idx[dst.g.cursor] < 0) {   /* "New card": the card to be, and its name when it is known */
+        if (dst.g.tab != TAB_FILES && dst.g.n && dst.g.idx[dst.g.cursor] == ROW_NEW) {   /* "New card": the card to be, and its name when it is known */
             look_card(CARD_X, CARD_Y, "+", NULL);
             ui_text_center(FONT_TEXT, CARD_CX, CARD_Y + LOOK_CARD_H + 2, COLOR_ITEM_ON, dst.newName);
         }
@@ -116,7 +112,7 @@ card_t *choose_dest(const card_t *from, int title, long long need, const char *s
     char id[12];
     int i;
     ui_lock();
-    tabs_init(&dst.g, from, destFiles);
+    tabs_init(&dst.g, from, 0);
     if (!dst.g.memcard && from != &slotCard && memcard_there()) {   /* (moved or installed into it too) */
         dst.g.memcard = 1;
         tabs_show(&dst.g, dst.g.tab);
@@ -127,8 +123,6 @@ card_t *choose_dest(const card_t *from, int title, long long need, const char *s
         /* (counted again: the Games group may be there only for this, and is then the one to open on) */
         tabs_show(&dst.g, dst.g.tab == TAB_FILES ? TAB_GAMES : dst.g.tab);
     }
-    destFiles = 0;
-    destDevice = -1;
     dst.title = T(title);
     dst.need = need;
     for (i = 0; i < MAX_CARDS; i++)
@@ -154,9 +148,9 @@ card_t *choose_dest(const card_t *from, int title, long long need, const char *s
             sound_play(SND_BACK);
             break;
         }
-        if ((b & PAD_CROSS) && dst.g.tab != TAB_FILES && dst.g.n && dst.g.idx[dst.g.cursor] < 0) {   /* "New card" */
+        if ((b & PAD_CROSS) && dst.g.tab != TAB_FILES && dst.g.n && dst.g.idx[dst.g.cursor] == ROW_NEW) {   /* "New card" */
             sound_play(SND_CONFIRM);
-            if (dest_new_place()) {
+            if (dest_new_place(dst.g.newGame)) {
                 c = &destNew;
                 break;
             }
@@ -172,11 +166,6 @@ card_t *choose_dest(const card_t *from, int title, long long need, const char *s
             }
             sound_play(SND_CONFIRM);
             c = &slotCard;
-            break;
-        }
-        if ((b & PAD_CROSS) && dst.g.tab == TAB_FILES) {   /* a device: its folders are browsed next */
-            sound_play(SND_CONFIRM);
-            destDevice = dst.g.cursor;
             break;
         }
         if ((b & PAD_CROSS) && dst.g.n) {
@@ -276,12 +265,11 @@ int ask_more_channels(int max)
 static int destNewMore;    /* the channels its folder has to be told it has, for the new card to be in reach (0 = as it is) */
 int cardsUnsorted;  /* a card was made and is at the end of cards[]: the list is put in order back on the main screen */
 
-/* X on "New card" while a save's destination is picked: where the card would be (destNew), the next free channel of
- * the game's folder. 0 = the folder has no place for one (said), or the user went back */
-static int dest_new_place(void)
+/* "New card" of a game picked as where saves go (game = its folder): where the card would be (destNew), the next free
+ * channel of the game's folder. 0 = the folder has no place for one (said), or the user went back */
+int dest_new_place(const char *game)
 {
     char folder[48], base[56], t[300];
-    const char *game = dst.g.newGame;
     int max = max_channels(game);
     destNewMore = 0;
     if (!new_card(TAB_GAMES, game, max, folder, base)) {

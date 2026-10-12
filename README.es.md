@@ -19,7 +19,7 @@ como la llama la PS2) de los dispositivos de la familia sd2psx con el firmware
 [sd2psXtd](https://github.com/sd2psXtd/firmware) (sd2psx, PSXMemCard, PSXMemCard Gen2, PicoMemcard+/Zero). No hace
 falta un PC. También reconoce una MemCard PRO2, de forma experimental: SD2Cloud todavía no se ha probado en una.
 
-[English](README.md) · [Português](README.pt-BR.md) · **Español** · [Русский](README.ru.md) · [Українська](README.uk.md)
+[English](README.md) · [Português](README.pt-BR.md) · **Español** · [Русский](README.ru.md) · [Українська](README.uk.md) · [日本語](README.ja.md)
 
 <p>
   <img src="docs/screens/menu-es.png" width="49%" alt="Pantalla principal">
@@ -51,7 +51,8 @@ falta un PC. También reconoce una MemCard PRO2, de forma experimental: SD2Cloud
 - Copia, mueve y elimina partidas entre las tarjetas del MMCE (se muestra el espacio libre del destino) y sube una
   partida suelta a Google Drive como archivo `.psu`. Se pueden copiar varias partidas a la vez, seleccionadas en una
   tarjeta o en varias. Una partida también puede ir a una tarjeta nueva de su propio juego, creada en el momento
-  ("Nueva tarjeta", en la pestaña Juegos): una tarjeta vacía de 8 MB, como las crea el propio dispositivo.
+  ("Nueva tarjeta", en la pestaña Juegos): una tarjeta vacía de 8 MB, como las crea el propio dispositivo,
+  que también recibe las plantillas del juego.
 - Muestra las partidas de todas las tarjetas de juego en una sola pantalla (**Todas las partidas**, en la pestaña
   Juegos), como si fueran una sola tarjeta.
 - Organiza las tarjetas en pestañas: tarjetas numeradas, tarjetas de juego (Game ID), en carpetas con el nombre de
@@ -68,7 +69,7 @@ falta un PC. También reconoce una MemCard PRO2, de forma experimental: SD2Cloud
   que se escribe se vuelve a leer y se compara.
 - Administra una **Memory Card** común en la otra ranura de la consola, desde la pestaña **Archivos**: sus partidas
   se muestran, copian, mueven y eliminan como las de una tarjeta, y le llegan partidas desde las tarjetas del
-  dispositivo o desde archivos `.psu`.
+  dispositivo o desde archivos `.psu`. Sus partidas, o la tarjeta entera, se pueden subir a Google Drive.
 - Guarda **plantillas**: conjuntos de partidas que marcas en tus tarjetas, guardados en el MMCE y puestos en cualquier
   tarjeta de una vez. El dispositivo crea vacía la tarjeta de un juego nuevo; una plantilla le da lo que todas tus
   tarjetas deberían tener, como la configuración de red que pide un juego en línea. Las partidas que la tarjeta ya
@@ -76,6 +77,7 @@ falta un PC. También reconoce una MemCard PRO2, de forma experimental: SD2Cloud
   todas de una vez y, cuando SD2Cloud se abre y encuentra una tarjeta de juego sin ella (la de un juego nuevo), lo avisa
   y ofrece ponerla. Una plantilla también puede ser solo de algunos juegos. Con la sincronización automática, la
   tarjeta que usó un juego recibe sus plantillas sola al salir del juego. Están en **Utilidades** (SELECT).
+  Las partidas de una plantilla no cuentan como un cambio: una tarjeta sincronizada sigue sincronizada.
 
 **Además**
 - Pide confirmación antes de cualquier cosa que suba, escriba o elimine datos.
@@ -139,9 +141,9 @@ El [README.txt](package/README.txt) incluido en la release explica cada pantalla
 | Pantalla | Botones |
 |---|---|
 | Pantalla principal | Arriba/Abajo: tarjeta · Izquierda/Derecha o L1/R1: pestaña · X: abrir la tarjeta · TRIÁNGULO: opciones de la tarjeta (sincronizar ahora, restaurar una copia, copiar a un dispositivo, insertar en el sd2psx) · SELECT: utilidades · START: ajustes · O: salir |
-| Dentro de una tarjeta | X: abrir una partida · TRIÁNGULO: opciones (sincronizar esta tarjeta; las partidas por nombre o por fecha; en Todas las partidas, repetidas ocultas o visibles) · O: volver |
+| Dentro de una tarjeta | X: abrir una partida · TRIÁNGULO: opciones (sincronizar esta tarjeta, o subir la Memory Card entera a Drive; las partidas por nombre o por fecha; en Todas las partidas, repetidas ocultas o visibles) · O: volver |
 | La página de una partida | Copiar · Mover · Eliminar · Subir a Drive |
-| Después de Copiar | La partida queda seleccionada, y otras también pueden quedarlo: X selecciona o deselecciona una partida · O: salir de la tarjeta, para seleccionar partidas de otras tarjetas también · START: pegarlas todas en la tarjeta bajo el cursor, o en la tarjeta abierta. En la pestaña Archivos, X abre las carpetas de un dispositivo: START las pega allí como archivos `.psu`, y X sobre un archivo de tarjeta de memoria lo abre, para seleccionar partidas suyas o pegarlas dentro con START; START sobre la Memory Card las pega en ella (en la tarjeta de donde vinieron, START pregunta adónde: otra tarjeta, una tarjeta nueva de su juego o una carpeta) |
+| Después de Copiar | La partida queda seleccionada, y otras también pueden quedarlo: X selecciona o deselecciona una partida · O: salir de la tarjeta a la lista de tarjetas, para seleccionar partidas de otras tarjetas también · START: pegarlas todas en la tarjeta abierta, o en la que está bajo el cursor en la lista (donde no pueden ir, como en la tarjeta de la que vienen todas, va a la lista). En la pestaña Juegos de la lista, la carpeta de su juego aparece primero, resaltada, con "Nueva tarjeta" dentro (entre las carpetas, mientras el juego no tenga una): una tarjeta vacía de 8 MB creada para ellas, con las plantillas del juego. En la pestaña Archivos, X abre las carpetas de un dispositivo: START las pega ahí como archivos `.psu`, o dentro del archivo de tarjeta de memoria bajo el cursor; X en ese archivo lo abre, para seleccionar partidas suyas o pegarlas dentro con START. START en la Memory Card las pega en ella |
 | Pestaña Archivos | X: abrir el dispositivo, una carpeta, un archivo `.psu` o un archivo de tarjeta de memoria · CUADRADO: instalar el `.psu` seleccionado en una tarjeta, o el archivo de tarjeta seleccionado en el MMCE · Izquierda/Derecha: una página arriba o abajo · O: volver. Para exportar partidas, usa **Copiar** en la página de una: esta pestaña está entre los lugares donde se pueden pegar, y START escribe cada `.psu` en la carpeta mostrada |
 | Utilidades (SELECT) > Plantillas | X: una plantilla nueva (se escribe su nombre; después se marcan sus partidas en las tarjetas: X marca, START termina) o una existente · En una plantilla: X: una partida, para quitarla · TRIÁNGULO (sobre una plantilla de la lista, o con ella abierta): fijar como principal, agregar partidas, aplicar plantilla (a todas las tarjetas de juego, a las tarjetas que elijas, o solo actualizando las partidas que las tarjetas de juego ya tienen), juegos vinculados, cambiar nombre, eliminar |
 | Durante una sincronización | O: cancelar · CUADRADO: omitir la tarjeta que se está subiendo · SELECT: la lista de las tarjetas de la sincronización, con lo que pasó con cada una, y de vuelta. En ella, CUADRADO omite una tarjeta (otra vez: deshace) y X ofrece omitirla, marcarla como resuelta (la sincronización automática la deja en paz hasta que vuelva a cambiar) o desactivar su sincronización |

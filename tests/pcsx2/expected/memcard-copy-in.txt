@@ -15,7 +15,7 @@ Card1/Card1-1: 2 saves, 8270848 bytes free
 [script] >
 [script] D
 [script] D
-[script] X
+[script] S
 [script] X
 slot: folder /BASLUS-21065ALPHA made (0)
 slot: /BASLUS-21065ALPHA put into the card in slot 2, 2 file(s)

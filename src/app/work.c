@@ -163,7 +163,7 @@ void load_card_icon(const card_t *c)
     buffer_t iconsys = {0}, ico = {0};
     char folder[33];
     icon_t *ic = NULL;
-    if (c->type == TYPE_GAMEID && mcfs_newest_save_icon(c->path, folder, &iconsys, &ico) == 0 && (ic = icon_load(&iconsys, &ico)))
+    if (card_icon_read(c, folder, &iconsys, &ico) == 0 && (ic = icon_load(&iconsys, &ico)))
         log_msg("%s: icon of %s (%d vertices, %d shapes) \"%s\"", c->id, folder, ic->nv, ic->shapes, ic->title);
     buf_free(&iconsys);
     buf_free(&ico);

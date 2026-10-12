@@ -172,10 +172,10 @@ int config_set(const char *section, const char *key, const char *value)
 
 int ini_set(const char *path, const char *section, const char *key, const char *value)
 {
-    char line[300], l[300];
+    char l[300], *line;
     buffer_t in = {0}, out = {0};
     const char *p, *end;
-    size_t klen = strlen(key), after = 0;
+    size_t klen = strlen(key), after = 0, n = klen + strlen(value) + 6;
     int inSection = 0, seen = 0, done = 0, r;
     /* a file that isn't there yet starts empty; one that is there and can't be read is left alone, never written
      * again from nothing (a folder's .ini has its channels' names) */
@@ -183,7 +183,13 @@ int ini_set(const char *path, const char *section, const char *key, const char *
         buf_free(&in);
         return -1;
     }
-    snprintf(line, sizeof(line), "%s = %s\r\n", key, value);
+    /* (the line whole, however long: the list of the cards left out of the sync can take 1 KB, and a line cut short
+     * would lose its end, and the line after it its own line) */
+    if (!(line = malloc(n))) {
+        buf_free(&in);
+        return -1;
+    }
+    snprintf(line, n, "%s = %s\r\n", key, value);
     for (p = (const char *)in.data, end = p + in.len; p && p < end;) {
         const char *nl = memchr(p, '\n', end - p);
         size_t len = nl ? (size_t)(nl - p + 1) : (size_t)(end - p);
@@ -225,6 +231,7 @@ int ini_set(const char *path, const char *section, const char *key, const char *
     r = file_replace(path, out.data, out.len);
     buf_free(&in);
     buf_free(&out);
+    free(line);
     return r;
 }
 

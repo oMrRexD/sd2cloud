@@ -49,7 +49,10 @@ int max_channels(const char *folder);       /* how many channels a folder of car
 int max_channels_set(const char *folder, int n);   /* the sd2psx goes up to that many in that folder from now on. 0 = written */
 /* fingerprint of each included card's index; progress(i, n) before each card */
 void cards_check(void (*progress)(int i, int n, const card_t *c));
-void cards_recheck(card_t *c);              /* one card again (after a save was copied in or out) */
+void cards_recheck(card_t *c);
+/* the card was changed by SD2Cloud with nothing a backup needs (a template's saves): it is taken as synced as it is
+ * now, when it was before (synced), and as resolved, when it was (resolved) */
+void card_keep_synced(card_t *c, int synced, int resolved);              /* one card again (after a save was copied in or out) */
 /* The user turns a card's sync on or off, whatever the settings said of it: kept in them ([cards] exclude, which
  * leaves a card out whatever else they say, and include, which takes one in). A card whose whole folder was left
  * out comes back alone: the folder's other cards stay out, each by its own name. 0 = done and written */

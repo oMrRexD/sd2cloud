@@ -311,7 +311,7 @@ static void psu_import(void)
 {
     char name[160], t[300], game[12];
     card_t *to;
-    int r;
+    int r, made;
     if (!nCards && !save_game_id(psu.info.folder, game)) {
         message_wait(0, NULL, COLOR_WARN, T(T_NO_CARDS_SD));
         return;
@@ -320,7 +320,8 @@ static void psu_import(void)
         return;
     save_name(&psu.v, name, sizeof(name));
     snprintf(t, sizeof(t), T(T_CONFIRM_IMPORT), name, to->base);
-    if (!confirm(t, to == &destNew ? T(T_NEWCARD_NOTE) : NULL, T_IMPORT_YES) || !(to = dest_real(to)) || card_free(to, NULL))
+    made = to == &destNew;
+    if (!confirm(t, made ? T(T_NEWCARD_NOTE) : NULL, T_IMPORT_YES) || !(to = dest_real(to)) || card_free(to, NULL))
         return;
     save_into(to, &psu.v, T_WORKING_IMPORT);
     r = mcfs_import_psu(psu.path, to->path, save_progress);
@@ -328,6 +329,8 @@ static void psu_import(void)
     log_msg("import %s into %s: %d", psu.path, to->id, r);
     cards_recheck(to);
     card_back();
+    if (made && r == MCFS_OK)   /* (a new game card: its templates too) */
+        templates_new_card(to);
     if (r != MCFS_ERR_CANCELLED)
         op_result(r, T_DONE_IMPORT, to);
 }
@@ -519,6 +522,35 @@ static int export_card(card_t *c)
     return r == 0;
 }
 
+/* START is on a card file the marked saves can go into: one that isn't the card they are all on (START on that one
+ * pastes them into the folder, as .psu files) */
+static int fb_on_card_file(void)
+{
+    char path[660];
+    const dir_entry_t *e = fb.n ? &fb.list[fb.cursor] : NULL;
+    if (!e || e->dir || !is_card_file(e->name, e->size))
+        return 0;
+    snprintf(path, sizeof(path), "%s%s", fb.dir, e->name);
+    return !card_file_all_marked(path);
+}
+
+/* A card file of the folder shown, opened (how: 0 = its saves shown, 2 = picked for the marked saves to be pasted
+ * into). 1 = START on its saves (or on it) gave the marked saves somewhere to go, from a copy's choosing: the browser
+ * is left for them to go there */
+static int card_file_go(const char *name, int how)
+{
+    card_file_screen(name, how);
+    if (marks.done && fbGive.c)   /* the copy goes on into it */
+        return 1;
+    if (marks.done) {   /* card files' saves marked here: they go into it */
+        marks.done = 0;
+        if (copy_marked(marks.into))
+            card_file_let_go();
+        fb_load(name);
+    }
+    return 0;
+}
+
 static void browse(int dev)
 {
     if (dev == FDEV_USB) {
@@ -580,17 +612,8 @@ static void browse(int dev)
                 fb_enter(name);
             else if (k == FB_PSU)
                 psu_screen(name, 0);
-            else if (k == FB_CARD) {
-                card_file_screen(name, 0);
-                if (marks.done && fbGive.c)   /* START on its saves, in a copy's choosing: the copy goes on into it */
-                    return;
-                if (marks.done) {   /* START on its saves, with card files' saves marked here: they go into it */
-                    marks.done = 0;
-                    if (copy_marked(marks.into))
-                        card_file_let_go();
-                    fb_load(name);
-                }
-            }
+            else if (k == FB_CARD && card_file_go(name, 0))
+                return;
             else if (k == FB_ELF) {   /* SD2Cloud leaves, as for a program picked in "Exit to" */
                 char path[660], target[200];
                 snprintf(path, sizeof(path), "%s%s", fb.dir, name);
@@ -628,6 +651,12 @@ static void browse(int dev)
         } else if ((b & PAD_TRIANGLE) && !fb.error && fbCard) {   /* from a card's options: the whole card goes into this folder */
             sound_play(SND_CONFIRM);
             if (export_card(fbCard))
+                return;
+        } else if ((b & PAD_START) && fb_on_card_file()) {
+            char name[256];   /* START on a card file: the marked saves go into it, as into a card */
+            snprintf(name, sizeof(name), "%s", fb.list[fb.cursor].name);
+            sound_play(SND_CONFIRM);
+            if (card_file_go(name, 2))
                 return;
         } else if ((b & PAD_START) && !fb.error && fbGive.c) {   /* "Paste", from a save's "Copy": into this folder */
             sound_play(SND_CONFIRM);

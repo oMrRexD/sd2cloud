@@ -656,6 +656,24 @@ void cards_recheck(card_t *c)
         state_write();
 }
 
+void card_keep_synced(card_t *c, int synced, int resolved)
+{
+    card_state_t *e = state_card(c->id, 0);
+    if (!e || c->status == ST_ERROR || (!synced && !resolved))
+        return;
+    if (synced) {
+        snprintf(e->fingerprint, sizeof(e->fingerprint), "%s", c->fingerprint);
+        e->version = MCFS_VERSION;
+        c->status = e->sha[0] ? ST_UP_TO_DATE : ST_NO_BACKUP;
+    }
+    if (resolved) {
+        snprintf(e->resolved, sizeof(e->resolved), "%s", c->fingerprint);
+        c->resolved = 1;
+    }
+    state_write();
+    log_msg("%s: a template's saves only: still %s", c->id, synced ? "synced" : "resolved");
+}
+
 int card_set_included(card_t *c, int on)
 {
     char include[sizeof(cfg.include)], exclude[sizeof(cfg.exclude)];

@@ -140,6 +140,10 @@ static int restore_flow(card_t *c, const drive_file_t *f)
     card_work_done();
     if (r == -2)
         return 0;   /* cancelled before writing: the card didn't change */
+    if (r == 0 && templates_in_use()) {   /* (what it had of its templates is the backup's now: looked into again) */
+        templates_unsettle(c->id);
+        templates_save();
+    }
     dlg_new(r == 0 ? COLOR_OK : COLOR_ERROR, T(r == 0 ? T_RESTORE_OK : T_RESTORE_FAILED));
     dlg_line(FONT_TEXT, COLOR_ACCENT, 4, c->base);
     if (r == 0)

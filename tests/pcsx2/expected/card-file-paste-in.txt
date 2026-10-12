@@ -30,7 +30,6 @@ mcfs: copy of BASLUS-21065ALPHA: 0, 54 reads and 7 writes of the cards in N ms
 copy BASLUS-21065ALPHA from Card1/Card1-1 to file/card.mcd: 0
 file/card.mcd: 1 folders, fingerprint 8c4e0ecbbb4b8e17, new
 [script] X
-Card1/Card1-1: 2 saves, 8270848 bytes free
 (end: capture)
 
 # files

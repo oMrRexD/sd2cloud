@@ -157,6 +157,18 @@ static void ini_set_keeps_the_rest(void)
     /* a file that isn't there is made */
     CHECK_INT(ini_set("new.ini", "s", "k", "v"), 0);
     CHECK_STR(text_of("new.ini"), "[s]\r\nk = v\r\n");
+    /* a value of 1 KB (the cards left out of the sync) goes whole, and the line after it stays its own */
+    {
+        static char list[1001], want[1100];
+        int i;
+        for (i = 0; i < 40; i++)
+            memcpy(list + i * 25, "SLUS-21065/SLUS-21065-1, ", 25);
+        list[1000] = 0;
+        t_text("long.ini", "[cards]\r\nexclude = x\r\ninclude = y\r\n");
+        CHECK_INT(ini_set("long.ini", "cards", "exclude", list), 0);
+        snprintf(want, sizeof(want), "[cards]\r\nexclude = %s\r\ninclude = y\r\n", list);
+        CHECK_STR(text_of("long.ini"), want);
+    }
 }
 
 static void settings_read_and_set(void)

@@ -43,10 +43,12 @@ SCENARIOS = [
      "script": "C"},
     # "Copy" on a save's page marks it. Others can be marked, there and on the other cards, which are listed when
     # that card's saves are left (O). START (S) pastes them into the card it is pressed on: the one under the cursor
-    # in that list, or the one whose saves are open. On the card they are all on, it asks where they go
-    {"name": "save-copy", "what": "a save copied to another card", "cards": CARDS, "script": "XXXSXXXC"},
+    # in that list, or the one whose saves are open. On the card they are all on, it goes to that list too. In the
+    # Games group of the list, their game's folder comes first, and "New card" first inside it (X D: its card)
+    {"name": "save-copy", "what": "a save copied to another card: START on its own card goes to the list of cards, START "
+     "there pastes it", "cards": CARDS, "script": "XXXSDSXXC"},
     {"name": "save-copy-many", "what": "saves marked on two cards, copied together to a third", "cards": CARDS,
-     "script": "XXXO>XX>XO<DSXXC"},
+     "script": "XXXO>XDX>XO<DSXXC"},
     {"name": "save-copy-list", "what": "a save marked on a card, pasted on another card of the list", "cards": CARDS,
      "script": "XXXODSXXC"},
     {"name": "save-paste-inside", "what": "a save marked on a card, pasted with another card's saves open", "cards": CARDS,
@@ -55,7 +57,15 @@ SCENARIOS = [
      "script": "XXX>XS>>XSXXC"},
     {"name": "save-move", "what": "a save moved to another card", "cards": CARDS, "script": "XXDXXXXC"},
     {"name": "save-delete", "what": "a save deleted", "cards": CARDS, "script": "XXDDXXXC"},
-    {"name": "save-new-card", "what": "a save copied to a new card of its game", "cards": CARDS, "script": "XXXS>XXXC"},
+    {"name": "save-new-card", "what": "a save copied to a new card of its game: \"New card\" in its game's folder, in the list "
+     "of cards", "cards": CARDS, "script": "XXXS>XXXXC"},
+    # (no card of the game yet: "New card" among the folders, first)
+    {"name": "save-new-game", "what": "a save copied to a new card of a game that has no card yet", "cards":
+     {"Card1/Card1-1": "game", "Card2/Card2-1": "empty", "SLUS-20001/SLUS-20001-1": "empty"}, "script": "XXXS>SXXC"},
+    # (the start's warning answered with square: that card is left alone)
+    {"name": "save-new-card-template", "what": "a save copied to a new card of its game: the main template goes into it too",
+     "cards": CARDS, "files": dict(TEMPLATE, **{"SD2Cloud/templates/templates.ini": b"[templates]\nmain = Net\n"}),
+     "script": "QXXXS>XXXXC"},
     {"name": "psu-import", "what": "a .psu file imported into a card", "cards": CARDS, "files": {"Files/save.psu": "save.psu"},
      "script": ">>XXXXXXXC"},
     {"name": "psu-folder-import", "what": "a save copied as a folder (its files, as on the card): square on it, its page, installed into a card",
@@ -76,7 +86,7 @@ SCENARIOS = [
     {"name": "card-file-look", "what": "a card file opened to see its saves, and one of them", "cards": CARDS,
      "files": {"Files/card.mcd": "game.mcd"}, "script": ">>XXXX.OOC"},
     {"name": "card-file-copy", "what": "two saves of a card file marked there, and copied to a card", "cards": CARDS,
-     "files": {"Files/card.mcd": "game.mcd"}, "script": ">>XXXXX>XSDXXXC"},
+     "files": {"Files/card.mcd": "game.mcd"}, "script": ">>XXXXX>XSOODSXXC"},
     # (the folders are browsed over the ones the card file was opened from, which come back as they were)
     # (circle goes back to the folder with the saves marked, the card file kept open: START there pastes them)
     {"name": "card-file-held", "what": "a save of a card file marked, circle back to its folder, pasted there as a .psu",
@@ -92,21 +102,24 @@ SCENARIOS = [
      "pasted into it", "cards": CARDS, "files": {"Files/a.mcd": "game.mcd", "Files/b.mcd": "empty.mcd"},
      "script": ">>XXXXXODXSXXC"},
     {"name": "card-file-export", "what": "a save of a card file opened in Files, copied to a folder of the MMCE as a .psu",
-     "cards": CARDS, "files": {"Files/card.mcd": "game.mcd"}, "script": ">>XXXXXS>>XSXXC"},
+     "cards": CARDS, "files": {"Files/card.mcd": "game.mcd"}, "script": ">>XXXXXSOSXXC"},
     # The Memory Card: a PS2 memory card in the console's other slot, in the Files group (run.py puts
     # fixtures/memcard.ps2.gz in PCSX2's slot 2)
     {"name": "memcard-open", "what": "the Memory Card in the Files group, opened: its saves", "cards": CARDS,
      "memcard": "memcard.ps2", "script": ">>DDXC"},
     {"name": "memcard-copy-out", "what": "a save of the Memory Card copied to a card", "cards": CARDS,
-     "memcard": "memcard.ps2", "script": ">>DDXXXSXXXC"},
+     "memcard": "memcard.ps2", "script": ">>DDXXXS<<SXXC"},
     {"name": "memcard-copy-in", "what": "a save of a card copied to the Memory Card, picked in the Files group",
-     "cards": CARDS, "memcard": "memcard.ps2", "script": "XXXS>>DDXXXC"},
+     "cards": CARDS, "memcard": "memcard.ps2", "script": "XXXS>>DDSXXC"},
     {"name": "memcard-move-out", "what": "a save of the Memory Card moved to a card", "cards": CARDS,
      "memcard": "memcard.ps2", "script": ">>DDXXDXXXXC"},
     {"name": "memcard-delete", "what": "a save of the Memory Card deleted", "cards": CARDS, "memcard": "memcard.ps2",
      "script": ">>DDXXDDXXXC"},
     {"name": "memcard-psu-in", "what": "a .psu file imported into the Memory Card", "cards": CARDS,
      "memcard": "memcard.ps2", "files": {"Files/save.psu": "save.psu"}, "script": ">>XXXX>>XXXC"},
+    # (its options, "Upload to Drive": read into a card file, sent as a dry sync sends, "B": nothing goes)
+    {"name": "memcard-upload", "what": "the whole Memory Card uploaded to Drive (dry: PCSX2 has no Google account)",
+     "cards": CARDS, "memcard": "memcard.ps2", "script": ">>DDXTXXBwC"},
     {"name": "memcard-paste-list", "what": "a save marked on a card, pasted with START on the Memory Card in the list of "
      "cards", "cards": CARDS, "memcard": "memcard.ps2", "script": "XXXO>>DDSXXC"},
     {"name": "settings", "what": "settings changed (how many backups are kept, their format, the language) and About",

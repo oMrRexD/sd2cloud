@@ -110,7 +110,8 @@ options offer to move its saves to the card the sd2psx opens.
   the item's page, and what is done to an item is done to that card. An item that more than one card has (the
   same folder with the same files, byte for byte, as a template put into every card) is shown once.
 - TRIANGLE, with a card's items on screen, opens the options: "Sync now", for that card; "Sort by" (the date,
-  descending or ascending, or the name of their game), for every card; and, in "All saves", "Duplicates",
+  descending or ascending, or the name of their game), for every card ("Upload to Drive" instead of "Sync
+  now", on the Memory Card: see FILES); and, in "All saves", "Duplicates",
   hidden or shown. X changes a value, and the items are listed the new way when the options are closed. The
   settings keep both.
 - START opens the settings (see SETTINGS), and SELECT the tools (see TEMPLATES).
@@ -118,19 +119,23 @@ options offer to move its saves to the card the sd2psx opens.
 - Copy marks the item (a green tick over its icon) and goes back to the card's items, where X now marks and
   unmarks others; O leaves the card for the list of cards, to mark items on other cards too. The marks stay
   from card to card, and their count is on screen. START (Paste) pastes them all into the card it is
-  pressed on: the one under the cursor in the list of cards, or the one that is open. Pressed on the card they
-  all came from, it asks where they go instead: a card on
-  the MMCE, chosen from the same tabs as the main screen (the destination's free space is shown, and a card
-  without enough space cannot be selected; when the items are all of one game, the Games tab also has "New
-  card", in that game's folder or among the folders while the game has none: an empty 8 MB card is made for
-  them, as the device itself makes them), or a folder of a device (see FILES).
+  pressed on: the one that is open, or the one under the cursor in the list of cards (a card without enough
+  space for them is left as it is). Pressed where they can't go (the card they all came from, or "All
+  saves"), it goes to the list of cards. In the list's Games tab, when the items are all of one game, that
+  game's folder comes first, in green, with "New card" in it; while the game has no folder, "New card" comes
+  first among the folders. An empty 8 MB card is made for them, as the device itself makes them, and gets the
+  game's templates too. START on a folder pastes into its card (a folder of more than one card opens). The
+  Files tab of the list leads to the folders of a device (see FILES) and to the Memory Card.
 - Move takes the item to another card, chosen the same way. Upload to Drive sends that item only, in .psu
   format, to a "Saves" folder next to the card's backups. To change the card the sd2psx is using, SD2Cloud
   asks first, then switches the sd2psx to another card, makes the change and switches back; only for a folder
   with a name of its own the card has to be switched on the sd2psx beforehand.
 Every operation that uploads, writes or deletes data asks for confirmation first. During a sync, the O
 button cancels the upload; cards already uploaded remain on Drive. While several cards are sent, SQUARE asks
-about the one on its way: X skips it this time, SQUARE skips it and turns its sync off.
+about the one on its way: SQUARE again skips it this time, TRIANGLE skips it and turns its sync off. SELECT
+shows the list of the sync's cards, with what became of each, and goes back: on it, SQUARE skips a card at
+once (again: undo), and X offers to skip it, to mark it as resolved (the automatic sync leaves it alone until
+it changes again) or to turn its sync off.
 
 FILES
 The last tab of the main screen, Files, lists the devices whose folders can be browsed: the MMCE
@@ -150,8 +155,15 @@ screen are the ones that do something with the selected entry.
   number: BASLUS-21065SAVE (2).psu).
 - Memory card files: X on a .mcd, a .mc2 (MemCard PRO2), a .ps2 (PCSX2), a .bin (one of OPL's virtual memory
   cards, VMC) or a .zip written by "Copy to a device" opens the card it holds, shown as the cards of the
-  MMCE are. The file is only read. X on an item opens its page, from where it can be copied to a card of
-  the MMCE, alone or with other items of that file (Copy marks it, START pastes them into a card).
+  MMCE are. X on an item opens its page, from where it can be copied anywhere, alone or with other items
+  of that file (Copy marks it, START pastes them). A .mcd, .mc2 or .bin card outside a .zip takes items too:
+  during a copy, X on the file opens it and START there pastes them into it, as does START on the file in the
+  list. A .ps2 (its pages carry ECC bytes) and a .zip's card are only read.
+- The Memory Card: a regular PS2 memory card in the console's other slot is the last row of the Files tab.
+  X shows its items, which are copied, moved, deleted and uploaded to Drive as a card's are, and items go
+  into it from the cards or from .psu files. TRIANGLE, on its items, has "Upload to Drive": the whole card is
+  read into a card file on the MMCE and sent as a backup of its own, kept with its history in the "Memory
+  Card" folder on Drive (the file is deleted afterwards).
 - Installing a memory card file: SQUARE, on the file in the list or on the screen of its card, asks where the
   card goes, in the same tabs as the main screen. "New card", at the top of each list, makes a new card: the
   lowest free number in Cards, the next channel of the BootCard in Boot and, in Games, the next channel of
@@ -186,7 +198,7 @@ settings an online game asks for. SELECT, on the main screen, opens the tools; T
   cards you mark, game cards or not (X marks and unmarks, START applies). Update existing saves is the one
   that replaces: on the game cards, the items of the template that a card already has in another version
   give way to the template's. No other item of the card is changed, an item the card lacks is not added,
-  and it asks first.
+  and it asks first. A template's items are no change to sync: a card that was synced stays synced.
 - Set as default: the default template is the one every game card should have (a yellow light marks it in the
   list). When SD2Cloud opens and a game card lacks it, as the card of a new game does, SD2Cloud says which
   and waits for an answer: X applies it, O leaves it for later, SQUARE stops the warning for those cards. A

@@ -58,7 +58,11 @@ enum { FDEV_SD, FDEV_USB, FDEVS };
 typedef struct {
     int tab;                  /* the group shown */
     int count[TABS];          /* how many cards each group has (the Files group: how many devices) */
-    int n, idx[MAX_CARDS];    /* the list's cards (indexes in cards[]); of a list of folders, the first card of each */
+    int n, idx[MAX_CARDS + 2];   /* the list's rows: cards (indexes in cards[]), ROW_ALL or ROW_NEW; of a list of
+                                    folders, the first card of each folder */
+    int fold[MAX_CARDS + 2];  /* of a list of folders: the folder each row is (-1 = a row that isn't one) */
+    int lit;                  /* the row of the game of the save on its way (newGame), first and lit: its folder, or
+                                 "New card" (-1 = none) */
     int cursor, top;          /* in the list */
     int keep[TABS][2];        /* each group's cursor and top: switching back lands on the same card */
     const card_t *skip;       /* a card left out (the one a save is copied from) */
@@ -76,8 +80,11 @@ typedef struct {
                                  saves on one screen (the main screen, with more than one game card) */
     char newGame[48];         /* a save is on its way to a card: its game's folder ("" = no game can be told). The
                                  Games group then offers "New card" for it: among the folders while the game has none
-                                 there, inside its folder once it has */
+                                 there, inside its folder once it has (and that folder comes first) */
 } tabs_t;
+/* the rows of a list that are neither a card nor a folder (their idx) */
+#define ROW_ALL (-1)              /* "All saves" */
+#define ROW_NEW (-2)              /* "New card" */
 typedef struct {
     mcfs_save_t s;
     card_t *card;          /* the card it is on */
@@ -168,6 +175,7 @@ extern card_t slotCard;                  /* the Memory Card, in the console's ot
 int memcard_there(void);
 void memcard_screen(void);
 void memcard_hint(void);
+void memcard_upload(void);               /* the whole card, as a backup of its own on Drive */
 
 /* ------------------------------------------------------------ dest.c */
 struct dst_s {
@@ -181,7 +189,6 @@ struct dst_s {
     char newName[56];                 /* on "New card": the card it would make ("" = not known before asking) */
 };
 extern struct dst_s dst;
-extern int destFiles, destDevice;
 extern card_t destNew;
 void scene_dest(float t);
 void dest_info(void);
@@ -190,6 +197,7 @@ card_t *choose_dest(const card_t *from, int title, long long need, const char *s
 int new_card(int tab, const char *gameFolder, int max, char folder[48], char base[56]);
 const char *dest_game_folder(void);
 void dest_new_name(void);
+int dest_new_place(const char *game);    /* "New card" of that game picked: where it will be (destNew). 1 = it can be */
 int ask_more_channels(int max);
 extern int cardsUnsorted;
 card_t *dest_real(card_t *to);
@@ -229,11 +237,12 @@ void history_screen(card_t *c, icon_t *icon);
 /* ------------------------------------------------------------ install.c */
 extern char fileGameFolder[48];
 int install_card(void);
-void card_file_screen(const char *file, int install);
+void card_file_screen(const char *file, int install);   /* install: 0 = its saves shown, 1 = installed, 2 = pasted into */
 int card_file_held(void);       /* a card file's saves are marked, back in its folder (it is kept open for them) */
 int card_file_writable(void);   /* saves can be pasted into the card file that is open (fileCard) */
 int card_file_marks(void);      /* saves of card files are marked (the one open, and the ones kept by their paths) */
 int card_file_card(const card_t *c);   /* that card is a card file's (fileCard, or one kept for its marked saves) */
+int card_file_all_marked(const char *path);   /* are all the marked saves of that card file? */
 void card_file_let_go(void);    /* those marks let go of, and the card file closed */
 
 /* ------------------------------------------------------------ keyboard.c */
@@ -298,6 +307,7 @@ int copy_leave(const card_t *c);
 int marks_of(const card_t *c);           /* how many of the marked saves are of that card */
 void marks_move(const card_t *from, card_t *to);   /* the marked saves of one card, taken as another's */
 void copy_go_on(const card_t *at);       /* the marking of a copy goes on in the list of cards, until it is over */
+int paste_here(const card_t *c);         /* can the marked saves be pasted into that card? */
 
 /* ------------------------------------------------------------ menu.c */
 void menu_refresh(void);
@@ -341,6 +351,7 @@ void save_title(save_view_t *v, const icon_t *ic);
 void browser_icons(int spin);
 void browser_close(void);
 icon_t *newest_icon(const card_t *c);
+int card_icon_read(const card_t *c, char folder[33], buffer_t *iconsys, buffer_t *ico);   /* (newest_icon's) */
 void card_screen(card_t *c);
 
 /* ------------------------------------------------------------ settings.c */
@@ -360,6 +371,7 @@ int tab_of(const card_t *c);
 const char *game_of(const card_t *c);
 int tabs_on_folders(const tabs_t *g);
 void tabs_open(tabs_t *g);
+void tabs_redo(tabs_t *g);
 void tabs_show(tabs_t *g, int tab);
 void tabs_init(tabs_t *g, const card_t *skip, int files);
 card_t *tabs_card(const tabs_t *g);
@@ -373,6 +385,7 @@ int tabs_device(const tabs_t *g);        /* the Files group's device under the c
 int templates_startup(void);              /* the warning of game cards that lack their templates: how many (0 = none) */
 int templates_wanted(void);              /* templates to put into the game cards after a game? */
 void templates_after_game(int alone);
+void templates_new_card(card_t *c);      /* a game card made for a save gets its templates too */
 void tools_screen(void);
 
 /* ------------------------------------------------------------ work.c */

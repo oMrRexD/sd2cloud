@@ -22,6 +22,7 @@ new card SLUS-21065/SLUS-21065-2: 0
 mcfs: copy of BASLUS-21065ALPHA: 0, 54 reads and 7 writes of the cards in N ms
 copy BASLUS-21065ALPHA from Card1/Card1-1 to SLUS-21065/SLUS-21065-2: 0
 SLUS-21065/SLUS-21065-2: 1 folders, fingerprint 8c4e0ecbbb4b8e17, new
+[script] X
 (end: capture)
 
 # files

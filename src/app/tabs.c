@@ -37,6 +37,7 @@ void draw_card_picture(const card_t *c, icon_t *ic, float t)
 }
 
 static float rowsDx;   /* the rows are drawn this far to the side (a folder's cards sliding into the list) */
+static int rowsLit = -1;   /* and that row is lit: the game of the save on its way (tabs_t.lit) */
 int rowsWide;          /* and their text may be this wide (0 = as usual): the folders' names are longer than a card's */
 
 /* the rows of a list: scrolls with the cursor, arrows when there's more */
@@ -54,9 +55,10 @@ void list_rows(int n, int cursor, int top, const char *(*text)(int i, char *buf)
         }
         /* without the status light (the backups' dates) the text starts further left: a whole date fits */
         if (i == cursor)
-            look_item(x + (dot ? 42 : 24), y, s, 1, 0);
+            look_glow_text(FONT_TEXT, x + (dot ? 42 : 24), y, i == rowsLit ? COLOR_OK : COLOR_ITEM,
+                           i == rowsLit ? 0xE6FFEA : COLOR_ITEM_ON, s);
         else
-            ui_text_fit(FONT_TEXT, x + (dot ? 42 : 24), y, rowsWide ? rowsWide : dot ? 150 : 172, COLOR_ITEM, s);
+            ui_text_fit(FONT_TEXT, x + (dot ? 42 : 24), y, rowsWide ? rowsWide : dot ? 150 : 172, i == rowsLit ? COLOR_OK : COLOR_ITEM, s);
     }
     if (top > 0)
         look_arrow(LIST_X + 186, ROW_Y0 - 14, 0, 0x6E9AE0);
@@ -105,28 +107,26 @@ const char *game_of(const card_t *c) { return c->game[0] ? c->game : c->folder; 
 /* is the list one of folders right now? */
 int tabs_on_folders(const tabs_t *g) { return g->tab == TAB_GAMES && g->open < 0; }
 
-/* is "New card" offered in the list shown for the game of the save on its way (newGame)? Among the folders when none
- * of them is that game's; in a folder when it is that game's (a folder of the list is a game, which may be more than
- * one folder of the microSD: versions of the same game under one name) */
-static int tabs_new_game(const tabs_t *g)
+/* the folder of the list that is the game of the save on its way (newGame). -1 = none is (a folder of the list is a
+ * game, which may be more than one folder of the microSD: versions of the same game under one name) */
+static int tabs_game_folder(const tabs_t *g)
 {
     int k, i;
-    if (!g->newGame[0] || g->tab != TAB_GAMES)
-        return 0;
-    for (k = g->open >= 0 ? g->open : 0; k < (g->open >= 0 ? g->open + 1 : g->folders); k++)
+    if (!g->newGame[0])
+        return -1;
+    for (k = 0; k < g->folders; k++)
         for (i = g->first[k]; i < g->first[k + 1]; i++)
             if (!strcasecmp(cards[g->games[i]].folder, g->newGame))
-                return g->open >= 0;
-    return g->open < 0;
+                return k;
+    return -1;
 }
 
-/* how many rows that aren't a card or a folder the list shown starts with (idx -1): "New card", or "All saves" */
-static int tabs_lead(const tabs_t *g) { return g->add || tabs_new_game(g) || (g->all && tabs_on_folders(g) && g->nGames > 1); }
-
-/* the Games group's list: its folders, or the cards of the one that is open (with ui_lock held) */
+/* the Games group's list: its folders, or the cards of the one that is open (with ui_lock held). With a save on its
+ * way (newGame), its game comes first and lit: its folder or, while it has none, "New card" for it (inside its folder,
+ * "New card" comes first too). Then "All saves", then the other folders */
 static void tabs_games(tabs_t *g)
 {
-    int i, k;
+    int i, k, mine;
     g->nGames = g->folders = 0;
     for (i = 0; i < nCards; i++) {
         if (&cards[i] == g->skip || tab_of(&cards[i]) != TAB_GAMES)
@@ -144,21 +144,42 @@ static void tabs_games(tabs_t *g)
     g->first[g->folders] = g->nGames;
     if (g->open >= g->folders)
         g->open = -1;
+    mine = g->add ? -1 : tabs_game_folder(g);
     g->n = 0;
-    if (tabs_lead(g))
-        g->idx[g->n++] = -1;
-    if (g->open < 0)
-        for (i = 0; i < g->folders; i++)
-            g->idx[g->n++] = g->games[g->first[i]];
-    else
-        for (i = g->first[g->open]; i < g->first[g->open + 1]; i++)
+    g->lit = -1;
+    if (g->add || (g->newGame[0] && (g->open < 0 ? mine < 0 : mine == g->open))) {   /* "New card" */
+        if (!g->add)
+            g->lit = 0;
+        g->fold[g->n] = -1;
+        g->idx[g->n++] = ROW_NEW;
+    }
+    if (g->open >= 0) {
+        for (i = g->first[g->open]; i < g->first[g->open + 1]; i++) {
+            g->fold[g->n] = g->open;
             g->idx[g->n++] = g->games[i];
+        }
+        return;
+    }
+    if (mine >= 0) {
+        g->lit = g->n;
+        g->fold[g->n] = mine;
+        g->idx[g->n++] = g->games[g->first[mine]];
+    }
+    if (g->all && g->nGames > 1) {
+        g->fold[g->n] = -1;
+        g->idx[g->n++] = ROW_ALL;
+    }
+    for (k = 0; k < g->folders; k++)
+        if (k != mine) {
+            g->fold[g->n] = k;
+            g->idx[g->n++] = g->games[g->first[k]];
+        }
 }
 
 /* X on a folder: its cards take the list's place */
 void tabs_open(tabs_t *g)
 {
-    g->open = g->cursor - tabs_lead(g);
+    g->open = g->fold[g->cursor];
     g->openTop = g->top;
     g->cursor = g->top = 0;
     tabs_games(g);
@@ -169,11 +190,14 @@ void tabs_open(tabs_t *g)
 /* circle inside a folder: back to the folders, on the one that was open. slide = 0: at once (the group is left) */
 static void tabs_close(tabs_t *g, int slide)
 {
-    g->cursor = g->open;
+    int k, was = g->open;
     g->top = g->openTop;
     g->open = -1;
     tabs_games(g);
-    g->cursor += tabs_lead(g);
+    for (k = g->cursor = 0; k < g->n; k++)
+        if (g->fold[k] == was)
+            g->cursor = k;
+    scroll_to(g->cursor, &g->top);
     if (slide) {
         g->moved = ui_clock();
         g->way = -1;
@@ -190,10 +214,11 @@ void tabs_show(tabs_t *g, int tab)
     g->keep[g->tab][1] = g->top;
     memset(g->count, 0, sizeof(g->count));
     g->n = 0;
+    g->lit = -1;
     if (g->add) {   /* a group that has no card yet is offered too: one can be added to it */
         g->count[TAB_CARDS] = g->count[TAB_GAMES] = 1;
         g->count[TAB_BOOT] = dev->sd2psx;
-        g->idx[g->n++] = -1;
+        g->idx[g->n++] = ROW_NEW;
     }
     for (i = 0; i < nCards; i++) {
         if (&cards[i] == g->skip)
@@ -215,6 +240,24 @@ void tabs_show(tabs_t *g, int tab)
         tabs_games(g);
     g->cursor = g->keep[tab][0] < g->n ? g->keep[tab][0] : 0;
     g->top = g->keep[tab][1];
+    scroll_to(g->cursor, &g->top);
+}
+
+/* the list shown made again, on the same card or folder when it is still there (with ui_lock held): the game of the
+ * saves on their way (newGame) changed, and with it what the Games group offers */
+void tabs_redo(tabs_t *g)
+{
+    int k, was = g->n ? g->idx[g->cursor] : ROW_ALL;
+    if (g->newGame[0] && !g->count[TAB_GAMES])
+        g->count[TAB_GAMES] = 1;
+    if (g->tab != TAB_GAMES)
+        return;
+    tabs_games(g);
+    for (k = 0; k < g->n; k++)
+        if (g->idx[k] == was)
+            g->cursor = k;
+    if (g->cursor >= g->n)
+        g->cursor = g->n ? g->n - 1 : 0;
     scroll_to(g->cursor, &g->top);
 }
 
@@ -262,10 +305,10 @@ void tabs_find(tabs_t *g, int card)
         if (g->idx[k] == card)
             g->cursor = k;
     if (tabs_on_folders(g))
-        for (k = 0; k < g->folders; k++)
-            for (i = g->first[k]; i < g->first[k + 1]; i++)
+        for (k = 0; k < g->n; k++)
+            for (i = g->fold[k] < 0 ? 0 : g->first[g->fold[k]]; g->fold[k] >= 0 && i < g->first[g->fold[k] + 1]; i++)
                 if (g->games[i] == card)
-                    g->cursor = k + tabs_lead(g);
+                    g->cursor = k;
     scroll_to(g->cursor, &g->top);
 }
 
@@ -323,8 +366,8 @@ static const char *tabs_text(int i, char *buf)
     if (rowsOf->tab == TAB_FILES)
         return i < (rowsOf->files ? FDEVS : 0) ? T(deviceText[i]) : T(T_MEMCARD);
     if (rowsOf->idx[i] < 0)
-        return T(rowsOf->add || rowsOf->newGame[0] ? T_NEW_CARD : T_ALL_SAVES);
-    return tabs_on_folders(rowsOf) ? rowsOf->label[i - tabs_lead(rowsOf)] : cards[rowsOf->idx[i]].base;
+        return T(rowsOf->idx[i] == ROW_NEW ? T_NEW_CARD : T_ALL_SAVES);
+    return tabs_on_folders(rowsOf) ? rowsOf->label[rowsOf->fold[i]] : cards[rowsOf->idx[i]].base;
 }
 
 static u32 tabs_dot(int i) { return rowsOf->idx[i] < 0 ? COLOR_DIM : status_color(&cards[rowsOf->idx[i]]); }
@@ -370,13 +413,14 @@ void tabs_draw(const tabs_t *g, int dots)
             ui_alpha((int)(128 * p));
         }
         rowsWide = folders ? FOLDER_W : 0;
+        rowsLit = g->tab == TAB_GAMES ? g->lit : -1;
         list_rows(g->n, g->cursor, g->top, tabs_text, folders ? NULL : dots ? tabs_dot : NULL);
         for (k = g->top; g->tab != TAB_FILES && k < g->n && k < g->top + ROWS; k++) {
             float x = LIST_X + rowsDx, y = ROW_Y0 + (k - g->top) * ROW_H + ui_line_height(FONT_TEXT) / 2.0f + 1;
             int here = g->idx[k] >= 0 && g->idx[k] == activeCard;
-            if (g->idx[k] < 0 && (g->add || g->newGame[0])) {   /* "New card": a plus where a folder has its picture */
-                ui_rect(x + 4, y - 1, 12, 2, COLOR_ACCENT, 0x70);
-                ui_rect(x + 9, y - 6, 2, 12, COLOR_ACCENT, 0x70);
+            if (g->idx[k] == ROW_NEW) {   /* "New card": a plus where a folder has its picture */
+                ui_rect(x + 4, y - 1, 12, 2, k == rowsLit ? COLOR_OK : COLOR_ACCENT, 0x70);
+                ui_rect(x + 9, y - 6, 2, 12, k == rowsLit ? COLOR_OK : COLOR_ACCENT, 0x70);
             } else if (g->idx[k] < 0) {   /* "All saves": two small cards, one behind the other */
                 ui_rect(x + 8, y - 11, 10, 13, 0x6E9AE0, 0x38);   /* (in the arrows' blue, the one behind fainter) */
                 ui_rect(x + 2, y - 6, 11, 14, 0x6E9AE0, 0x80);
@@ -384,8 +428,8 @@ void tabs_draw(const tabs_t *g, int dots)
             } else if (folders) {   /* a game's folder: a small arrow, as the tabs have (it opens) */
                 /* (grey, when the device opens another folder for that game now) */
                 ui_triangle(x + 5, y - 6, x + 5, y + 6, x + 14, y,
-                            cards[g->games[g->first[k - tabs_lead(g)]]].moved[0] ? 0x5A6478 : 0x6E9AE0, 0x80);
-                for (i = g->first[k - tabs_lead(g)]; i < g->first[k - tabs_lead(g) + 1]; i++)
+                            cards[g->games[g->first[g->fold[k]]]].moved[0] ? 0x5A6478 : k == rowsLit ? COLOR_OK : 0x6E9AE0, 0x80);
+                for (i = g->first[g->fold[k]]; i < g->first[g->fold[k] + 1]; i++)
                     here |= g->games[i] == activeCard;
                 x -= 22;   /* the mark of the card in use goes before the folder */
             }
@@ -396,10 +440,11 @@ void tabs_draw(const tabs_t *g, int dots)
         }
         if (g->tab == TAB_GAMES && g->open >= 0) {   /* over a folder's cards, small: which folder this is */
             ui_triangle(LIST_X + 27, LIST_Y + 23, LIST_X + 27, LIST_Y + 33, LIST_X + 35, LIST_Y + 28, 0x6E9AE0, 0x70);
-            ui_text_fit(FONT_SMALL, LIST_X + 44, LIST_Y + 21, FOLDER_W - 20, 0x8E98AA, game_of(&cards[g->idx[tabs_lead(g)]]));
+            ui_text_fit(FONT_SMALL, LIST_X + 44, LIST_Y + 21, FOLDER_W - 20, 0x8E98AA, game_of(&cards[g->games[g->first[g->open]]]));
         }
         rowsDx = 0;
         rowsWide = 0;
+        rowsLit = -1;
         if (sliding)
             ui_alpha(128);
     }

@@ -34,6 +34,11 @@ void sync_list_start(int mode)
             syncCards[nSync].taken = 0;
             syncCards[nSync++].state = SY_WAITING;
         }
+    if (mode == 3 && !nSync && singleCard) {   /* (one that isn't a card of the device: the Memory Card, read whole) */
+        syncCards[0].c = (card_t *)singleCard;
+        syncCards[0].taken = 0;
+        syncCards[nSync++].state = SY_WAITING;
+    }
     syncListed = mode != 3 && nSync > 1;   /* (a card synced by itself has its own screen only) */
     syncView = 0;
     sy.cursor = sy.top = 0;

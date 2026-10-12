@@ -832,7 +832,13 @@ T_UPLOAD_OFF = sincronización desactivada
 T_UNDO = Deshacer
 # One line. English: Memory Card
 T_MEMCARD = Memory Card
-# Up to 5 lines. English: Copy saves between the Memory Card and the sd2psx's cards.
-T_MEMCARD_HINT = Copie partidas entre la Memory Card y las tarjetas del sd2psx.
+# Up to 5 lines. English: Transfer saves between the Memory Card and the sd2psx's cards, and back up individual saves or the entire card to Google Drive.
+T_MEMCARD_HINT = Transfiera partidas entre la Memory Card y las tarjetas del sd2psx, y respalde en Google Drive una partida o la tarjeta completa.
 # Up to 3 lines. English: No Memory Card was found.
 T_MEMCARD_NONE = No se encontró ninguna Memory Card.
+# One line. English: Reading the Memory Card...
+T_MEMCARD_READING = Leyendo la Memory Card...
+# Up to 3 lines. English: Unable to read the Memory Card.
+T_MEMCARD_READ_FAILED = No se pudo leer la Memory Card.
+# Up to 4 lines. English: Saves can't be pasted into this file. Here, only a .mcd, .mc2 or .bin card outside a .zip can take them.
+T_CARD_FILE_READ_ONLY = No se pueden pegar partidas en este archivo. Aquí solo una tarjeta .mcd, .mc2 o .bin fuera de un .zip puede recibirlas.

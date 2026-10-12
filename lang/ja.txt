@@ -833,7 +833,13 @@ T_UPLOAD_OFF = 同期無効
 T_UNDO = 元に戻す
 # One line. English: Memory Card
 T_MEMCARD = メモリーカード
-# Up to 5 lines. English: Copy saves between the Memory Card and the sd2psx's cards.
-T_MEMCARD_HINT = メモリーカードと sd2psx のカードの間でセーブデータをコピーできます。
+# Up to 5 lines. English: Transfer saves between the Memory Card and the sd2psx's cards, and back up individual saves or the entire card to Google Drive.
+T_MEMCARD_HINT = メモリーカードと sd2psx のカードの間でセーブデータを転送し、個別のセーブデータまたはカード全体を Google ドライブにバックアップできます。
 # Up to 3 lines. English: No Memory Card was found.
 T_MEMCARD_NONE = メモリーカードが見つかりません。
+# One line. English: Reading the Memory Card...
+T_MEMCARD_READING = メモリーカードを読み込んでいます...
+# Up to 3 lines. English: Unable to read the Memory Card.
+T_MEMCARD_READ_FAILED = メモリーカードを読み込めませんでした。
+# Up to 4 lines. English: Saves can't be pasted into this file. Here, only a .mcd, .mc2 or .bin card outside a .zip can take them.
+T_CARD_FILE_READ_ONLY = このファイルにはセーブデータを貼り付けられません。ここで貼り付けられるのは、.zip に入っていない .mcd、.mc2、.bin のカードだけです。

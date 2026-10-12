@@ -64,6 +64,7 @@ static struct {
     char title[80];
     icon_t *icon;     /* the selected game card's icon, once read */
     int iconCard;
+    char newName[56]; /* the card "New card" would make, for the game of the saves of a copy (g.newGame) */
 } mk = {.iconCard = -1};
 
 static void scene_mark(float t)
@@ -75,9 +76,18 @@ static void scene_mark(float t)
     ui_alpha(look_fade(t));
     tabs_draw(&mk.g, 0);
     {
-        legend_t l[3] = {{BUTTON_CIRCLE, T(T_BACK)}, {BUTTON_CROSS, T(T_OPEN)},
-                         {BUTTON_START, T(marks.copy ? T_PASTE : T_FINISH)}};
-        look_legend(l, 3, 0);
+        /* only what the row does: "New card" has nothing to open (X pastes there too), and START pastes only where
+         * the saves can go ("All saves" isn't a card, and the card they are all on has them) */
+        legend_t l[3] = {{BUTTON_CIRCLE, T(T_BACK)}};
+        int n = 1, row = mk.g.n ? mk.g.idx[mk.g.cursor] : ROW_ALL;
+        if (mk.g.n && row != ROW_NEW)
+            l[n].button = BUTTON_CROSS, l[n++].text = T(T_OPEN);
+        if (!marks.copy)
+            l[n].button = BUTTON_START, l[n++].text = T(T_FINISH);
+        else if (mk.g.tab == TAB_FILES ? tabs_device(&mk.g) >= 0 || paste_here(&slotCard)
+                 : row == ROW_NEW || (row >= 0 && (tabs_on_folders(&mk.g) || paste_here(&cards[row]))))
+            l[n].button = BUTTON_START, l[n++].text = T(T_PASTE);
+        look_legend(l, n, 0);
     }
     look_title(CARD_CX, 82, mk.title, 1);
     snprintf(s, sizeof(s), T(T_MARKED_N), marks.n);
@@ -85,6 +95,11 @@ static void scene_mark(float t)
     if (mk.g.tab == TAB_FILES) {   /* a device: the marked saves can go to a folder of it; the Memory Card, into it */
         if (tabs_device(&mk.g) < 0)
             look_card(CARD_X, CARD_Y, NULL, T(T_MEMCARD));
+        return;
+    }
+    if (mk.g.n && mk.g.idx[mk.g.cursor] == ROW_NEW) {   /* "New card": the card to be, under the count */
+        look_card(CARD_X, CARD_Y, "+", NULL);
+        ui_text_center(FONT_SMALL, CARD_CX, CARD_Y + LOOK_CARD_H + 26, COLOR_OK, mk.newName);
         return;
     }
     if (mk.g.n && mk.g.idx[mk.g.cursor] < 0) {   /* "All saves": the game cards together */
@@ -112,6 +127,59 @@ static void mark_icon(void)
     ui_unlock();
 }
 
+/* The game of the saves marked for a copy, when they are all of one (its folder; "" = they aren't): the Games group
+ * offers "New card" for it, and its folder comes first there. 1 = it changed (with ui_lock held) */
+static int mark_game(void)
+{
+    char id[12], first[12] = "", folder[48] = "", f[48];
+    int i;
+    for (i = 0; marks.copy && i < marks.n; i++)
+        if (!save_game_id(marks.save[i].s.folder, id) || (i && strcmp(id, first) != 0)) {
+            first[0] = 0;
+            break;
+        } else
+            snprintf(first, sizeof(first), "%s", id);
+    if (first[0])
+        game_folder(first, folder, sizeof(folder));
+    if (!strcmp(folder, mk.g.newGame))
+        return 0;
+    snprintf(mk.g.newGame, sizeof(mk.g.newGame), "%s", folder);
+    mk.newName[0] = 0;
+    if (folder[0] && !new_card(TAB_GAMES, folder, 255, f, mk.newName))
+        mk.newName[0] = 0;
+    return 1;
+}
+
+/* START (or X) on "New card": the copy goes into a new card of their game, made once it is agreed to. 1 = picked */
+static int mark_new_card(void)
+{
+    sound_play(SND_CONFIRM);
+    if (!dest_new_place(mk.g.newGame))
+        return 0;
+    marks.into = &destNew;
+    return 1;
+}
+
+/* START on a folder of games: the card in it, when it has one; a folder of more than one opens, for the one to be
+ * picked. 1 = that card takes them */
+static int mark_folder(void)
+{
+    int k = mk.g.fold[mk.g.cursor];
+    card_t *c = &cards[mk.g.games[mk.g.first[k]]];
+    if (mk.g.first[k + 1] - mk.g.first[k] > 1) {
+        sound_play(SND_CONFIRM);
+        ui_lock();
+        tabs_open(&mk.g);
+        ui_unlock();
+        return 0;
+    }
+    sound_play(paste_here(c) ? SND_CONFIRM : SND_BACK);
+    if (!paste_here(c))
+        return 0;
+    marks.into = c;
+    return 1;
+}
+
 /* The list, until START with something marked (1) or circle with the marks let go of (0). at = the card it opens on
  * (&allGames = "All saves"; NULL = the first one). For a copy the list has the Files group too: X or START on a
  * device opens its folders, where START writes the marked saves as .psu files (2 = that was done) */
@@ -123,6 +191,7 @@ static int mark_cards(const card_t *at)
     marks.into = NULL;
     tabs_init(&mk.g, NULL, marks.copy);
     mk.g.all = 1;
+    mark_game();
     tabs_show(&mk.g, mk.g.tab);
     if (at == &allGames)
         tabs_show(&mk.g, TAB_GAMES);
@@ -175,19 +244,36 @@ static int mark_cards(const card_t *at)
                 r = 2;
             else if (marks.done)   /* (START on the saves of a card file opened there: they go into it) */
                 r = 1;
-        } else if (b & PAD_START) {
+        } else if ((b & PAD_START) && !marks.copy) {   /* (a template's: done) */
             sound_play(marks.n ? SND_CONFIRM : SND_BACK);
-            if (marks.n) {   /* (on a card: that is the card a copy pastes them into) */
-                marks.into = tabs_on_folders(&mk.g) ? NULL : tabs_card(&mk.g);
+            if (marks.n)
                 r = 1;
-            }
+        } else if (b & PAD_START) {   /* a copy's: pasted into the card START is on */
+            if (!marks.n || !mk.g.n || mk.g.idx[mk.g.cursor] == ROW_ALL)   /* ("All saves" isn't a card) */
+                sound_play(SND_BACK);
+            else if (mk.g.idx[mk.g.cursor] == ROW_NEW)
+                r = mark_new_card() ? 1 : -1;
+            else if (tabs_on_folders(&mk.g))
+                r = mark_folder() ? 1 : -1;
+            else if (paste_here(tabs_card(&mk.g))) {
+                sound_play(SND_CONFIRM);
+                marks.into = tabs_card(&mk.g);
+                r = 1;
+            } else   /* (the card they are all on) */
+                sound_play(SND_BACK);
+        } else if ((b & PAD_CROSS) && mk.g.n && mk.g.idx[mk.g.cursor] == ROW_NEW) {   /* (nothing to open: pasted) */
+            r = mark_new_card() ? 1 : -1;
         } else if ((b & PAD_CROSS) && mk.g.n) {
-            card_t *c = mk.g.idx[mk.g.cursor] < 0 ? &allGames : tabs_card(&mk.g);
+            card_t *c = mk.g.idx[mk.g.cursor] == ROW_ALL ? &allGames : tabs_card(&mk.g);
             if (c) {
                 sound_play(SND_CONFIRM);
                 card_screen(c);
                 if (marks.done)
                     r = 1;
+                ui_lock();   /* (saves marked or unmarked there: their game may be another one now) */
+                if (mark_game())
+                    tabs_redo(&mk.g);
+                ui_unlock();
             }
         }
     }
@@ -331,65 +417,47 @@ static int copy_to_device(int device)
     return fbGive.done;
 }
 
-/* START with saves marked for a copy ("Paste"). into = the card it was pressed on: the one whose saves were open,
- * or the one under the cursor in the list of cards. That card takes them, when it lacks at least one of them; with
- * no such card (START on the card they all are on, on every game card's saves, on a card file's) where they go is
- * picked: a card, a new one of their game, or a folder of a device. It is asked about, and they are copied one by
- * one, each read back and compared. A save the card has under the same name stays out, as one that is on that very
- * card does. 1 = it is over (they were copied, or couldn't be, and that was said): nothing is marked any more.
- * 0 = the user came back from it: the marks stay, and so does the marking */
+/* Can the marked saves be pasted into that card: one of the cards, the Memory Card or a card file that can be
+ * written, which lacks at least one of them? (Every game card's saves together aren't a card, nor is a .zip's) */
+int paste_here(const card_t *c)
+{
+    if (!c || !marks.n)
+        return 0;
+    if (!(c >= cards && c < cards + nCards) && c != &slotCard && !(c == &fileCard && card_file_writable()))
+        return 0;
+    return marks_of(c) < marks.n;
+}
+
+/* START with saves marked for a copy ("Paste"). into = the card it was pressed on (paste_here): the one whose saves
+ * were open, or the one under the cursor in the list of cards; or &destNew, a new card of their game, made once it
+ * is agreed to. It is asked about, and they are copied one by one, each read back and compared. A save the card has
+ * under the same name stays out, as one that is on that very card does. 1 = it is over (they were copied, or
+ * couldn't be, and that was said): nothing is marked any more. 0 = the user came back from it: the marks stay, and
+ * so does the marking */
 int copy_marked(card_t *into)
 {
-    card_t *from = marks.save[0].card, *to = NULL;
-    const char *game = marks.save[0].s.folder;   /* a save that tells their game, when they are all of one */
-    char id[12], first[12], t[300];
+    card_t *from = marks.save[0].card, *to = into;
+    char t[300];
     long long size[MARKS_MAX], need = 0;
-    int i, n = 0, k = 0, total = 0, one = 0, last = MCFS_OK, r = MCFS_OK;
+    int i, n = 0, k = 0, total = 0, one = 0, last = MCFS_OK, r = MCFS_OK, made = into == &destNew;
+    if (!made && !paste_here(into))
+        return 0;   /* (the screens offer START only where it pastes) */
     if (marks.n > 1)   /* (each save's size is read from its card) */
         message(0, NULL, COLOR_TEXT, T(T_LOADING));
-    if (into && (into < cards || into >= cards + nCards) && into != &slotCard && !(into == &fileCard && card_file_writable()))
-        into = NULL;   /* (not one of the cards, the Memory Card or a card file that can be written: nothing is pasted
-                          into it) */
-    save_game_id(game, first);
     for (i = 0; i < marks.n; i++) {
         int files = 0;
         size[i] = 0;
         if (marks.save[i].card != from)
-            from = NULL;   /* of more than one card: none is left out of where they can go */
-        if (!first[0] || !save_game_id(marks.save[i].s.folder, id) || strcmp(id, first) != 0)
-            game = NULL;
+            from = NULL;   /* of more than one card */
         mcfs_save_info(marks.save[i].card->path, marks.save[i].s.folder, &size[i], &files);
-        need += size[i];
-        if (into && marks.save[i].card != into)
-            to = into;   /* the card START was pressed on lacks this one: it is where they go */
+        if (marks.save[i].card != to)
+            need += size[i];
     }
-    if (to) {   /* a card without room for them is left as it is (picking one, such a card can't be picked either) */
+    if (!made) {   /* a card without room for them is left as it is */
         long long room = -1;
-        for (need = 0, i = 0; i < marks.n; i++)
-            if (marks.save[i].card != to)
-                need += size[i];
         if (mcfs_list_saves(to->path, NULL, 0, &room) >= 0 && room >= 0 && room < need) {
             snprintf(t, sizeof(t), T(T_ERR_FULL), to->base);
             message_wait(0, NULL, COLOR_WARN, t);
-            return 0;
-        }
-    } else {
-        if (!nCards && !game) {
-            message_wait(0, NULL, COLOR_WARN, T(T_NO_CARDS_SD));
-            return 0;
-        }
-        /* they can also go to a folder of the microSD or of a USB drive, as .psu files (from a card file opened in
-         * Files too: the folders are browsed over the ones underneath, which come back as they were) */
-        destFiles = 1;
-        if (!(to = choose_dest(from, T_COPY_TO, need, game))) {
-            if (destDevice < 0)
-                return 0;
-            if (copy_to_device(destDevice))
-                return 1;
-            if (marks.done && marks.into) {   /* START on the saves of a card file opened in that device: into it */
-                marks.done = 0;
-                return copy_marked(marks.into);
-            }
             return 0;
         }
     }
@@ -431,6 +499,8 @@ int copy_marked(card_t *into)
         transferDest = to;
     cards_recheck(to);
     card_back();
+    if (made && n)   /* (a new game card: its templates too, as the device's new cards get them) */
+        templates_new_card(to);
     if (r == MCFS_ERR_CANCELLED && !n)
         return 0;   /* back to the marked saves, as they were */
     if (total == 1 || !n)
@@ -440,11 +510,6 @@ int copy_marked(card_t *into)
     return 1;
 }
 
-/* Circle on the screen of saves where a copy's marking began (c = whose saves it shows). A card's saves: the screen
- * closes and the cards are listed, to mark saves on others too; START there goes on to where they are copied to.
- * A card file's: the screen closes, and its folder is shown with them still marked (card_file_held): START there
- * pastes them, as .psu files. 1 = the screen is left. 0 = the screen stays: nothing was marked any more, and the
- * marking is over */
 void marks_move(const card_t *from, card_t *to)
 {
     int i;
@@ -470,6 +535,11 @@ void copy_go_on(const card_t *at)
     marks_reset();
 }
 
+/* Circle on the screen of saves where a copy's marking began (c = whose saves it shows). A card's saves: the screen
+ * closes and the cards are listed, to mark saves on others too; START there pastes them into the card it is on.
+ * A card file's: the screen closes, and its folder is shown with them still marked (card_file_held): START there
+ * pastes them, as .psu files. 1 = the screen is left. 0 = the screen stays: nothing was marked any more, and the
+ * marking is over */
 int copy_leave(const card_t *c)
 {
     if (marks.n && c == &fileCard)   /* back to the card file's folder, with them (card_file_held) */

@@ -205,6 +205,8 @@ PLACE = {
     "T_DEV_SD": ("text", 172, 1), "T_DEV_USB": ("text", 172, 1), "T_FILES_HINT": ("small", 212, 5),
     # the Memory Card: a row of the Files group (and a card's name in the questions), and what it is for on the right
     "T_MEMCARD": ("text", 140, 1), "T_MEMCARD_HINT": ("small", 212, 5),   # (140: also on the picture of a card)
+    "T_MEMCARD_READING": ("text", DIALOG, 1), "T_MEMCARD_READ_FAILED": ("text", DIALOG, 3),
+    "T_CARD_FILE_READ_ONLY": ("text", DIALOG, 4),
     "T_DIR_ERROR": ("text", 500, 1), "T_DIR_EMPTY": ("text", 500, 1),
     # a .psu file's page and the card pickers over it; the questions and answers of importing and exporting
     "T_IMPORT": ("browser", 304, 1), "T_IMPORT_TO": ("text", 200, 1),

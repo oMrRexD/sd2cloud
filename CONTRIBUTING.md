@@ -62,6 +62,10 @@ Latin letters with their accents, the Cyrillic ones, and the kana and common kan
 characters for now: `check_messages.py` says which letters it lacks; a kanji `lang/ja.txt` needs beyond the common
 ones goes into the font with `python tools/make_font.py`).
 
+The README has a page in each language too (`README.es.md`, `README.ja.md`...), with the screens of the program in
+that language (`docs/screens/*-<code>.png`) and its logo (`docs/logo/<code>/`). A new language's page is welcome, but
+not needed for the language to be in the program; the line of languages at the top of every page then gets it too.
+
 ## Sending a pull request
 
 1. Fork the repository and create a branch from `main`.

@@ -33,11 +33,12 @@ a PC's compiler. `src/app` is the only place that knows the screens; it calls do
 | `menu.c` | The main screen: the cards in their groups, the selected one big on the right |
 | `tabs.c` | The groups themselves (numbered cards, games, boot cards, files) and the big card's picture |
 | `saves.c`, `save.c` | One card's saves, as the PS2 browser shows them; one save's page and what is done with it |
-| `marks.c` | Saves marked on the cards, whichever cards they are on: for a template, or to be copied together to a card or a folder |
-| `dest.c` | Where a save goes: a card picked among the others, or a new card made on the spot |
+| `marks.c` | Saves marked on the cards, whichever cards they are on: for a template, or to be copied together to a card or a folder (pasted with START on the card, in the list of cards, where their game's folder comes first) |
+| `dest.c` | Where a save goes when it is moved or imported: a card picked among the others, or a new card made on the spot (a copy's new card too) |
 | `browse.c` | The Files group: folders of the microSD and of a USB drive, `.psu` files, exporting |
-| `install.c` | A memory card file looked into, and installed as a card |
-| `backup.c`, `autosync.c` | The sync to Google Drive; the one that runs by itself after a game |
+| `install.c` | A memory card file looked into, its saves copied out of it or into it, and installed as a card |
+| `memcard.c` | The Memory Card: a PS2 memory card in the console's other slot, in the Files group, and uploading it whole |
+| `backup.c`, `autosync.c`, `synclist.c` | The sync to Google Drive; the one that runs by itself after a game; the list of a sync's cards (SELECT) |
 | `history.c` | A card's backups on Drive, and restoring one |
 | `active.c` | The card the device is using right now: finding it, switching it, noticing it change |
 | `settings.c`, `account.c` | The settings; the Google account |

@@ -19,7 +19,7 @@ running the [sd2psXtd](https://github.com/sd2psXtd/firmware) firmware (sd2psx, P
 PicoMemcard+/Zero). No PC is required. A MemCard PRO2 is recognized too, experimentally: SD2Cloud has not been tried
 on one yet.
 
-**English** · [Português](README.pt-BR.md) · [Español](README.es.md) · [Русский](README.ru.md) · [Українська](README.uk.md)
+**English** · [Português](README.pt-BR.md) · [Español](README.es.md) · [Русский](README.ru.md) · [Українська](README.uk.md) · [日本語](README.ja.md)
 
 <p>
   <img src="docs/screens/menu-en.png" width="49%" alt="Main screen">
@@ -50,7 +50,8 @@ on one yet.
 - Copies, moves and deletes saved data between the cards on the MMCE (the destination's free space is shown),
   and uploads a single item to Google Drive as a `.psu` file. Several saves can be copied at once, selected on
   one card or on more than one. Saved data can also go to a new card of its own game,
-  made on the spot ("New card", in the Games tab): an empty 8 MB card, as the device itself makes them.
+  made on the spot ("New card", in the Games tab): an empty 8 MB card, as the device itself makes them,
+  which gets the game's templates too.
 - Shows the saved data of every game card on one screen (**All saves**, in the Games tab), as if it were a single card.
 - Organizes the cards in tabs: numbered cards, game (Game ID) cards, in folders named after each game, and boot
   cards.
@@ -66,14 +67,15 @@ on one yet.
   and compared.
 - Manages a regular **Memory Card** in the console's other slot, from the **Files** tab: its saved data is shown,
   copied, moved and deleted as a card's are, and saved data goes into it from the device's cards or from `.psu`
-  files.
+  files. Its saved data, or the whole card, can be uploaded to Google Drive.
 - Keeps **templates**: sets of saved data you mark on your cards, kept on the MMCE and put into any card in one
   go. The device makes the card of a new game empty; a template gives it what every card of yours should have, as
   the network settings an online game asks for. Saved data the card already has is never touched. One template can
   be the **default** one, the one every game card should have: it goes into all of them at once, and when SD2Cloud
   opens and finds a game card without it (the card of a new game), it says so and offers to put it there. A
   template can also be only some games'. With the automatic sync, the card a game used gets its templates by
-  itself when the game is left. They are in **Tools** (SELECT).
+  itself when the game is left. They are in **Tools** (SELECT). A template's saves don't count as a change: a card
+  that was synced stays synced.
 
 **Also**
 - Asks for confirmation before anything that uploads, writes or deletes data.
@@ -135,9 +137,9 @@ The [README.txt](package/README.txt) included in the release explains every scre
 | Screen | Buttons |
 |---|---|
 | Main screen | Up/Down: card · Left/Right or L1/R1: tab · X: open the card · TRIANGLE: card options (sync now, restore a backup, copy to a device, insert into the sd2psx) · SELECT: tools · START: settings · O: exit |
-| Inside a card | X: open a save · TRIANGLE: options (sync this card; the saves by name or by date; in All saves, duplicates shown or hidden) · O: back |
+| Inside a card | X: open a save · TRIANGLE: options (sync this card, or upload the whole Memory Card to Drive; the saves by name or by date; in All saves, duplicates shown or hidden) · O: back |
 | A save's page | Copy · Move · Delete · Upload to Drive |
-| After Copy | The save is selected, and so can others be: X selects or deselects a save · O: leave the card, to select saves on other cards too · START: paste them all into the card under the cursor, or into the card that is open. In the Files tab, X opens a device's folders: START pastes them there as `.psu` files, and X on a memory card file opens it, to select saves of it or to paste them into it with START; START on the Memory Card pastes them into it (on the card they came from, START asks where to: another card, a new card of their game, or a folder) |
+| After Copy | The save is selected, and so can others be: X selects or deselects a save · O: leave the card for the list of cards, to select saves on other cards too · START: paste them all into the card that is open, or into the one under the cursor in the list (pressed where they can't go, such as the card they all came from, it goes to the list). In the list's Games tab, the folder of their game comes first, highlighted, with "New card" in it (among the folders while the game has none): an empty 8 MB card made for them, with the game's templates. In the Files tab, X opens a device's folders: START pastes them there as `.psu` files, or into the memory card file under the cursor; X on such a file opens it, to select saves of it or to paste them into it with START. START on the Memory Card pastes them into it |
 | Files tab | X: open the device, a folder, a `.psu` file or a memory card file · SQUARE: install the selected `.psu` in a card, or the selected memory card file on the MMCE · Left/Right: a page up or down · O: back. To export saves, use **Copy** on a save's page: this tab is among the places they can be pasted to, and START writes each `.psu` into the folder shown |
 | Tools (SELECT) > Templates | X: a new template (its name is typed; then its saves are marked on the cards: X marks, START finishes) or an existing one · In a template: X: a save, to remove it · TRIANGLE (on a template of the list, or with it open): set as default, add saves, apply template (to all game cards, to the cards you select, or only updating the saves the game cards already have), linked games, rename, delete |
 | During a sync | O: cancel · SQUARE: skip the card being uploaded · SELECT: the list of the sync's cards, with what became of each, and back. On it, SQUARE skips a card (again: undo) and X offers to skip it, mark it as resolved (the automatic sync leaves it alone until it changes again) or turn its sync off |
