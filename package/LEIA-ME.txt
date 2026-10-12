@@ -25,7 +25,8 @@ Gerenciador de cartões de memória
 - Organiza os cartões em abas: cartões numerados, cartões de jogos (Game ID), em pastas com o nome de cada
   jogo, e cartões de boot.
 - Importa arquivos .psu para qualquer cartão e exporta qualquer item de um cartão como arquivo .psu, a partir
-  do MMCE ou de um pendrive USB e para eles (veja ARQUIVOS).
+  do MMCE ou de um pendrive USB e para eles. Um item copiado de um cartão como pasta, com os arquivos como
+  estavam, também é importado (veja ARQUIVOS).
 - Abre arquivos de cartão de memória do MMCE ou de um pendrive USB (.mcd, o .mc2 do MemCard PRO2, o .ps2
   do PCSX2, os cartões virtuais do OPL (.bin) ou o .zip gravado pelo próprio SD2Cloud) e os instala como
   cartões do sd2psx (veja ARQUIVOS).
@@ -160,6 +161,11 @@ com o item selecionado.
   verificado por inteiro antes de o cartão ser alterado, e o que é gravado é lido de volta e comparado. Um
   cartão que já tem dados com o mesmo nome, ou sem espaço suficiente, fica como está: elimine ou mova esse
   item antes. QUADRADO no arquivo, na lista, vai direto para a escolha do cartão, sem abrir a página.
+- Itens copiados como pasta: uma pasta com icon.sys (um item que um gerenciador de arquivos como o wLaunchELF
+  copiou de um cartão, com os arquivos como estavam) tem QUADRADO "Instalar save", nela na lista e dentro
+  dela. QUADRADO abre a página do item, e "Importar para cartão" o coloca em um cartão como o de um .psu,
+  verificado do mesmo jeito. X continua entrando na pasta. O que um computador deixa numa pasta (Thumbs.db,
+  desktop.ini, .DS_Store) fica de fora.
 - Exportar: o Copiar da página de um item (X nele, dentro de um cartão) também lista a aba Arquivos entre os
   destinos dos itens selecionados; escolha o dispositivo, vá até a pasta onde os arquivos devem ficar e
   pressione START (a lista de cartões em que os itens são selecionados também tem essa aba). Cada arquivo recebe o nome da pasta do item (BASLUS-21065SAVE.psu, por exemplo), é

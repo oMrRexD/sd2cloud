@@ -63,8 +63,9 @@ on one yet.
   memory cards (`.bin`), or that `.zip`), copies saved data out of them and installs them on the MMCE: as a new card (numbered, of a game, or one more
   channel of the BootCard) or in place of an existing one.
 - Imports and exports `.psu` files: the **Files** tab browses the folders of the MMCE and of a USB drive (FAT32
-  or exFAT), installs a `.psu` into any card and saves any item of a card as a `.psu`. What is written is read back
-  and compared.
+  or exFAT), installs a `.psu` into any card and saves any item of a card as a `.psu`. Saved data copied off a card
+  as a folder (by a file manager such as wLaunchELF, its files as they were) is installed the same way. What is
+  written is read back and compared.
 - Manages a regular **Memory Card** in the console's other slot, from the **Files** tab: its saved data is shown,
   copied, moved and deleted as a card's are, and saved data goes into it from the device's cards or from `.psu`
   files. Its saved data, or the whole card, can be uploaded to Google Drive.
@@ -140,7 +141,7 @@ The [README.txt](package/README.txt) included in the release explains every scre
 | Inside a card | X: open a save · TRIANGLE: options (sync this card, or upload the whole Memory Card to Drive; the saves by name or by date; in All saves, duplicates shown or hidden) · O: back |
 | A save's page | Copy · Move · Delete · Upload to Drive |
 | After Copy | The save is selected, and so can others be: X selects or deselects a save · O: leave the card for the list of cards, to select saves on other cards too · START: paste them all into the card that is open, or into the one under the cursor in the list (pressed where they can't go, such as the card they all came from, it goes to the list). In the list's Games tab, the folder of their game comes first, highlighted, with "New card" in it (among the folders while the game has none): an empty 8 MB card made for them, with the game's templates. In the Files tab, X opens a device's folders: START pastes them there as `.psu` files, or into the memory card file under the cursor; X on such a file opens it, to select saves of it or to paste them into it with START. START on the Memory Card pastes them into it |
-| Files tab | X: open the device, a folder, a `.psu` file or a memory card file · SQUARE: install the selected `.psu` in a card, or the selected memory card file on the MMCE · Left/Right: a page up or down · O: back. To export saves, use **Copy** on a save's page: this tab is among the places they can be pasted to, and START writes each `.psu` into the folder shown |
+| Files tab | X: open the device, a folder, a `.psu` file or a memory card file · SQUARE: install the selected `.psu` or save folder (a folder with an `icon.sys`, also from inside it) in a card, or the selected memory card file on the MMCE · Left/Right: a page up or down · O: back. To export saves, use **Copy** on a save's page: this tab is among the places they can be pasted to, and START writes each `.psu` into the folder shown |
 | Tools (SELECT) > Templates | X: a new template (its name is typed; then its saves are marked on the cards: X marks, START finishes) or an existing one · In a template: X: a save, to remove it · TRIANGLE (on a template of the list, or with it open): set as default, add saves, apply template (to all game cards, to the cards you select, or only updating the saves the game cards already have), linked games, rename, delete |
 | During a sync | O: cancel · SQUARE: skip the card being uploaded · SELECT: the list of the sync's cards, with what became of each, and back. On it, SQUARE skips a card (again: undo) and X offers to skip it, mark it as resolved (the automatic sync leaves it alone until it changes again) or turn its sync off |
 
