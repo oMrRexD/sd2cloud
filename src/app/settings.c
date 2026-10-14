@@ -9,8 +9,8 @@ static void helper_install_now(int doneTitle);
  * sd2cloud.ini at once */
 
 
-enum { SET_SYNC_ALL, SET_AUTO_SYNC, SET_HELPER, SET_IGR_RETURN, SET_DEVICE, SET_LANGUAGE, SET_KEEP, SET_FORMAT, SET_UPDATES,
-       SET_CHANNEL, SET_ACCOUNT, SET_ABOUT, SET_MAX };
+enum { SET_SYNC_ALL, SET_AUTO_SYNC, SET_HELPER, SET_IGR_RETURN, SET_DEVICE, SET_CARD_SIZE, SET_LANGUAGE, SET_KEEP,
+       SET_FORMAT, SET_UPDATES, SET_CHANNEL, SET_ACCOUNT, SET_ABOUT, SET_MAX };
 #define SET_X      80     /* the labels; the values end at SET_RIGHT */
 #define SET_RIGHT  560
 #define SET_Y0     120
@@ -47,6 +47,10 @@ static void build_settings(void)
     set_item(&i, SET_IGR_RETURN, T(T_SET_IGR_RETURN), v);
     if (deviceBoth)   /* (a microSD with the cards of both devices: which one it is in is the user's to say) */
         set_item(&i, SET_DEVICE, T(T_SET_DEVICE), dev->name);
+    if (dev->sd2psx) {   /* (the size the sd2psx makes a game's first card of: its own setting, on its microSD) */
+        snprintf(v, sizeof(v), T(T_SIZE_MB), device_card_mb() ? device_card_mb() : 8);
+        set_item(&i, SET_CARD_SIZE, T(T_SET_CARD_SIZE), v);
+    }
     set_item(&i, SET_LANGUAGE, T(T_SET_LANGUAGE), i18n_find(cfg.language) >= 0 ? i18n_name(i18n_find(cfg.language))
                                                                                      : T(T_AUTO));
     snprintf(v, sizeof(v), "%d", cfg.keep);
@@ -76,7 +80,8 @@ static void scene_settings(float t)
     ui_alpha(look_fade(t));
     look_title(W / 2.0f, 88, T(T_SETTINGS), 1);
     for (i = 0; i < st.n; i++) {
-        float y = SET_Y0 + i * (st.n > 11 ? SET_ROW - 2 : SET_ROW);   /* (one more row than usual: closer together) */
+        /* (one or two more rows than usual: closer together) */
+        float y = SET_Y0 + i * (st.n > 12 ? SET_ROW - 3 : st.n > 11 ? SET_ROW - 2 : SET_ROW);
         if (i == st.cursor) {
             look_glow_text(FONT_TEXT, SET_X, y, COLOR_ITEM, COLOR_ITEM_ON, st.label[i]);
             ui_text_right(FONT_TEXT, SET_RIGHT, y, 0xD8E4F4, st.value[i]);
@@ -553,6 +558,20 @@ static void pick_keep(void)
     config_set("retention", "default", v);
 }
 
+/* the size the sd2psx makes a card of when it is sent to one it doesn't find (a game's first one): its settings.ini's,
+ * which it reads when it starts, so that is when it takes the new one */
+static void pick_card_size(void)
+{
+    int now = device_card_mb() ? device_card_mb() : 8, mb = card_size_pick(T_SET_CARD_SIZE, 0, now, 1);
+    if (!mb || mb == now)
+        return;
+    if (device_card_mb_set(mb) != 0) {
+        message_wait(0, NULL, COLOR_ERROR, T(T_SIZE_SET_FAILED));
+        return;
+    }
+    message_wait(0, NULL, COLOR_OK, T(T_SIZE_NEXT_START));
+}
+
 static void pick_format(void)
 {
     static const char *items[2];
@@ -678,6 +697,9 @@ void settings_screen(void)
             break;
         case SET_DEVICE:
             pick_device(0);
+            break;
+        case SET_CARD_SIZE:
+            pick_card_size();
             break;
         case SET_LANGUAGE:
             pick_language();

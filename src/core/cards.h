@@ -47,6 +47,10 @@ int game_title(const char *id, char *out, size_t size);   /* the game of that ID
 void game_folder(const char *id, char *out, size_t size);
 int max_channels(const char *folder);       /* how many channels a folder of cards has (its .ini's MaxChannels, or 8) */
 int max_channels_set(const char *folder, int n);   /* the sd2psx goes up to that many in that folder from now on. 0 = written */
+/* the size, in MB, the sd2psx makes a card it doesn't find (a game's first one): its settings.ini's, which it reads
+ * when it starts. 0 = not said there (it makes them of 8 MB then) */
+int device_card_mb(void);
+int device_card_mb_set(int mb);                    /* 0 = written: the sd2psx takes it the next time it starts */
 /* fingerprint of each included card's index; progress(i, n) before each card */
 void cards_check(void (*progress)(int i, int n, const card_t *c));
 void cards_recheck(card_t *c);

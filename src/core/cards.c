@@ -459,6 +459,38 @@ int max_channels(const char *folder)
     return n;
 }
 
+/* the sd2psx's own settings, which it reads from its microSD when it starts (and writes there when they are changed on
+ * it): of them, the size it makes a card it is sent to and doesn't find */
+static void on_card_size(const char *s, const char *k, const char *v, void *u)
+{
+    int mb = atoi(v);
+    if (!strcmp(s, "PS2") && !strcmp(k, "CardSize") && mb >= MCFS_MIN_MB && mb <= MCFS_MAX_MB && !(mb & (mb - 1)))
+        *(int *)u = mb;
+}
+
+int device_card_mb(void)
+{
+    char path[64];
+    int mb = 0;
+    snprintf(path, sizeof(path), "%s.sd2psx/settings.ini", sdRoot);
+    if (dev->sd2psx)
+        ini_read(path, on_card_size, &mb);
+    return mb;
+}
+
+int device_card_mb_set(int mb)
+{
+    char path[64], v[8];
+    int r;
+    snprintf(path, sizeof(path), "%s.sd2psx/", sdRoot);
+    ensure_dir(path);   /* (the sd2psx makes it when it first starts with that microSD: it may not have yet) */
+    snprintf(path, sizeof(path), "%s.sd2psx/settings.ini", sdRoot);
+    snprintf(v, sizeof(v), "%d", mb);
+    r = ini_set(path, "PS2", "CardSize", v);
+    log_msg("%s: CardSize = %d (%d)", path, mb, r);
+    return r;
+}
+
 int max_channels_set(const char *folder, int n)
 {
     char path[260], v[8];

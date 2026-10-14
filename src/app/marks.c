@@ -445,7 +445,7 @@ int copy_marked(card_t *into)
 {
     card_t *from = marks.save[0].card, *to = into;
     char t[300];
-    long long size[MARKS_MAX], need = 0;
+    long long size[MARKS_MAX], need = 0, room = 0;
     int i, n = 0, k = 0, total = 0, one = 0, last = MCFS_OK, r = MCFS_OK, made = into == &destNew;
     if (!made && !paste_here(into))
         return 0;   /* (the screens offer START only where it pastes) */
@@ -457,8 +457,15 @@ int copy_marked(card_t *into)
         if (marks.save[i].card != from)
             from = NULL;   /* of more than one card */
         mcfs_save_info(marks.save[i].card->path, marks.save[i].s.folder, &size[i], &files);
-        if (marks.save[i].card != to)
+        if (marks.save[i].card != to) {
             need += size[i];
+            room += mcfs_save_room(size[i], files);
+        }
+    }
+    if (made && !dest_new_size(room)) {   /* (circle on the sizes: back to the marked saves) */
+        card_back();
+        mark_show_done();
+        return 0;
     }
     if (!made) {   /* a card without room for them is left as it is */
         long long room = -1;
@@ -479,7 +486,7 @@ int copy_marked(card_t *into)
         snprintf(t, sizeof(t), T(T_CONFIRM_COPY), name, to->base);
     } else
         snprintf(t, sizeof(t), T(T_CONFIRM_COPY_N), total, to->base);
-    if (!confirm(t, to == &destNew ? T(T_NEWCARD_NOTE) : NULL, T_COPY) || !(to = dest_real(to)) || card_free(to, from)) {
+    if (!confirm(t, to == &destNew ? dest_new_note() : NULL, T_COPY) || !(to = dest_real(to)) || card_free(to, from)) {
         card_back();
         mark_show_done();
         return 0;

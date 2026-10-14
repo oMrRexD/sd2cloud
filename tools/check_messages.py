@@ -249,12 +249,19 @@ PLACE = {
     "T_SY_SENDING": ("small", 220, 1), "T_SY_SENT": ("small", 220, 1), "T_SY_FAILED": ("small", 220, 1),
     "T_SY_SKIPPED": ("small", 220, 1), "T_SY_RESOLVED": ("small", 220, 1), "T_SY_OFF": ("small", 220, 1),
     "T_MARK_RESOLVED": ("text", 320, 1),
+    # a card's size: the wide box with a list (dialog.c, choose_noted), its title and the items in a 250 px column;
+    # beside them, in the small letters, what the saves take, what the card has left, and what a size asks of the
+    # microSD (past 8 MB) or of the game (under it, made by the sd2psx)
+    "T_SIZE_TITLE": ("text", 480, 1), "T_SIZE_MB": ("text", 230, 1), "T_SIZE_RECOMMENDED": ("text", 230, 1),
+    "T_SIZE_NEED": ("small", 234, 2), "T_SIZE_FREE": ("small", 234, 2), "T_SIZE_BIG": ("small", 234, 5),
+    "T_SIZE_UNFORMATTED": ("small", 234, 6), "T_SET_CARD_SIZE": ("text", 270, 1),
 }
 PARAGRAPH = ("text", DIALOG, 3)     # error messages and the rest: up to 3 lines in a box
 # what only an sd2psx is ever told (being moved to another card, its boot cards, one more channel for a folder): not
 # checked with another device's name
 ONLY_SD2PSX = {"T_INSERT", "T_INSERT_NEEDS_BOOT", "T_INSERT_BOOT_ASK", "T_SWITCH_ASK", "T_SWITCH_FAILED",
-               "T_SWITCH_BACK_FAILED", "T_INSTALL_RAISE_ASK", "T_INSTALL_BOOT_WARN"}
+               "T_SWITCH_BACK_FAILED", "T_INSTALL_RAISE_ASK", "T_INSTALL_BOOT_WARN", "T_SIZE_UNFORMATTED",
+               "T_SIZE_NEXT_START", "T_SIZE_SET_FAILED"}
 
 # the button legends at the bottom: (texts, how many of the last ones stand apart at the right edge). They go from
 # the right edge (x = 596) toward the left and must not pass x = 40

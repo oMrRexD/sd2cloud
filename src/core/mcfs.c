@@ -1596,22 +1596,77 @@ int mcfs_import_psu(const char *psu, const char *to, mcfs_step_cb progress)
 
 /* ------------------------------------------------------------ a new card
 
-   An empty, formatted 8 MB card, byte for byte the one the sd2psx makes when it is asked for a card that isn't there
-   yet (its firmware's ps2_cardman.c: build_superblock, blockRoot, genblock). 8192 clusters of 1 KB: 16 kept for the
-   superblock, the indirect FAT in cluster 16, the FAT in the 32 after it, and from cluster 49 on what can be
-   allocated, the root folder first, up to the two blocks kept as backup at the end. Everything else is 0xFF. */
+   An empty, formatted card of any size a memory card can be, laid out the way the PS2's own mcman formats one (the
+   ps2sdk's mcman_format2) and the sd2psx makes one when it is asked for a card that isn't there yet (its firmware's
+   ps2_cardman.c: build_superblock, blockRoot, genblock). Clusters of 1 KB: 16 kept for the superblock, then the
+   indirect FAT, then the FAT, and from there on what can be allocated, the root folder first, up to the two blocks
+   kept as backup at the end. Everything else is 0xFF. An 8 MB one is byte for byte the sd2psx's: 8192 clusters, the
+   indirect FAT in cluster 16, the FAT in the 32 after it, the root folder in cluster 49. */
 
-#define NEW_SIZE     (8 * 1024 * 1024)
-#define NEW_CLUSTERS (NEW_SIZE / 1024)
 #define NEW_RESERVED 16
-#define NEW_FAT      ((NEW_CLUSTERS * 4 + 1023) / 1024)   /* 32 clusters */
-#define NEW_IFC      ((NEW_FAT * 4 + 1023) / 1024)        /* 1 */
-#define NEW_ALLOC    (NEW_RESERVED + NEW_IFC + NEW_FAT)   /* 49 */
-#define NEW_BACKUP1  (NEW_CLUSTERS / 8 - 1)
-#define NEW_BACKUP2  (NEW_BACKUP1 - 1)
-#define NEW_END      (NEW_BACKUP2 * 8 - NEW_ALLOC)        /* 8127 */
-#define NEW_HEAD     ((NEW_ALLOC + 1) * 1024)             /* through the root folder's cluster: all that isn't 0xFF */
 #define NEW_PIECE    (512 * 1024)
+
+typedef struct {
+    unsigned int clusters, fat, ifc, alloc, backup1, backup2, end, maxAlloc;
+    size_t head;   /* through the root folder's cluster: all that isn't 0xFF */
+} new_layout_t;
+
+/* 0 = that isn't a size a memory card can be (a power of two from 1 to 128 MB) */
+static int new_layout(long long size, new_layout_t *l)
+{
+    long long mb = size / (1024 * 1024);
+    if (size % (1024 * 1024) || mb < MCFS_MIN_MB || mb > MCFS_MAX_MB || (mb & (mb - 1)))
+        return 0;
+    l->clusters = (unsigned int)(size / 1024);
+    l->fat = (l->clusters * 4 + 1023) / 1024;
+    l->ifc = (l->fat * 4 + 1023) / 1024;
+    l->alloc = NEW_RESERVED + l->ifc + l->fat;
+    l->backup1 = l->clusters / 8 - 1;
+    l->backup2 = l->backup1 - 1;
+    l->end = l->backup2 * 8 - l->alloc;
+    /* what mcman writes there: where the first clusters / 1000 * 1000 + 1 clusters that can be allocated end, or,
+     * when the card has fewer than that (only a 1 MB one), where the backup blocks start */
+    l->maxAlloc = l->clusters / 1000 * 1000 + 1;
+    if (l->maxAlloc > l->end)
+        l->maxAlloc = l->backup2 * 8;
+    l->head = (size_t)(l->alloc + 1) * 1024;
+    return 1;
+}
+
+long long mcfs_card_room(long long size)
+{
+    new_layout_t l;
+    unsigned int n;
+    if (!new_layout(size, &l))
+        return 0;
+    /* (the PS2 counts no more than those clusters/1000*1000+1 as free, the root folder's one among them: an 8 MB
+     * card has 8000 KB for saves) */
+    n = l.clusters / 1000 * 1000 + 1;
+    if (n > l.end)
+        n = l.end;
+    return (long long)(n - 1) * 1024;
+}
+
+long long mcfs_save_room(long long bytes, int files)
+{
+    /* its folder's entries (two in a cluster, "." and ".." among them), its files (none takes less than a whole
+     * cluster, so each may waste up to one), and its entry in the root, which may take a cluster of its own */
+    return ((long long)(files + 2 + 1) / 2 + bytes / 1024 + files + 1) * 1024;
+}
+
+int mcfs_recommended_mb(long long room, int minMb, int maxMb)
+{
+    int mb;
+    /* the smallest one the saves take no more than half of, for the game to have room to save more; else the smallest
+     * one they fit in */
+    for (mb = minMb; mb <= maxMb; mb *= 2)
+        if (room * 2 <= mcfs_card_room((long long)mb << 20))
+            return mb;
+    for (mb = minMb; mb <= maxMb; mb *= 2)
+        if (room <= mcfs_card_room((long long)mb << 20))
+            return mb;
+    return 0;
+}
 
 static void new16(unsigned char *p, unsigned int v)
 {
@@ -1625,14 +1680,14 @@ static void new32(unsigned char *p, unsigned int v)
     new16(p + 2, v >> 16);
 }
 
-/* the start of that card, NEW_HEAD bytes */
-static void new_head(unsigned char *h)
+/* the start of that card, l->head bytes */
+static void new_head(const new_layout_t *l, unsigned char *h)
 {
     /* the time the sd2psx gives the root folder: 2000-01-12 06:00:41 */
     static const unsigned char when[8] = {0x00, 0x29, 0x00, 0x06, 0x0C, 0x01, 0xD0, 0x07};
-    unsigned char *fat = h + (NEW_RESERVED + NEW_IFC) * 1024, *dir = h + NEW_ALLOC * 1024;
+    unsigned char *fat = h + (NEW_RESERVED + l->ifc) * 1024, *dir = h + l->alloc * 1024;
     unsigned int i;
-    memset(h, 0xFF, NEW_HEAD);
+    memset(h, 0xFF, l->head);
     /* the superblock */
     memset(h, 0, 0xD0);
     memcpy(h, MAGIC, 28);
@@ -1641,13 +1696,13 @@ static void new_head(unsigned char *h)
     new16(h + 0x2A, 2);                /* pages in a cluster */
     new16(h + 0x2C, 16);               /* pages in an erase block */
     new16(h + 0x2E, 0xFF00);
-    new32(h + 0x30, NEW_CLUSTERS);
-    new32(h + 0x34, NEW_ALLOC);
-    new32(h + 0x38, NEW_END);
+    new32(h + 0x30, l->clusters);
+    new32(h + 0x34, l->alloc);
+    new32(h + 0x38, l->end);
     new32(h + 0x3C, 0);                /* the root folder's cluster, counted from where the allocatable area starts */
-    new32(h + 0x40, NEW_BACKUP1);
-    new32(h + 0x44, NEW_BACKUP2);
-    for (i = 0; i < NEW_IFC; i++)
+    new32(h + 0x40, l->backup1);
+    new32(h + 0x44, l->backup2);
+    for (i = 0; i < l->ifc; i++)
         new32(h + 0x50 + i * 4, NEW_RESERVED + i);
     memset(h + 0x150, 0, 0x2C);
     h[0x150] = 2;                      /* a PS2 card */
@@ -1656,13 +1711,13 @@ static void new_head(unsigned char *h)
     new32(h + 0x158, 256);             /* FAT entries in a cluster */
     new32(h + 0x15C, 8);               /* clusters in a block */
     new32(h + 0x160, 0xFFFFFFFFu);
-    new32(h + 0x170, NEW_CLUSTERS / 1000 * 1000 + 1);
+    new32(h + 0x170, l->maxAlloc);
     /* the indirect FAT: where each cluster of the FAT is */
-    for (i = 0; i < NEW_FAT; i++)
-        new32(h + NEW_RESERVED * 1024 + i * 4, NEW_RESERVED + NEW_IFC + i);
+    for (i = 0; i < l->fat; i++)
+        new32(h + NEW_RESERVED * 1024 + i * 4, NEW_RESERVED + l->ifc + i);
     /* the FAT: the root folder's one cluster, and everything else that can be allocated, free */
     new32(fat, FAT_END);
-    for (i = 1; i < NEW_END; i++)
+    for (i = 1; i < l->end; i++)
         new32(fat + i * 4, FAT_FREE);
     /* the root folder: "." (which says how many entries it has, 2) and ".." */
     memset(dir, 0, 1024);
@@ -1677,22 +1732,28 @@ static void new_head(unsigned char *h)
     dir[512 + 64] = dir[512 + 65] = '.';
 }
 
-int mcfs_new_card(const char *path, void (*progress)(long long done, long long total))
+int mcfs_new_card(const char *path, long long size, void (*progress)(long long done, long long total))
 {
-    unsigned char *piece = malloc(NEW_PIECE), *back = malloc(NEW_HEAD);
+    new_layout_t l;
+    unsigned char *piece, *head, *back;
     long long at;
     int fd, done, k = 0, r = MCFS_OK;
-    if (!piece || !back) {
+    if (!new_layout(size, &l))
+        return MCFS_ERR_BAD;
+    piece = malloc(NEW_PIECE), head = malloc(l.head), back = malloc(l.head);
+    if (!piece || !head || !back) {
         free(piece);
+        free(head);
         free(back);
         return MCFS_ERR_IO;
     }
+    new_head(&l, head);
     /* a piece at a time, the file open only while one goes into it (the way a whole card is written when a backup is
      * restored) */
-    for (at = 0; at < NEW_SIZE && r == MCFS_OK; at += NEW_PIECE) {
+    for (at = 0; at < size && r == MCFS_OK; at += NEW_PIECE) {
         memset(piece, 0xFF, NEW_PIECE);
-        if (!at)
-            new_head(piece);
+        if ((size_t)at < l.head)   /* (a big card's start goes on into the next piece) */
+            memcpy(piece, head + at, l.head - at < NEW_PIECE ? l.head - at : NEW_PIECE);
         if ((fd = open(path, at ? O_WRONLY : O_WRONLY | O_CREAT | O_TRUNC, 0666)) < 0) {
             r = MCFS_ERR_IO;
             break;
@@ -1705,26 +1766,26 @@ int mcfs_new_card(const char *path, void (*progress)(long long done, long long t
         if (close(fd) < 0 || done < NEW_PIECE)
             r = MCFS_ERR_IO;
         if (progress)
-            progress(at + NEW_PIECE, NEW_SIZE);
+            progress(at + NEW_PIECE, size);
     }
     /* what isn't 0xFF is read back, and the size is looked at */
     if (r == MCFS_OK) {
-        long size = -1;
-        new_head(piece);
+        long end = -1;
         if ((fd = open(path, O_RDONLY)) >= 0) {
-            for (done = 0; done < NEW_HEAD; done += k)
-                if ((k = read(fd, back + done, NEW_HEAD - done)) <= 0)
+            for (done = 0; (size_t)done < l.head; done += k)
+                if ((k = read(fd, back + done, l.head - done)) <= 0)
                     break;
-            size = lseek(fd, 0, SEEK_END);
+            end = lseek(fd, 0, SEEK_END);
             close(fd);
-            if (done < NEW_HEAD || memcmp(back, piece, NEW_HEAD) != 0 || size != NEW_SIZE)
+            if ((size_t)done < l.head || memcmp(back, head, l.head) != 0 || end != size)
                 r = MCFS_ERR_CHECK;
         } else
             r = MCFS_ERR_IO;
     }
     free(piece);
+    free(head);
     free(back);
-    log_msg("mcfs: new card %s: %d", path, r);
+    log_msg("mcfs: new card %s of %lld MB: %d", path, size >> 20, r);
     return r;
 }
 

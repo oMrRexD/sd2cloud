@@ -16,7 +16,7 @@
 char googleError[256];
 char sdRoot[16] = "sd/";
 char dataDir[32] = "sd/SD2Cloud/";
-static const device_t sd2psx = {"sd2psx", "sd2psx", "MemoryCards/PS2", ".mcd", "Card", 1};
+static const device_t sd2psx = {"sd2psx", "sd2psx", "MemoryCards/PS2", ".mcd", "Card", 1, 1, 64};
 const device_t *dev = &sd2psx;
 int cardTold = 1;
 

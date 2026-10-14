@@ -80,8 +80,8 @@ int mmce_set_gameid(const char *id)
  * what its card numbers mean isn't taken for granted, so the card in use is told by the root folder the PS2 sees in the
  * slot; telling it to take another card is offered as a preview, checked the same way; and it is never moved off a
  * card for that card to be changed */
-static const device_t devSd2psx = {"sd2psx", "sd2psx", "MemoryCards/PS2", ".mcd", "Card", 1};
-static const device_t devMcp2 = {"MemCard PRO2", "PRO2", "PS2", ".mc2", "MemoryCard", 0};
+static const device_t devSd2psx = {"sd2psx", "sd2psx", "MemoryCards/PS2", ".mcd", "Card", 1, 1, 64};
+static const device_t devMcp2 = {"MemCard PRO2", "PRO2", "PS2", ".mc2", "MemoryCard", 0, 8, 128};
 const device_t *dev = &devSd2psx;
 int cardTold = 1;
 int devicePings;

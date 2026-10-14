@@ -265,7 +265,7 @@ static void slot_to_card_and_back(void)
     CHECK_INT(mcfs_export_psu("mc1:", SAVE, &fromSlot), MCFS_OK);
     CHECK_INT(get32(fromSlot.data + 4), 5);   /* ".", ".." and the three files */
     /* into a card's file: the same files, the same dates */
-    CHECK_INT(mcfs_new_card("sd/a.mcd", NULL), MCFS_OK);
+    CHECK_INT(mcfs_new_card("sd/a.mcd", MCFS_CARD_8MB, NULL), MCFS_OK);
     CHECK_INT(mcfs_copy_save("mc1:", SAVE, "sd/a.mcd", NULL), MCFS_OK);
     CHECK_INT(mcfs_save_info("sd/a.mcd", SAVE, &bytes, &files), MCFS_OK);
     CHECK_INT(files, 3);
@@ -285,7 +285,7 @@ static void slot_to_card_and_back(void)
     /* a .psu held in memory is read as its file is */
     mcfs_psu_memory(fromSlot.data, fromSlot.len);
     CHECK_INT(mcfs_import_psu(MCFS_PSU_MEMORY, "sd/a.mcd", NULL), MCFS_ERR_EXISTS);
-    CHECK_INT(mcfs_new_card("sd/b.mcd", NULL), MCFS_OK);
+    CHECK_INT(mcfs_new_card("sd/b.mcd", MCFS_CARD_8MB, NULL), MCFS_OK);
     CHECK_INT(mcfs_import_psu(MCFS_PSU_MEMORY, "sd/b.mcd", NULL), MCFS_OK);
     mcfs_psu_memory(NULL, 0);
     CHECK_INT(mcfs_import_psu(MCFS_PSU_MEMORY, "sd/b.mcd", NULL), MCFS_ERR_IO);
@@ -310,7 +310,7 @@ static void slot_copy_given_up(void)
     static mcfs_save_t list[MCFS_MAX_SAVES];
     fake_empty();
     two_saves_in_the_slot();
-    CHECK_INT(mcfs_new_card("sd/a.mcd", NULL), MCFS_OK);
+    CHECK_INT(mcfs_new_card("sd/a.mcd", MCFS_CARD_8MB, NULL), MCFS_OK);
     /* given up while it is read from the slot: the card is left without it */
     stopAt = MCFS_STEP_READ, told = 0;
     CHECK_INT(mcfs_copy_save("mc1:", SAVE, "sd/a.mcd", on_step), MCFS_ERR_CANCELLED);

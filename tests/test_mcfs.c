@@ -49,7 +49,7 @@ static void new_card(void)
     long long freeBytes = 0;
     buffer_t b;
     int page = 0, saves = -1;
-    CHECK_INT(mcfs_new_card("sd/a.mcd", NULL), MCFS_OK);
+    CHECK_INT(mcfs_new_card("sd/a.mcd", MCFS_CARD_8MB, NULL), MCFS_OK);
     CHECK_INT(t_size("sd/a.mcd"), CARD_BYTES);
     b = t_read("sd/a.mcd");
     CHECK_INT(mcfs_card_size(b.data, &page), CARD_BYTES);
@@ -61,7 +61,7 @@ static void new_card(void)
     CHECK_INT(saves, 0);
     CHECK_INT(mcfs_root_signature("sd/a.mcd", sig), 0);
     /* another new card is the same card: what tells two cards apart is what is saved to them */
-    CHECK_INT(mcfs_new_card("sd/b.mcd", NULL), MCFS_OK);
+    CHECK_INT(mcfs_new_card("sd/b.mcd", MCFS_CARD_8MB, NULL), MCFS_OK);
     CHECK_INT(mcfs_fingerprint("sd/b.mcd", fp2, NULL), 0);
     CHECK_INT(mcfs_root_signature("sd/b.mcd", sig2), 0);
     CHECK_STR(fp, fp2);
@@ -71,6 +71,66 @@ static void new_card(void)
     CHECK(mcfs_fingerprint("sd/not.mcd", fp, NULL) != 0);
     CHECK(saves_of("sd/not.mcd", NULL) < 0);
     CHECK(mcfs_fingerprint("sd/missing.mcd", fp, NULL) != 0);
+}
+
+/* a new card of every size a memory card can be: what the card says of itself, its room, a save in and out of it */
+static void new_card_sizes(void)
+{
+    static const unsigned int one[] = {3000};
+    long long mb, freeBytes = 0;
+    char fp[65];
+    buffer_t b;
+    int page = 0;
+    make_psu("save.psu", SAVE, one, 1, 3);
+    for (mb = 1; mb <= 128; mb *= 2) {
+        long long size = mb << 20;
+        CHECK_INT(mcfs_new_card("sd/s.mcd", size, NULL), MCFS_OK);
+        CHECK_INT(t_size("sd/s.mcd"), size);
+        b = t_read("sd/s.mcd");
+        CHECK_INT(mcfs_card_size(b.data, &page), size);
+        /* the superblock as the PS2's own format writes it: clusters, where the allocatable area starts and ends,
+         * the backup blocks, the indirect FAT's clusters, the root folder's first entry */
+        {
+            unsigned int clusters = (unsigned int)(size / 1024), fatLen = (clusters * 4 + 1023) / 1024,
+                         ifc = (fatLen * 4 + 1023) / 1024, alloc = 16 + ifc + fatLen, b2 = clusters / 8 - 2;
+            CHECK_INT(get32(b.data + 0x30), clusters);
+            CHECK_INT(get32(b.data + 0x34), alloc);
+            CHECK_INT(get32(b.data + 0x38), b2 * 8 - alloc);
+            CHECK_INT(get32(b.data + 0x40), b2 + 1);
+            CHECK_INT(get32(b.data + 0x44), b2);
+            CHECK_INT(get32(b.data + 0x50 + (ifc - 1) * 4), 16 + ifc - 1);
+            CHECK_INT(b.data[(size_t)alloc * 1024 + 64], '.');
+        }
+        buf_free(&b);
+        CHECK_INT(saves_of("sd/s.mcd", &freeBytes), 0);
+        CHECK(freeBytes >= mcfs_card_room(size));
+        CHECK_INT(mcfs_import_psu("save.psu", "sd/s.mcd", NULL), MCFS_OK);
+        CHECK_INT(saves_of("sd/s.mcd", NULL), 1);
+        CHECK_INT(mcfs_fingerprint("sd/s.mcd", fp, NULL), 0);
+        CHECK_INT(mcfs_delete_save("sd/s.mcd", SAVE), MCFS_OK);
+        CHECK_INT(saves_of("sd/s.mcd", NULL), 0);
+    }
+    /* sizes no card is */
+    CHECK_INT(mcfs_new_card("sd/x.mcd", 3LL << 20, NULL), MCFS_ERR_BAD);
+    CHECK_INT(mcfs_new_card("sd/x.mcd", 256LL << 20, NULL), MCFS_ERR_BAD);
+    CHECK_INT(mcfs_new_card("sd/x.mcd", 512 * 1024, NULL), MCFS_ERR_BAD);
+    CHECK_INT(t_size("sd/x.mcd"), -1);
+    /* the room the PS2 tells of: 8000 KB on an 8 MB card; a 1 MB card has its whole allocatable area but the root */
+    CHECK_INT(mcfs_card_room(MCFS_CARD_8MB), 8000 * 1024);
+    CHECK_INT(mcfs_card_room(1 << 20), 986 * 1024);
+    CHECK_INT(mcfs_card_room(2 << 20), 2000 * 1024);
+    CHECK_INT(mcfs_card_room(3 << 20), 0);
+    /* a save of 3 files and 100 KB: 3 clusters of entries, 100 of data, up to 3 lost to rounding, 1 in the root */
+    CHECK_INT(mcfs_save_room(100 * 1024, 3), 107 * 1024);
+    CHECK_INT(mcfs_save_room(0, 0), 2 * 1024);
+    /* the size for a new card: twice what goes into it, at least */
+    CHECK_INT(mcfs_recommended_mb(107 * 1024, 1, 64), 1);
+    CHECK_INT(mcfs_recommended_mb(600 * 1024, 1, 64), 2);
+    CHECK_INT(mcfs_recommended_mb(600 * 1024, 8, 128), 8);
+    CHECK_INT(mcfs_recommended_mb(5000LL * 1024, 1, 64), 16);
+    CHECK_INT(mcfs_recommended_mb(40000LL * 1024, 1, 64), 64);   /* (only fits) */
+    CHECK_INT(mcfs_recommended_mb(70000LL * 1024, 1, 64), 0);
+    CHECK_INT(mcfs_recommended_mb(70000LL * 1024, 8, 128), 128);
 }
 
 static void save_in_and_out(void)
@@ -86,7 +146,7 @@ static void save_in_and_out(void)
     CHECK_INT(info.files, FILES);
     CHECK_INT(info.bytes, 10 + 1024 + 70000 + 0 + 5000);
 
-    CHECK_INT(mcfs_new_card("sd/a.mcd", NULL), MCFS_OK);
+    CHECK_INT(mcfs_new_card("sd/a.mcd", MCFS_CARD_8MB, NULL), MCFS_OK);
     CHECK_INT(mcfs_fingerprint("sd/a.mcd", empty, NULL), 0);
     CHECK_INT(mcfs_root_signature("sd/a.mcd", sigEmpty), 0);
     CHECK_INT(saves_of("sd/a.mcd", &freeEmpty), 0);
@@ -117,7 +177,7 @@ static void save_in_and_out(void)
     CHECK_INT(mcfs_export_psu("sd/a.mcd", SAVE, &out), MCFS_OK);
     CHECK(psu_holds(&out, SAVE, SIZES, FILES, 7));
     t_write("out.psu", out.data, out.len);
-    CHECK_INT(mcfs_new_card("sd/b.mcd", NULL), MCFS_OK);
+    CHECK_INT(mcfs_new_card("sd/b.mcd", MCFS_CARD_8MB, NULL), MCFS_OK);
     CHECK_INT(mcfs_import_psu("out.psu", "sd/b.mcd", NULL), MCFS_OK);
     CHECK_INT(mcfs_export_psu("sd/b.mcd", SAVE, &out2), MCFS_OK);
     CHECK(out.len == out2.len && !memcmp(out.data, out2.data, out.len));
@@ -132,8 +192,8 @@ static void save_from_card_to_card(void)
     long long freeEmpty = 0, freeNow = 0;
     buffer_t a = {0}, b = {0};
     make_psu("save.psu", SAVE, SIZES, FILES, 11);
-    CHECK_INT(mcfs_new_card("sd/a.mcd", NULL), MCFS_OK);
-    CHECK_INT(mcfs_new_card("sd/b.mcd", NULL), MCFS_OK);
+    CHECK_INT(mcfs_new_card("sd/a.mcd", MCFS_CARD_8MB, NULL), MCFS_OK);
+    CHECK_INT(mcfs_new_card("sd/b.mcd", MCFS_CARD_8MB, NULL), MCFS_OK);
     CHECK_INT(saves_of("sd/b.mcd", &freeEmpty), 0);
     CHECK_INT(mcfs_import_psu("save.psu", "sd/a.mcd", NULL), MCFS_OK);
     CHECK_INT(mcfs_fingerprint("sd/a.mcd", fpA, NULL), 0);
@@ -181,7 +241,7 @@ static void save_given_up_and_card_full(void)
     char before[65], after[65];
     long long freeBefore = 0, freeAfter = 0;
     make_psu("save.psu", SAVE, SIZES, FILES, 3);
-    CHECK_INT(mcfs_new_card("sd/a.mcd", NULL), MCFS_OK);
+    CHECK_INT(mcfs_new_card("sd/a.mcd", MCFS_CARD_8MB, NULL), MCFS_OK);
     CHECK_INT(saves_of("sd/a.mcd", &freeBefore), 0);
     CHECK_INT(mcfs_fingerprint("sd/a.mcd", before, NULL), 0);
 
@@ -218,7 +278,7 @@ static void psu_that_is_not_one(void)
 {
     buffer_t whole;
     char before[65], after[65];
-    CHECK_INT(mcfs_new_card("sd/a.mcd", NULL), MCFS_OK);
+    CHECK_INT(mcfs_new_card("sd/a.mcd", MCFS_CARD_8MB, NULL), MCFS_OK);
     CHECK_INT(mcfs_fingerprint("sd/a.mcd", before, NULL), 0);
     t_text("short.psu", "not a save");
     CHECK_INT(mcfs_import_psu("short.psu", "sd/a.mcd", NULL), MCFS_ERR_BAD);
@@ -259,7 +319,7 @@ static void save_from_a_folder(void)
     CHECK_INT(info.files, FILES);
     CHECK_INT(info.bytes, 10 + 1024 + 70000 + 0 + 5000);
     CHECK_INT(info.when, (2023ULL << 40) | (11ULL << 32) | (15 << 24) | (2 << 16) | (13 << 8) | 20);   /* file4.bin's */
-    CHECK_INT(mcfs_new_card("sd/a.mcd", NULL), MCFS_OK);
+    CHECK_INT(mcfs_new_card("sd/a.mcd", MCFS_CARD_8MB, NULL), MCFS_OK);
     CHECK_INT(mcfs_import_psu("usb/" SAVE "/", "sd/a.mcd", NULL), MCFS_OK);
     CHECK_INT(mcfs_export_psu("sd/a.mcd", SAVE, &out), MCFS_OK);
     CHECK(psu_holds(&out, SAVE, SIZES, FILES, 9));
@@ -273,7 +333,7 @@ static void save_from_a_folder(void)
     CHECK_INT(info.when, (2026ULL << 40) | (1ULL << 32) | (2 << 24) | (3 << 16) | (4 << 8) | 5);
 
     /* a folder inside it; a name no card can hold; no files; no folder at all: the card is left as it was */
-    CHECK_INT(mcfs_new_card("sd/b.mcd", NULL), MCFS_OK);
+    CHECK_INT(mcfs_new_card("sd/b.mcd", MCFS_CARD_8MB, NULL), MCFS_OK);
     CHECK_INT(mcfs_fingerprint("sd/b.mcd", before, NULL), 0);
     t_mkdir("usb/" SAVE "/inner");
     CHECK_INT(mcfs_import_psu("usb/" SAVE "/", "sd/b.mcd", NULL), MCFS_ERR_BAD);
@@ -290,6 +350,7 @@ static void save_from_a_folder(void)
 void suite_mcfs(void)
 {
     RUN(new_card);
+    RUN(new_card_sizes);
     RUN(save_in_and_out);
     RUN(save_from_card_to_card);
     RUN(save_given_up_and_card_full);

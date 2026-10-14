@@ -612,14 +612,36 @@ T_ERR_PSU = Este arquivo não é um .psu válido.
 T_ERR_SAVE_FOLDER = Esta pasta não é um save de cartão de memória válido.
 # Up to 3 lines. English: No memory cards were found on the MMCE.
 T_NO_CARDS_SD = Nenhum cartão de memória foi encontrado no MMCE.
-# Up to 2 lines. English: A new 8 MB memory card will be created for this game.
-T_NEWCARD_NOTE = Um novo cartão de memória de 8 MB será criado para este jogo.
+# Up to 2 lines. English: A new %d MB memory card will be created for this game.
+T_NEWCARD_NOTE = Um novo cartão de memória de %d MB será criado para este jogo.
 # One line. English: Creating the memory card...
 T_NEWCARD_MAKING = Criando o cartão de memória...
 # Up to 2 lines. English: Unable to create the memory card.
 T_NEWCARD_FAILED = Não foi possível criar o cartão de memória.
 # Up to 3 lines. English: This game's folder has reached its limit of %d cards.
 T_NEWCARD_NO_CHANNEL = A pasta deste jogo atingiu o limite de %d cartões.
+# One line. English: Memory card size
+T_SIZE_TITLE = Tamanho do cartão de memória
+# One line. English: %d MB
+T_SIZE_MB = %d MB
+# One line. English: %d MB (recommended)
+T_SIZE_RECOMMENDED = %d MB (recomendado)
+# Up to 2 lines. English: The saves take %s.
+T_SIZE_NEED = Os saves ocupam %s.
+# Up to 2 lines. English: Space left: %s
+T_SIZE_FREE = Espaço livre restante: %s
+# Up to 5 lines. English: Above 8 MB, the card depends on the microSD's speed: a slow one can corrupt it.
+T_SIZE_BIG = Acima de 8 MB, o cartão depende da velocidade do microSD: um microSD lento pode corrompê-lo.
+# Up to 3 lines. English: These saves don't fit in a single memory card.
+T_SIZE_NONE = Esses saves não cabem em um único cartão de memória.
+# Up to 6 lines. English: Under 8 MB, the sd2psx may create the card unformatted: the game or the PS2 browser then asks to format it.
+T_SIZE_UNFORMATTED = Abaixo de 8 MB, o sd2psx pode criar o cartão sem formatar: o jogo ou o navegador do PS2 pede para formatá-lo.
+# One line. English: New card size
+T_SET_CARD_SIZE = Tamanho dos cartões novos
+# Up to 3 lines. English: The sd2psx will create new cards of this size from the next time it is turned on.
+T_SIZE_NEXT_START = O sd2psx passa a criar os cartões novos com este tamanho na próxima vez em que for ligado.
+# Up to 3 lines. English: Unable to change the sd2psx's settings.
+T_SIZE_SET_FAILED = Não foi possível alterar as configurações do sd2psx.
 # Up to 3 lines. English: Choose an ELF...
 T_PICK_ELF = Escolher um ELF...
 # Up to 3 lines. English: Unable to read this memory card.

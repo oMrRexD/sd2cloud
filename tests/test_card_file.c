@@ -17,7 +17,7 @@ static void make_source(const char *path)
     buffer_t b;
     t_mkdir("sd/MemoryCards/PS2/Card1");
     make_psu("save.psu", SAVE, sizes, 3, 31);
-    CHECK_INT(mcfs_new_card(path, NULL), MCFS_OK);
+    CHECK_INT(mcfs_new_card(path, MCFS_CARD_8MB, NULL), MCFS_OK);
     CHECK_INT(mcfs_import_psu("save.psu", path, NULL), MCFS_OK);
     b = t_read(path);
     t_write("source.keep", b.data, b.len);

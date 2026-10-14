@@ -15,7 +15,7 @@ static void new_card(const char *path)
     char dir[200];
     snprintf(dir, sizeof(dir), "%.*s", (int)(strrchr(path, '/') - path), path);
     t_mkdir(dir);
-    if (mcfs_new_card(path, NULL) != MCFS_OK) {
+    if (mcfs_new_card(path, MCFS_CARD_8MB, NULL) != MCFS_OK) {
         fprintf(stderr, "the tests can't make %s\n", path);
         exit(2);
     }

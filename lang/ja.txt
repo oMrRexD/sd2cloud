@@ -615,14 +615,36 @@ T_ERR_PSU = このファイルは有効な .psu セーブデータではあり�
 T_ERR_SAVE_FOLDER = このフォルダーは有効なメモリーカードのセーブデータではありません。
 # Up to 3 lines. English: No memory cards were found on the MMCE.
 T_NO_CARDS_SD = MMCE にメモリーカードが見つかりません。
-# Up to 2 lines. English: A new 8 MB memory card will be created for this game.
-T_NEWCARD_NOTE = このゲーム用に 8 MB の新しいメモリーカードが作成されます。
+# Up to 2 lines. English: A new %d MB memory card will be created for this game.
+T_NEWCARD_NOTE = このゲーム用に %d MB の新しいメモリーカードが作成されます。
 # One line. English: Creating the memory card...
 T_NEWCARD_MAKING = メモリーカードを作成しています...
 # Up to 2 lines. English: Unable to create the memory card.
 T_NEWCARD_FAILED = メモリーカードを作成できませんでした。
 # Up to 3 lines. English: This game's folder has reached its limit of %d cards.
 T_NEWCARD_NO_CHANNEL = このゲームのフォルダーは上限の %d 枚に達しています。
+# One line. English: Memory card size
+T_SIZE_TITLE = メモリーカードの容量
+# One line. English: %d MB
+T_SIZE_MB = %d MB
+# One line. English: %d MB (recommended)
+T_SIZE_RECOMMENDED = %d MB（推奨）
+# Up to 2 lines. English: The saves take %s.
+T_SIZE_NEED = セーブデータの容量：%s
+# Up to 2 lines. English: Space left: %s
+T_SIZE_FREE = 残りの空き容量：%s
+# Up to 5 lines. English: Above 8 MB, the card depends on the microSD's speed: a slow one can corrupt it.
+T_SIZE_BIG = 8 MB を超えるカードは microSD の速度に左右され、遅い microSD では破損することがあります。
+# Up to 3 lines. English: These saves don't fit in a single memory card.
+T_SIZE_NONE = これらのセーブデータは 1 枚のメモリーカードに収まりません。
+# Up to 6 lines. English: Under 8 MB, the sd2psx may create the card unformatted: the game or the PS2 browser then asks to format it.
+T_SIZE_UNFORMATTED = 8 MB 未満のカードは sd2psx が未フォーマットで作成することがあり、ゲームや PS2 のブラウザーでフォーマットを求められます。
+# One line. English: New card size
+T_SET_CARD_SIZE = 新しいカードの容量
+# Up to 3 lines. English: The sd2psx will create new cards of this size from the next time it is turned on.
+T_SIZE_NEXT_START = 次回 sd2psx の電源を入れたときから、新しいカードはこの容量で作成されます。
+# Up to 3 lines. English: Unable to change the sd2psx's settings.
+T_SIZE_SET_FAILED = sd2psx の設定を変更できませんでした。
 # Up to 3 lines. English: Choose an ELF...
 T_PICK_ELF = ELF を選択...
 # Up to 3 lines. English: Unable to read this memory card.

@@ -614,14 +614,36 @@ T_ERR_PSU = Цей файл не є коректним збереженням .p
 T_ERR_SAVE_FOLDER = Ця папка не є коректним збереженням картки пам’яті.
 # Up to 3 lines. English: No memory cards were found on the MMCE.
 T_NO_CARDS_SD = На MMCE не знайдено карток пам’яті.
-# Up to 2 lines. English: A new 8 MB memory card will be created for this game.
-T_NEWCARD_NOTE = Для цієї гри буде створено нову картку пам’яті на 8 МБ.
+# Up to 2 lines. English: A new %d MB memory card will be created for this game.
+T_NEWCARD_NOTE = Для цієї гри буде створено нову картку пам’яті на %d МБ.
 # One line. English: Creating the memory card...
 T_NEWCARD_MAKING = Створення картки пам’яті...
 # Up to 2 lines. English: Unable to create the memory card.
 T_NEWCARD_FAILED = Не вдалося створити картку пам’яті.
 # Up to 3 lines. English: This game's folder has reached its limit of %d cards.
 T_NEWCARD_NO_CHANNEL = У папці цієї гри досягнуто межі карток (%d).
+# One line. English: Memory card size
+T_SIZE_TITLE = Розмір картки пам’яті
+# One line. English: %d MB
+T_SIZE_MB = %d МБ
+# One line. English: %d MB (recommended)
+T_SIZE_RECOMMENDED = %d МБ (рекомендовано)
+# Up to 2 lines. English: The saves take %s.
+T_SIZE_NEED = Збереження займають %s.
+# Up to 2 lines. English: Space left: %s
+T_SIZE_FREE = Залишиться вільно: %s
+# Up to 5 lines. English: Above 8 MB, the card depends on the microSD's speed: a slow one can corrupt it.
+T_SIZE_BIG = Картці понад 8 МБ потрібна швидка microSD: на повільній картка може пошкодитися.
+# Up to 3 lines. English: These saves don't fit in a single memory card.
+T_SIZE_NONE = Ці збереження не вмістяться на одну картку пам’яті.
+# Up to 6 lines. English: Under 8 MB, the sd2psx may create the card unformatted: the game or the PS2 browser then asks to format it.
+T_SIZE_UNFORMATTED = Картки менше 8 МБ sd2psx може створювати невідформатованими: їх відформатує гра або браузер PS2.
+# One line. English: New card size
+T_SET_CARD_SIZE = Розмір нових карток
+# Up to 3 lines. English: The sd2psx will create new cards of this size from the next time it is turned on.
+T_SIZE_NEXT_START = sd2psx почне створювати нові картки цього розміру після наступного ввімкнення.
+# Up to 3 lines. English: Unable to change the sd2psx's settings.
+T_SIZE_SET_FAILED = Не вдалося змінити налаштування sd2psx.
 # Up to 3 lines. English: Choose an ELF...
 T_PICK_ELF = Виберіть ELF...
 # Up to 3 lines. English: Unable to read this memory card.

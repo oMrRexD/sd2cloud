@@ -300,6 +300,83 @@ int dest_new_place(const char *game)
     return 1;
 }
 
+/* ------------------------------------------------------------ a new card's size */
+
+static struct {
+    int mb[8];
+    int device;       /* the size the device itself makes cards of is being picked */
+    long long room;   /* what goes into the card (0 = nothing now) */
+    char need[100];   /* "The saves take 340 KB." ("" = nothing goes into the card now) */
+} sz;
+
+/* beside the list of sizes: what the saves take and what the card would have left, and, on a size past the 8 MB of a
+ * real card, what the sd2psx's firmware says of those: they lean on the microSD's speed, and a slow one can corrupt
+ * them. For the size the sd2psx makes cards of: one under 8 MB it makes unformatted (its firmware's ps2_cardman.c, on
+ * a device with PSRAM) */
+static const char *size_note(int i)
+{
+    static char t[400];
+    char left[24], rest[100] = "";
+    const char *more = dev->sd2psx && sz.mb[i] > 8 ? T(T_SIZE_BIG) : sz.device && sz.mb[i] < 8 ? T(T_SIZE_UNFORMATTED) : "";
+    if (sz.room) {
+        format_size(mcfs_card_room((long long)sz.mb[i] << 20) - sz.room, left, sizeof(left));
+        snprintf(rest, sizeof(rest), T(T_SIZE_FREE), left);
+    }
+    snprintf(t, sizeof(t), "%s%s%s%s%s", sz.need, rest[0] ? "\n" : "", rest, (sz.need[0] || rest[0]) && more[0] ? "\n\n" : "", more);
+    return t;
+}
+
+/* A card's size, picked among the ones the device makes (dev->minMb to maxMb) that saves taking room (as
+ * mcfs_save_room counts them; 0 = none go into it now) fit in, under title. The cursor starts on current, or on the
+ * one recommended for them (mcfs_recommended_mb; with none, the 8 MB of a real card). device = the size the device
+ * makes its own cards of. The size in MB, or 0 = back (or no size is big enough, which is said) */
+int card_size_pick(int title, long long room, int current, int device)
+{
+    char items[8][48], need[24];
+    const char *list[8];
+    int mb, n = 0, start = 0, r, rec = room ? mcfs_recommended_mb(room, dev->minMb, dev->maxMb)
+                                            : (dev->minMb <= 8 && dev->maxMb >= 8 ? 8 : dev->minMb);
+    sz.device = device;
+    sz.room = room;
+    if (!rec) {
+        message_wait(0, NULL, COLOR_WARN, T(T_SIZE_NONE));
+        return 0;
+    }
+    for (mb = dev->minMb; mb <= dev->maxMb && n < 8; mb *= 2) {
+        if (room > mcfs_card_room((long long)mb << 20))
+            continue;   /* (too small for them) */
+        snprintf(items[n], sizeof(items[0]), T(mb == rec ? T_SIZE_RECOMMENDED : T_SIZE_MB), mb);
+        list[n] = items[n];
+        if (mb == (current ? current : rec))
+            start = n;
+        sz.mb[n++] = mb;
+    }
+    sz.need[0] = 0;
+    if (room) {
+        format_size(room, need, sizeof(need));
+        snprintf(sz.need, sizeof(sz.need), T(T_SIZE_NEED), need);
+    }
+    r = choose_noted(T(title), list, n, start, size_note);
+    return r < 0 ? 0 : sz.mb[r];
+}
+
+int dest_new_size(long long room)
+{
+    int mb = card_size_pick(T_SIZE_TITLE, room, 0, 0);
+    if (!mb)
+        return 0;
+    destNew.size = (long long)mb << 20;
+    log_msg("new card %s: %d MB picked", destNew.id, mb);
+    return 1;
+}
+
+const char *dest_new_note(void)
+{
+    static char t[200];
+    snprintf(t, sizeof(t), T(T_NEWCARD_NOTE), (int)((destNew.size ? destNew.size : MCFS_CARD_8MB) >> 20));
+    return t;
+}
+
 static void new_card_progress(long long done, long long total)
 {
     upload_screen(done, total);
@@ -310,9 +387,9 @@ static void new_card_progress(long long done, long long total)
 }
 
 /* The card a save goes to, once the user agreed to it. A card that is still to be made (&destNew) is made now: an
- * empty 8 MB one, as the device itself makes them, in the game's folder and under the device's own extension. It
- * joins the cards at the end of the list, so the card the save comes from stays where it is. NULL = it couldn't be
- * made (said) */
+ * empty one of the size picked (destNew.size; none picked, the 8 MB of a real card), formatted as the PS2 does, in the
+ * game's folder and under the device's own extension. It joins the cards at the end of the list, so the card the save
+ * comes from stays where it is. NULL = it couldn't be made (said) */
 card_t *dest_real(card_t *to)
 {
     char dir[200], file[80];
@@ -324,8 +401,9 @@ card_t *dest_real(card_t *to)
     snprintf(dir, sizeof(dir), "%s%s/%s/", sdRoot, dev->cards, destNew.folder);
     ensure_dir(dir);
     there = file_exists(destNew.path);   /* (made by the device since the place was picked: left as it is) */
-    r = there || (destNewMore && max_channels_set(destNew.folder, destNewMore) != 0) ? MCFS_ERR_IO
-                                                                                     : mcfs_new_card(destNew.path, new_card_progress);
+    r = there || (destNewMore && max_channels_set(destNew.folder, destNewMore) != 0)
+            ? MCFS_ERR_IO
+            : mcfs_new_card(destNew.path, destNew.size ? destNew.size : MCFS_CARD_8MB, new_card_progress);
     snprintf(file, sizeof(file), "%s%s", destNew.base, dev->ext);
     if (r == MCFS_OK && (c = cards_append(destNew.folder, file)) != NULL) {
         cards_recheck(c);

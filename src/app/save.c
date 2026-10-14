@@ -126,7 +126,9 @@ static int save_move(card_t *c, save_view_t *v)
             return 0;
         snprintf(t, sizeof(t), T(T_CONFIRM_MOVE), name, to->base);
         made = to == &destNew;
-        if (confirm(t, made ? T(T_NEWCARD_NOTE) : NULL, T_MOVE))
+        if (made && !dest_new_size(mcfs_save_room(bytes, files)))
+            continue;   /* (circle on the sizes: back to the cards) */
+        if (confirm(t, made ? dest_new_note() : NULL, T_MOVE))
             break;
     }
     if (!(to = dest_real(to)))

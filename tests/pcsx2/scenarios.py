@@ -35,6 +35,9 @@ CARDS = {"Card1/Card1-1": "game", "Card2/Card2-1": "empty", "SLUS-21065/SLUS-210
 # what the app remembers of the empty card: never sent, marked as resolved as it is (its fingerprint, of no saves)
 RESOLVED = (b"[Card2/Card2-1]\r\nfingerprint = \r\nfingerprint_version = 0\r\nsha256 = \r\nwhen = \r\n"
             b"resolved = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\r\n")
+# the sd2psx's own settings, as its firmware writes them on the microSD
+SD2PSX_SETTINGS = (b"[General]\nMode=PS2\nFlippedScreen=OFF\n[PS1]\nAutoboot=ON\nGameID=ON\nEnableControllerCombo=ON\n"
+                   b"MaxCardIdx=0\n[PS2]\nAutoboot=OFF\nGameID=ON\nCardSize=8\nVariant=RETAIL\nMaxCardIdx=0\n")
 # a template that is there when a scenario starts: "Net", with the save of fixtures/save.psu
 TEMPLATE = {"SD2Cloud/templates/Net/save.psu": "save.psu"}
 
@@ -57,15 +60,18 @@ SCENARIOS = [
      "script": "XXX>XS>>XSXXC"},
     {"name": "save-move", "what": "a save moved to another card", "cards": CARDS, "script": "XXDXXXXC"},
     {"name": "save-delete", "what": "a save deleted", "cards": CARDS, "script": "XXDDXXXC"},
+    # (after "New card", its size: the cursor starts on the one recommended for what goes into it, and X takes it)
     {"name": "save-new-card", "what": "a save copied to a new card of its game: \"New card\" in its game's folder, in the list "
-     "of cards", "cards": CARDS, "script": "XXXS>XXXXC"},
+     "of cards", "cards": CARDS, "script": "XXXS>XXXXXC"},
+    {"name": "save-new-card-size", "what": "a save copied to a new card of its game, of a size other than the one "
+     "recommended (2 MB)", "cards": CARDS, "script": "XXXS>XXDXXXC"},
     # (no card of the game yet: "New card" among the folders, first)
     {"name": "save-new-game", "what": "a save copied to a new card of a game that has no card yet", "cards":
-     {"Card1/Card1-1": "game", "Card2/Card2-1": "empty", "SLUS-20001/SLUS-20001-1": "empty"}, "script": "XXXS>SXXC"},
+     {"Card1/Card1-1": "game", "Card2/Card2-1": "empty", "SLUS-20001/SLUS-20001-1": "empty"}, "script": "XXXS>SXXXC"},
     # (the start's warning answered with square: that card is left alone)
     {"name": "save-new-card-template", "what": "a save copied to a new card of its game: the main template goes into it too",
      "cards": CARDS, "files": dict(TEMPLATE, **{"SD2Cloud/templates/templates.ini": b"[templates]\nmain = Net\n"}),
-     "script": "QXXXS>XXXXC"},
+     "script": "QXXXS>XXXXXC"},
     {"name": "psu-import", "what": "a .psu file imported into a card", "cards": CARDS, "files": {"Files/save.psu": "save.psu"},
      "script": ">>XXXXXXXC"},
     # (circle on the question of where it goes: the cards as they were left, not from the start)
@@ -132,7 +138,7 @@ SCENARIOS = [
     {"name": "memcard-paste-list", "what": "a save marked on a card, pasted with START on the Memory Card in the list of "
      "cards", "cards": CARDS, "memcard": "memcard.ps2", "script": "XXXO>>DDSXXC"},
     {"name": "settings", "what": "settings changed (how many backups are kept, their format, the language) and About",
-     "cards": CARDS, "script": "SDDDDDXDXDXDXUUXUXDDDDDDXOOC"},
+     "cards": CARDS, "script": "SDDDDDDXDXDXDXUUXUXDDDDDDXOOC"},
     # (a sync with nothing sent, "B": SELECT shows its cards; X on one still to go: resolved; on the next, its sync off)
     {"name": "sync-list", "what": "the list of a sync's cards: one card marked as resolved, another's sync turned off",
      "cards": CARDS, "script": "BLDXDXDXDDXwC"},
@@ -166,6 +172,9 @@ SCENARIOS = [
     {"name": "all-saves-progress", "what": "two saves of the same name saved at different moments are both shown",
      "cards": {"Card1/Card1-1": "empty", "SLUS-21065/SLUS-21065-1": "game", "SLUS-20001/SLUS-20001-1": "empty"},
      "files": {"Files/alpha.psu": "alpha-other.psu"}, "script": ">>XXXX>DXXXXOOO<XC"},
+    # Settings (START), the fifth row: the size the sd2psx makes a game's first card of, written to its settings.ini
+    {"name": "settings-card-size", "what": "the size of the sd2psx's new cards set to 32 MB in its settings.ini",
+     "cards": CARDS, "files": {".sd2psx/settings.ini": SD2PSX_SETTINGS}, "script": "SDDDDXDDXXC"},
     {"name": "saves-by-name", "what": "a card's saves the oldest first, by name, and the newest first again: each time the options are closed", "cards": CARDS, "script": "XTDXOTDXOTDXOC"},
     {"name": "igr-no-account", "what": "started as after IGR with no Google account: it leaves at once", "cards": CARDS,
      "script": "I"},

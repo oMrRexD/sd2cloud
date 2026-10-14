@@ -78,6 +78,8 @@ typedef struct {
     const char *numbered;   /* what the folders of its numbered cards start with: Card1, MemoryCard1 */
     int sd2psx;             /* it runs the sd2psx's firmware: boot cards in BOOT, an .ini in each folder (the channels'
                                names, how many there are), Game2Folder.ini, and SD2Cloud moves it off a card to change it */
+    int minMb, maxMb;       /* the sizes of card it makes, a power of two each (the sd2psx: 1 to 64 MB, the most its own
+                               menu and the per-folder .ini offer; a MemCard PRO2: 8 to 128 MB) */
 } device_t;
 extern const device_t *dev;
 /* 1 = the number and channel the device gives for its card are known to mean what the sd2psx's do. Else (a device

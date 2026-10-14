@@ -54,9 +54,21 @@ int mcfs_save_info(const char *path, const char *folder, long long *bytes, int *
 int mcfs_copy_save(const char *from, const char *folder, const char *to, mcfs_step_cb progress);
 int mcfs_delete_save(const char *path, const char *folder);
 int mcfs_export_psu(const char *path, const char *folder, buffer_t *out);
-/* a new card in that file: empty, formatted, 8 MB, as the sd2psx makes one. progress is told how much of it is
- * written. 0 = ok (what it has was read back), else MCFS_ERR_* */
-int mcfs_new_card(const char *path, void (*progress)(long long done, long long total));
+/* a new card in that file: empty and formatted, of that size (a power of two from 1 to 128 MB), as the PS2 formats
+ * one; an 8 MB one is byte for byte the sd2psx's. progress is told how much of it is written. 0 = ok (what it has was
+ * read back), else MCFS_ERR_* (BAD = not a size a card can be) */
+#define MCFS_MIN_MB 1
+#define MCFS_MAX_MB 128
+#define MCFS_CARD_8MB (8LL * 1024 * 1024)
+int mcfs_new_card(const char *path, long long size, void (*progress)(long long done, long long total));
+/* what an empty card of that size has for saves, in bytes, as the PS2 counts it (8 MB: 8000 KB). 0 = not a size */
+long long mcfs_card_room(long long size);
+/* what a save of those files (bytes, as their sizes add up) takes of a card at most: its folder's entries, each file
+ * to the whole cluster, its entry in the root */
+long long mcfs_save_room(long long bytes, int files);
+/* the size (MB, from minMb to maxMb) for a new card that saves taking room go into: the smallest they take no more
+ * than half of, else the smallest they fit in. 0 = none is big enough */
+int mcfs_recommended_mb(long long room, int minMb, int maxMb);
 /* what a .psu file holds: the save's folder, when it was last saved, its files' sizes added up, and its icon (the
  * buffers stay empty when it has none). Here and below, a path ending in / is a save copied as a folder (its files
  * as they were on the card), which is taken as its .psu would be */

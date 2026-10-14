@@ -140,48 +140,65 @@ int confirm(const char *title, const char *text, int yesText)
 #define PICK_MAX 128
 #define PICK_ROWS 6
 #define PICK_W 380   /* the box; an item gets 60 less than that, clear of the arrows on its right */
+/* with a note: a wide box, the list in a column on the left and the note of the item under the cursor on the right,
+ * its rows a little closer, so that more of them are seen at once */
+#define PICK_NOTED_W    540
+#define PICK_NOTED_LIST 250   /* the list's column */
+#define PICK_NOTED_ROWS 7
+#define PICK_NOTED_ROW  30
+#define PICK_NOTE_W     (PICK_NOTED_W - PICK_NOTED_LIST - 2 * 28)
 static struct {
     char title[100];
     char items[PICK_MAX][100];
     int n, cursor, top;
+    int noted;        /* the items have notes: the wide box */
+    char note[320];   /* on the right: what the item under the cursor means ("" = nothing) */
 } pick;
 
 static void scene_pick(float t)
 {
-    int rows = pick.n < PICK_ROWS ? pick.n : PICK_ROWS, w = PICK_W, h = 56 + rows * 32 + 24, x = (W - w) / 2,
-        y = LOOK_TOP + (LOOK_BOTTOM - LOOK_TOP - h) / 2, i;
+    int max = pick.noted ? PICK_NOTED_ROWS : PICK_ROWS, pitch = pick.noted ? PICK_NOTED_ROW : 32,
+        rows = pick.n < max ? pick.n : max, w = pick.noted ? PICK_NOTED_W : PICK_W, h = 56 + rows * pitch + 24,
+        x = (W - w) / 2, y = LOOK_TOP + (LOOK_BOTTOM - LOOK_TOP - h) / 2, i;
+    float cx = pick.noted ? x + 28 + PICK_NOTED_LIST / 2.0f : W / 2.0f;
     look_space();
     look_frame();
     ui_alpha(look_fade(t));
     look_panel(x, y, w, h);
     look_title(W / 2.0f, y + 20, pick.title, 1);
     for (i = pick.top; i < pick.n && i < pick.top + rows; i++)
-        look_item(W / 2.0f, y + 64 + (i - pick.top) * 32, pick.items[i], i == pick.cursor, 1);
+        look_item(cx, y + 64 + (i - pick.top) * pitch, pick.items[i], i == pick.cursor, 1);
     if (pick.top > 0)
-        look_arrow(x + w - 26, y + 60, 0, 0x6E9AE0);
+        look_arrow(pick.noted ? (int)cx + PICK_NOTED_LIST / 2 - 4 : x + w - 26, y + 60, 0, 0x6E9AE0);
     if (pick.top + rows < pick.n)
-        look_arrow(x + w - 26, y + h - 26, 1, 0x6E9AE0);
+        look_arrow(pick.noted ? (int)cx + PICK_NOTED_LIST / 2 - 4 : x + w - 26, y + 56 + rows * pitch - 2, 1, 0x6E9AE0);
+    if (pick.note[0])
+        ui_paragraph(FONT_SMALL, x + w - 28 - PICK_NOTE_W, y + 62, PICK_NOTE_W, COLOR_DIM, pick.note);
     {
         legend_t l[2] = {{BUTTON_CIRCLE, T(T_BACK)}, {BUTTON_CROSS, T(T_SELECT)}};
         look_legend(l, 2, 0);
     }
 }
 
-/* the index picked, or -1 (circle). start = the item the cursor starts on (the current value) */
-int choose(const char *title, const char *const *items, int n, int start)
+/* the index picked, or -1 (circle). start = the item the cursor starts on (the current value). note (NULL = none):
+ * the text for an item, shown beside the list while the cursor is on it ("" = nothing for that one) */
+int choose_noted(const char *title, const char *const *items, int n, int start, const char *(*note)(int i))
 {
-    int i;
+    int i, rows;
     if (n > PICK_MAX)
         n = PICK_MAX;
     ui_lock();
     snprintf(pick.title, sizeof(pick.title), "%s", title);
+    pick.noted = note != NULL;
+    rows = pick.noted ? PICK_NOTED_ROWS : PICK_ROWS;
     for (i = 0; i < n; i++) {   /* a program's name can be any length: one that doesn't fit the box is cut */
         snprintf(pick.items[i], sizeof(pick.items[0]), "%s", items[i]);
-        fit(FONT_TEXT, pick.items[i], sizeof(pick.items[0]), PICK_W - 60);
+        fit(FONT_TEXT, pick.items[i], sizeof(pick.items[0]), pick.noted ? PICK_NOTED_LIST - 20 : PICK_W - 60);
     }
     pick.n = n;
     pick.cursor = start >= 0 && start < n ? start : 0;
-    pick.top = pick.cursor >= PICK_ROWS ? pick.cursor - PICK_ROWS + 1 : 0;
+    pick.top = pick.cursor >= rows ? pick.cursor - rows + 1 : 0;
+    snprintf(pick.note, sizeof(pick.note), "%s", note && note(pick.cursor) ? note(pick.cursor) : "");
     ui_unlock();
     ui_scene(scene_pick);
     for (;;) {
@@ -198,9 +215,15 @@ int choose(const char *title, const char *const *items, int n, int start)
         pick.cursor = (b & PAD_UP) ? (pick.cursor + n - 1) % n : (pick.cursor + 1) % n;
         if (pick.cursor < pick.top)
             pick.top = pick.cursor;
-        if (pick.cursor >= pick.top + PICK_ROWS)
-            pick.top = pick.cursor - PICK_ROWS + 1;
+        if (pick.cursor >= pick.top + rows)
+            pick.top = pick.cursor - rows + 1;
+        snprintf(pick.note, sizeof(pick.note), "%s", note && note(pick.cursor) ? note(pick.cursor) : "");
         ui_unlock();
         sound_play(SND_MOVE);
     }
+}
+
+int choose(const char *title, const char *const *items, int n, int start)
+{
+    return choose_noted(title, items, n, start, NULL);
 }

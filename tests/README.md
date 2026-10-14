@@ -20,9 +20,9 @@ What is covered:
 
 | File | What it checks |
 |---|---|
-| `test_mcfs.c` | The memory card's file system: a new card; a save imported from a `.psu`, exported to one, copied to another card and deleted; a card with no room; an import given up halfway; a file that isn't a `.psu`; what changes a card's fingerprint and its root folder's signature |
+| `test_mcfs.c` | The memory card's file system: a new card, of every size a card can be (1 to 128 MB), and the size recommended for what goes into one; a save imported from a `.psu`, exported to one, copied to another card and deleted; a card with no room; an import given up halfway; a file that isn't a `.psu`; what changes a card's fingerprint and its root folder's signature |
 | `test_card_file.c` | A card file installed on the microSD: as a new card and over a smaller, an equal and a bigger one; from memory and, when it doesn't fit there, straight from its file; a file that stops reading (tried again, or given up); a new card cancelled; a `.ps2` with its ECC bytes; a card copied out to a `.zip` and installed back |
-| `test_cards.c` | The list of cards: which files are cards and of which kind, what the settings leave out, what the state makes of each |
+| `test_cards.c` | The list of cards: which files are cards and of which kind, what the settings leave out, what the state makes of each; the size the sd2psx makes new cards of, in its `settings.ini` |
 | `test_small.c` | The JSON reader, the `.ini` files changed in place, the settings and the state |
 | `test_templates.c` | The templates: one made of a card's saves, listed again from the microSD, with a `.psu` put there by hand; a save replaced and one taken out; a template put into a card that lacks it all, that has a save of its own (left as it is) and that has no room; one renamed, deleted, and as many as there can be; the default template, the games a template is for, the cards that are settled with their templates, and a template updated on a card |
 

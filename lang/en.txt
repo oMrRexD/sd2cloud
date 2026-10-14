@@ -618,13 +618,35 @@ T_ERR_SAVE_FOLDER = This folder is not a valid memory card save.
 # Up to 3 lines.
 T_NO_CARDS_SD = No memory cards were found on the MMCE.
 # Up to 2 lines.
-T_NEWCARD_NOTE = A new 8 MB memory card will be created for this game.
+T_NEWCARD_NOTE = A new %d MB memory card will be created for this game.
 # One line.
 T_NEWCARD_MAKING = Creating the memory card...
 # Up to 2 lines.
 T_NEWCARD_FAILED = Unable to create the memory card.
 # Up to 3 lines.
 T_NEWCARD_NO_CHANNEL = This game's folder has reached its limit of %d cards.
+# One line.
+T_SIZE_TITLE = Memory card size
+# One line.
+T_SIZE_MB = %d MB
+# One line.
+T_SIZE_RECOMMENDED = %d MB (recommended)
+# Up to 2 lines.
+T_SIZE_NEED = The saves take %s.
+# Up to 2 lines.
+T_SIZE_FREE = Space left: %s
+# Up to 5 lines.
+T_SIZE_BIG = Above 8 MB, the card depends on the microSD's speed: a slow one can corrupt it.
+# Up to 3 lines.
+T_SIZE_NONE = These saves don't fit in a single memory card.
+# Up to 6 lines.
+T_SIZE_UNFORMATTED = Under 8 MB, the sd2psx may create the card unformatted: the game or the PS2 browser then asks to format it.
+# One line.
+T_SET_CARD_SIZE = New card size
+# Up to 3 lines.
+T_SIZE_NEXT_START = The sd2psx will create new cards of this size from the next time it is turned on.
+# Up to 3 lines.
+T_SIZE_SET_FAILED = Unable to change the sd2psx's settings.
 # Up to 3 lines.
 T_PICK_ELF = Choose an ELF...
 # Up to 3 lines.

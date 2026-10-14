@@ -8,7 +8,7 @@ static void put_card(const char *folder, const char *file)
     snprintf(p, sizeof(p), "sd/MemoryCards/PS2/%s", folder);
     t_mkdir(p);
     snprintf(p, sizeof(p), "sd/MemoryCards/PS2/%s/%s", folder, file);
-    if (mcfs_new_card(p, NULL) != MCFS_OK) {
+    if (mcfs_new_card(p, MCFS_CARD_8MB, NULL) != MCFS_OK) {
         fprintf(stderr, "the tests can't make %s\n", p);
         exit(2);
     }
@@ -218,9 +218,45 @@ static void group_folders_are_named(void)
     CHECK_STR(card("MCCG-10001/MCCG-10001-1")->moved, "");
 }
 
+/* the size the sd2psx makes a card it doesn't find: read from its settings.ini, and changed there without touching the
+ * rest of it, as the sd2psx writes that file */
+static void device_card_size(void)
+{
+    buffer_t b;
+    CHECK_INT(device_card_mb(), 0);   /* (no settings.ini: 8 MB is what it makes then) */
+    /* a microSD the sd2psx hasn't started with yet has no .sd2psx folder: made */
+    CHECK_INT(device_card_mb_set(16), 0);
+    CHECK_INT(device_card_mb(), 16);
+    t_text("sd/.sd2psx/settings.ini", "[General]\nMode=PS2\nFlippedScreen=OFF\n[PS1]\nAutoboot=ON\nGameID=ON\n"
+                                      "EnableControllerCombo=ON\nMaxCardIdx=0\n[PS2]\nAutoboot=OFF\nGameID=ON\nCardSize=8\n"
+                                      "Variant=RETAIL\nMaxCardIdx=0\n");
+    CHECK_INT(device_card_mb(), 8);
+    CHECK_INT(device_card_mb_set(2), 0);
+    CHECK_INT(device_card_mb(), 2);
+    b = t_read("sd/.sd2psx/settings.ini");
+    CHECK(b.len && strstr((char *)b.data, "[PS1]\nAutoboot=ON\nGameID=ON\nEnableControllerCombo=ON\nMaxCardIdx=0\n") != NULL);
+    CHECK(b.len && strstr((char *)b.data, "GameID=ON\nCardSize = 2\r\nVariant=RETAIL\nMaxCardIdx=0\n") != NULL);
+    CHECK(b.len && b.data[b.len - 1] == '\n');   /* (the sd2psx wants the file to end with a line break) */
+    buf_free(&b);
+    /* a size no card is, written there by hand, is no size */
+    t_text("sd/.sd2psx/settings.ini", "[PS2]\nCardSize=3\n");
+    CHECK_INT(device_card_mb(), 0);
+    /* only an sd2psx has one */
+    {
+        static const device_t pro2 = {"MemCard PRO2", "PRO2", "PS2", ".mc2", "MemoryCard", 0, 8, 128};
+        const device_t *was = dev;
+        t_text("sd/.sd2psx/settings.ini", "[PS2]\nCardSize=16\n");
+        dev = &pro2;
+        CHECK_INT(device_card_mb(), 0);
+        dev = was;
+        CHECK_INT(device_card_mb(), 16);
+    }
+}
+
 void suite_cards(void)
 {
     RUN(cards_are_listed);
     RUN(group_folders_are_named);
     RUN(settings_choose_the_cards);
+    RUN(device_card_size);
 }

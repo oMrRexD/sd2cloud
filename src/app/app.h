@@ -200,6 +200,9 @@ void dest_new_name(void);
 int dest_new_place(const char *game);    /* "New card" of that game picked: where it will be (destNew). 1 = it can be */
 int ask_more_channels(int max);
 extern int cardsUnsorted;
+int card_size_pick(int title, long long room, int current, int device);   /* a card's size, in MB (0 = back): dest.c */
+int dest_new_size(long long room);       /* the new card's size (destNew.size), picked: 1 = it was, 0 = back */
+const char *dest_new_note(void);         /* what the question about making it says of it */
 card_t *dest_real(card_t *to);
 card_t *dest_card(const char *folder, int channel);
 
@@ -216,6 +219,7 @@ void message(u32 titleColor, const char *title, u32 textColor, const char *text)
 void message_wait(u32 titleColor, const char *title, u32 textColor, const char *text);
 int confirm(const char *title, const char *text, int yesText);
 int choose(const char *title, const char *const *items, int n, int start);
+int choose_noted(const char *title, const char *const *items, int n, int start, const char *(*note)(int i));
 
 /* ------------------------------------------------------------ format.c */
 void format_size(long long bytes, char *out, size_t size);

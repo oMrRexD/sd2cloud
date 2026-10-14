@@ -322,7 +322,9 @@ static void psu_import(void)
             return;
         snprintf(t, sizeof(t), T(T_CONFIRM_IMPORT), name, to->base);
         made = to == &destNew;
-        if (confirm(t, made ? T(T_NEWCARD_NOTE) : NULL, T_IMPORT_YES))
+        if (made && !dest_new_size(mcfs_save_room(psu.info.bytes, psu.info.files)))
+            continue;   /* (circle on the sizes: back to the cards) */
+        if (confirm(t, made ? dest_new_note() : NULL, T_IMPORT_YES))
             break;
     }
     if (!(to = dest_real(to)) || card_free(to, NULL))

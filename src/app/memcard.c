@@ -109,7 +109,7 @@ void memcard_upload(void)
         card_work(&slotCard, 0, T(T_MEMCARD_READING), 0);
         cancelLatched = 0;
         unlink(memImage.path);   /* (one left by a run that didn't end) */
-        if (mcfs_new_card(memImage.path, image_made) != MCFS_OK)
+        if (mcfs_new_card(memImage.path, MCFS_CARD_8MB, image_made) != MCFS_OK)
             r = MCFS_ERR_IO;
         for (imgDone = IMG_MAKING, i = 0; i < n && r == MCFS_OK; i++) {
             bytes = files = 0;
