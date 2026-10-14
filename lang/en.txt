@@ -805,6 +805,8 @@ T_MIGRATE_DELETE_ASK = Delete from %s the saves that are on their games' cards n
 T_MIGRATE_DELETE_TEXT = Saves that go: %d. The ones without a game ID, and the ones not copied, stay.
 # Button.
 T_MIGRATE_KEEP = Keep
+# One line.
+T_VIEW_NOTE = Not in the console
 # Up to 3 lines.
 T_PICK_ELF = Choose an ELF...
 # Up to 3 lines.

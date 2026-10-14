@@ -19,6 +19,7 @@
 #include "common.h"
 
 card_t cards[MAX_CARDS];
+int cardsOther;
 int nCards;
 
 #define MAX_NAMES 512
@@ -594,10 +595,12 @@ int cards_scan(void)
     if (nCards == MAX_CARDS)
         log_msg("more memory cards than SD2Cloud handles (%d): the rest are left out", MAX_CARDS);
     qsort(cards, nCards, sizeof(cards[0]), compare);
-    for (i = 0; i < nCards; i++)
+    for (i = 0; i < nCards; i++) {
         set_included(&cards[i]);
+        cards[i].included &= !cardsOther;
+    }
     game_names();
-    log_msg("%d card(s) on the microSD", nCards);
+    log_msg("%d card(s) on the microSD%s", nCards, cardsOther ? ", of the device that isn't in the slot" : "");
     return nCards;
 }
 
@@ -609,6 +612,7 @@ card_t *cards_append(const char *folder, const char *file)
         return NULL;
     fill_cards(base, folder, nCards - 1);
     set_included(&cards[nCards - 1]);
+    cards[nCards - 1].included &= !cardsOther;
     game_names();
     log_msg("%s joined the cards: %d on the microSD", cards[nCards - 1].id, nCards);
     return &cards[nCards - 1];
@@ -620,7 +624,8 @@ void cards_sort(void) { qsort(cards, nCards, sizeof(cards[0]), compare); }
 static void cards_drop(card_t *c)
 {
     int i = (int)(c - cards);
-    state_forget(c->id);
+    if (!cardsOther)
+        state_forget(c->id);
     memmove(&cards[i], &cards[i + 1], (nCards - i - 1) * sizeof(cards[0]));
     nCards--;
 }
@@ -737,9 +742,11 @@ int cards_rename_folder(const char *folder, const char *name)
             snprintf(cards[i].base, sizeof(cards[i].base), "%s-%d", name, cards[i].channel);
             snprintf(cards[i].id, sizeof(cards[i].id), "%s/%s", name, cards[i].base);
             snprintf(cards[i].path, sizeof(cards[i].path), "%s%s/%s/%s%s", sdRoot, dev->cards, name, cards[i].base, dev->ext);
-            state_rename(id, cards[i].id);
+            if (!cardsOther)
+                state_rename(id, cards[i].id);
         }
-    state_write();
+    if (!cardsOther)
+        state_write();
     log_msg("%s is called %s now (%s)%s", old, name, whole ? "renamed" : "copied", r ? ", not all of its files" : "");
     return r;
 }
@@ -754,7 +761,8 @@ int cards_delete(card_t *c)
         return -1;
     }
     cards_drop(c);
-    state_write();
+    if (!cardsOther)
+        state_write();
     log_msg("%s deleted: %d on the microSD", id, nCards);
     return 0;
 }
@@ -779,7 +787,8 @@ int cards_delete_folder(const char *folder)
                 continue;
             cards_drop(&cards[i]);
         }
-    state_write();
+    if (!cardsOther)
+        state_write();
     dir[strlen(dir) - 1] = 0;   /* (the folder itself, without its last /) */
     if (left || rmdir(dir) != 0) {
         log_msg("%s couldn't be deleted whole (%d left in it)", name, left);
@@ -811,6 +820,11 @@ static void check_one(card_t *c, int *migrated)
     if (mcfs_fingerprint_root(c->path, c->fingerprint, &saves, c->rootSig) != 0) {
         c->status = ST_ERROR;
         log_msg("%s: couldn't read the index: %s", c->id, mcfs_last_error());
+        return;
+    }
+    if (cardsOther) {   /* (the other device's: what is known is of the device's own cards of the same name) */
+        c->status = ST_NO_BACKUP;
+        c->resolved = 0;
         return;
     }
     e = state_card(c->id, 0);
@@ -863,7 +877,7 @@ void cards_recheck(card_t *c)
 
 void card_keep_synced(card_t *c, int synced, int resolved)
 {
-    card_state_t *e = state_card(c->id, 0);
+    card_state_t *e = cardsOther ? NULL : state_card(c->id, 0);
     if (!e || c->status == ST_ERROR || (!synced && !resolved))
         return;
     if (synced) {

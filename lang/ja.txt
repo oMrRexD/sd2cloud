@@ -803,6 +803,8 @@ T_MIGRATE_DELETE_ASK = ゲームのカードに移ったセーブデータを %s
 T_MIGRATE_DELETE_TEXT = 削除するセーブデータ: %d　ゲーム ID のないものとコピーされなかったものは残ります。
 # Button. English: Keep
 T_MIGRATE_KEEP = 残す
+# One line. English: Not in the console
+T_VIEW_NOTE = 本体にありません
 # Up to 3 lines. English: Choose an ELF...
 T_PICK_ELF = ELF を選択...
 # Up to 3 lines. English: Unable to read this memory card.

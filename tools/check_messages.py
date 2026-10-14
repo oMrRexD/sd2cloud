@@ -291,7 +291,7 @@ PLACE = {
     "T_MIGRATE_DIFFER": ("text", 320, 2), "T_MIGRATE_KEEP_GAME": ("text", 320, 1), "T_MIGRATE_REPLACE": ("text", 320, 1),
     "T_MIGRATE_NEWER": ("text", 320, 1), "T_MIGRATE_ASK": ("text", WIDE, 2), "T_MIGRATE_ASK_NEW": ("text", WIDE, 1),
     "T_MIGRATE_ASK_KEEP": ("small", WIDE, 2), "T_MIGRATE_THERE_N": ("text", DIALOG, 1),
-    "T_MIGRATE_KEPT_N": ("text", DIALOG, 1), "T_MIGRATE_DELETE_ASK": ("text", WIDE, 2), "T_MIGRATE_DELETE_TEXT": ("text", WIDE, 3),
+    "T_MIGRATE_KEPT_N": ("text", DIALOG, 1), "T_VIEW_NOTE": ("text", 200, 1), "T_MIGRATE_DELETE_ASK": ("text", WIDE, 2), "T_MIGRATE_DELETE_TEXT": ("text", WIDE, 3),
 }
 PARAGRAPH = ("text", DIALOG, 3)     # error messages and the rest: up to 3 lines in a box
 # what only an sd2psx is ever told (being moved to another card, its boot cards, one more channel for a folder): not

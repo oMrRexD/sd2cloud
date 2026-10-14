@@ -800,6 +800,8 @@ T_MIGRATE_DELETE_ASK = Deseja eliminar de %s os saves que agora estão nos cart�
 T_MIGRATE_DELETE_TEXT = Saves que saem: %d. Os sem ID de jogo, e os que não foram copiados, ficam.
 # Button. English: Keep
 T_MIGRATE_KEEP = Manter
+# One line. English: Not in the console
+T_VIEW_NOTE = Fora do console
 # Up to 3 lines. English: Choose an ELF...
 T_PICK_ELF = Escolher um ELF...
 # Up to 3 lines. English: Unable to read this memory card.

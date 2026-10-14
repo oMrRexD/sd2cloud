@@ -802,6 +802,8 @@ T_MIGRATE_DELETE_ASK = ¿Desea eliminar de %s las partidas que ahora están en l
 T_MIGRATE_DELETE_TEXT = Partidas que se van: %d. Las que no tienen ID de juego, y las que no se copiaron, se quedan.
 # Button. English: Keep
 T_MIGRATE_KEEP = Conservar
+# One line. English: Not in the console
+T_VIEW_NOTE = Fuera de la consola
 # Up to 3 lines. English: Choose an ELF...
 T_PICK_ELF = Elegir un ELF...
 # Up to 3 lines. English: Unable to read this memory card.

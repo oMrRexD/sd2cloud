@@ -53,7 +53,7 @@ void backup_when(const card_t *c, const drive_file_t *f, char *out, size_t size)
 /* the last backup of a card, for the screen ("" = never) */
 void last_backup(const card_t *c, char *out, size_t size)
 {
-    card_state_t *e = state_card(c->id, 0);
+    card_state_t *e = cardsOther ? NULL : state_card(c->id, 0);
     int yr, mo, d, h, mi;
     out[0] = 0;
     if (e && e->sha[0] && sscanf(e->when, "%d-%d-%d %d:%d", &yr, &mo, &d, &h, &mi) == 5)

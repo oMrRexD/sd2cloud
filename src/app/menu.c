@@ -15,11 +15,13 @@ static void card_options(card_t *c)
         for (i = mates = 0; i < nCards; i++)   /* (the other cards of its folder: the folder can go whole) */
             mates += &cards[i] != c && !strcasecmp(cards[i].folder, c->folder);
         n = 0;
-        items[n] = T(T_SYNC_NOW), id[n++] = OPT_SYNC;
-        items[n] = T(c->included ? T_SYNC_DISABLE : T_SYNC_ENABLE), id[n++] = OPT_INCLUDED;
-        items[n] = T(T_RESTORE_BACKUP), id[n++] = OPT_RESTORE;
+        if (!viewOther) {   /* (the other device's card, not in the slot: never synced nor restored) */
+            items[n] = T(T_SYNC_NOW), id[n++] = OPT_SYNC;
+            items[n] = T(c->included ? T_SYNC_DISABLE : T_SYNC_ENABLE), id[n++] = OPT_INCLUDED;
+            items[n] = T(T_RESTORE_BACKUP), id[n++] = OPT_RESTORE;
+        }
         items[n] = T(T_COPY_DEVICE), id[n++] = OPT_DEVICE;
-        if (c->moved[0]) {   /* the device opens another folder for its game now: its saves can go there */
+        if (c->moved[0] && !viewOther) {   /* the device opens another folder for its game now: its saves can go there */
             char to[64];
             snprintf(to, sizeof(to), "%.44s-%d", c->moved, c->channel);
             snprintf(move, sizeof(move), T(T_MOVE_SAVES), to);
@@ -140,6 +142,7 @@ static void scene_menu(float t)
     look_space();
     look_frame();
     ui_alpha(look_fade(t));
+    view_draw();
     tabs_draw(&menu.g, 1);
     if (menu.g.tab == TAB_FILES) {   /* the devices: what the group is for, where a card's picture would be */
         legend_t l[4] = {{BUTTON_CIRCLE, T(T_MENU_EXIT)}, {BUTTON_CROSS, T(T_OPEN)}, {BUTTON_SELECT, T(T_TOOLS)},
@@ -195,6 +198,10 @@ static void scene_menu(float t)
     }
     ui_text_center(FONT_TEXT, CARD_CX, 82, 0x7E8AA0, c->name[0] ? c->name : c->base);
     draw_card_picture(c, menu.iconCard == menu.g.idx[menu.g.cursor] ? menu.icon : NULL, ui_clock());
+    if (viewOther) {   /* (the other device's: no sync status, it isn't the slot's) */
+        ui_text_center(FONT_TEXT, CARD_CX, CARD_Y + LOOK_CARD_H + 2, COLOR_DIM, T(T_VIEW_NOTE));
+        return;
+    }
     ui_text_center(FONT_TEXT, CARD_CX, CARD_Y + LOOK_CARD_H + 2, status_color(c), status_text(c));
     last_backup(c, s, sizeof(s));
     if (c->moved[0])
@@ -374,7 +381,8 @@ void manual(void)
     }
     ui_unlock();
     for (;;) {
-        u32 b, keys = PAD_UP | PAD_DOWN | TAB_KEYS | PAD_CROSS | PAD_CIRCLE | PAD_TRIANGLE | PAD_START | PAD_SELECT;
+        u32 b, keys = PAD_UP | PAD_DOWN | TAB_KEYS | PAD_CROSS | PAD_CIRCLE | PAD_TRIANGLE | PAD_START | PAD_SELECT |
+                         (device_other() ? PAD_R2 : 0);
         ui_scene(scene_menu);
 #ifdef DEBUG_BUILD
         if (debug_take('G')) {
@@ -392,6 +400,20 @@ void manual(void)
                 card_reread();
             if (!b)
                 b = wait_nav(keys);
+        }
+        if (b & PAD_R2) {   /* the other device's cards, or the slot's again */
+            sound_play(SND_MOVE);
+            view_switch();
+            cards_resort();
+            if (!menu.g.count[menu.g.tab]) {   /* (a group that device has none of: the Boot cards) */
+                int k;
+                ui_lock();
+                for (k = 0; k < TABS && !menu.g.count[k]; k++)
+                    ;
+                tabs_show(&menu.g, k < TABS ? k : TAB_CARDS);
+                ui_unlock();
+            }
+            continue;
         }
         if ((b & PAD_TRIANGLE) && tabs_on_folders(&menu.g) && tabs_card(&menu.g)) {   /* (X opens it) */
             sound_play(SND_CONFIRM);

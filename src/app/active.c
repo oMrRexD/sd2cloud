@@ -68,7 +68,12 @@ void find_active(void)
 {
     static const int order[3] = {TYPE_BOOT, TYPE_GAMEID, TYPE_NAMED};
     char seen[65], file[65];
-    int channel = 0, active = active_card(&channel), i, pass, found = -1;
+    int channel = 0, active, i, pass, found = -1;
+    if (viewOther) {   /* (the other device's cards: none is the one in the slot) */
+        activeCard = -1;
+        return;
+    }
+    active = active_card(&channel);
     if (!cardTold) {   /* against each card's root folder as it was read when the cards were checked */
         if (active == -1 && mc_root_signature(sdRoot[4] - '0', seen) == 0)
             for (i = 0; i < nCards && found < 0; i++)
@@ -135,7 +140,7 @@ int active_sure(char seen[65])
 /* can the device be told to take this card? Not a folder with a name of its own: it has no way to be asked for one.
  * The BootCard and a game's card the sd2psx only takes with Autoboot or Game ID on in its settings, which shows by
  * trying. On a device that isn't the sd2psx this is a preview: it takes the same requests, as far as is known */
-int can_insert(const card_t *c) { return !strncmp(sdRoot, "mmce", 4) && c->type != TYPE_NAMED; }
+int can_insert(const card_t *c) { return !strncmp(sdRoot, "mmce", 4) && c->type != TYPE_NAMED && !viewOther; }
 
 /* and can it be moved off that card and back, for the card to be changed? Only the sd2psx: there it is known that
  * the card it left was written and closed by the time the next one shows in the slot */
@@ -315,8 +320,8 @@ int card_free(const card_t *c, const card_t *other)
 {
     char t[400];
     int channel = 0, active, r;
-    if (mcfs_slot_port(c->path) >= 0 || card_file_card(c))
-        return 0;   /* (the Memory Card in the other slot, or a card file: not the device's) */
+    if (mcfs_slot_port(c->path) >= 0 || card_file_card(c) || viewOther)
+        return 0;   /* (the Memory Card in the other slot, a card file, the other device's card: not in the slot) */
     active = active_card(&channel);
     r = card_in_use(c, active, channel);
     if (r == 0)
@@ -455,7 +460,7 @@ void device_watch(void)
 {
     int i;
     /* (a device that never answered the ping, as a MemCard PRO2 may not, would look taken out all the time) */
-    if (watchOff || !devicePings || !dev->sd2psx || strncmp(sdRoot, "mmce", 4) != 0 || now_ms() < watchNext)
+    if (watchOff || viewOther || !devicePings || !dev->sd2psx || strncmp(sdRoot, "mmce", 4) != 0 || now_ms() < watchNext)
         return;
     watchNext = now_ms() + 2000;
     for (i = 0; i < 3; i++) {   /* three times in a row: it may only be busy (changing cards) */
@@ -504,10 +509,84 @@ void device_lost(void)
     reload_all();
 }
 
+/* ------------------------------------------------------------ the other device's cards
+ *
+ * A microSD with the cards of both devices (an sd2psx's and a MemCard PRO2's): R2 lists the other device's, the one
+ * that isn't in the slot, and back. They are cards like the others (opened, copied to and from, made, renamed,
+ * resized, deleted), but not the slot's: none of them is in use, inserted, synced or restored. The saves marked
+ * for a copy stay marked: their cards are kept, by their paths, while the list is the other one */
+
+int viewOther;
+static card_t held[MARKS_MAX];   /* the cards of marked saves, while their device's cards aren't the ones listed */
+static int nHeld;
+
+void view_switch(void)
+{
+    int i, k;
+    if (!device_other())
+        return;
+    message(0, NULL, COLOR_TEXT, T(T_LOADING));
+    for (k = 0; k < nHeld; k++)   /* (the ones no save is marked on any more: their places are free) */
+        if (!marks_of(&held[k])) {
+            held[k] = held[--nHeld];
+            marks_move(&held[nHeld], &held[k]);
+            k--;
+        }
+    for (i = 0; i < marks.n; i++) {
+        card_t *c = marks.save[i].card;
+        if (!(c >= cards && c < cards + nCards))
+            continue;
+        for (k = 0; k < nHeld && strcmp(held[k].path, c->path); k++)
+            ;
+        if (k == nHeld) {
+            if (nHeld == MARKS_MAX)
+                continue;
+            held[nHeld++] = *c;
+        }
+        marks_move(c, &held[k]);
+    }
+    viewOther = !viewOther;
+    cardsOther = viewOther;
+    device_view(viewOther);
+    activeCard = -1;
+    movedOff = NULL;
+    transferDest = NULL;
+    cards_scan();
+    if (!viewOther) {
+        cards_check(NULL);
+        find_active();
+    }
+    for (k = 0; k < nHeld; k++)   /* (the marked saves' cards, listed again: theirs once more) */
+        for (i = 0; i < nCards; i++)
+            if (!strcmp(cards[i].path, held[k].path))
+                marks_move(&held[k], &cards[i]);
+    cardsUnsorted = 1;
+    log_msg("the cards of the %s on screen", dev->name);
+}
+
+/* at the top, when there is another device's cards to list: the device whose cards are listed (yellow, when it isn't
+ * the one in the slot), and R2 with the other one */
+void view_draw(void)
+{
+    const device_t *other = viewOther ? device_here() : device_other();
+    int wb = 26, x, w;
+    if (!device_other())
+        return;
+    w = ui_measure(FONT_SMALL, dev->name) + 14 + wb + 10 + ui_measure(FONT_SMALL, other->name);
+    x = W / 2 - w / 2;
+    ui_text(FONT_SMALL, x, 42, viewOther ? COLOR_WARN : COLOR_ITEM_ON, dev->name);
+    x += ui_measure(FONT_SMALL, dev->name) + 14;
+    ui_rect(x, 43, wb, ui_line_height(FONT_SMALL) - 2, 0x6E9AE0, 0x40);
+    ui_text_center(FONT_SMALL, x + wb / 2.0f, 42, COLOR_ITEM_ON, "R2");
+    x += wb + 10;
+    ui_text(FONT_SMALL, x, 42, COLOR_DIM, other->name);
+}
+
 /* Everything that came from the microSD is let go of and read again from the start (main.c, at reloadPoint): the
  * device was taken out and is back, maybe with another microSD; or the user said which device it is in */
 void reload_all(void)
 {
+    viewOther = cardsOther = nHeld = 0;   /* (the slot's device again: find_device) */
     /* what was open of the microSD that was there */
     browser_close();
     psu_close();

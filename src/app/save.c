@@ -318,6 +318,8 @@ int save_screen(card_t *c, int i)
     mcfs_save_info(c->path, v->s.folder, &bytes, &files);
     if (c == &fileCard)
         save_page(v, c->base, bytes, saveOptions, 1);   /* a card file is only read: a save can be copied out of it */
+    else if (viewOther)
+        save_page(v, c->base, bytes, saveOptions, 3);   /* (the other device's card: not in the slot, not synced) */
     else if (mcfs_save_app(c->path, &v->s, boot, sizeof(boot)))
         save_page(v, c->base, bytes, appOptions, 5);
     else

@@ -802,6 +802,8 @@ T_MIGRATE_DELETE_ASK = Удалить с %s сохранения, которые
 T_MIGRATE_DELETE_TEXT = Удаляется сохранений: %d. Сохранения без ID игры и нескопированные остаются.
 # Button. English: Keep
 T_MIGRATE_KEEP = Оставить
+# One line. English: Not in the console
+T_VIEW_NOTE = Не в консоли
 # Up to 3 lines. English: Choose an ELF...
 T_PICK_ELF = Выберите ELF...
 # Up to 3 lines. English: Unable to read this memory card.

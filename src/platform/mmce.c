@@ -83,6 +83,7 @@ int mmce_set_gameid(const char *id)
 static const device_t devSd2psx = {"sd2psx", "sd2psx", "MemoryCards/PS2", ".mcd", "Card", 1, 1, 64};
 static const device_t devMcp2 = {"MemCard PRO2", "PRO2", "PS2", ".mc2", "MemoryCard", 0, 8, 128};
 const device_t *dev = &devSd2psx;
+static const device_t *devHere = &devSd2psx;   /* the one in the slot (dev is the one whose cards are on screen) */
 int cardTold = 1;
 int devicePings;
 int deviceBoth;
@@ -117,6 +118,7 @@ void find_device(void)
         if (!strcasecmp(cfg.device, "pro2"))
             dev = &devMcp2;
     }
+    devHere = dev;
     cardTold = dev->sd2psx;
     devicePings = r >= 0;
 #ifdef DEBUG_BUILD
@@ -128,6 +130,12 @@ void find_device(void)
             r >= 0 ? r & 0xFF : 0, !deviceBoth ? "" : cfg.device[0] ? ", as the settings say: the microSD has both devices' cards"
                                                                    : ", for now: the microSD has both devices' cards");
 }
+
+const device_t *device_other(void) { return !deviceBoth ? NULL : devHere == &devSd2psx ? &devMcp2 : &devSd2psx; }
+
+void device_view(int other) { dev = other && device_other() ? device_other() : devHere; }
+
+const device_t *device_here(void) { return devHere; }
 
 void system_reload(void)
 {

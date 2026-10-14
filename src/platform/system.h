@@ -88,6 +88,12 @@ extern int cardTold;
 /* the microSD has the cards of an sd2psx and those of a MemCard PRO2, and the device didn't say which of the two it
  * is: the settings do ([general] device), once the user was asked */
 extern int deviceBoth;
+/* that microSD: the device that isn't in the slot (NULL = the microSD has one device's cards only). device_view(1)
+ * makes it dev, the one whose cards are listed and made (its folder of cards, its files' extension); 0, the one in the
+ * slot again */
+const device_t *device_other(void);
+void device_view(int other);
+const device_t *device_here(void);   /* the one in the slot */
 /* a USB drive (mass0:), for the file browser: loads its drivers the first time, then waits up to ms for the drive.
  * 0 = it's there */
 int usb_open(int ms);

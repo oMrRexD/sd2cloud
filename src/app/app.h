@@ -123,6 +123,9 @@ extern jmp_buf reloadPoint;
 extern u64 debugGone;
 #endif
 void device_watch(void);
+extern int viewOther;                    /* the cards listed are the other device's (a microSD with both devices') */
+void view_switch(void);                  /* R2: the other device's cards listed, or the slot's again */
+void view_draw(void);                    /* at the top: whose cards are listed, and R2 for the other's */
 void device_lost(void) __attribute__((noreturn));
 void reload_all(void) __attribute__((noreturn));
 

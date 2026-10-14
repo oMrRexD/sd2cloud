@@ -489,7 +489,7 @@ int folder_delete(card_t *c)
     snprintf(folder, sizeof(folder), "%s", c->folder);
     for (i = 0; i < nCards; i++)
         if (!strcasecmp(cards[i].folder, folder)) {
-            card_state_t *e = state_card(cards[i].id, 0);
+            card_state_t *e = cardsOther ? NULL : state_card(cards[i].id, 0);
             own[n++] = &cards[i];
             never += !e || !e->sha[0];
         }

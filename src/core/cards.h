@@ -32,6 +32,9 @@ typedef struct {
  * not UP_TO_DATE. */
 enum { ST_NEW, ST_CHANGED, ST_UP_TO_DATE, ST_NO_BACKUP, ST_ERROR };
 extern card_t cards[MAX_CARDS];
+/* the cards listed are those of the device that isn't in the slot (a microSD with both devices' cards): never synced,
+ * and nothing of them is kept in the state, whose names are the device's own cards' */
+extern int cardsOther;
 extern int nCards;
 int cards_scan(void);                       /* lists the .mcd files on the microSD; returns how many (-1 = no SD) */
 /* a card just written to the microSD (the name of its folder and of its file) joins the list, in its place: the other

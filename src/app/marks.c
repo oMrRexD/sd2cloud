@@ -102,6 +102,7 @@ static void scene_mark(float t)
     look_space();
     look_frame();
     ui_alpha(look_fade(t));
+    view_draw();
     tabs_draw(&mk.g, 0);
     {
         /* only what the row does: "New card" has nothing to open (X pastes there too), and START pastes only where
@@ -260,7 +261,7 @@ shown:
     mk.iconCard = -1;
     ui_unlock();
     while (r < 0) {
-        u32 keys = PAD_UP | PAD_DOWN | TAB_KEYS | PAD_CROSS | PAD_CIRCLE | PAD_START, b;
+        u32 keys = PAD_UP | PAD_DOWN | TAB_KEYS | PAD_CROSS | PAD_CIRCLE | PAD_START | (device_other() ? PAD_R2 : 0), b;
         ui_scene(scene_mark);
         if (!(b = wait_nav_ms(keys, 250))) {
             mark_icon();
@@ -268,6 +269,24 @@ shown:
         }
         if (tabs_nav(&mk.g, b) || tabs_folder_nav(&mk.g, b))
             continue;
+        if (b & PAD_R2) {   /* the other device's cards: saves marked on them too, or pasted into them */
+            int tab = mk.g.tab;
+            sound_play(SND_MOVE);
+            view_switch();
+            ui_lock();
+            tabs_init(&mk.g, NULL, marks.copy);
+            mk.g.all = 1;
+            mk.g.create = marks.copy;
+            mark_game();
+            tabs_show(&mk.g, mk.g.tab);
+            if (mk.g.count[tab])   /* (the group it was on, when that device has it) */
+                tabs_show(&mk.g, tab);
+            icon_free(mk.icon);
+            mk.icon = NULL;
+            mk.iconCard = -1;
+            ui_unlock();
+            continue;
+        }
         if (b & PAD_CIRCLE) {
             sound_play(SND_BACK);
             if (!marks.n || confirm(T(T_MARK_DROP), NULL, T_MARK_DROP_YES))

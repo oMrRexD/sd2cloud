@@ -162,6 +162,16 @@ SCENARIOS = [
     # asked once. Told it is the MemCard PRO2, its card is the one listed; told in the settings it is the sd2psx, the three)
     {"name": "device-both", "what": "a microSD with both devices' cards: which device it is in is asked, and changed in the settings",
      "cards": CARDS, "files": {"PS2/MemoryCard1/MemoryCard1-1.mc2": "game.mcd"}, "script": "DXXSDDDDXUXC"},
+    # (on that microSD, with the sd2psx in the slot, R2 lists the MemCard PRO2's cards, and back: a save of the sd2psx's
+    # first card copied into the MemCard PRO2's, from the list of cards; and one of the MemCard PRO2's card, marked
+    # with its cards on the screen, pasted into the sd2psx's second card after R2 in that list. Nothing of them goes
+    # into the state)
+    {"name": "device-both-to-other", "what": "a microSD with both devices' cards: a save copied into the other device's card",
+     "cards": CARDS, "files": {"PS2/MemoryCard1/MemoryCard1-1.mc2": "empty.mcd"}, "settings": "device = sd2psx\r\n",
+     "script": "XXXO2SXXC"},
+    {"name": "device-both-from-other", "what": "a microSD with both devices' cards: a save of the other device's card copied into one of the slot's",
+     "cards": CARDS, "files": {"PS2/MemoryCard1/MemoryCard1-1.mc2": "game.mcd"}, "settings": "device = sd2psx\r\n",
+     "script": "2XXXO2DSXXC"},
     # (two game cards with the same two saves: each is on the screen once, until the options say to show them all;
     # then by name)
     {"name": "all-saves-repeated", "what": "every game card's saves on one screen: the same save on two cards once, then each time, then by name",

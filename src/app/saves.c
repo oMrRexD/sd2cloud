@@ -696,7 +696,7 @@ static int browser_options(const card_t *c)
     int r = 0;
     ui_lock();
     opt.n = opt.cursor = 0;
-    if (c != &allGames && c != &fileCard)   /* (the device's cards are synced; the Memory Card is sent whole) */
+    if (c != &allGames && c != &fileCard && !viewOther)   /* (the device's cards are synced; the Memory Card is sent whole) */
         opt.id[opt.n++] = OPT_SYNC;
     opt.id[opt.n++] = OPT_SORT;
     if (c == &allGames) {

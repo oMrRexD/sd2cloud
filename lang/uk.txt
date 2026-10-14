@@ -802,6 +802,8 @@ T_MIGRATE_DELETE_ASK = Видалити з %s збереження, які те�
 T_MIGRATE_DELETE_TEXT = Видаляється збережень: %d. Збереження без ID гри та нескопійовані залишаються.
 # Button. English: Keep
 T_MIGRATE_KEEP = Залишити
+# One line. English: Not in the console
+T_VIEW_NOTE = Не в консолі
 # Up to 3 lines. English: Choose an ELF...
 T_PICK_ELF = Виберіть ELF...
 # Up to 3 lines. English: Unable to read this memory card.
