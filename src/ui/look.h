@@ -23,6 +23,9 @@ typedef struct {
  * program's own: the tools and the settings) */
 void look_legend(const legend_t *items, int n, int apart);
 void look_panel(float x, float y, float w, float h);   /* a box for messages */
+/* a key of the controller that has a name instead of a symbol (R2), drawn as START and SELECT are: dark grey rubber
+ * with a lighter rim, its name on it, its middle at cy. Returns its width */
+int look_key(float x, float cy, const char *name);
 /* an item of a menu; selected = it glows. center: x is the center. Returns the width */
 int look_item(float x, float y, const char *text, int selected, int center);
 float look_pulse(void);                        /* 0..1..0, slowly: what makes the selected item breathe */

@@ -628,42 +628,42 @@ T_SIZE_TITLE = Размер карты памяти
 T_SIZE_MB = %d МБ
 # One line. English: %d MB (recommended)
 T_SIZE_RECOMMENDED = %d МБ (рекомендуется)
-# Up to 2 lines. English: The saves take %s.
-T_SIZE_NEED = Сохранения занимают %s.
-# Up to 2 lines. English: Space left: %s
-T_SIZE_FREE = Останется свободно: %s
-# Up to 5 lines. English: Above 8 MB, the card depends on the microSD's speed: a slow one can corrupt it.
-T_SIZE_BIG = Карте больше 8 МБ нужна быстрая microSD: на медленной карта может повредиться.
-# Up to 3 lines. English: These saves don't fit in a single memory card.
-T_SIZE_NONE = Эти сохранения не поместятся на одну карту памяти.
-# Up to 6 lines. English: Under 8 MB, the sd2psx may create the card unformatted: the game or the PS2 browser then asks to format it.
-T_SIZE_UNFORMATTED = Карты меньше 8 МБ sd2psx может создавать неотформатированными: их отформатирует игра или браузер PS2.
+# Up to 2 lines. English: Used space: %s
+T_SIZE_NEED = Занято: %s
+# Up to 2 lines. English: Free space: %s
+T_SIZE_FREE = Свободно: %s
+# Up to 5 lines. English: Cards larger than 8 MB depend on the microSD's speed. On slow microSD cards, data corruption may occur.
+T_SIZE_BIG = Карты больше 8 МБ зависят от скорости microSD. На медленных microSD возможно повреждение данных.
+# Up to 3 lines. English: The selected saves exceed the maximum capacity of a memory card.
+T_SIZE_NONE = Выбранные сохранения превышают максимальный объём карты памяти.
+# Up to 6 lines. English: Below 8 MB, the sd2psx may create the card unformatted. If so, format it from the PS2 browser or from the game.
+T_SIZE_UNFORMATTED = При размере меньше 8 МБ sd2psx может создать карту без форматирования. В этом случае отформатируйте её в браузере PS2 или в игре.
 # One line. English: New card size
 T_SET_CARD_SIZE = Размер новых карт
-# Up to 3 lines. English: The sd2psx will create new cards of this size from the next time it is turned on.
-T_SIZE_NEXT_START = sd2psx начнёт создавать новые карты этого размера после следующего включения.
+# Up to 3 lines. English: The change takes effect the next time the sd2psx starts.
+T_SIZE_NEXT_START = Изменение вступит в силу при следующем запуске sd2psx.
 # Up to 3 lines. English: Unable to change the sd2psx's settings.
 T_SIZE_SET_FAILED = Не удалось изменить настройки sd2psx.
 # One line. English: Delete card
 T_DELETE_CARD = Удалить карту
-# One line. English: Delete whole folder
-T_DELETE_FOLDER = Удалить всю папку
+# One line. English: Delete folder
+T_DELETE_FOLDER = Удалить папку
 # Up to 2 lines. English: Delete the memory card %s?
 T_DELETE_CARD_ASK = Удалить карту памяти %s?
-# Up to 3 lines. English: It will be permanently removed from the MMCE, with every save it has. This action cannot be undone.
-T_DELETE_CARD_TEXT = Карта будет безвозвратно удалена с MMCE вместе со всеми сохранениями. Это действие нельзя отменить.
-# Up to 2 lines. English: Last backup: %s. Backups on Google Drive are kept.
-T_DELETE_BACKUP = Копия от %s. Копии в Google Drive сохранятся.
+# Up to 3 lines. English: The card and all of its saves will be permanently removed from the MMCE. This action cannot be undone.
+T_DELETE_CARD_TEXT = Карта и все её сохранения будут безвозвратно удалены с MMCE. Это действие нельзя отменить.
+# Up to 2 lines. English: Last backup: %s. Backups on Google Drive will not be affected.
+T_DELETE_BACKUP = Последняя копия: %s. Копии в Google Drive не будут затронуты.
 # One line. English: This card has no backup on Google Drive.
 T_DELETE_NO_BACKUP = У этой карты нет копии в Google Drive.
-# Up to 2 lines. English: Delete the whole %s folder?
-T_DELETE_FOLDER_ASK = Удалить всю папку %s?
-# Up to 3 lines. English: Its %d memory cards will be permanently removed from the MMCE, with every save. This action cannot be undone.
-T_DELETE_FOLDER_TEXT = Все карты памяти папки (%d) будут удалены с MMCE вместе с сохранениями. Это действие нельзя отменить.
-# One line. English: Memory cards with no backup on Google Drive: %d.
-T_DELETE_FOLDER_NO_BACKUP = Карт без копии в Google Drive: %d.
-# Up to 2 lines. English: Every card of it has a backup on Google Drive, which is kept.
-T_DELETE_FOLDER_BACKUPS = У всех карт этой папки есть копии в Google Drive, они сохранятся.
+# Up to 2 lines. English: Delete the folder %s?
+T_DELETE_FOLDER_ASK = Удалить папку %s?
+# Up to 3 lines. English: The folder and its %d memory cards will be permanently removed from the MMCE. This action cannot be undone.
+T_DELETE_FOLDER_TEXT = Папка и все карты памяти в ней (%d) будут безвозвратно удалены с MMCE. Это действие нельзя отменить.
+# One line. English: Cards without a backup on Google Drive: %d
+T_DELETE_FOLDER_NO_BACKUP = Карт без копии в Google Drive: %d
+# Up to 2 lines. English: All cards in this folder have a backup on Google Drive. The backups will not be affected.
+T_DELETE_FOLDER_BACKUPS = У всех карт этой папки есть копии в Google Drive. Копии не будут затронуты.
 # One line. English: Deleting...
 T_DELETING = Удаление...
 # One line. English: Memory card deleted.
@@ -672,30 +672,30 @@ T_DONE_DELETE_CARD = Карта памяти удалена.
 T_DELETE_CARD_FAILED = Не удалось удалить карту памяти.
 # One line. English: Folder deleted.
 T_DONE_DELETE_FOLDER = Папка удалена.
-# Up to 3 lines. English: Unable to delete the whole folder.
-T_DELETE_FOLDER_FAILED = Не удалось удалить всю папку.
+# Up to 3 lines. English: Unable to delete the folder.
+T_DELETE_FOLDER_FAILED = Не удалось удалить папку.
 # One line. English: %d MB (current)
 T_SIZE_CURRENT = %d МБ (текущий)
 # One line. English: Change size
 T_RESIZE = Изменить размер
-# One line. English: New size of the card
+# One line. English: New card size
 T_RESIZE_TITLE = Новый размер карты
 # Up to 2 lines. English: Change the size of %s from %d MB to %d MB?
 T_RESIZE_ASK = Изменить размер %s с %d МБ на %d МБ?
-# Up to 4 lines. English: The saves are copied to a new card of that size, which takes the current one's place once checked. If anything fails, the current card is not changed.
-T_RESIZE_TEXT = Сохранения копируются на новую карту этого размера, которая после проверки заменит текущую. При ошибке текущая карта не изменится.
+# Up to 4 lines. English: The saves will be copied to a new card of that size, which will replace the current one after verification. If anything fails, the current card remains unchanged.
+T_RESIZE_TEXT = Сохранения будут скопированы на новую карту этого размера, которая заменит текущую после проверки. При сбое текущая карта останется без изменений.
 # One line. English: Creating the new card...
 T_RESIZE_MAKING = Создание новой карты...
 # One line. English: Copying the saves...
 T_RESIZE_COPYING = Копирование сохранений...
-# Up to 2 lines. English: %s is now %d MB.
-T_RESIZE_DONE = Теперь размер %s — %d МБ.
-# Up to 5 lines. English: Unable to put the new card in the place of %s. It is whole and checked, in the file %s of the same folder.
-T_RESIZE_LEFT = Не удалось поставить новую карту на место %s. Она цела и проверена: файл %s в той же папке.
-# Up to 4 lines. English: This card has files outside folders, or a folder inside a save: its size can't be changed.
-T_RESIZE_ODD = На этой карте есть файлы вне папок или папка внутри сохранения: её размер нельзя изменить.
-# Up to 3 lines. English: The saves didn't fit in a %d MB card. The card was not changed.
-T_RESIZE_FULL = Сохранения не поместились на карту %d МБ. Карта не изменена.
+# Up to 2 lines. English: %s resized to %d MB.
+T_RESIZE_DONE = Размер %s изменён на %d МБ.
+# Up to 5 lines. English: Unable to replace %s. The new card, already verified, was kept as %s in the same folder.
+T_RESIZE_LEFT = Не удалось заменить %s. Новая карта, уже проверенная, сохранена как %s в той же папке.
+# Up to 4 lines. English: This card can't be resized: it contains files outside folders, or subfolders inside saves.
+T_RESIZE_ODD = Невозможно изменить размер этой карты: она содержит файлы вне папок или вложенные папки внутри сохранений.
+# Up to 3 lines. English: The saves exceed the capacity of a %d MB card. The card was not changed.
+T_RESIZE_FULL = Сохранения превышают объём карты %d МБ. Карта не изменена.
 # Button. English: Rename
 T_RENAME = Переименовать
 # One line. English: Card name
@@ -706,28 +706,28 @@ T_FOLDER_NAME_TITLE = Имя папки
 T_FILE_NAME_TITLE = Имя файла
 # Up to 3 lines. English: A folder or file with that name already exists.
 T_RENAME_EXISTS = Папка или файл с таким именем уже существует.
-# Up to 3 lines. English: The sd2psx uses that name for its own folders (CardN, BOOT or a game's ID). Choose another one.
-T_RENAME_RESERVED = sd2psx использует это имя для своих папок (CardN, BOOT или ID игры). Выберите другое.
+# Up to 3 lines. English: This name is reserved by the sd2psx (CardN, BOOT or a game ID). Choose another name.
+T_RENAME_RESERVED = Это имя зарезервировано sd2psx (CardN, BOOT или ID игры). Выберите другое имя.
 # Up to 2 lines. English: Rename the folder %s to %s?
 T_RENAME_FOLDER_ASK = Переименовать папку %s в %s?
-# Up to 3 lines. English: Its cards and files take the new name. The backups already on Google Drive keep the old one.
-T_RENAME_FOLDER_TEXT = Карты и файлы папки получат новое имя. Уже сделанные копии в Google Drive сохранят старое.
+# Up to 3 lines. English: The folder's cards and files will also be renamed. Existing backups on Google Drive keep the previous name.
+T_RENAME_FOLDER_TEXT = Карты и файлы папки также будут переименованы. Существующие копии в Google Drive сохранят прежнее имя.
 # One line. English: Renaming...
 T_RENAMING = Переименование...
 # Up to 3 lines. English: Unable to rename. Nothing was changed.
 T_RENAME_FAILED = Не удалось переименовать. Ничего не изменено.
-# Up to 2 lines. English: The folder is now called %s.
-T_RENAME_DONE_FOLDER = Теперь папка называется %s.
+# Up to 2 lines. English: Folder renamed to %s.
+T_RENAME_DONE_FOLDER = Папка переименована в %s.
 # Up to 2 lines. English: Delete the file %s?
 T_DELETE_FILE_ASK = Удалить файл %s?
 # Up to 3 lines. English: Unable to delete the file.
 T_DELETE_FILE_FAILED = Не удалось удалить файл.
-# Up to 3 lines. English: This file is one of the sd2psx's cards: use its options in the list of cards.
-T_FILE_IS_CARD = Этот файл — карта sd2psx: используйте её параметры в списке карт.
-# Up to 2 lines. English: In a group of the sd2psx, or as a file.
+# Up to 3 lines. English: This file is an sd2psx card. Manage it from the Cards tab.
+T_FILE_IS_CARD = Этот файл — карта sd2psx. Управляйте ею на вкладке «Карты».
+# Up to 2 lines. English: In an sd2psx group or as a file.
 T_CREATE_HINT = В группе sd2psx или в виде файла.
-# One line. English: Where to create the card
-T_CREATE_WHERE = Где создать карту
+# One line. English: New card location
+T_CREATE_WHERE = Расположение новой карты
 # One line. English: Numbered card: %s
 T_CREATE_NUMBERED = Нумерованная карта: %s
 # One line. English: %s group: %s
@@ -736,7 +736,7 @@ T_CREATE_IN_GROUP = Группа %s: %s
 T_CREATE_NEW_GROUP = Новая группа...
 # One line. English: File on the MMCE...
 T_CREATE_FILE_SD = Файл на MMCE...
-# One line. English: File on the USB drive...
+# One line. English: File on USB drive...
 T_CREATE_FILE_USB = Файл на USB-накопителе...
 # Button. English: Create here
 T_CREATE_HERE = Создать здесь
@@ -746,64 +746,68 @@ T_CREATE_FORMAT = Формат файла
 T_CREATE_ASK = Создать карту %s (%d МБ)?
 # Up to 2 lines. English: Create the file %s (%d MB)?
 T_CREATE_FILE_ASK = Создать файл %s (%d МБ)?
-# One line. English: Saves that go into it: %d
-T_CREATE_SAVES = Сохранений на ней будет: %d
+# One line. English: Saves to copy: %d
+T_CREATE_SAVES = Сохранений для копирования: %d
 # Up to 2 lines. English: Card created: %s
 T_CREATE_DONE = Карта создана: %s
 # One line. English: Export all to a card
 T_EXPORT_ALL = Экспорт всех на карту
-# One line. English: Saves with the same folder: %d
-T_REPEATED_ASK = Сохранения с той же папкой: %d
-# One line. English: Keep the newest of each
-T_REPEATED_NEWEST = Оставить самое новое
-# One line. English: Choose one by one
-T_REPEATED_EACH = Выбрать по одному
-# Up to 2 lines. English: "%s" is already marked on %s.
+# One line. English: Duplicate saves: %d
+T_REPEATED_ASK = Дубликатов сохранений: %d
+# One line. English: Keep the newest
+T_REPEATED_NEWEST = Оставить самые новые
+# One line. English: Choose individually
+T_REPEATED_EACH = Выбрать по отдельности
+# Up to 2 lines. English: "%s" is already selected on %s.
 T_MARK_SAME_ASK = «%s» уже отмечено на %s.
-# Up to 4 lines. English: A card can have only one save of that folder. The one on %s is from %s; the one on %s, from %s. Mark this one instead?
-T_MARK_SAME_TEXT = На карте может быть только одно сохранение с этой папкой. На %s — от %s, на %s — от %s. Отметить это вместо него?
+# Up to 2 lines. English: A card can't contain two saves with the same folder. Replace the selection?
+T_MARK_SAME_TEXT = Карта не может содержать два сохранения с одной папкой. Заменить отметку?
+# One line. English: Selected: %s (%s)
+T_MARK_SAME_SELECTED = Отмечено: %s (%s)
+# One line. English: This one: %s (%s)
+T_MARK_SAME_THIS = Это: %s (%s)
 # One line. English: Split saves by game
 T_MIGRATE = Разделить сохранения по играм
-# One line. English: Saves by game
-T_MIGRATE_TITLE = Сохранения по играм
-# One line. English: Stays
-T_MIGRATE_OFF = Остаётся
-# One line. English: New card, %d MB
-T_MIGRATE_NEW = Новая карта, %d МБ
-# Up to 3 lines. English: None of this card's saves is of a game that has a card of its own.
-T_MIGRATE_NONE = Ни одно сохранение на этой карте не относится к игре с собственной картой.
-# One line. English: %d saves of %d games go; %d without a game ID stay.
-T_MIGRATE_SUMMARY = Перенос: %d сохранений, %d игр. Остаётся без ID: %d
+# One line. English: Split by game
+T_MIGRATE_TITLE = Разделение по играм
+# One line. English: Skipped
+T_MIGRATE_OFF = Пропущено
+# One line. English: New card (%d MB)
+T_MIGRATE_NEW = Новая карта (%d МБ)
+# Up to 3 lines. English: This card has no saves to split.
+T_MIGRATE_NONE = На этой карте нет сохранений для разделения.
+# One line. English: Selected: %d saves (%d games) · No game ID: %d
+T_MIGRATE_SUMMARY = Отмечено сохранений: %d (игр: %d) · Без ID игры: %d
 # Button. English: Size
 T_MIGRATE_SIZE = Размер
 # Button. English: Start
 T_MIGRATE_START = Начать
-# Up to 2 lines. English: Saves already on their game's card, saved differently: %d
-T_MIGRATE_DIFFER = Уже есть на карте игры, но отличаются: %d
-# One line. English: Keep the game cards' ones
-T_MIGRATE_KEEP_GAME = Оставить те, что на картах игр
-# One line. English: Replace with this card's
-T_MIGRATE_REPLACE = Заменить этими сохранениями
-# One line. English: Keep the newer one
-T_MIGRATE_NEWER = Оставить более новое
-# Up to 2 lines. English: Copy %d saves to the cards of %d games?
-T_MIGRATE_ASK = Скопировать %d сохранений на карты %d игр?
-# One line. English: New cards: %d, with their templates.
-T_MIGRATE_ASK_NEW = Новых карт: %d, с их шаблонами.
-# Up to 2 lines. English: This card is not changed. At the end you choose whether its copied saves stay on it.
-T_MIGRATE_ASK_KEEP = Эта карта не изменяется. В конце вы решите, оставить ли на ней скопированные сохранения.
-# One line. English: Already on the game's card: %d
-T_MIGRATE_THERE_N = Уже были на карте игры: %d
-# One line. English: Kept as they were: %d
-T_MIGRATE_KEPT_N = Оставлены как были: %d
-# Up to 2 lines. English: Delete from %s the saves that are on their games' cards now?
-T_MIGRATE_DELETE_ASK = Удалить с %s сохранения, которые теперь есть на картах игр?
-# Up to 3 lines. English: Saves that go: %d. The ones without a game ID, and the ones not copied, stay.
-T_MIGRATE_DELETE_TEXT = Удаляется сохранений: %d. Сохранения без ID игры и нескопированные остаются.
+# Up to 2 lines. English: %d saves already exist at the destination with different content
+T_MIGRATE_DIFFER = Отличающихся сохранений в месте назначения: %d
+# One line. English: Keep existing
+T_MIGRATE_KEEP_GAME = Оставить существующие
+# One line. English: Replace all
+T_MIGRATE_REPLACE = Заменить все
+# One line. English: Keep the newest
+T_MIGRATE_NEWER = Оставить самые новые
+# Up to 2 lines. English: Copy %d saves to %d game cards?
+T_MIGRATE_ASK = Скопировать сохранения (%d) на карты игр (%d)?
+# One line. English: New cards: %d (templates applied)
+T_MIGRATE_ASK_NEW = Новых карт: %d (с шаблонами)
+# Up to 2 lines. English: The source card will not be changed. At the end, you can remove the copied saves from it.
+T_MIGRATE_ASK_KEEP = Исходная карта не будет изменена. В конце вы сможете удалить с неё скопированные сохранения.
+# One line. English: Already at the destination: %d
+T_MIGRATE_THERE_N = Уже есть в месте назначения: %d
+# One line. English: Not replaced: %d
+T_MIGRATE_KEPT_N = Не заменено: %d
+# Up to 2 lines. English: Remove the copied saves from %s?
+T_MIGRATE_DELETE_ASK = Удалить скопированные сохранения с %s?
+# Up to 3 lines. English: Saves to remove: %d. Saves without a game ID and saves not copied will be kept.
+T_MIGRATE_DELETE_TEXT = Сохранений к удалению: %d. Сохранения без ID игры и нескопированные останутся на карте.
 # Button. English: Keep
 T_MIGRATE_KEEP = Оставить
-# One line. English: Not in the console
-T_VIEW_NOTE = Не в консоли
+# One line. English: Not connected
+T_VIEW_NOTE = Не подключено
 # Up to 3 lines. English: Choose an ELF...
 T_PICK_ELF = Выберите ELF...
 # Up to 3 lines. English: Unable to read this memory card.

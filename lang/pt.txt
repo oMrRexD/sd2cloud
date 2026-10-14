@@ -626,42 +626,42 @@ T_SIZE_TITLE = Tamanho do cartão de memória
 T_SIZE_MB = %d MB
 # One line. English: %d MB (recommended)
 T_SIZE_RECOMMENDED = %d MB (recomendado)
-# Up to 2 lines. English: The saves take %s.
-T_SIZE_NEED = Os saves ocupam %s.
-# Up to 2 lines. English: Space left: %s
-T_SIZE_FREE = Espaço livre restante: %s
-# Up to 5 lines. English: Above 8 MB, the card depends on the microSD's speed: a slow one can corrupt it.
-T_SIZE_BIG = Acima de 8 MB, o cartão depende da velocidade do microSD: um microSD lento pode corrompê-lo.
-# Up to 3 lines. English: These saves don't fit in a single memory card.
-T_SIZE_NONE = Esses saves não cabem em um único cartão de memória.
-# Up to 6 lines. English: Under 8 MB, the sd2psx may create the card unformatted: the game or the PS2 browser then asks to format it.
-T_SIZE_UNFORMATTED = Abaixo de 8 MB, o sd2psx pode criar o cartão sem formatar: o jogo ou o navegador do PS2 pede para formatá-lo.
+# Up to 2 lines. English: Used space: %s
+T_SIZE_NEED = Espaço usado: %s
+# Up to 2 lines. English: Free space: %s
+T_SIZE_FREE = Espaço livre: %s
+# Up to 5 lines. English: Cards larger than 8 MB depend on the microSD's speed. On slow microSD cards, data corruption may occur.
+T_SIZE_BIG = Cartões acima de 8 MB dependem da velocidade do microSD. Em microSDs lentos, há risco de corrupção de dados.
+# Up to 3 lines. English: The selected saves exceed the maximum capacity of a memory card.
+T_SIZE_NONE = Os saves selecionados excedem a capacidade máxima de um cartão de memória.
+# Up to 6 lines. English: Below 8 MB, the sd2psx may create the card unformatted. If so, format it from the PS2 browser or from the game.
+T_SIZE_UNFORMATTED = Abaixo de 8 MB, o sd2psx pode criar o cartão sem formatação. Nesse caso, formate-o pelo navegador do PS2 ou pelo jogo.
 # One line. English: New card size
 T_SET_CARD_SIZE = Tamanho dos cartões novos
-# Up to 3 lines. English: The sd2psx will create new cards of this size from the next time it is turned on.
-T_SIZE_NEXT_START = O sd2psx passa a criar os cartões novos com este tamanho na próxima vez em que for ligado.
+# Up to 3 lines. English: The change takes effect the next time the sd2psx starts.
+T_SIZE_NEXT_START = A alteração entra em vigor na próxima inicialização do sd2psx.
 # Up to 3 lines. English: Unable to change the sd2psx's settings.
 T_SIZE_SET_FAILED = Não foi possível alterar as configurações do sd2psx.
 # One line. English: Delete card
 T_DELETE_CARD = Eliminar cartão
-# One line. English: Delete whole folder
-T_DELETE_FOLDER = Eliminar a pasta inteira
+# One line. English: Delete folder
+T_DELETE_FOLDER = Eliminar pasta
 # Up to 2 lines. English: Delete the memory card %s?
 T_DELETE_CARD_ASK = Deseja eliminar o cartão de memória %s?
-# Up to 3 lines. English: It will be permanently removed from the MMCE, with every save it has. This action cannot be undone.
-T_DELETE_CARD_TEXT = Ele será removido permanentemente do MMCE, com todos os seus saves. Esta ação não pode ser desfeita.
-# Up to 2 lines. English: Last backup: %s. Backups on Google Drive are kept.
-T_DELETE_BACKUP = Último backup: %s. Os backups no Google Drive são mantidos.
+# Up to 3 lines. English: The card and all of its saves will be permanently removed from the MMCE. This action cannot be undone.
+T_DELETE_CARD_TEXT = O cartão e todos os seus saves serão removidos permanentemente do MMCE. Esta ação não pode ser desfeita.
+# Up to 2 lines. English: Last backup: %s. Backups on Google Drive will not be affected.
+T_DELETE_BACKUP = Último backup: %s. Os backups no Google Drive não serão afetados.
 # One line. English: This card has no backup on Google Drive.
 T_DELETE_NO_BACKUP = Este cartão não tem backup no Google Drive.
-# Up to 2 lines. English: Delete the whole %s folder?
-T_DELETE_FOLDER_ASK = Deseja eliminar a pasta %s inteira?
-# Up to 3 lines. English: Its %d memory cards will be permanently removed from the MMCE, with every save. This action cannot be undone.
-T_DELETE_FOLDER_TEXT = Os %d cartões de memória dela serão removidos permanentemente do MMCE, com todos os saves. Esta ação não pode ser desfeita.
-# One line. English: Memory cards with no backup on Google Drive: %d.
-T_DELETE_FOLDER_NO_BACKUP = Cartões sem backup no Google Drive: %d.
-# Up to 2 lines. English: Every card of it has a backup on Google Drive, which is kept.
-T_DELETE_FOLDER_BACKUPS = Todos os cartões dela têm backup no Google Drive, que é mantido.
+# Up to 2 lines. English: Delete the folder %s?
+T_DELETE_FOLDER_ASK = Deseja eliminar a pasta %s?
+# Up to 3 lines. English: The folder and its %d memory cards will be permanently removed from the MMCE. This action cannot be undone.
+T_DELETE_FOLDER_TEXT = A pasta e os %d cartões de memória nela serão removidos permanentemente do MMCE. Esta ação não pode ser desfeita.
+# One line. English: Cards without a backup on Google Drive: %d
+T_DELETE_FOLDER_NO_BACKUP = Cartões sem backup no Google Drive: %d
+# Up to 2 lines. English: All cards in this folder have a backup on Google Drive. The backups will not be affected.
+T_DELETE_FOLDER_BACKUPS = Todos os cartões desta pasta têm backup no Google Drive. Os backups não serão afetados.
 # One line. English: Deleting...
 T_DELETING = Eliminando...
 # One line. English: Memory card deleted.
@@ -670,30 +670,30 @@ T_DONE_DELETE_CARD = Cartão de memória eliminado.
 T_DELETE_CARD_FAILED = Não foi possível eliminar o cartão de memória.
 # One line. English: Folder deleted.
 T_DONE_DELETE_FOLDER = Pasta eliminada.
-# Up to 3 lines. English: Unable to delete the whole folder.
-T_DELETE_FOLDER_FAILED = Não foi possível eliminar a pasta inteira.
+# Up to 3 lines. English: Unable to delete the folder.
+T_DELETE_FOLDER_FAILED = Não foi possível eliminar a pasta.
 # One line. English: %d MB (current)
 T_SIZE_CURRENT = %d MB (atual)
 # One line. English: Change size
 T_RESIZE = Alterar tamanho
-# One line. English: New size of the card
+# One line. English: New card size
 T_RESIZE_TITLE = Novo tamanho do cartão
 # Up to 2 lines. English: Change the size of %s from %d MB to %d MB?
 T_RESIZE_ASK = Deseja alterar o tamanho de %s de %d MB para %d MB?
-# Up to 4 lines. English: The saves are copied to a new card of that size, which takes the current one's place once checked. If anything fails, the current card is not changed.
-T_RESIZE_TEXT = Os saves são copiados para um cartão novo desse tamanho, que substitui o atual depois de conferido. Se algo falhar, o cartão atual não é alterado.
+# Up to 4 lines. English: The saves will be copied to a new card of that size, which will replace the current one after verification. If anything fails, the current card remains unchanged.
+T_RESIZE_TEXT = Os saves serão copiados para um novo cartão desse tamanho, que substituirá o atual após a verificação. Em caso de falha, o cartão atual permanecerá inalterado.
 # One line. English: Creating the new card...
-T_RESIZE_MAKING = Criando o cartão novo...
+T_RESIZE_MAKING = Criando o novo cartão...
 # One line. English: Copying the saves...
 T_RESIZE_COPYING = Copiando os saves...
-# Up to 2 lines. English: %s is now %d MB.
-T_RESIZE_DONE = %s agora tem %d MB.
-# Up to 5 lines. English: Unable to put the new card in the place of %s. It is whole and checked, in the file %s of the same folder.
-T_RESIZE_LEFT = Não foi possível colocar o cartão novo no lugar de %s. Ele está inteiro, já conferido, no arquivo %s da mesma pasta.
-# Up to 4 lines. English: This card has files outside folders, or a folder inside a save: its size can't be changed.
-T_RESIZE_ODD = Este cartão tem arquivos fora de pastas, ou uma pasta dentro de um save: o tamanho dele não pode ser alterado.
-# Up to 3 lines. English: The saves didn't fit in a %d MB card. The card was not changed.
-T_RESIZE_FULL = Os saves não couberam em um cartão de %d MB. O cartão não foi alterado.
+# Up to 2 lines. English: %s resized to %d MB.
+T_RESIZE_DONE = Tamanho de %s alterado para %d MB.
+# Up to 5 lines. English: Unable to replace %s. The new card, already verified, was kept as %s in the same folder.
+T_RESIZE_LEFT = Não foi possível substituir %s. O novo cartão, já verificado, foi mantido como %s na mesma pasta.
+# Up to 4 lines. English: This card can't be resized: it contains files outside folders, or subfolders inside saves.
+T_RESIZE_ODD = Não é possível alterar o tamanho deste cartão: ele contém arquivos fora de pastas ou subpastas dentro de saves.
+# Up to 3 lines. English: The saves exceed the capacity of a %d MB card. The card was not changed.
+T_RESIZE_FULL = Os saves excedem a capacidade de um cartão de %d MB. O cartão não foi alterado.
 # Button. English: Rename
 T_RENAME = Renomear
 # One line. English: Card name
@@ -704,28 +704,28 @@ T_FOLDER_NAME_TITLE = Nome da pasta
 T_FILE_NAME_TITLE = Nome do arquivo
 # Up to 3 lines. English: A folder or file with that name already exists.
 T_RENAME_EXISTS = Já existe uma pasta ou um arquivo com esse nome.
-# Up to 3 lines. English: The sd2psx uses that name for its own folders (CardN, BOOT or a game's ID). Choose another one.
-T_RENAME_RESERVED = O sd2psx usa esse nome para as próprias pastas (CardN, BOOT ou o ID de um jogo). Escolha outro.
+# Up to 3 lines. English: This name is reserved by the sd2psx (CardN, BOOT or a game ID). Choose another name.
+T_RENAME_RESERVED = Este nome é reservado pelo sd2psx (CardN, BOOT ou ID de jogo). Escolha outro nome.
 # Up to 2 lines. English: Rename the folder %s to %s?
 T_RENAME_FOLDER_ASK = Deseja renomear a pasta %s para %s?
-# Up to 3 lines. English: Its cards and files take the new name. The backups already on Google Drive keep the old one.
-T_RENAME_FOLDER_TEXT = Os cartões e arquivos dela passam a ter o nome novo. Os backups já feitos no Google Drive continuam com o nome antigo.
+# Up to 3 lines. English: The folder's cards and files will also be renamed. Existing backups on Google Drive keep the previous name.
+T_RENAME_FOLDER_TEXT = Os cartões e arquivos da pasta também serão renomeados. Os backups existentes no Google Drive manterão o nome anterior.
 # One line. English: Renaming...
 T_RENAMING = Renomeando...
 # Up to 3 lines. English: Unable to rename. Nothing was changed.
 T_RENAME_FAILED = Não foi possível renomear. Nada foi alterado.
-# Up to 2 lines. English: The folder is now called %s.
-T_RENAME_DONE_FOLDER = A pasta agora se chama %s.
+# Up to 2 lines. English: Folder renamed to %s.
+T_RENAME_DONE_FOLDER = Pasta renomeada para %s.
 # Up to 2 lines. English: Delete the file %s?
 T_DELETE_FILE_ASK = Deseja eliminar o arquivo %s?
 # Up to 3 lines. English: Unable to delete the file.
 T_DELETE_FILE_FAILED = Não foi possível eliminar o arquivo.
-# Up to 3 lines. English: This file is one of the sd2psx's cards: use its options in the list of cards.
-T_FILE_IS_CARD = Este arquivo é um cartão do sd2psx: use as opções dele na lista de cartões.
-# Up to 2 lines. English: In a group of the sd2psx, or as a file.
-T_CREATE_HINT = Num grupo do sd2psx ou como um arquivo.
-# One line. English: Where to create the card
-T_CREATE_WHERE = Onde criar o cartão
+# Up to 3 lines. English: This file is an sd2psx card. Manage it from the Cards tab.
+T_FILE_IS_CARD = Este arquivo é um cartão do sd2psx. Gerencie-o pela aba Cartões.
+# Up to 2 lines. English: In an sd2psx group or as a file.
+T_CREATE_HINT = Em um grupo do sd2psx ou como arquivo.
+# One line. English: New card location
+T_CREATE_WHERE = Local do novo cartão
 # One line. English: Numbered card: %s
 T_CREATE_NUMBERED = Cartão numerado: %s
 # One line. English: %s group: %s
@@ -734,8 +734,8 @@ T_CREATE_IN_GROUP = Grupo %s: %s
 T_CREATE_NEW_GROUP = Novo grupo...
 # One line. English: File on the MMCE...
 T_CREATE_FILE_SD = Arquivo no MMCE...
-# One line. English: File on the USB drive...
-T_CREATE_FILE_USB = Arquivo no pendrive...
+# One line. English: File on USB drive...
+T_CREATE_FILE_USB = Arquivo em dispositivo USB...
 # Button. English: Create here
 T_CREATE_HERE = Criar aqui
 # One line. English: File format
@@ -744,64 +744,68 @@ T_CREATE_FORMAT = Formato do arquivo
 T_CREATE_ASK = Deseja criar o cartão %s (%d MB)?
 # Up to 2 lines. English: Create the file %s (%d MB)?
 T_CREATE_FILE_ASK = Deseja criar o arquivo %s (%d MB)?
-# One line. English: Saves that go into it: %d
-T_CREATE_SAVES = Saves que vão para ele: %d
+# One line. English: Saves to copy: %d
+T_CREATE_SAVES = Saves a copiar: %d
 # Up to 2 lines. English: Card created: %s
 T_CREATE_DONE = Cartão criado: %s
 # One line. English: Export all to a card
 T_EXPORT_ALL = Exportar todos para um cartão
-# One line. English: Saves with the same folder: %d
-T_REPEATED_ASK = Saves com a mesma pasta: %d
-# One line. English: Keep the newest of each
-T_REPEATED_NEWEST = Manter o mais recente de cada
-# One line. English: Choose one by one
-T_REPEATED_EACH = Escolher um por um
-# Up to 2 lines. English: "%s" is already marked on %s.
-T_MARK_SAME_ASK = "%s" já está marcado em %s.
-# Up to 4 lines. English: A card can have only one save of that folder. The one on %s is from %s; the one on %s, from %s. Mark this one instead?
-T_MARK_SAME_TEXT = Um cartão só pode ter um save com essa pasta. O de %s é de %s; o de %s, de %s. Deseja marcar este no lugar?
+# One line. English: Duplicate saves: %d
+T_REPEATED_ASK = Saves duplicados: %d
+# One line. English: Keep the newest
+T_REPEATED_NEWEST = Manter os mais recentes
+# One line. English: Choose individually
+T_REPEATED_EACH = Escolher individualmente
+# Up to 2 lines. English: "%s" is already selected on %s.
+T_MARK_SAME_ASK = "%s" já está selecionado em %s.
+# Up to 2 lines. English: A card can't contain two saves with the same folder. Replace the selection?
+T_MARK_SAME_TEXT = Um cartão não pode conter dois saves com a mesma pasta. Deseja substituir a seleção?
+# One line. English: Selected: %s (%s)
+T_MARK_SAME_SELECTED = Selecionado: %s (%s)
+# One line. English: This one: %s (%s)
+T_MARK_SAME_THIS = Este: %s (%s)
 # One line. English: Split saves by game
 T_MIGRATE = Separar saves por jogo
-# One line. English: Saves by game
-T_MIGRATE_TITLE = Saves por jogo
-# One line. English: Stays
-T_MIGRATE_OFF = Fica
-# One line. English: New card, %d MB
-T_MIGRATE_NEW = Novo cartão, %d MB
-# Up to 3 lines. English: None of this card's saves is of a game that has a card of its own.
-T_MIGRATE_NONE = Nenhum save deste cartão é de um jogo que tenha cartão próprio.
-# One line. English: %d saves of %d games go; %d without a game ID stay.
-T_MIGRATE_SUMMARY = Vão %d saves de %d jogos; ficam %d sem ID de jogo.
+# One line. English: Split by game
+T_MIGRATE_TITLE = Separar por jogo
+# One line. English: Skipped
+T_MIGRATE_OFF = Ignorado
+# One line. English: New card (%d MB)
+T_MIGRATE_NEW = Novo cartão (%d MB)
+# Up to 3 lines. English: This card has no saves to split.
+T_MIGRATE_NONE = Não há saves para separar neste cartão.
+# One line. English: Selected: %d saves (%d games) · No game ID: %d
+T_MIGRATE_SUMMARY = Selecionados: %d saves (%d jogos) · Sem ID de jogo: %d
 # Button. English: Size
 T_MIGRATE_SIZE = Tamanho
 # Button. English: Start
 T_MIGRATE_START = Iniciar
-# Up to 2 lines. English: Saves already on their game's card, saved differently: %d
-T_MIGRATE_DIFFER = Saves que já estão no cartão do jogo, diferentes: %d
-# One line. English: Keep the game cards' ones
-T_MIGRATE_KEEP_GAME = Manter os dos cartões dos jogos
-# One line. English: Replace with this card's
-T_MIGRATE_REPLACE = Substituir pelos deste cartão
-# One line. English: Keep the newer one
-T_MIGRATE_NEWER = Manter o mais recente
-# Up to 2 lines. English: Copy %d saves to the cards of %d games?
-T_MIGRATE_ASK = Deseja copiar %d saves para os cartões de %d jogos?
-# One line. English: New cards: %d, with their templates.
-T_MIGRATE_ASK_NEW = Cartões novos: %d, com os templates deles.
-# Up to 2 lines. English: This card is not changed. At the end you choose whether its copied saves stay on it.
-T_MIGRATE_ASK_KEEP = Este cartão não é alterado. No fim, você escolhe se os saves copiados continuam nele.
-# One line. English: Already on the game's card: %d
-T_MIGRATE_THERE_N = Já estavam no cartão do jogo: %d
-# One line. English: Kept as they were: %d
-T_MIGRATE_KEPT_N = Mantidos como estavam: %d
-# Up to 2 lines. English: Delete from %s the saves that are on their games' cards now?
-T_MIGRATE_DELETE_ASK = Deseja eliminar de %s os saves que agora estão nos cartões dos jogos?
-# Up to 3 lines. English: Saves that go: %d. The ones without a game ID, and the ones not copied, stay.
-T_MIGRATE_DELETE_TEXT = Saves que saem: %d. Os sem ID de jogo, e os que não foram copiados, ficam.
+# Up to 2 lines. English: %d saves already exist at the destination with different content
+T_MIGRATE_DIFFER = %d saves já existem no destino com conteúdo diferente
+# One line. English: Keep existing
+T_MIGRATE_KEEP_GAME = Manter os existentes
+# One line. English: Replace all
+T_MIGRATE_REPLACE = Substituir todos
+# One line. English: Keep the newest
+T_MIGRATE_NEWER = Manter os mais recentes
+# Up to 2 lines. English: Copy %d saves to %d game cards?
+T_MIGRATE_ASK = Deseja copiar %d saves para %d cartões de jogo?
+# One line. English: New cards: %d (templates applied)
+T_MIGRATE_ASK_NEW = Novos cartões: %d (templates aplicados)
+# Up to 2 lines. English: The source card will not be changed. At the end, you can remove the copied saves from it.
+T_MIGRATE_ASK_KEEP = O cartão de origem não será alterado. Ao final, será possível remover dele os saves copiados.
+# One line. English: Already at the destination: %d
+T_MIGRATE_THERE_N = Já existentes no destino: %d
+# One line. English: Not replaced: %d
+T_MIGRATE_KEPT_N = Não substituídos: %d
+# Up to 2 lines. English: Remove the copied saves from %s?
+T_MIGRATE_DELETE_ASK = Deseja remover de %s os saves copiados?
+# Up to 3 lines. English: Saves to remove: %d. Saves without a game ID and saves not copied will be kept.
+T_MIGRATE_DELETE_TEXT = Saves a remover: %d. Saves sem ID de jogo e saves não copiados serão mantidos.
 # Button. English: Keep
 T_MIGRATE_KEEP = Manter
-# One line. English: Not in the console
-T_VIEW_NOTE = Fora do console
+# One line. English: Not connected
+T_VIEW_NOTE = Não conectado
 # Up to 3 lines. English: Choose an ELF...
 T_PICK_ELF = Escolher um ELF...
 # Up to 3 lines. English: Unable to read this memory card.

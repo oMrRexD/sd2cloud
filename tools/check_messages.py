@@ -281,7 +281,8 @@ PLACE = {
     "T_CREATE_FILE_USB": ("text", 320, 1), "T_CREATE_FORMAT": ("text", 320, 1), "T_CREATE_ASK": ("text", WIDE, 2),
     "T_CREATE_FILE_ASK": ("text", WIDE, 2), "T_CREATE_SAVES": ("text", WIDE, 1), "T_CREATE_DONE": ("text", DIALOG, 2),
     "T_EXPORT_ALL": ("text", 320, 1), "T_REPEATED_ASK": ("text", 320, 1), "T_REPEATED_NEWEST": ("text", 320, 1),
-    "T_REPEATED_EACH": ("text", 320, 1), "T_MARK_SAME_ASK": ("text", WIDE, 2), "T_MARK_SAME_TEXT": ("text", WIDE, 4),
+    "T_REPEATED_EACH": ("text", 320, 1), "T_MARK_SAME_ASK": ("text", WIDE, 2), "T_MARK_SAME_TEXT": ("text", WIDE, 2), "T_MARK_SAME_SELECTED": ("text", WIDE, 1),
+    "T_MARK_SAME_THIS": ("text", WIDE, 1),
     # a card's saves by game (migrate.c): the option; the screen's title on the left; on the right of a game's row,
     # where its saves go; in the middle when there is none; under the list, how many go and stay; the box with a list
     # of what to do with the ones that are there already, saved differently; the questions, in a wide box; the screen

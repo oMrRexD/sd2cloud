@@ -629,42 +629,42 @@ T_SIZE_TITLE = メモリーカードの容量
 T_SIZE_MB = %d MB
 # One line. English: %d MB (recommended)
 T_SIZE_RECOMMENDED = %d MB（推奨）
-# Up to 2 lines. English: The saves take %s.
-T_SIZE_NEED = セーブデータの容量：%s
-# Up to 2 lines. English: Space left: %s
-T_SIZE_FREE = 残りの空き容量：%s
-# Up to 5 lines. English: Above 8 MB, the card depends on the microSD's speed: a slow one can corrupt it.
-T_SIZE_BIG = 8 MB を超えるカードは microSD の速度に左右され、遅い microSD では破損することがあります。
-# Up to 3 lines. English: These saves don't fit in a single memory card.
-T_SIZE_NONE = これらのセーブデータは 1 枚のメモリーカードに収まりません。
-# Up to 6 lines. English: Under 8 MB, the sd2psx may create the card unformatted: the game or the PS2 browser then asks to format it.
-T_SIZE_UNFORMATTED = 8 MB 未満のカードは sd2psx が未フォーマットで作成することがあり、ゲームや PS2 のブラウザーでフォーマットを求められます。
+# Up to 2 lines. English: Used space: %s
+T_SIZE_NEED = 使用容量: %s
+# Up to 2 lines. English: Free space: %s
+T_SIZE_FREE = 空き容量: %s
+# Up to 5 lines. English: Cards larger than 8 MB depend on the microSD's speed. On slow microSD cards, data corruption may occur.
+T_SIZE_BIG = 8 MB を超えるカードは microSD の速度に依存します。低速な microSD ではデータが破損するおそれがあります。
+# Up to 3 lines. English: The selected saves exceed the maximum capacity of a memory card.
+T_SIZE_NONE = 選択したセーブデータは、メモリーカード 1 枚の最大容量を超えています。
+# Up to 6 lines. English: Below 8 MB, the sd2psx may create the card unformatted. If so, format it from the PS2 browser or from the game.
+T_SIZE_UNFORMATTED = 8 MB 未満の場合、sd2psx はカードを未フォーマットで作成することがあります。その場合は PS2 のブラウザーまたはゲームでフォーマットしてください。
 # One line. English: New card size
 T_SET_CARD_SIZE = 新しいカードの容量
-# Up to 3 lines. English: The sd2psx will create new cards of this size from the next time it is turned on.
-T_SIZE_NEXT_START = 次回 sd2psx の電源を入れたときから、新しいカードはこの容量で作成されます。
+# Up to 3 lines. English: The change takes effect the next time the sd2psx starts.
+T_SIZE_NEXT_START = 変更は sd2psx の次回起動時に反映されます。
 # Up to 3 lines. English: Unable to change the sd2psx's settings.
 T_SIZE_SET_FAILED = sd2psx の設定を変更できませんでした。
 # One line. English: Delete card
 T_DELETE_CARD = カードを削除
-# One line. English: Delete whole folder
-T_DELETE_FOLDER = フォルダーごと削除
+# One line. English: Delete folder
+T_DELETE_FOLDER = フォルダーを削除
 # Up to 2 lines. English: Delete the memory card %s?
 T_DELETE_CARD_ASK = メモリーカード %s を削除しますか？
-# Up to 3 lines. English: It will be permanently removed from the MMCE, with every save it has. This action cannot be undone.
-T_DELETE_CARD_TEXT = すべてのセーブデータとともに MMCE から完全に削除されます。この操作は元に戻せません。
-# Up to 2 lines. English: Last backup: %s. Backups on Google Drive are kept.
-T_DELETE_BACKUP = 最終同期: %s。Google ドライブのバックアップは残ります。
+# Up to 3 lines. English: The card and all of its saves will be permanently removed from the MMCE. This action cannot be undone.
+T_DELETE_CARD_TEXT = カードとそのすべてのセーブデータが MMCE から完全に削除されます。この操作は取り消せません。
+# Up to 2 lines. English: Last backup: %s. Backups on Google Drive will not be affected.
+T_DELETE_BACKUP = 最終バックアップ: %s。Google ドライブのバックアップには影響しません。
 # One line. English: This card has no backup on Google Drive.
 T_DELETE_NO_BACKUP = このカードには Google ドライブのバックアップがありません。
-# Up to 2 lines. English: Delete the whole %s folder?
-T_DELETE_FOLDER_ASK = フォルダー %s をまるごと削除しますか？
-# Up to 3 lines. English: Its %d memory cards will be permanently removed from the MMCE, with every save. This action cannot be undone.
-T_DELETE_FOLDER_TEXT = このフォルダーの %d 枚のメモリーカードが、すべてのセーブデータとともに MMCE から完全に削除されます。この操作は元に戻せません。
-# One line. English: Memory cards with no backup on Google Drive: %d.
-T_DELETE_FOLDER_NO_BACKUP = Google ドライブにバックアップがないカード: %d 枚
-# Up to 2 lines. English: Every card of it has a backup on Google Drive, which is kept.
-T_DELETE_FOLDER_BACKUPS = すべてのカードに Google ドライブのバックアップがあり、それらは残ります。
+# Up to 2 lines. English: Delete the folder %s?
+T_DELETE_FOLDER_ASK = フォルダー %s を削除しますか？
+# Up to 3 lines. English: The folder and its %d memory cards will be permanently removed from the MMCE. This action cannot be undone.
+T_DELETE_FOLDER_TEXT = フォルダーとその中のメモリーカード %d 枚が MMCE から完全に削除されます。この操作は取り消せません。
+# One line. English: Cards without a backup on Google Drive: %d
+T_DELETE_FOLDER_NO_BACKUP = Google ドライブにバックアップがないカード: %d
+# Up to 2 lines. English: All cards in this folder have a backup on Google Drive. The backups will not be affected.
+T_DELETE_FOLDER_BACKUPS = このフォルダーのすべてのカードに Google ドライブのバックアップがあります。バックアップには影響しません。
 # One line. English: Deleting...
 T_DELETING = 削除中...
 # One line. English: Memory card deleted.
@@ -673,30 +673,30 @@ T_DONE_DELETE_CARD = メモリーカードを削除しました。
 T_DELETE_CARD_FAILED = メモリーカードを削除できませんでした。
 # One line. English: Folder deleted.
 T_DONE_DELETE_FOLDER = フォルダーを削除しました。
-# Up to 3 lines. English: Unable to delete the whole folder.
-T_DELETE_FOLDER_FAILED = フォルダーをまるごと削除できませんでした。
+# Up to 3 lines. English: Unable to delete the folder.
+T_DELETE_FOLDER_FAILED = フォルダーを削除できませんでした。
 # One line. English: %d MB (current)
 T_SIZE_CURRENT = %d MB（現在）
 # One line. English: Change size
 T_RESIZE = 容量を変更
-# One line. English: New size of the card
+# One line. English: New card size
 T_RESIZE_TITLE = カードの新しい容量
 # Up to 2 lines. English: Change the size of %s from %d MB to %d MB?
 T_RESIZE_ASK = %s の容量を %d MB から %d MB に変更しますか？
-# Up to 4 lines. English: The saves are copied to a new card of that size, which takes the current one's place once checked. If anything fails, the current card is not changed.
-T_RESIZE_TEXT = セーブデータはこの容量の新しいカードにコピーされ、確認後に現在のカードと置き換わります。失敗した場合、現在のカードは変更されません。
+# Up to 4 lines. English: The saves will be copied to a new card of that size, which will replace the current one after verification. If anything fails, the current card remains unchanged.
+T_RESIZE_TEXT = セーブデータはその容量の新しいカードにコピーされ、検証後に現在のカードと置き換えられます。失敗した場合、現在のカードは変更されません。
 # One line. English: Creating the new card...
 T_RESIZE_MAKING = 新しいカードを作成中...
 # One line. English: Copying the saves...
 T_RESIZE_COPYING = セーブデータをコピー中...
-# Up to 2 lines. English: %s is now %d MB.
-T_RESIZE_DONE = %s の容量は %d MB になりました。
-# Up to 5 lines. English: Unable to put the new card in the place of %s. It is whole and checked, in the file %s of the same folder.
-T_RESIZE_LEFT = 新しいカードを %s と置き換えられませんでした。新しいカードは確認済みで、同じフォルダーのファイル %s にあります。
-# Up to 4 lines. English: This card has files outside folders, or a folder inside a save: its size can't be changed.
-T_RESIZE_ODD = このカードにはフォルダー外のファイル、またはセーブデータ内のフォルダーがあるため、容量を変更できません。
-# Up to 3 lines. English: The saves didn't fit in a %d MB card. The card was not changed.
-T_RESIZE_FULL = セーブデータが %d MB のカードに収まりませんでした。カードは変更されていません。
+# Up to 2 lines. English: %s resized to %d MB.
+T_RESIZE_DONE = %s の容量を %d MB に変更しました。
+# Up to 5 lines. English: Unable to replace %s. The new card, already verified, was kept as %s in the same folder.
+T_RESIZE_LEFT = %s を置き換えられませんでした。検証済みの新しいカードは、同じフォルダーに %s として保存されています。
+# Up to 4 lines. English: This card can't be resized: it contains files outside folders, or subfolders inside saves.
+T_RESIZE_ODD = このカードの容量は変更できません。フォルダー外のファイル、またはセーブデータ内のサブフォルダーが含まれています。
+# Up to 3 lines. English: The saves exceed the capacity of a %d MB card. The card was not changed.
+T_RESIZE_FULL = セーブデータが %d MB のカードの容量を超えています。カードは変更されていません。
 # Button. English: Rename
 T_RENAME = 名前を変更
 # One line. English: Card name
@@ -707,28 +707,28 @@ T_FOLDER_NAME_TITLE = フォルダー名
 T_FILE_NAME_TITLE = ファイル名
 # Up to 3 lines. English: A folder or file with that name already exists.
 T_RENAME_EXISTS = 同じ名前のフォルダーまたはファイルがすでにあります。
-# Up to 3 lines. English: The sd2psx uses that name for its own folders (CardN, BOOT or a game's ID). Choose another one.
-T_RENAME_RESERVED = この名前は sd2psx が独自のフォルダー（CardN、BOOT、ゲーム ID）に使用します。別の名前を選んでください。
+# Up to 3 lines. English: This name is reserved by the sd2psx (CardN, BOOT or a game ID). Choose another name.
+T_RENAME_RESERVED = この名前は sd2psx で予約されています（CardN、BOOT、ゲーム ID）。別の名前を選んでください。
 # Up to 2 lines. English: Rename the folder %s to %s?
 T_RENAME_FOLDER_ASK = フォルダー %s の名前を %s に変更しますか？
-# Up to 3 lines. English: Its cards and files take the new name. The backups already on Google Drive keep the old one.
-T_RENAME_FOLDER_TEXT = フォルダー内のカードとファイルは新しい名前になります。Google ドライブの既存のバックアップは古い名前のままです。
+# Up to 3 lines. English: The folder's cards and files will also be renamed. Existing backups on Google Drive keep the previous name.
+T_RENAME_FOLDER_TEXT = フォルダー内のカードとファイルも名前が変更されます。Google ドライブの既存のバックアップは以前の名前のままです。
 # One line. English: Renaming...
 T_RENAMING = 名前を変更中...
 # Up to 3 lines. English: Unable to rename. Nothing was changed.
 T_RENAME_FAILED = 名前を変更できませんでした。何も変更されていません。
-# Up to 2 lines. English: The folder is now called %s.
+# Up to 2 lines. English: Folder renamed to %s.
 T_RENAME_DONE_FOLDER = フォルダー名を %s に変更しました。
 # Up to 2 lines. English: Delete the file %s?
 T_DELETE_FILE_ASK = ファイル %s を削除しますか？
 # Up to 3 lines. English: Unable to delete the file.
 T_DELETE_FILE_FAILED = ファイルを削除できませんでした。
-# Up to 3 lines. English: This file is one of the sd2psx's cards: use its options in the list of cards.
-T_FILE_IS_CARD = このファイルは sd2psx のカードです。カード一覧でカードのオプションを使ってください。
-# Up to 2 lines. English: In a group of the sd2psx, or as a file.
-T_CREATE_HINT = sd2psx のグループ、またはファイルとして
-# One line. English: Where to create the card
-T_CREATE_WHERE = カードの作成先
+# Up to 3 lines. English: This file is an sd2psx card. Manage it from the Cards tab.
+T_FILE_IS_CARD = このファイルは sd2psx のカードです。「カード」タブから管理してください。
+# Up to 2 lines. English: In an sd2psx group or as a file.
+T_CREATE_HINT = sd2psx のグループ内、またはファイルとして作成します。
+# One line. English: New card location
+T_CREATE_WHERE = 新しいカードの場所
 # One line. English: Numbered card: %s
 T_CREATE_NUMBERED = 番号付きカード: %s
 # One line. English: %s group: %s
@@ -737,7 +737,7 @@ T_CREATE_IN_GROUP = グループ %s: %s
 T_CREATE_NEW_GROUP = 新しいグループ...
 # One line. English: File on the MMCE...
 T_CREATE_FILE_SD = MMCE 上のファイル...
-# One line. English: File on the USB drive...
+# One line. English: File on USB drive...
 T_CREATE_FILE_USB = USB ドライブ上のファイル...
 # Button. English: Create here
 T_CREATE_HERE = ここに作成
@@ -747,64 +747,68 @@ T_CREATE_FORMAT = ファイル形式
 T_CREATE_ASK = カード %s（%d MB）を作成しますか？
 # Up to 2 lines. English: Create the file %s (%d MB)?
 T_CREATE_FILE_ASK = ファイル %s（%d MB）を作成しますか？
-# One line. English: Saves that go into it: %d
-T_CREATE_SAVES = コピーするセーブデータ: %d 件
+# One line. English: Saves to copy: %d
+T_CREATE_SAVES = コピーするセーブデータ: %d
 # Up to 2 lines. English: Card created: %s
 T_CREATE_DONE = カードを作成しました: %s
 # One line. English: Export all to a card
 T_EXPORT_ALL = すべてカードに書き出す
-# One line. English: Saves with the same folder: %d
-T_REPEATED_ASK = 同じフォルダーのセーブデータ: %d
-# One line. English: Keep the newest of each
-T_REPEATED_NEWEST = それぞれ最新のものを残す
-# One line. English: Choose one by one
-T_REPEATED_EACH = 1 件ずつ選ぶ
-# Up to 2 lines. English: "%s" is already marked on %s.
+# One line. English: Duplicate saves: %d
+T_REPEATED_ASK = 重複したセーブデータ: %d
+# One line. English: Keep the newest
+T_REPEATED_NEWEST = 最新のものを残す
+# One line. English: Choose individually
+T_REPEATED_EACH = 個別に選択
+# Up to 2 lines. English: "%s" is already selected on %s.
 T_MARK_SAME_ASK = 「%s」はすでに %s で選択されています。
-# Up to 4 lines. English: A card can have only one save of that folder. The one on %s is from %s; the one on %s, from %s. Mark this one instead?
-T_MARK_SAME_TEXT = 1 枚のカードには同じフォルダーのセーブデータを 1 つしか置けません。%s のものは %s、%s のものは %s です。代わりにこちらを選択しますか？
+# Up to 2 lines. English: A card can't contain two saves with the same folder. Replace the selection?
+T_MARK_SAME_TEXT = 1 枚のカードに同じフォルダーのセーブデータを 2 つ入れることはできません。選択を置き換えますか？
+# One line. English: Selected: %s (%s)
+T_MARK_SAME_SELECTED = 選択済み: %s（%s）
+# One line. English: This one: %s (%s)
+T_MARK_SAME_THIS = このデータ: %s（%s）
 # One line. English: Split saves by game
 T_MIGRATE = セーブデータをゲームごとに分ける
-# One line. English: Saves by game
-T_MIGRATE_TITLE = ゲームごとのセーブデータ
-# One line. English: Stays
-T_MIGRATE_OFF = 移動しない
-# One line. English: New card, %d MB
+# One line. English: Split by game
+T_MIGRATE_TITLE = ゲームごとに分ける
+# One line. English: Skipped
+T_MIGRATE_OFF = スキップ
+# One line. English: New card (%d MB)
 T_MIGRATE_NEW = 新しいカード（%d MB）
-# Up to 3 lines. English: None of this card's saves is of a game that has a card of its own.
-T_MIGRATE_NONE = このカードには、専用のカードを持つゲームのセーブデータがありません。
-# One line. English: %d saves of %d games go; %d without a game ID stay.
-T_MIGRATE_SUMMARY = 移動: %d 件（%d ゲーム）　残る（ID なし）: %d
+# Up to 3 lines. English: This card has no saves to split.
+T_MIGRATE_NONE = このカードには分けられるセーブデータがありません。
+# One line. English: Selected: %d saves (%d games) · No game ID: %d
+T_MIGRATE_SUMMARY = 選択中: %d 件（%d ゲーム）· ゲーム ID なし: %d
 # Button. English: Size
 T_MIGRATE_SIZE = 容量
 # Button. English: Start
 T_MIGRATE_START = 開始
-# Up to 2 lines. English: Saves already on their game's card, saved differently: %d
-T_MIGRATE_DIFFER = ゲームのカードにすでにあり、内容が異なるもの: %d
-# One line. English: Keep the game cards' ones
-T_MIGRATE_KEEP_GAME = ゲームのカードのものを残す
-# One line. English: Replace with this card's
-T_MIGRATE_REPLACE = このカードのもので置き換える
-# One line. English: Keep the newer one
-T_MIGRATE_NEWER = 新しい方を残す
-# Up to 2 lines. English: Copy %d saves to the cards of %d games?
-T_MIGRATE_ASK = %d 件のセーブデータを %d 本のゲームのカードにコピーしますか？
-# One line. English: New cards: %d, with their templates.
-T_MIGRATE_ASK_NEW = 新しいカード: %d 枚（テンプレート付き）
-# Up to 2 lines. English: This card is not changed. At the end you choose whether its copied saves stay on it.
-T_MIGRATE_ASK_KEEP = このカードは変更されません。最後に、コピーしたセーブデータを残すかどうかを選べます。
-# One line. English: Already on the game's card: %d
-T_MIGRATE_THERE_N = すでにゲームのカードにあったもの: %d
-# One line. English: Kept as they were: %d
-T_MIGRATE_KEPT_N = そのまま残したもの: %d
-# Up to 2 lines. English: Delete from %s the saves that are on their games' cards now?
-T_MIGRATE_DELETE_ASK = ゲームのカードに移ったセーブデータを %s から削除しますか？
-# Up to 3 lines. English: Saves that go: %d. The ones without a game ID, and the ones not copied, stay.
-T_MIGRATE_DELETE_TEXT = 削除するセーブデータ: %d　ゲーム ID のないものとコピーされなかったものは残ります。
+# Up to 2 lines. English: %d saves already exist at the destination with different content
+T_MIGRATE_DIFFER = コピー先に内容の異なるセーブデータがあります: %d
+# One line. English: Keep existing
+T_MIGRATE_KEEP_GAME = 既存のものを残す
+# One line. English: Replace all
+T_MIGRATE_REPLACE = すべて置き換える
+# One line. English: Keep the newest
+T_MIGRATE_NEWER = 最新のものを残す
+# Up to 2 lines. English: Copy %d saves to %d game cards?
+T_MIGRATE_ASK = %d 件のセーブデータを %d 枚のゲームカードにコピーしますか？
+# One line. English: New cards: %d (templates applied)
+T_MIGRATE_ASK_NEW = 作成する新しいカード: %d 枚（テンプレート適用）
+# Up to 2 lines. English: The source card will not be changed. At the end, you can remove the copied saves from it.
+T_MIGRATE_ASK_KEEP = コピー元のカードは変更されません。最後に、コピーしたセーブデータをコピー元から削除できます。
+# One line. English: Already at the destination: %d
+T_MIGRATE_THERE_N = コピー先にすでにあるもの: %d
+# One line. English: Not replaced: %d
+T_MIGRATE_KEPT_N = 置き換えなかったもの: %d
+# Up to 2 lines. English: Remove the copied saves from %s?
+T_MIGRATE_DELETE_ASK = コピーしたセーブデータを %s から削除しますか？
+# Up to 3 lines. English: Saves to remove: %d. Saves without a game ID and saves not copied will be kept.
+T_MIGRATE_DELETE_TEXT = 削除するセーブデータ: %d。ゲーム ID のないセーブデータと、コピーされなかったセーブデータは残ります。
 # Button. English: Keep
 T_MIGRATE_KEEP = 残す
-# One line. English: Not in the console
-T_VIEW_NOTE = 本体にありません
+# One line. English: Not connected
+T_VIEW_NOTE = 未接続
 # Up to 3 lines. English: Choose an ELF...
 T_PICK_ELF = ELF を選択...
 # Up to 3 lines. English: Unable to read this memory card.

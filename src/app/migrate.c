@@ -156,12 +156,12 @@ static void scene_migrate(float t)
             going += mg.games[i].n, games++;
     if (!mg.nGames)
         ui_paragraph_center(FONT_TEXT, W / 2.0f, 180, 420, COLOR_DIM, T(T_MIGRATE_NONE));
-    /* under the list: how many go, how many stay */
+    /* under the list, past its arrow: how many go, how many stay */
     snprintf(s, sizeof(s), T(T_MIGRATE_SUMMARY), going, games, mg.stay);
-    ui_text_fit(FONT_SMALL, MG_X + 4, MG_Y0 + MG_ROWS * MG_ROW + 10, MG_RIGHT - MG_X - 70, 0x8E98AA, s);
+    ui_text_fit(FONT_SMALL, MG_X + 4, MG_Y0 + MG_ROWS * MG_ROW + 20, MG_RIGHT - MG_X - 70, 0x8E98AA, s);
     if (mg.nGames) {
         snprintf(s, sizeof(s), "%d/%d", mg.cursor + 1, mg.nGames);
-        ui_text_right(FONT_SMALL, MG_RIGHT, MG_Y0 + MG_ROWS * MG_ROW + 10, 0x8E98AA, s);
+        ui_text_right(FONT_SMALL, MG_RIGHT, MG_Y0 + MG_ROWS * MG_ROW + 20, 0x8E98AA, s);
     }
     {
         legend_t l[4] = {{BUTTON_CIRCLE, T(T_BACK)}};

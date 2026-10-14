@@ -150,6 +150,33 @@ void look_legend(const legend_t *items, int n, int apart)
 
 /* ------------------------------------------------------------ boxes, menus, titles */
 
+/* a box with round corners (r), filled */
+static void round_box(float x, float y, float w, float h, float r, u32 color)
+{
+    static const float c[5] = {1, 0.924f, 0.707f, 0.383f, 0};   /* (a quarter of a circle, in four steps) */
+    int k;
+    ui_rect(x + r, y, w - 2 * r, h, color, 0x80);
+    ui_rect(x, y + r, r, h - 2 * r, color, 0x80);
+    ui_rect(x + w - r, y + r, r, h - 2 * r, color, 0x80);
+    for (k = 0; k < 4; k++) {
+        float a0 = r * c[k], b0 = r * c[4 - k], a1 = r * c[k + 1], b1 = r * c[3 - k];
+        ui_triangle(x + r, y + r, x + r - a0, y + r - b0, x + r - a1, y + r - b1, color, 0x80);
+        ui_triangle(x + w - r, y + r, x + w - r + a0, y + r - b0, x + w - r + a1, y + r - b1, color, 0x80);
+        ui_triangle(x + r, y + h - r, x + r - a0, y + h - r + b0, x + r - a1, y + h - r + b1, color, 0x80);
+        ui_triangle(x + w - r, y + h - r, x + w - r + a0, y + h - r + b0, x + w - r + a1, y + h - r + b1, color, 0x80);
+    }
+}
+
+int look_key(float x, float cy, const char *name)
+{
+    int w = ui_measure(FONT_SMALL, name) + 12, h = 18;
+    float y = cy - h / 2.0f;
+    round_box(x, y, w, h, 5, 0x969AA4);   /* (as START and SELECT: the rim lighter than the rubber) */
+    round_box(x + 1, y + 1, w - 2, h - 2, 4, 0x54575F);
+    ui_text_center(FONT_SMALL, x + w / 2.0f, cy - ui_line_height(FONT_SMALL) / 2.0f, 0xE6E8EC, name);
+    return w;
+}
+
 void look_panel(float x, float y, float w, float h)
 {
     /* soft edges: a few slightly bigger, fainter boxes around it */

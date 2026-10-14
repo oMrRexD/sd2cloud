@@ -632,41 +632,41 @@ T_SIZE_MB = %d MB
 # One line.
 T_SIZE_RECOMMENDED = %d MB (recommended)
 # Up to 2 lines.
-T_SIZE_NEED = The saves take %s.
+T_SIZE_NEED = Used space: %s
 # Up to 2 lines.
-T_SIZE_FREE = Space left: %s
+T_SIZE_FREE = Free space: %s
 # Up to 5 lines.
-T_SIZE_BIG = Above 8 MB, the card depends on the microSD's speed: a slow one can corrupt it.
+T_SIZE_BIG = Cards larger than 8 MB depend on the microSD's speed. On slow microSD cards, data corruption may occur.
 # Up to 3 lines.
-T_SIZE_NONE = These saves don't fit in a single memory card.
+T_SIZE_NONE = The selected saves exceed the maximum capacity of a memory card.
 # Up to 6 lines.
-T_SIZE_UNFORMATTED = Under 8 MB, the sd2psx may create the card unformatted: the game or the PS2 browser then asks to format it.
+T_SIZE_UNFORMATTED = Below 8 MB, the sd2psx may create the card unformatted. If so, format it from the PS2 browser or from the game.
 # One line.
 T_SET_CARD_SIZE = New card size
 # Up to 3 lines.
-T_SIZE_NEXT_START = The sd2psx will create new cards of this size from the next time it is turned on.
+T_SIZE_NEXT_START = The change takes effect the next time the sd2psx starts.
 # Up to 3 lines.
 T_SIZE_SET_FAILED = Unable to change the sd2psx's settings.
 # One line.
 T_DELETE_CARD = Delete card
 # One line.
-T_DELETE_FOLDER = Delete whole folder
+T_DELETE_FOLDER = Delete folder
 # Up to 2 lines.
 T_DELETE_CARD_ASK = Delete the memory card %s?
 # Up to 3 lines.
-T_DELETE_CARD_TEXT = It will be permanently removed from the MMCE, with every save it has. This action cannot be undone.
+T_DELETE_CARD_TEXT = The card and all of its saves will be permanently removed from the MMCE. This action cannot be undone.
 # Up to 2 lines.
-T_DELETE_BACKUP = Last backup: %s. Backups on Google Drive are kept.
+T_DELETE_BACKUP = Last backup: %s. Backups on Google Drive will not be affected.
 # One line.
 T_DELETE_NO_BACKUP = This card has no backup on Google Drive.
 # Up to 2 lines.
-T_DELETE_FOLDER_ASK = Delete the whole %s folder?
+T_DELETE_FOLDER_ASK = Delete the folder %s?
 # Up to 3 lines.
-T_DELETE_FOLDER_TEXT = Its %d memory cards will be permanently removed from the MMCE, with every save. This action cannot be undone.
+T_DELETE_FOLDER_TEXT = The folder and its %d memory cards will be permanently removed from the MMCE. This action cannot be undone.
 # One line.
-T_DELETE_FOLDER_NO_BACKUP = Memory cards with no backup on Google Drive: %d.
+T_DELETE_FOLDER_NO_BACKUP = Cards without a backup on Google Drive: %d
 # Up to 2 lines.
-T_DELETE_FOLDER_BACKUPS = Every card of it has a backup on Google Drive, which is kept.
+T_DELETE_FOLDER_BACKUPS = All cards in this folder have a backup on Google Drive. The backups will not be affected.
 # One line.
 T_DELETING = Deleting...
 # One line.
@@ -676,29 +676,29 @@ T_DELETE_CARD_FAILED = Unable to delete the memory card.
 # One line.
 T_DONE_DELETE_FOLDER = Folder deleted.
 # Up to 3 lines.
-T_DELETE_FOLDER_FAILED = Unable to delete the whole folder.
+T_DELETE_FOLDER_FAILED = Unable to delete the folder.
 # One line.
 T_SIZE_CURRENT = %d MB (current)
 # One line.
 T_RESIZE = Change size
 # One line.
-T_RESIZE_TITLE = New size of the card
+T_RESIZE_TITLE = New card size
 # Up to 2 lines.
 T_RESIZE_ASK = Change the size of %s from %d MB to %d MB?
 # Up to 4 lines.
-T_RESIZE_TEXT = The saves are copied to a new card of that size, which takes the current one's place once checked. If anything fails, the current card is not changed.
+T_RESIZE_TEXT = The saves will be copied to a new card of that size, which will replace the current one after verification. If anything fails, the current card remains unchanged.
 # One line.
 T_RESIZE_MAKING = Creating the new card...
 # One line.
 T_RESIZE_COPYING = Copying the saves...
 # Up to 2 lines.
-T_RESIZE_DONE = %s is now %d MB.
+T_RESIZE_DONE = %s resized to %d MB.
 # Up to 5 lines.
-T_RESIZE_LEFT = Unable to put the new card in the place of %s. It is whole and checked, in the file %s of the same folder.
+T_RESIZE_LEFT = Unable to replace %s. The new card, already verified, was kept as %s in the same folder.
 # Up to 4 lines.
-T_RESIZE_ODD = This card has files outside folders, or a folder inside a save: its size can't be changed.
+T_RESIZE_ODD = This card can't be resized: it contains files outside folders, or subfolders inside saves.
 # Up to 3 lines.
-T_RESIZE_FULL = The saves didn't fit in a %d MB card. The card was not changed.
+T_RESIZE_FULL = The saves exceed the capacity of a %d MB card. The card was not changed.
 # Button.
 T_RENAME = Rename
 # One line.
@@ -710,27 +710,27 @@ T_FILE_NAME_TITLE = File name
 # Up to 3 lines.
 T_RENAME_EXISTS = A folder or file with that name already exists.
 # Up to 3 lines.
-T_RENAME_RESERVED = The sd2psx uses that name for its own folders (CardN, BOOT or a game's ID). Choose another one.
+T_RENAME_RESERVED = This name is reserved by the sd2psx (CardN, BOOT or a game ID). Choose another name.
 # Up to 2 lines.
 T_RENAME_FOLDER_ASK = Rename the folder %s to %s?
 # Up to 3 lines.
-T_RENAME_FOLDER_TEXT = Its cards and files take the new name. The backups already on Google Drive keep the old one.
+T_RENAME_FOLDER_TEXT = The folder's cards and files will also be renamed. Existing backups on Google Drive keep the previous name.
 # One line.
 T_RENAMING = Renaming...
 # Up to 3 lines.
 T_RENAME_FAILED = Unable to rename. Nothing was changed.
 # Up to 2 lines.
-T_RENAME_DONE_FOLDER = The folder is now called %s.
+T_RENAME_DONE_FOLDER = Folder renamed to %s.
 # Up to 2 lines.
 T_DELETE_FILE_ASK = Delete the file %s?
 # Up to 3 lines.
 T_DELETE_FILE_FAILED = Unable to delete the file.
 # Up to 3 lines.
-T_FILE_IS_CARD = This file is one of the sd2psx's cards: use its options in the list of cards.
+T_FILE_IS_CARD = This file is an sd2psx card. Manage it from the Cards tab.
 # Up to 2 lines.
-T_CREATE_HINT = In a group of the sd2psx, or as a file.
+T_CREATE_HINT = In an sd2psx group or as a file.
 # One line.
-T_CREATE_WHERE = Where to create the card
+T_CREATE_WHERE = New card location
 # One line.
 T_CREATE_NUMBERED = Numbered card: %s
 # One line.
@@ -740,7 +740,7 @@ T_CREATE_NEW_GROUP = New group...
 # One line.
 T_CREATE_FILE_SD = File on the MMCE...
 # One line.
-T_CREATE_FILE_USB = File on the USB drive...
+T_CREATE_FILE_USB = File on USB drive...
 # Button.
 T_CREATE_HERE = Create here
 # One line.
@@ -750,63 +750,67 @@ T_CREATE_ASK = Create the card %s (%d MB)?
 # Up to 2 lines.
 T_CREATE_FILE_ASK = Create the file %s (%d MB)?
 # One line.
-T_CREATE_SAVES = Saves that go into it: %d
+T_CREATE_SAVES = Saves to copy: %d
 # Up to 2 lines.
 T_CREATE_DONE = Card created: %s
 # One line.
 T_EXPORT_ALL = Export all to a card
 # One line.
-T_REPEATED_ASK = Saves with the same folder: %d
+T_REPEATED_ASK = Duplicate saves: %d
 # One line.
-T_REPEATED_NEWEST = Keep the newest of each
+T_REPEATED_NEWEST = Keep the newest
 # One line.
-T_REPEATED_EACH = Choose one by one
+T_REPEATED_EACH = Choose individually
 # Up to 2 lines.
-T_MARK_SAME_ASK = "%s" is already marked on %s.
-# Up to 4 lines.
-T_MARK_SAME_TEXT = A card can have only one save of that folder. The one on %s is from %s; the one on %s, from %s. Mark this one instead?
+T_MARK_SAME_ASK = "%s" is already selected on %s.
+# Up to 2 lines.
+T_MARK_SAME_TEXT = A card can't contain two saves with the same folder. Replace the selection?
+# One line.
+T_MARK_SAME_SELECTED = Selected: %s (%s)
+# One line.
+T_MARK_SAME_THIS = This one: %s (%s)
 # One line.
 T_MIGRATE = Split saves by game
 # One line.
-T_MIGRATE_TITLE = Saves by game
+T_MIGRATE_TITLE = Split by game
 # One line.
-T_MIGRATE_OFF = Stays
+T_MIGRATE_OFF = Skipped
 # One line.
-T_MIGRATE_NEW = New card, %d MB
+T_MIGRATE_NEW = New card (%d MB)
 # Up to 3 lines.
-T_MIGRATE_NONE = None of this card's saves is of a game that has a card of its own.
+T_MIGRATE_NONE = This card has no saves to split.
 # One line.
-T_MIGRATE_SUMMARY = %d saves of %d games go; %d without a game ID stay.
+T_MIGRATE_SUMMARY = Selected: %d saves (%d games) · No game ID: %d
 # Button.
 T_MIGRATE_SIZE = Size
 # Button.
 T_MIGRATE_START = Start
 # Up to 2 lines.
-T_MIGRATE_DIFFER = Saves already on their game's card, saved differently: %d
+T_MIGRATE_DIFFER = %d saves already exist at the destination with different content
 # One line.
-T_MIGRATE_KEEP_GAME = Keep the game cards' ones
+T_MIGRATE_KEEP_GAME = Keep existing
 # One line.
-T_MIGRATE_REPLACE = Replace with this card's
+T_MIGRATE_REPLACE = Replace all
 # One line.
-T_MIGRATE_NEWER = Keep the newer one
+T_MIGRATE_NEWER = Keep the newest
 # Up to 2 lines.
-T_MIGRATE_ASK = Copy %d saves to the cards of %d games?
+T_MIGRATE_ASK = Copy %d saves to %d game cards?
 # One line.
-T_MIGRATE_ASK_NEW = New cards: %d, with their templates.
+T_MIGRATE_ASK_NEW = New cards: %d (templates applied)
 # Up to 2 lines.
-T_MIGRATE_ASK_KEEP = This card is not changed. At the end you choose whether its copied saves stay on it.
+T_MIGRATE_ASK_KEEP = The source card will not be changed. At the end, you can remove the copied saves from it.
 # One line.
-T_MIGRATE_THERE_N = Already on the game's card: %d
+T_MIGRATE_THERE_N = Already at the destination: %d
 # One line.
-T_MIGRATE_KEPT_N = Kept as they were: %d
+T_MIGRATE_KEPT_N = Not replaced: %d
 # Up to 2 lines.
-T_MIGRATE_DELETE_ASK = Delete from %s the saves that are on their games' cards now?
+T_MIGRATE_DELETE_ASK = Remove the copied saves from %s?
 # Up to 3 lines.
-T_MIGRATE_DELETE_TEXT = Saves that go: %d. The ones without a game ID, and the ones not copied, stay.
+T_MIGRATE_DELETE_TEXT = Saves to remove: %d. Saves without a game ID and saves not copied will be kept.
 # Button.
 T_MIGRATE_KEEP = Keep
 # One line.
-T_VIEW_NOTE = Not in the console
+T_VIEW_NOTE = Not connected
 # Up to 3 lines.
 T_PICK_ELF = Choose an ELF...
 # Up to 3 lines.

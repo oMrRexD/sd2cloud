@@ -62,7 +62,10 @@ int mark_same_folder(const save_view_t *v)
     dlg_new(COLOR_WARN, t);
     format_save_when(marks.save[i].s.when, a, sizeof(a));
     format_save_when(v->s.when, b, sizeof(b));
-    snprintf(t, sizeof(t), T(T_MARK_SAME_TEXT), marks.save[i].card->base, a, v->card->base, b);
+    dlg_line(FONT_TEXT, COLOR_TEXT, 6, T(T_MARK_SAME_TEXT));
+    snprintf(t, sizeof(t), T(T_MARK_SAME_SELECTED), marks.save[i].card->base, a);   /* (the one marked, and this one) */
+    dlg_line(FONT_TEXT, COLOR_TEXT, 0, t);
+    snprintf(t, sizeof(t), T(T_MARK_SAME_THIS), v->card->base, b);
     dlg_line(FONT_TEXT, COLOR_TEXT, 0, t);
     dlg_buttons(BUTTON_CIRCLE, T_BACK, BUTTON_CROSS, T_REPLACE);
     next.wide = 1;
