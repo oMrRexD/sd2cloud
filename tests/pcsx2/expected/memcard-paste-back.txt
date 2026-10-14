@@ -15,6 +15,7 @@ Card1/Card1-1: 2 saves, 8270848 bytes free
 [script] >
 [script] D
 [script] D
+[script] D
 [script] S
 [script] O
 [script] S

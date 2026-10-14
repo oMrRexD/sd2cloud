@@ -10,6 +10,7 @@ SLUS-21065/SLUS-21065-1: 2 folders, fingerprint 64fbc81ffd3ff7a8, new
 [script] >
 [script] D
 [script] D
+[script] D
 [script] X
 slot/mc1: 1 saves, 7931904 bytes free
 [script] T
