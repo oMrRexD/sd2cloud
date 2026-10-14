@@ -1,5 +1,6 @@
 /* SD2Cloud's regression tests -- the list of the microSD's cards (cards.c): which files are cards, of which kind,
  * and what the settings and the state make of each. */
+#include <dirent.h>
 #include "t.h"
 
 static void put_card(const char *folder, const char *file)
@@ -253,10 +254,61 @@ static void device_card_size(void)
     }
 }
 
+/* a card deleted, and a folder of cards deleted whole: off the microSD, out of the list and out of the state */
+static void cards_are_deleted(void)
+{
+    card_t *c;
+    put_card("Card1", "Card1-1.mcd");
+    put_card("Card1", "Card1-2.mcd");
+    put_card("SLUS-21065", "SLUS-21065-1.mcd");
+    put_card("SLUS-21065", "SLUS-21065-2.mcd");
+    t_text("sd/MemoryCards/PS2/SLUS-21065/SLUS-21065.ini", "[Settings]\nMaxChannels=8\n");
+    t_text("sd/MemoryCards/PS2/SLUS-21065/SLUS-21065.bin", "a picture");
+    config_read();
+    state_read();
+    CHECK_INT(cards_scan(), 4);
+    cards_check(no_progress);
+    state_card("Card1/Card1-2", 1);
+    state_card("SLUS-21065/SLUS-21065-1", 1);
+    state_card("Card1/Card1-1", 1);
+    /* one card: the others stay, and so does what is known of them */
+    c = card("Card1/Card1-2");
+    CHECK(c != NULL);
+    if (c)
+        CHECK_INT(cards_delete(c), 0);
+    CHECK_INT(nCards, 3);
+    CHECK_INT(t_size("sd/MemoryCards/PS2/Card1/Card1-2.mcd"), -1);
+    CHECK(t_size("sd/MemoryCards/PS2/Card1/Card1-1.mcd") > 0);
+    CHECK(card("Card1/Card1-2") == NULL);
+    CHECK(card("Card1/Card1-1") != NULL);
+    CHECK(state_card("Card1/Card1-2", 0) == NULL);
+    CHECK(state_card("Card1/Card1-1", 0) != NULL);
+    /* a game's folder whole: its cards, its .ini and its picture, and the folder itself */
+    CHECK_INT(cards_delete_folder("SLUS-21065"), 0);
+    CHECK_INT(nCards, 1);
+    CHECK(card("SLUS-21065/SLUS-21065-1") == NULL && card("SLUS-21065/SLUS-21065-2") == NULL);
+    CHECK(state_card("SLUS-21065/SLUS-21065-1", 0) == NULL);
+    CHECK_INT(t_size("sd/MemoryCards/PS2/SLUS-21065/SLUS-21065.ini"), -1);
+    CHECK_INT(t_size("sd/MemoryCards/PS2/SLUS-21065/SLUS-21065-2.mcd"), -1);
+    {
+        DIR *d = opendir("sd/MemoryCards/PS2/SLUS-21065");
+        CHECK(d == NULL);
+        if (d)
+            closedir(d);
+    }
+    /* the state written without them; listed again, the microSD has the one card left */
+    state_read();
+    CHECK(state_card("Card1/Card1-2", 0) == NULL);
+    CHECK_INT(cards_scan(), 1);
+    /* a folder that isn't there */
+    CHECK_INT(cards_delete_folder("Nothing"), -1);
+}
+
 void suite_cards(void)
 {
     RUN(cards_are_listed);
     RUN(group_folders_are_named);
     RUN(settings_choose_the_cards);
     RUN(device_card_size);
+    RUN(cards_are_deleted);
 }

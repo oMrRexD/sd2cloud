@@ -177,6 +177,10 @@ void memcard_screen(void);
 void memcard_hint(void);
 void memcard_upload(void);               /* the whole card, as a backup of its own on Drive */
 
+/* ------------------------------------------------------------ cardops.c */
+int card_delete(card_t *c);              /* asked, and deleted: 1 = cards[] changed (the main screen lists them again) */
+int folder_delete(card_t *c);            /* that card's whole folder, the same way */
+
 /* ------------------------------------------------------------ dest.c */
 struct dst_s {
     tabs_t g;

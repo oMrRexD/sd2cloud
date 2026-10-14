@@ -616,6 +616,60 @@ card_t *cards_append(const char *folder, const char *file)
 
 void cards_sort(void) { qsort(cards, nCards, sizeof(cards[0]), compare); }
 
+/* the card out of cards[] and out of the state (whose backups stay on Drive) */
+static void cards_drop(card_t *c)
+{
+    int i = (int)(c - cards);
+    state_forget(c->id);
+    memmove(&cards[i], &cards[i + 1], (nCards - i - 1) * sizeof(cards[0]));
+    nCards--;
+}
+
+int cards_delete(card_t *c)
+{
+    char id[96];
+    int r;
+    snprintf(id, sizeof(id), "%s", c->id);
+    if ((r = unlink(c->path)) != 0 && file_exists(c->path)) {
+        log_msg("%s couldn't be deleted (%d)", id, r);
+        return -1;
+    }
+    cards_drop(c);
+    state_write();
+    log_msg("%s deleted: %d on the microSD", id, nCards);
+    return 0;
+}
+
+int cards_delete_folder(const char *folder)
+{
+    static dir_entry_t list[256];
+    char dir[260], path[520], name[48];
+    int n, i, left = 0;
+    snprintf(name, sizeof(name), "%s", folder);   /* (it may be a card's, which goes) */
+    snprintf(dir, sizeof(dir), "%s%s/%s/", sdRoot, dev->cards, name);
+    if ((n = dir_list(dir, list, 256)) < 0)
+        return -1;
+    for (i = 0; i < n; i++) {   /* everything in it: its cards, its .ini, its pictures (and a folder in it, empty) */
+        snprintf(path, sizeof(path), "%s%s", dir, list[i].name);
+        if ((list[i].dir ? rmdir(path) : unlink(path)) != 0 && (list[i].dir || file_exists(path)))
+            left++;
+    }
+    for (i = nCards - 1; i >= 0; i--)   /* the cards that were its, whatever became of the rest */
+        if (!strcasecmp(cards[i].folder, name)) {
+            if (file_exists(cards[i].path))
+                continue;
+            cards_drop(&cards[i]);
+        }
+    state_write();
+    dir[strlen(dir) - 1] = 0;   /* (the folder itself, without its last /) */
+    if (left || rmdir(dir) != 0) {
+        log_msg("%s couldn't be deleted whole (%d left in it)", name, left);
+        return -1;
+    }
+    log_msg("%s deleted, folder and all: %d cards on the microSD", name, nCards);
+    return 0;
+}
+
 card_t *cards_add(const char *folder, const char *file)
 {
     char id[96];

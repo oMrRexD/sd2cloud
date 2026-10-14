@@ -15,7 +15,7 @@ slot/mc1: 1 saves, 7931904 bytes free
 [script] T
 [script] X
 [script] X
-mcfs: new card host:SD2Cloud/memcard-upload.mcd: 0
+mcfs: new card host:SD2Cloud/memcard-upload.mcd of 8 MB: 0
 mcfs: copy of BASLUS-99999TESTS from mc1: to host:SD2Cloud/memcard-upload.mcd: 0 in N ms
 mcfs: copy of BADATA-SYSTEM from mc1: to host:SD2Cloud/memcard-upload.mcd: -4 in N ms
 mcfs: copy of BEDATA-SYSTEM from mc1: to host:SD2Cloud/memcard-upload.mcd: -4 in N ms

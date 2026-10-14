@@ -645,6 +645,36 @@ T_SET_CARD_SIZE = 新しいカードの容量
 T_SIZE_NEXT_START = 次回 sd2psx の電源を入れたときから、新しいカードはこの容量で作成されます。
 # Up to 3 lines. English: Unable to change the sd2psx's settings.
 T_SIZE_SET_FAILED = sd2psx の設定を変更できませんでした。
+# One line. English: Delete card
+T_DELETE_CARD = カードを削除
+# One line. English: Delete whole folder
+T_DELETE_FOLDER = フォルダーごと削除
+# Up to 2 lines. English: Delete the memory card %s?
+T_DELETE_CARD_ASK = メモリーカード %s を削除しますか？
+# Up to 3 lines. English: It will be permanently removed from the MMCE, with every save it has. This action cannot be undone.
+T_DELETE_CARD_TEXT = すべてのセーブデータとともに MMCE から完全に削除されます。この操作は元に戻せません。
+# Up to 2 lines. English: Last backup: %s. Backups on Google Drive are kept.
+T_DELETE_BACKUP = 最終同期: %s。Google ドライブのバックアップは残ります。
+# One line. English: This card has no backup on Google Drive.
+T_DELETE_NO_BACKUP = このカードには Google ドライブのバックアップがありません。
+# Up to 2 lines. English: Delete the whole %s folder?
+T_DELETE_FOLDER_ASK = フォルダー %s をまるごと削除しますか？
+# Up to 3 lines. English: Its %d memory cards will be permanently removed from the MMCE, with every save. This action cannot be undone.
+T_DELETE_FOLDER_TEXT = このフォルダーの %d 枚のメモリーカードが、すべてのセーブデータとともに MMCE から完全に削除されます。この操作は元に戻せません。
+# One line. English: Memory cards with no backup on Google Drive: %d.
+T_DELETE_FOLDER_NO_BACKUP = Google ドライブにバックアップがないカード: %d 枚
+# Up to 2 lines. English: Every card of it has a backup on Google Drive, which is kept.
+T_DELETE_FOLDER_BACKUPS = すべてのカードに Google ドライブのバックアップがあり、それらは残ります。
+# One line. English: Deleting...
+T_DELETING = 削除中...
+# One line. English: Memory card deleted.
+T_DONE_DELETE_CARD = メモリーカードを削除しました。
+# Up to 3 lines. English: Unable to delete the memory card.
+T_DELETE_CARD_FAILED = メモリーカードを削除できませんでした。
+# One line. English: Folder deleted.
+T_DONE_DELETE_FOLDER = フォルダーを削除しました。
+# Up to 3 lines. English: Unable to delete the whole folder.
+T_DELETE_FOLDER_FAILED = フォルダーをまるごと削除できませんでした。
 # Up to 3 lines. English: Choose an ELF...
 T_PICK_ELF = ELF を選択...
 # Up to 3 lines. English: Unable to read this memory card.

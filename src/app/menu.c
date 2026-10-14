@@ -5,12 +5,14 @@
 
 static void card_options(card_t *c)
 {
-    enum { OPT_SYNC, OPT_INCLUDED, OPT_RESTORE, OPT_DEVICE, OPT_MOVE, OPT_INSERT, OPTS };
+    enum { OPT_SYNC, OPT_INCLUDED, OPT_RESTORE, OPT_DEVICE, OPT_MOVE, OPT_INSERT, OPT_DELETE, OPT_DELETE_FOLDER, OPTS };
     static const char *devices[FDEVS];
     static char move[96];
     const char *items[OPTS];
-    int id[OPTS], n, k = 0, d;
+    int id[OPTS], n, k = 0, d, i, mates;
     for (;;) {   /* circle in what comes next comes back here; circle here goes back to the main screen */
+        for (i = mates = 0; i < nCards; i++)   /* (the other cards of its folder: the folder can go whole) */
+            mates += &cards[i] != c && !strcasecmp(cards[i].folder, c->folder);
         n = 0;
         items[n] = T(T_SYNC_NOW), id[n++] = OPT_SYNC;
         items[n] = T(c->included ? T_SYNC_DISABLE : T_SYNC_ENABLE), id[n++] = OPT_INCLUDED;
@@ -24,9 +26,20 @@ static void card_options(card_t *c)
         } else if (can_insert(c) && c != (activeCard >= 0 ? &cards[activeCard] : NULL))
             /* only a card the device can be told to take, and isn't on already */
             items[n] = T(dev->sd2psx ? T_INSERT : T_INSERT_PREVIEW), id[n++] = OPT_INSERT;
+        items[n] = T(T_DELETE_CARD), id[n++] = OPT_DELETE;
+        if (mates)
+            items[n] = T(T_DELETE_FOLDER), id[n++] = OPT_DELETE_FOLDER;
         if ((k = choose(c->base, items, n, k < n ? k : 0)) < 0)
             return;
         switch (id[k]) {
+        case OPT_DELETE:
+            if (card_delete(c))
+                return;   /* (gone: back to the main screen, which lists the cards again) */
+            break;
+        case OPT_DELETE_FOLDER:
+            if (folder_delete(c))
+                return;
+            break;
         case OPT_SYNC:
             if (sync_card(c))
                 return;   /* synced: back to the main screen, where its new status shows */
@@ -61,6 +74,25 @@ static void card_options(card_t *c)
         }
         }
     }
+}
+
+/* -------- △ on a folder of the Games group: what can be done with the folder as a whole */
+
+static void folder_options(card_t *c)
+{
+    const char *items[1] = {T(T_DELETE_FOLDER)};
+    char title[100];
+    int i, n = 0;
+    for (i = 0; i < nCards; i++)
+        n += !strcasecmp(cards[i].folder, c->folder);
+    snprintf(title, sizeof(title), "%s", game_of(c));   /* (the game's name, cut to fit the box) */
+    fit(FONT_TEXT, title, sizeof(title), 320);
+    if (choose(title, items, 1, 0) < 0)
+        return;
+    if (n > 1)
+        folder_delete(c);
+    else   /* (a folder of one card: that card is asked about, and its folder goes with it) */
+        card_delete(c);
 }
 
 /* -------- the main screen: the cards on the left, in their groups (tabs), the selected one big on the right */
@@ -334,6 +366,11 @@ void manual(void)
                 card_reread();
             if (!b)
                 b = wait_nav(keys);
+        }
+        if ((b & PAD_TRIANGLE) && tabs_on_folders(&menu.g) && tabs_card(&menu.g)) {   /* (X opens it) */
+            sound_play(SND_CONFIRM);
+            folder_options(tabs_card(&menu.g));
+            continue;
         }
         if (tabs_nav(&menu.g, b) || tabs_folder_nav(&menu.g, b))
             continue;

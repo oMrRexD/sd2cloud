@@ -172,6 +172,12 @@ SCENARIOS = [
     {"name": "all-saves-progress", "what": "two saves of the same name saved at different moments are both shown",
      "cards": {"Card1/Card1-1": "empty", "SLUS-21065/SLUS-21065-1": "game", "SLUS-20001/SLUS-20001-1": "empty"},
      "files": {"Files/alpha.psu": "alpha-other.psu"}, "script": ">>XXXX>DXXXXOOO<XC"},
+    # △ on a card: "Delete card", fifth of its options (on PCSX2 there is no "Insert"); the last card of its folder takes
+    # the folder with it. With more than one card in its folder, "Delete whole folder" comes after it
+    {"name": "card-delete", "what": "a card deleted from its options: its file and its folder go", "cards": CARDS,
+     "script": "TDDDDXXXC"},
+    {"name": "folder-delete", "what": "a game's folder of two cards deleted whole: triangle on its row, the folder's options",
+     "cards": dict(CARDS, **{"SLUS-21065/SLUS-21065-2": "empty"}), "script": ">DTXXXC"},
     # Settings (START), the fifth row: the size the sd2psx makes a game's first card of, written to its settings.ini
     {"name": "settings-card-size", "what": "the size of the sd2psx's new cards set to 32 MB in its settings.ini",
      "cards": CARDS, "files": {".sd2psx/settings.ini": SD2PSX_SETTINGS}, "script": "SDDDDXDDXXC"},

@@ -41,6 +41,17 @@ card_state_t *state_card(const char *id, int create)
     return &states[nStates++];
 }
 
+void state_forget(const char *id)
+{
+    int i;
+    for (i = 0; i < nStates; i++)
+        if (!strcasecmp(states[i].id, id)) {
+            memmove(&states[i], &states[i + 1], (nStates - i - 1) * sizeof(states[0]));
+            nStates--;
+            return;
+        }
+}
+
 const char *state_folder(const char *name)
 {
     int i;

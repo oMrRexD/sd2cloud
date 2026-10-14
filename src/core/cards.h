@@ -45,6 +45,12 @@ int is_game_id(const char *p);              /* SLUS-21065: the way a game's ID n
 int game_title(const char *id, char *out, size_t size);   /* the game of that ID in the sd2psx's list. 1 = it's there */
 /* where the sd2psx keeps a game's cards: the folder Game2Folder.ini gives that ID, or one named after the ID */
 void game_folder(const char *id, char *out, size_t size);
+/* A card's file deleted from the microSD, and the card out of cards[] (the ones after it move up: whatever holds on
+ * to a card has to find it again) and out of the state; its backups stay on Drive. 0 = done */
+int cards_delete(card_t *c);
+/* a folder of cards deleted whole, with whatever else it has (its .ini, its pictures); its cards out of cards[] and
+ * the state. 0 = done; -1 = it couldn't be read, or something was left in it (the cards gone are out anyway) */
+int cards_delete_folder(const char *folder);
 int max_channels(const char *folder);       /* how many channels a folder of cards has (its .ini's MaxChannels, or 8) */
 int max_channels_set(const char *folder, int n);   /* the sd2psx goes up to that many in that folder from now on. 0 = written */
 /* the size, in MB, the sd2psx makes a card it doesn't find (a game's first one): its settings.ini's, which it reads

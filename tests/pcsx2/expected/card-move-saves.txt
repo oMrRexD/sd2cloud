@@ -15,7 +15,7 @@ SLUS-21065/SLUS-21065-1: 2 folders, fingerprint 64fbc81ffd3ff7a8, new
 [script] D
 [script] X
 [script] X
-mcfs: new card host:MemoryCards/PS2/MCCG-10045/MCCG-10045-1.mcd: 0
+mcfs: new card host:MemoryCards/PS2/MCCG-10045/MCCG-10045-1.mcd of 8 MB: 0
 MCCG-10045/MCCG-10045-1 joined the cards: 3 on the microSD
 MCCG-10045/MCCG-10045-1: 0 folders, fingerprint e3b0c44298fc1c14, new
 new card MCCG-10045/MCCG-10045-1: 0

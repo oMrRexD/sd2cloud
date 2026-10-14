@@ -255,6 +255,13 @@ PLACE = {
     "T_SIZE_TITLE": ("text", 480, 1), "T_SIZE_MB": ("text", 230, 1), "T_SIZE_RECOMMENDED": ("text", 230, 1),
     "T_SIZE_NEED": ("small", 234, 2), "T_SIZE_FREE": ("small", 234, 2), "T_SIZE_BIG": ("small", 234, 5),
     "T_SIZE_UNFORMATTED": ("small", 234, 6), "T_SET_CARD_SIZE": ("text", 270, 1),
+    # a card deleted, or its whole folder (cardops.c): the items of its options; the question, in a wide box: the
+    # title, what goes, and its backups in the small letters
+    "T_DELETE_CARD": ("text", 320, 1), "T_DELETE_FOLDER": ("text", 320, 1), "T_DELETE_CARD_ASK": ("text", WIDE, 2),
+    "T_DELETE_CARD_TEXT": ("text", WIDE, 3), "T_DELETE_BACKUP": ("small", WIDE, 2), "T_DELETE_NO_BACKUP": ("small", WIDE, 1),
+    "T_DELETE_FOLDER_ASK": ("text", WIDE, 2), "T_DELETE_FOLDER_TEXT": ("text", WIDE, 3),
+    "T_DELETE_FOLDER_NO_BACKUP": ("small", WIDE, 1), "T_DELETE_FOLDER_BACKUPS": ("small", WIDE, 2),
+    "T_DELETING": ("text", DIALOG, 1), "T_DONE_DELETE_CARD": ("text", DIALOG, 1), "T_DONE_DELETE_FOLDER": ("text", DIALOG, 1),
 }
 PARAGRAPH = ("text", DIALOG, 3)     # error messages and the rest: up to 3 lines in a box
 # what only an sd2psx is ever told (being moved to another card, its boot cards, one more channel for a folder): not

@@ -19,6 +19,7 @@ typedef struct {
                               as synced by the automatic sync, without a backup ("" = none) */
 } card_state_t;
 card_state_t *state_card(const char *id, int create);
+void state_forget(const char *id);                       /* a card that is no more: what was known of it goes */
 const char *state_folder(const char *name);              /* Drive folder id (cache) */
 void state_set_folder(const char *name, const char *id);
 void state_read(void);

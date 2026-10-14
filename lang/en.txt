@@ -647,6 +647,36 @@ T_SET_CARD_SIZE = New card size
 T_SIZE_NEXT_START = The sd2psx will create new cards of this size from the next time it is turned on.
 # Up to 3 lines.
 T_SIZE_SET_FAILED = Unable to change the sd2psx's settings.
+# One line.
+T_DELETE_CARD = Delete card
+# One line.
+T_DELETE_FOLDER = Delete whole folder
+# Up to 2 lines.
+T_DELETE_CARD_ASK = Delete the memory card %s?
+# Up to 3 lines.
+T_DELETE_CARD_TEXT = It will be permanently removed from the MMCE, with every save it has. This action cannot be undone.
+# Up to 2 lines.
+T_DELETE_BACKUP = Last backup: %s. Backups on Google Drive are kept.
+# One line.
+T_DELETE_NO_BACKUP = This card has no backup on Google Drive.
+# Up to 2 lines.
+T_DELETE_FOLDER_ASK = Delete the whole %s folder?
+# Up to 3 lines.
+T_DELETE_FOLDER_TEXT = Its %d memory cards will be permanently removed from the MMCE, with every save. This action cannot be undone.
+# One line.
+T_DELETE_FOLDER_NO_BACKUP = Memory cards with no backup on Google Drive: %d.
+# Up to 2 lines.
+T_DELETE_FOLDER_BACKUPS = Every card of it has a backup on Google Drive, which is kept.
+# One line.
+T_DELETING = Deleting...
+# One line.
+T_DONE_DELETE_CARD = Memory card deleted.
+# Up to 3 lines.
+T_DELETE_CARD_FAILED = Unable to delete the memory card.
+# One line.
+T_DONE_DELETE_FOLDER = Folder deleted.
+# Up to 3 lines.
+T_DELETE_FOLDER_FAILED = Unable to delete the whole folder.
 # Up to 3 lines.
 T_PICK_ELF = Choose an ELF...
 # Up to 3 lines.

@@ -642,6 +642,36 @@ T_SET_CARD_SIZE = Tamanho dos cartões novos
 T_SIZE_NEXT_START = O sd2psx passa a criar os cartões novos com este tamanho na próxima vez em que for ligado.
 # Up to 3 lines. English: Unable to change the sd2psx's settings.
 T_SIZE_SET_FAILED = Não foi possível alterar as configurações do sd2psx.
+# One line. English: Delete card
+T_DELETE_CARD = Eliminar cartão
+# One line. English: Delete whole folder
+T_DELETE_FOLDER = Eliminar a pasta inteira
+# Up to 2 lines. English: Delete the memory card %s?
+T_DELETE_CARD_ASK = Deseja eliminar o cartão de memória %s?
+# Up to 3 lines. English: It will be permanently removed from the MMCE, with every save it has. This action cannot be undone.
+T_DELETE_CARD_TEXT = Ele será removido permanentemente do MMCE, com todos os seus saves. Esta ação não pode ser desfeita.
+# Up to 2 lines. English: Last backup: %s. Backups on Google Drive are kept.
+T_DELETE_BACKUP = Último backup: %s. Os backups no Google Drive são mantidos.
+# One line. English: This card has no backup on Google Drive.
+T_DELETE_NO_BACKUP = Este cartão não tem backup no Google Drive.
+# Up to 2 lines. English: Delete the whole %s folder?
+T_DELETE_FOLDER_ASK = Deseja eliminar a pasta %s inteira?
+# Up to 3 lines. English: Its %d memory cards will be permanently removed from the MMCE, with every save. This action cannot be undone.
+T_DELETE_FOLDER_TEXT = Os %d cartões de memória dela serão removidos permanentemente do MMCE, com todos os saves. Esta ação não pode ser desfeita.
+# One line. English: Memory cards with no backup on Google Drive: %d.
+T_DELETE_FOLDER_NO_BACKUP = Cartões sem backup no Google Drive: %d.
+# Up to 2 lines. English: Every card of it has a backup on Google Drive, which is kept.
+T_DELETE_FOLDER_BACKUPS = Todos os cartões dela têm backup no Google Drive, que é mantido.
+# One line. English: Deleting...
+T_DELETING = Eliminando...
+# One line. English: Memory card deleted.
+T_DONE_DELETE_CARD = Cartão de memória eliminado.
+# Up to 3 lines. English: Unable to delete the memory card.
+T_DELETE_CARD_FAILED = Não foi possível eliminar o cartão de memória.
+# One line. English: Folder deleted.
+T_DONE_DELETE_FOLDER = Pasta eliminada.
+# Up to 3 lines. English: Unable to delete the whole folder.
+T_DELETE_FOLDER_FAILED = Não foi possível eliminar a pasta inteira.
 # Up to 3 lines. English: Choose an ELF...
 T_PICK_ELF = Escolher um ELF...
 # Up to 3 lines. English: Unable to read this memory card.

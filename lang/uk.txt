@@ -644,6 +644,36 @@ T_SET_CARD_SIZE = Розмір нових карток
 T_SIZE_NEXT_START = sd2psx почне створювати нові картки цього розміру після наступного ввімкнення.
 # Up to 3 lines. English: Unable to change the sd2psx's settings.
 T_SIZE_SET_FAILED = Не вдалося змінити налаштування sd2psx.
+# One line. English: Delete card
+T_DELETE_CARD = Видалити картку
+# One line. English: Delete whole folder
+T_DELETE_FOLDER = Видалити всю папку
+# Up to 2 lines. English: Delete the memory card %s?
+T_DELETE_CARD_ASK = Видалити картку пам’яті %s?
+# Up to 3 lines. English: It will be permanently removed from the MMCE, with every save it has. This action cannot be undone.
+T_DELETE_CARD_TEXT = Картку буде остаточно видалено з MMCE разом з усіма збереженнями. Цю дію не можна скасувати.
+# Up to 2 lines. English: Last backup: %s. Backups on Google Drive are kept.
+T_DELETE_BACKUP = Копія від %s. Копії в Google Drive збережуться.
+# One line. English: This card has no backup on Google Drive.
+T_DELETE_NO_BACKUP = Ця картка не має копії в Google Drive.
+# Up to 2 lines. English: Delete the whole %s folder?
+T_DELETE_FOLDER_ASK = Видалити всю папку %s?
+# Up to 3 lines. English: Its %d memory cards will be permanently removed from the MMCE, with every save. This action cannot be undone.
+T_DELETE_FOLDER_TEXT = Картки пам’яті цієї папки (%d) буде остаточно видалено з MMCE разом з усіма збереженнями. Цю дію не можна скасувати.
+# One line. English: Memory cards with no backup on Google Drive: %d.
+T_DELETE_FOLDER_NO_BACKUP = Карток без копії в Google Drive: %d.
+# Up to 2 lines. English: Every card of it has a backup on Google Drive, which is kept.
+T_DELETE_FOLDER_BACKUPS = Усі картки цієї папки мають копії в Google Drive, вони збережуться.
+# One line. English: Deleting...
+T_DELETING = Видалення...
+# One line. English: Memory card deleted.
+T_DONE_DELETE_CARD = Картку пам’яті видалено.
+# Up to 3 lines. English: Unable to delete the memory card.
+T_DELETE_CARD_FAILED = Не вдалося видалити картку пам’яті.
+# One line. English: Folder deleted.
+T_DONE_DELETE_FOLDER = Папку видалено.
+# Up to 3 lines. English: Unable to delete the whole folder.
+T_DELETE_FOLDER_FAILED = Не вдалося видалити всю папку.
 # Up to 3 lines. English: Choose an ELF...
 T_PICK_ELF = Виберіть ELF...
 # Up to 3 lines. English: Unable to read this memory card.
