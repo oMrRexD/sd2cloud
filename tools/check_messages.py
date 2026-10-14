@@ -282,6 +282,16 @@ PLACE = {
     "T_CREATE_FILE_ASK": ("text", WIDE, 2), "T_CREATE_SAVES": ("text", WIDE, 1), "T_CREATE_DONE": ("text", DIALOG, 2),
     "T_EXPORT_ALL": ("text", 320, 1), "T_REPEATED_ASK": ("text", 320, 1), "T_REPEATED_NEWEST": ("text", 320, 1),
     "T_REPEATED_EACH": ("text", 320, 1), "T_MARK_SAME_ASK": ("text", WIDE, 2), "T_MARK_SAME_TEXT": ("text", WIDE, 4),
+    # a card's saves by game (migrate.c): the option; the screen's title on the left; on the right of a game's row,
+    # where its saves go; in the middle when there is none; under the list, how many go and stay; the box with a list
+    # of what to do with the ones that are there already, saved differently; the questions, in a wide box; the screen
+    # of the copy; how it went
+    "T_MIGRATE": ("text", 320, 1), "T_MIGRATE_TITLE": ("text", 300, 1), "T_MIGRATE_OFF": ("small", 180, 1),
+    "T_MIGRATE_NEW": ("small", 180, 1), "T_MIGRATE_NONE": ("text", 420, 3), "T_MIGRATE_SUMMARY": ("small", 430, 1),
+    "T_MIGRATE_DIFFER": ("text", 320, 2), "T_MIGRATE_KEEP_GAME": ("text", 320, 1), "T_MIGRATE_REPLACE": ("text", 320, 1),
+    "T_MIGRATE_NEWER": ("text", 320, 1), "T_MIGRATE_ASK": ("text", WIDE, 2), "T_MIGRATE_ASK_NEW": ("text", WIDE, 1),
+    "T_MIGRATE_ASK_KEEP": ("small", WIDE, 2), "T_MIGRATE_THERE_N": ("text", DIALOG, 1),
+    "T_MIGRATE_KEPT_N": ("text", DIALOG, 1), "T_MIGRATE_DELETE_ASK": ("text", WIDE, 2), "T_MIGRATE_DELETE_TEXT": ("text", WIDE, 3),
 }
 PARAGRAPH = ("text", DIALOG, 3)     # error messages and the rest: up to 3 lines in a box
 # what only an sd2psx is ever told (being moved to another card, its boot cards, one more channel for a folder): not
@@ -328,6 +338,9 @@ LEGENDS = [
     # a folder picked for a new card file; "New card" on the main screen
     (("T_BACK", "T_OPEN", "T_CREATE_HERE"), False), (("T_BACK", "T_CREATE_HERE"), False),
     (("T_MENU_EXIT", "T_TPL_CREATE", "T_TOOLS", "T_SETTINGS"), 2), (("T_BACK", "T_REPLACE"), False),
+    # a card's saves by game; the question of deleting them from it after
+    (("T_BACK", "T_MARK", "T_MIGRATE_SIZE", "T_MIGRATE_START"), False), (("T_BACK", "T_MARK", "T_MIGRATE_START"), False),
+    (("T_BACK", "T_MIGRATE_START"), False), (("T_MIGRATE_KEEP", "T_DELETE"), False),
 ]
 
 

@@ -765,6 +765,46 @@ T_REPEATED_EACH = Choose one by one
 T_MARK_SAME_ASK = "%s" is already marked on %s.
 # Up to 4 lines.
 T_MARK_SAME_TEXT = A card can have only one save of that folder. The one on %s is from %s; the one on %s, from %s. Mark this one instead?
+# One line.
+T_MIGRATE = Split saves by game
+# One line.
+T_MIGRATE_TITLE = Saves by game
+# One line.
+T_MIGRATE_OFF = Stays
+# One line.
+T_MIGRATE_NEW = New card, %d MB
+# Up to 3 lines.
+T_MIGRATE_NONE = None of this card's saves is of a game that has a card of its own.
+# One line.
+T_MIGRATE_SUMMARY = %d saves of %d games go; %d without a game ID stay.
+# Button.
+T_MIGRATE_SIZE = Size
+# Button.
+T_MIGRATE_START = Start
+# Up to 2 lines.
+T_MIGRATE_DIFFER = Saves already on their game's card, saved differently: %d
+# One line.
+T_MIGRATE_KEEP_GAME = Keep the game cards' ones
+# One line.
+T_MIGRATE_REPLACE = Replace with this card's
+# One line.
+T_MIGRATE_NEWER = Keep the newer one
+# Up to 2 lines.
+T_MIGRATE_ASK = Copy %d saves to the cards of %d games?
+# One line.
+T_MIGRATE_ASK_NEW = New cards: %d, with their templates.
+# Up to 2 lines.
+T_MIGRATE_ASK_KEEP = This card is not changed. At the end you choose whether its copied saves stay on it.
+# One line.
+T_MIGRATE_THERE_N = Already on the game's card: %d
+# One line.
+T_MIGRATE_KEPT_N = Kept as they were: %d
+# Up to 2 lines.
+T_MIGRATE_DELETE_ASK = Delete from %s the saves that are on their games' cards now?
+# Up to 3 lines.
+T_MIGRATE_DELETE_TEXT = Saves that go: %d. The ones without a game ID, and the ones not copied, stay.
+# Button.
+T_MIGRATE_KEEP = Keep
 # Up to 3 lines.
 T_PICK_ELF = Choose an ELF...
 # Up to 3 lines.

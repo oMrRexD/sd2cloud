@@ -172,11 +172,11 @@ SCENARIOS = [
     {"name": "all-saves-progress", "what": "two saves of the same name saved at different moments are both shown",
      "cards": {"Card1/Card1-1": "empty", "SLUS-21065/SLUS-21065-1": "game", "SLUS-20001/SLUS-20001-1": "empty"},
      "files": {"Files/alpha.psu": "alpha-other.psu"}, "script": ">>XXXX>DXXXXOOO<XC"},
-    # △ on a card: "Delete card", seventh of its options (on PCSX2 there is no "Insert"), after "Rename" and "Change
-    # size"; the last card of its folder takes the folder with it. With more than one card in its folder, "Delete
+    # △ on a card: "Delete card", eighth of its options (on PCSX2 there is no "Insert"), after "Rename", "Change
+    # size" and "Split saves by game"; the last card of its folder takes the folder with it. With more than one card in its folder, "Delete
     # whole folder" comes after it
     {"name": "card-delete", "what": "a card deleted from its options: its file and its folder go", "cards": CARDS,
-     "script": "TDDDDDDXXXC"},
+     "script": "TDDDDDDDXXXC"},
     {"name": "folder-delete", "what": "a game's folder of two cards deleted whole: triangle on its row, the folder's options",
      "cards": dict(CARDS, **{"SLUS-21065/SLUS-21065-2": "empty"}), "script": ">DTXXXC"},
     # "Change size", sixth of its options: the cursor starts on the size recommended for what it has (1 MB)
@@ -221,6 +221,13 @@ SCENARIOS = [
     {"name": "mark-same-folder", "what": "a save of a folder marked on another card, marked in its place once asked",
      "cards": {"Card1/Card1-1": "empty", "SLUS-21065/SLUS-21065-1": "game", "SLUS-20001/SLUS-20001-1": "empty"},
      "files": {"Files/alpha.psu": "alpha-other.psu"}, "script": ">>XXXX>DXXXXOOO<XXX>XXC"},
+    # "Split saves by game", seventh of a card's options: each game's saves to its card. The game has none: a new one, of
+    # the size recommended (1 MB), and the card they come from stays as it was (circle on the question of deleting).
+    # The game's card has them already, the same: nothing is copied, and they are deleted from where they were
+    {"name": "split-new-card", "what": "a card's saves split by game: a new card for their game, the card left as it was",
+     "cards": {"Card1/Card1-1": "game", "Card2/Card2-1": "empty"}, "script": "TDDDDDDXSXXOC"},
+    {"name": "split-there-delete", "what": "a card's saves split by game, on the game's card already: deleted from it after",
+     "cards": CARDS, "script": "TDDDDDDXSXXXXC"},
     # Settings (START), the fifth row: the size the sd2psx makes a game's first card of, written to its settings.ini
     {"name": "settings-card-size", "what": "the size of the sd2psx's new cards set to 32 MB in its settings.ini",
      "cards": CARDS, "files": {".sd2psx/settings.ini": SD2PSX_SETTINGS}, "script": "SDDDDXDDXXC"},

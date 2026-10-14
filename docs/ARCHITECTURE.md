@@ -35,6 +35,7 @@ a PC's compiler. `src/app` is the only place that knows the screens; it calls do
 | `saves.c`, `save.c` | One card's saves, as the PS2 browser shows them; one save's page and what is done with it |
 | `marks.c` | Saves marked on the cards, whichever cards they are on: for a template, or to be copied together to a card or a folder (pasted with START on the card, in the list of cards, where their game's folder comes first) |
 | `dest.c` | Where a save goes when it is moved or imported: a card picked among the others, or a new card made on the spot (a copy's new card too), and the size it is made of |
+| `migrate.c` | A card's saves sent each to its game's card, as the sd2psx's Game ID keeps them: listed by game, picked, copied |
 | `cardops.c` | A card as a whole: made (empty, or with saves: the marked ones, or every one of "All saves"), in a group of the device or as a file; from its options, made again of another size, renamed (its name on the sd2psx, or its folder's), deleted, or its whole folder deleted |
 | `browse.c` | The Files group: folders of the microSD and of a USB drive, `.psu` files, exporting; a file renamed or deleted |
 | `install.c` | A memory card file looked into, its saves copied out of it or into it, and installed as a card |

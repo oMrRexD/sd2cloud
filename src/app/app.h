@@ -193,6 +193,9 @@ int card_rename_screen(card_t *c);       /* its name on the sd2psx, or its folde
 int card_delete(card_t *c);              /* asked, and deleted: 1 = cards[] changed (the main screen lists them again) */
 int folder_delete(card_t *c);            /* that card's whole folder, the same way */
 
+/* ------------------------------------------------------------ migrate.c */
+void migrate_screen(card_t *src);        /* its saves, each to its game's card (Game ID): listed, picked, copied */
+
 /* ------------------------------------------------------------ dest.c */
 struct dst_s {
     tabs_t g;
@@ -222,6 +225,7 @@ int dest_new_size(long long room);       /* the new card's size (destNew.size), 
 const char *dest_new_note(void);         /* what the question about making it says of it */
 card_t *dest_real(card_t *to);
 card_t *dest_card(const char *folder, int channel);
+card_t *dest_card_sized(const char *folder, int channel, long long size);
 
 /* ------------------------------------------------------------ dialog.c */
 extern dialog_t dlg, next;

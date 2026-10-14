@@ -763,6 +763,46 @@ T_REPEATED_EACH = 1 件ずつ選ぶ
 T_MARK_SAME_ASK = 「%s」はすでに %s で選択されています。
 # Up to 4 lines. English: A card can have only one save of that folder. The one on %s is from %s; the one on %s, from %s. Mark this one instead?
 T_MARK_SAME_TEXT = 1 枚のカードには同じフォルダーのセーブデータを 1 つしか置けません。%s のものは %s、%s のものは %s です。代わりにこちらを選択しますか？
+# One line. English: Split saves by game
+T_MIGRATE = セーブデータをゲームごとに分ける
+# One line. English: Saves by game
+T_MIGRATE_TITLE = ゲームごとのセーブデータ
+# One line. English: Stays
+T_MIGRATE_OFF = 移動しない
+# One line. English: New card, %d MB
+T_MIGRATE_NEW = 新しいカード（%d MB）
+# Up to 3 lines. English: None of this card's saves is of a game that has a card of its own.
+T_MIGRATE_NONE = このカードには、専用のカードを持つゲームのセーブデータがありません。
+# One line. English: %d saves of %d games go; %d without a game ID stay.
+T_MIGRATE_SUMMARY = 移動: %d 件（%d ゲーム）　残る（ID なし）: %d
+# Button. English: Size
+T_MIGRATE_SIZE = 容量
+# Button. English: Start
+T_MIGRATE_START = 開始
+# Up to 2 lines. English: Saves already on their game's card, saved differently: %d
+T_MIGRATE_DIFFER = ゲームのカードにすでにあり、内容が異なるもの: %d
+# One line. English: Keep the game cards' ones
+T_MIGRATE_KEEP_GAME = ゲームのカードのものを残す
+# One line. English: Replace with this card's
+T_MIGRATE_REPLACE = このカードのもので置き換える
+# One line. English: Keep the newer one
+T_MIGRATE_NEWER = 新しい方を残す
+# Up to 2 lines. English: Copy %d saves to the cards of %d games?
+T_MIGRATE_ASK = %d 件のセーブデータを %d 本のゲームのカードにコピーしますか？
+# One line. English: New cards: %d, with their templates.
+T_MIGRATE_ASK_NEW = 新しいカード: %d 枚（テンプレート付き）
+# Up to 2 lines. English: This card is not changed. At the end you choose whether its copied saves stay on it.
+T_MIGRATE_ASK_KEEP = このカードは変更されません。最後に、コピーしたセーブデータを残すかどうかを選べます。
+# One line. English: Already on the game's card: %d
+T_MIGRATE_THERE_N = すでにゲームのカードにあったもの: %d
+# One line. English: Kept as they were: %d
+T_MIGRATE_KEPT_N = そのまま残したもの: %d
+# Up to 2 lines. English: Delete from %s the saves that are on their games' cards now?
+T_MIGRATE_DELETE_ASK = ゲームのカードに移ったセーブデータを %s から削除しますか？
+# Up to 3 lines. English: Saves that go: %d. The ones without a game ID, and the ones not copied, stay.
+T_MIGRATE_DELETE_TEXT = 削除するセーブデータ: %d　ゲーム ID のないものとコピーされなかったものは残ります。
+# Button. English: Keep
+T_MIGRATE_KEEP = 残す
 # Up to 3 lines. English: Choose an ELF...
 T_PICK_ELF = ELF を選択...
 # Up to 3 lines. English: Unable to read this memory card.

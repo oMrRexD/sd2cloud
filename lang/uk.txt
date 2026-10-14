@@ -762,6 +762,46 @@ T_REPEATED_EACH = Вибрати по одному
 T_MARK_SAME_ASK = «%s» уже позначено на %s.
 # Up to 4 lines. English: A card can have only one save of that folder. The one on %s is from %s; the one on %s, from %s. Mark this one instead?
 T_MARK_SAME_TEXT = На картці може бути лише одне збереження з цією папкою. На %s — від %s, на %s — від %s. Позначити це замість нього?
+# One line. English: Split saves by game
+T_MIGRATE = Розділити збереження за іграми
+# One line. English: Saves by game
+T_MIGRATE_TITLE = Збереження за іграми
+# One line. English: Stays
+T_MIGRATE_OFF = Залишається
+# One line. English: New card, %d MB
+T_MIGRATE_NEW = Нова картка, %d МБ
+# Up to 3 lines. English: None of this card's saves is of a game that has a card of its own.
+T_MIGRATE_NONE = Жодне збереження на цій картці не належить грі з власною карткою.
+# One line. English: %d saves of %d games go; %d without a game ID stay.
+T_MIGRATE_SUMMARY = Перенос: %d збережень, %d ігор. Без ID лишається: %d
+# Button. English: Size
+T_MIGRATE_SIZE = Розмір
+# Button. English: Start
+T_MIGRATE_START = Почати
+# Up to 2 lines. English: Saves already on their game's card, saved differently: %d
+T_MIGRATE_DIFFER = Уже є на картці гри, але відрізняються: %d
+# One line. English: Keep the game cards' ones
+T_MIGRATE_KEEP_GAME = Залишити ті, що на картках ігор
+# One line. English: Replace with this card's
+T_MIGRATE_REPLACE = Замінити цими збереженнями
+# One line. English: Keep the newer one
+T_MIGRATE_NEWER = Залишити новіше
+# Up to 2 lines. English: Copy %d saves to the cards of %d games?
+T_MIGRATE_ASK = Скопіювати %d збережень на картки %d ігор?
+# One line. English: New cards: %d, with their templates.
+T_MIGRATE_ASK_NEW = Нових карток: %d, з їхніми шаблонами.
+# Up to 2 lines. English: This card is not changed. At the end you choose whether its copied saves stay on it.
+T_MIGRATE_ASK_KEEP = Ця картка не змінюється. Наприкінці ви вирішите, чи залишити на ній скопійовані збереження.
+# One line. English: Already on the game's card: %d
+T_MIGRATE_THERE_N = Уже були на картці гри: %d
+# One line. English: Kept as they were: %d
+T_MIGRATE_KEPT_N = Залишені як були: %d
+# Up to 2 lines. English: Delete from %s the saves that are on their games' cards now?
+T_MIGRATE_DELETE_ASK = Видалити з %s збереження, які тепер є на картках ігор?
+# Up to 3 lines. English: Saves that go: %d. The ones without a game ID, and the ones not copied, stay.
+T_MIGRATE_DELETE_TEXT = Видаляється збережень: %d. Збереження без ID гри та нескопійовані залишаються.
+# Button. English: Keep
+T_MIGRATE_KEEP = Залишити
 # Up to 3 lines. English: Choose an ELF...
 T_PICK_ELF = Виберіть ELF...
 # Up to 3 lines. English: Unable to read this memory card.

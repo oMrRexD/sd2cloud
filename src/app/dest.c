@@ -428,8 +428,13 @@ card_t *dest_real(card_t *to)
 }
 
 /* The card of a folder of games, on a channel: the one that is there or, made now as dest_real makes one, a new
- * one. NULL = it isn't there and couldn't be made (said) */
+ * one (of that size; 0 = 8 MB). NULL = it isn't there and couldn't be made (said) */
 card_t *dest_card(const char *folder, int channel)
+{
+    return dest_card_sized(folder, channel, 0);
+}
+
+card_t *dest_card_sized(const char *folder, int channel, long long size)
 {
     int i;
     for (i = 0; i < nCards; i++)
@@ -442,5 +447,6 @@ card_t *dest_card(const char *folder, int channel)
     snprintf(destNew.id, sizeof(destNew.id), "%s/%s", destNew.folder, destNew.base);
     snprintf(destNew.path, sizeof(destNew.path), "%s%s/%s/%s%s", sdRoot, dev->cards, destNew.folder, destNew.base, dev->ext);
     destNew.type = TYPE_GAMEID;
+    destNew.size = size;
     return dest_real(&destNew);
 }

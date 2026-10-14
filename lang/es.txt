@@ -762,6 +762,46 @@ T_REPEATED_EACH = Elegir una por una
 T_MARK_SAME_ASK = "%s" ya está marcada en %s.
 # Up to 4 lines. English: A card can have only one save of that folder. The one on %s is from %s; the one on %s, from %s. Mark this one instead?
 T_MARK_SAME_TEXT = Una tarjeta solo puede tener una partida de esa carpeta. La de %s es del %s; la de %s, del %s. ¿Desea marcar esta en su lugar?
+# One line. English: Split saves by game
+T_MIGRATE = Separar partidas por juego
+# One line. English: Saves by game
+T_MIGRATE_TITLE = Partidas por juego
+# One line. English: Stays
+T_MIGRATE_OFF = Se queda
+# One line. English: New card, %d MB
+T_MIGRATE_NEW = Tarjeta nueva, %d MB
+# Up to 3 lines. English: None of this card's saves is of a game that has a card of its own.
+T_MIGRATE_NONE = Ninguna partida de esta tarjeta es de un juego que tenga tarjeta propia.
+# One line. English: %d saves of %d games go; %d without a game ID stay.
+T_MIGRATE_SUMMARY = Se van %d partidas de %d juegos; se quedan %d sin ID.
+# Button. English: Size
+T_MIGRATE_SIZE = Tamaño
+# Button. English: Start
+T_MIGRATE_START = Iniciar
+# Up to 2 lines. English: Saves already on their game's card, saved differently: %d
+T_MIGRATE_DIFFER = Partidas que ya están en la tarjeta del juego, distintas: %d
+# One line. English: Keep the game cards' ones
+T_MIGRATE_KEEP_GAME = Conservar las de los juegos
+# One line. English: Replace with this card's
+T_MIGRATE_REPLACE = Sustituir por las de esta tarjeta
+# One line. English: Keep the newer one
+T_MIGRATE_NEWER = Conservar la más reciente
+# Up to 2 lines. English: Copy %d saves to the cards of %d games?
+T_MIGRATE_ASK = ¿Desea copiar %d partidas a las tarjetas de %d juegos?
+# One line. English: New cards: %d, with their templates.
+T_MIGRATE_ASK_NEW = Tarjetas nuevas: %d, con sus plantillas.
+# Up to 2 lines. English: This card is not changed. At the end you choose whether its copied saves stay on it.
+T_MIGRATE_ASK_KEEP = Esta tarjeta no se modifica. Al final usted elige si las partidas copiadas siguen en ella.
+# One line. English: Already on the game's card: %d
+T_MIGRATE_THERE_N = Ya estaban en la tarjeta del juego: %d
+# One line. English: Kept as they were: %d
+T_MIGRATE_KEPT_N = Conservadas como estaban: %d
+# Up to 2 lines. English: Delete from %s the saves that are on their games' cards now?
+T_MIGRATE_DELETE_ASK = ¿Desea eliminar de %s las partidas que ahora están en las tarjetas de los juegos?
+# Up to 3 lines. English: Saves that go: %d. The ones without a game ID, and the ones not copied, stay.
+T_MIGRATE_DELETE_TEXT = Partidas que se van: %d. Las que no tienen ID de juego, y las que no se copiaron, se quedan.
+# Button. English: Keep
+T_MIGRATE_KEEP = Conservar
 # Up to 3 lines. English: Choose an ELF...
 T_PICK_ELF = Elegir un ELF...
 # Up to 3 lines. English: Unable to read this memory card.
