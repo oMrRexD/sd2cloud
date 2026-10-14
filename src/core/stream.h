@@ -20,5 +20,9 @@ int stream_zip(const card_t *c, const datetime_t *t, stream_t *s, chunk_cb cb, v
 /* the card's file copied to dest (in a folder of the microSD or of a USB drive) inside a .zip, as .mcd or as .ps2;
  * the .zip is read back and compared. 0 = ok */
 int card_export(const card_t *c, const char *dest, int ps2, int (*progress)(long long done, long long total));
+/* a card's file (card, a .mcd) written to dest as a file of its own, as it is or with the ECC bytes of a .ps2, a piece
+ * at a time with one of the two files open at a time; read back and compared by its SHA-256. 0 = ok (a copy that
+ * failed is removed) */
+int card_write_file(const char *card, const char *dest, int ps2, int (*progress)(long long done, long long total));
 
 #endif

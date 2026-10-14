@@ -294,6 +294,75 @@ static int zip_to_file(const unsigned char *d, size_t n, int last, void *u)
     return 0;
 }
 
+int card_write_file(const char *card, const char *dest, int ps2, int (*progress)(long long done, long long total))
+{
+    unsigned char *in = malloc(PIECE), *ecc = ps2 ? malloc(PIECE / PAGE * PAGE_ECC) : NULL;
+    unsigned char h1[WC_SHA256_DIGEST_SIZE], h2[WC_SHA256_DIGEST_SIZE];
+    wc_Sha256 sha, back;
+    long long total, at = 0, wrote = 0, read2 = 0;
+    int r = -1, fd, n = 0, k, got, done;
+    ecc_tables();
+    if (!in || (ps2 && !ecc) || (fd = open(card, O_RDONLY)) < 0)
+        goto end;
+    total = lseek(fd, 0, SEEK_END);
+    close(fd);
+    wc_InitSha256(&sha);
+    while (at < total) {   /* a piece of the card read, and then written: one of the two files open at a time */
+        const unsigned char *d = in;
+        if ((fd = open(card, O_RDONLY)) < 0)
+            goto end_sha;
+        lseek(fd, (long)at, SEEK_SET);
+        for (n = 0; n < PIECE && (got = read(fd, in + n, BLOCK)) > 0; n += got)
+            ;
+        close(fd);
+        if (n <= 0 || (ps2 && n % PAGE))
+            goto end_sha;
+        k = n;
+        if (ps2) {
+            k = add_ecc(in, n, ecc);
+            d = ecc;
+        }
+        wc_Sha256Update(&sha, d, k);
+        if ((fd = open(dest, wrote ? O_WRONLY : O_WRONLY | O_CREAT | O_TRUNC, 0666)) < 0)
+            goto end_sha;
+        if (wrote)
+            lseek(fd, (long)wrote, SEEK_SET);
+        for (done = 0; done < k && (got = write(fd, d + done, k - done > BLOCK ? BLOCK : k - done)) > 0; done += got)
+            ;
+        if (close(fd) < 0 || done < k)
+            goto end_sha;
+        wrote += k;
+        at += n;
+        if (progress)
+            progress(at, total * 2);
+    }
+    wc_Sha256Final(&sha, h1);
+    /* read back: the file there has to be what was written */
+    wc_InitSha256(&back);
+    if ((fd = open(dest, O_RDONLY)) >= 0) {
+        while ((n = read(fd, in, BLOCK)) > 0) {
+            wc_Sha256Update(&back, in, n);
+            read2 += n;
+            if (progress)
+                progress(total + read2 * total / (wrote ? wrote : 1), total * 2);
+        }
+        close(fd);
+        wc_Sha256Final(&back, h2);
+        if (n == 0 && read2 == wrote && !memcmp(h1, h2, sizeof(h1)))
+            r = 0;
+    }
+    wc_Sha256Free(&back);
+end_sha:
+    wc_Sha256Free(&sha);
+end:
+    free(in);
+    free(ecc);
+    if (r != 0)
+        unlink(dest);
+    log_msg("card %s written to %s%s: %d", card, dest, ps2 ? " with its ECC" : "", r);
+    return r;
+}
+
 int card_export(const card_t *c, const char *dest, int ps2, int (*progress)(long long done, long long total))
 {
     static unsigned char comp[BLOCK];

@@ -57,6 +57,10 @@ static int is_card_file(const char *name, long long size)
 enum { FB_ENTER = 1, FB_PSU, FB_CARD, FB_ELF };
 int fbExit;   /* the folders were opened from "Exit to": the program run from them is the choice kept for next time */
 int fbPick;   /* or to choose a program without running it (the one to open after IGR): X on an ELF gives it, in fbPicked */
+/* or for a folder: △ in the folder shown hands it to fbHere (its text says so), which answers 1 when it is done with
+ * the folders (a new card was made there) */
+int (*fbHere)(const char *dir);
+int fbHereText;
 char fbPicked[200];
 
 static int is_elf(const char *name)
@@ -194,7 +198,8 @@ static int fb_up(void)
  * card or saves on their way here, a program being picked) */
 static int fb_file_options(void)
 {
-    return fb.n && !fb.loading && !fb.list[fb.cursor].dir && !fbCard && !fbGive.c && !fbPick && !fbExit && !card_file_marks();
+    return fb.n && !fb.loading && !fb.list[fb.cursor].dir && !fbCard && !fbGive.c && !fbPick && !fbExit && !fbHere &&
+           !card_file_marks();
 }
 
 static void scene_files(float t)
@@ -263,7 +268,10 @@ static void scene_files(float t)
             l[n].button = BUTTON_START, l[n++].text = T(T_PASTE);
         else if (fbCard)   /* a whole card is */
             l[n].button = BUTTON_TRIANGLE, l[n++].text = T(T_EXPORT);
-        else if (e && (e->dir ? IS_SAVE(fb.cursor) : is_psu(e->name)))   /* what the selected file is good for */
+        else if (fbHere) {   /* a folder is being picked: this one */
+            if (!fb.error)
+                l[n].button = BUTTON_TRIANGLE, l[n++].text = T(fbHereText);
+        } else if (e && (e->dir ? IS_SAVE(fb.cursor) : is_psu(e->name)))   /* what the selected file is good for */
             l[n].button = BUTTON_SQUARE, l[n++].text = T(T_INSTALL_SAVE);
         else if (e && !e->dir && is_card_file(e->name, e->size))
             l[n].button = BUTTON_SQUARE, l[n++].text = T(T_INSTALL);
@@ -706,7 +714,7 @@ static void browse(int dev)
                     leave(target);
                 }
             }
-        } else if ((b & PAD_SQUARE) && !fbGive.c && !fbCard) {
+        } else if ((b & PAD_SQUARE) && !fbGive.c && !fbCard && !fbHere) {
             const dir_entry_t *e = fb.n ? &fb.list[fb.cursor] : NULL;
             char name[260];   /* the file itself, without opening it first */
             snprintf(name, sizeof(name), "%s%s", e ? e->name : "", e && e->dir ? "/" : "");
@@ -723,6 +731,11 @@ static void browse(int dev)
                 sound_play(SND_CONFIRM);
                 psu_screen("", 0);
             }
+        } else if ((b & PAD_TRIANGLE) && fbHere && !fb.error) {   /* the folder shown, for what it was picked for */
+            sound_play(SND_CONFIRM);
+            if (fbHere(fb.dir))
+                return;
+            fb_load(fb.n ? fb.list[fb.cursor].name : NULL);   /* (with what was made there) */
         } else if ((b & PAD_TRIANGLE) && fb_file_options()) {
             sound_play(SND_CONFIRM);
             file_options(&fb.list[fb.cursor]);

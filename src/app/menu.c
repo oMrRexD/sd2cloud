@@ -90,16 +90,21 @@ static void card_options(card_t *c)
 
 static void folder_options(card_t *c)
 {
-    const char *items[1] = {T(T_DELETE_FOLDER)};
+    const char *items[2];
     char title[100];
-    int i, n = 0;
+    int i, n = 0, k = 0, rename = folder_renamable(c->folder);
     for (i = 0; i < nCards; i++)
         n += !strcasecmp(cards[i].folder, c->folder);
+    if (rename)   /* (a folder of the user's own: it can be called something else) */
+        items[k++] = T(T_RENAME);
+    items[k++] = T(T_DELETE_FOLDER);
     snprintf(title, sizeof(title), "%s", game_of(c));   /* (the game's name, cut to fit the box) */
     fit(FONT_TEXT, title, sizeof(title), 320);
-    if (choose(title, items, 1, 0) < 0)
+    if ((i = choose(title, items, k, 0)) < 0)
         return;
-    if (n > 1)
+    if (rename && i == 0)
+        card_rename_screen(c);
+    else if (n > 1)
         folder_delete(c);
     else   /* (a folder of one card: that card is asked about, and its folder goes with it) */
         card_delete(c);
@@ -145,16 +150,22 @@ static void scene_menu(float t)
         return;
     }
     {
-        /* inside a folder of the Games group circle goes back to the folders ("Back" and the other four don't fit
-         * the line: the tools and the settings stay on SELECT and START, unsaid) */
-        int inside = menu.g.tab == TAB_GAMES && menu.g.open >= 0;
-        legend_t l[5] = {{BUTTON_CIRCLE, T(inside ? T_BACK : T_MENU_EXIT)}, {BUTTON_CROSS, T(T_OPEN)},
+        /* inside a folder circle goes back to the folders ("Back" and the other four don't fit the line: the tools
+         * and the settings stay on SELECT and START, unsaid) */
+        int inside = menu.g.open >= 0, made = menu.g.n && menu.g.idx[menu.g.cursor] == ROW_NEW;
+        legend_t l[5] = {{BUTTON_CIRCLE, T(inside ? T_BACK : T_MENU_EXIT)}, {BUTTON_CROSS, T(made ? T_TPL_CREATE : T_OPEN)},
                          {BUTTON_TRIANGLE, T(T_OPTIONS)}, {BUTTON_SELECT, T(T_TOOLS)}, {BUTTON_START, T(T_SETTINGS)}};
-        if (menu.g.n && menu.g.idx[menu.g.cursor] < 0) {   /* "All saves": not a card, there are no options of one */
+        if (menu.g.n && menu.g.idx[menu.g.cursor] < 0) {   /* "All saves", "New card": not a card, no options of one */
             l[2] = l[3], l[3] = l[4];
             look_legend(l, 4, 2);
         } else
             look_legend(l, inside ? 3 : 5, inside ? 0 : 2);
+    }
+    if (menu.g.n && menu.g.idx[menu.g.cursor] == ROW_NEW) {   /* "New card": what it makes */
+        ui_text_center(FONT_TEXT, CARD_CX, 82, 0x7E8AA0, T(T_NEW_CARD));
+        look_card(CARD_X, CARD_Y, "+", NULL);
+        ui_paragraph_center(FONT_SMALL, CARD_CX, CARD_Y + LOOK_CARD_H + 4, LOOK_CARD_W + 32, COLOR_DIM, T(T_CREATE_HINT));
+        return;
     }
     if (menu.g.n && menu.g.idx[menu.g.cursor] < 0) {   /* "All saves": the game cards, and how many they are */
         snprintf(s, sizeof(s), T(T_GAME_CARDS_N), menu.g.nGames);
@@ -214,7 +225,7 @@ static void cards_resort(void)
 {
     char active[96], moved[96], shown[96];
     const card_t *c = tabs_card(&menu.g);
-    int i, inside = menu.g.tab == TAB_GAMES && menu.g.open >= 0;
+    int i, inside = menu.g.open >= 0;
     snprintf(active, sizeof(active), "%s", activeCard >= 0 ? cards[activeCard].id : "");
     snprintf(moved, sizeof(moved), "%s", movedOff ? movedOff->id : "");
     snprintf(shown, sizeof(shown), "%s", c ? c->id : "");
@@ -351,6 +362,7 @@ void manual(void)
     ui_lock();
     tabs_init(&menu.g, NULL, 1);
     menu.g.all = 1;
+    menu.g.create = 1;   /* (the Cards group starts with "New card") */
     tabs_show(&menu.g, menu.g.tab);
     if (i < nCards) {
         tabs_show(&menu.g, tab_of(&cards[i]));
@@ -384,7 +396,10 @@ void manual(void)
         }
         if (tabs_nav(&menu.g, b) || tabs_folder_nav(&menu.g, b))
             continue;
-        if ((b & PAD_CROSS) && menu.g.tab == TAB_GAMES && menu.g.n && menu.g.idx[menu.g.cursor] < 0) {
+        if ((b & PAD_CROSS) && menu.g.tab != TAB_FILES && menu.g.n && menu.g.idx[menu.g.cursor] == ROW_NEW) {   /* "New card" */
+            sound_play(SND_CONFIRM);
+            card_create(NULL, 0);
+        } else if ((b & PAD_CROSS) && menu.g.tab == TAB_GAMES && menu.g.n && menu.g.idx[menu.g.cursor] < 0) {
             sound_play(SND_CONFIRM);
             card_screen(&allGames);   /* "All saves" */
         } else if ((b & PAD_CROSS) && menu.g.tab == TAB_FILES) {

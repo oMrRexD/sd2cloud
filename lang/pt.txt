@@ -722,6 +722,44 @@ T_DELETE_FILE_ASK = Deseja eliminar o arquivo %s?
 T_DELETE_FILE_FAILED = Não foi possível eliminar o arquivo.
 # Up to 3 lines. English: This file is one of the sd2psx's cards: use its options in the list of cards.
 T_FILE_IS_CARD = Este arquivo é um cartão do sd2psx: use as opções dele na lista de cartões.
+# Up to 2 lines. English: In a group of the sd2psx, or as a file.
+T_CREATE_HINT = Num grupo do sd2psx ou como um arquivo.
+# One line. English: Where to create the card
+T_CREATE_WHERE = Onde criar o cartão
+# One line. English: Numbered card: %s
+T_CREATE_NUMBERED = Cartão numerado: %s
+# One line. English: %s group: %s
+T_CREATE_IN_GROUP = Grupo %s: %s
+# One line. English: New group...
+T_CREATE_NEW_GROUP = Novo grupo...
+# One line. English: File on the MMCE...
+T_CREATE_FILE_SD = Arquivo no MMCE...
+# One line. English: File on the USB drive...
+T_CREATE_FILE_USB = Arquivo no pendrive...
+# Button. English: Create here
+T_CREATE_HERE = Criar aqui
+# One line. English: File format
+T_CREATE_FORMAT = Formato do arquivo
+# Up to 2 lines. English: Create the card %s (%d MB)?
+T_CREATE_ASK = Deseja criar o cartão %s (%d MB)?
+# Up to 2 lines. English: Create the file %s (%d MB)?
+T_CREATE_FILE_ASK = Deseja criar o arquivo %s (%d MB)?
+# One line. English: Saves that go into it: %d
+T_CREATE_SAVES = Saves que vão para ele: %d
+# Up to 2 lines. English: Card created: %s
+T_CREATE_DONE = Cartão criado: %s
+# One line. English: Export all to a card
+T_EXPORT_ALL = Exportar todos para um cartão
+# One line. English: Saves with the same folder: %d
+T_REPEATED_ASK = Saves com a mesma pasta: %d
+# One line. English: Keep the newest of each
+T_REPEATED_NEWEST = Manter o mais recente de cada
+# One line. English: Choose one by one
+T_REPEATED_EACH = Escolher um por um
+# Up to 2 lines. English: "%s" is already marked on %s.
+T_MARK_SAME_ASK = "%s" já está marcado em %s.
+# Up to 4 lines. English: A card can have only one save of that folder. The one on %s is from %s; the one on %s, from %s. Mark this one instead?
+T_MARK_SAME_TEXT = Um cartão só pode ter um save com essa pasta. O de %s é de %s; o de %s, de %s. Deseja marcar este no lugar?
 # Up to 3 lines. English: Choose an ELF...
 T_PICK_ELF = Escolher um ELF...
 # Up to 3 lines. English: Unable to read this memory card.

@@ -273,6 +273,15 @@ PLACE = {
     "T_RENAME": ("text", 320, 1), "T_CARD_NAME_TITLE": ("text", 400, 1), "T_FOLDER_NAME_TITLE": ("text", 400, 1),
     "T_FILE_NAME_TITLE": ("text", 400, 1), "T_RENAME_FOLDER_ASK": ("text", WIDE, 2), "T_RENAME_FOLDER_TEXT": ("text", WIDE, 3),
     "T_RENAMING": ("text", DIALOG, 1), "T_RENAME_DONE_FOLDER": ("text", DIALOG, 2), "T_DELETE_FILE_ASK": ("text", WIDE, 2),
+    # a new card: under the big card of "New card"; the boxes with a list (where it goes, its format, the saves of a
+    # folder that are on more than one card); the question, in a wide box; how it went; the row of the options of
+    # "All saves" (no value on its right); the question of a folder marked on another card, in a wide box
+    "T_CREATE_HINT": ("small", 212, 2), "T_CREATE_WHERE": ("text", 320, 1), "T_CREATE_NUMBERED": ("text", 320, 1),
+    "T_CREATE_IN_GROUP": ("text", 320, 1), "T_CREATE_NEW_GROUP": ("text", 320, 1), "T_CREATE_FILE_SD": ("text", 320, 1),
+    "T_CREATE_FILE_USB": ("text", 320, 1), "T_CREATE_FORMAT": ("text", 320, 1), "T_CREATE_ASK": ("text", WIDE, 2),
+    "T_CREATE_FILE_ASK": ("text", WIDE, 2), "T_CREATE_SAVES": ("text", WIDE, 1), "T_CREATE_DONE": ("text", DIALOG, 2),
+    "T_EXPORT_ALL": ("text", 320, 1), "T_REPEATED_ASK": ("text", 320, 1), "T_REPEATED_NEWEST": ("text", 320, 1),
+    "T_REPEATED_EACH": ("text", 320, 1), "T_MARK_SAME_ASK": ("text", WIDE, 2), "T_MARK_SAME_TEXT": ("text", WIDE, 4),
 }
 PARAGRAPH = ("text", DIALOG, 3)     # error messages and the rest: up to 3 lines in a box
 # what only an sd2psx is ever told (being moved to another card, its boot cards, one more channel for a folder): not
@@ -316,6 +325,9 @@ LEGENDS = [
     # a file of the Files group, with its options; renaming a folder of cards
     (("T_BACK", "T_OPEN", "T_INSTALL", "T_OPTIONS"), False), (("T_BACK", "T_OPEN", "T_INSTALL_SAVE", "T_OPTIONS"), False),
     (("T_BACK", "T_RUN", "T_OPTIONS"), False), (("T_BACK", "T_OPTIONS"), False), (("T_BACK", "T_RENAME"), False),
+    # a folder picked for a new card file; "New card" on the main screen
+    (("T_BACK", "T_OPEN", "T_CREATE_HERE"), False), (("T_BACK", "T_CREATE_HERE"), False),
+    (("T_MENU_EXIT", "T_TPL_CREATE", "T_TOOLS", "T_SETTINGS"), 2), (("T_BACK", "T_REPLACE"), False),
 ]
 
 

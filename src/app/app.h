@@ -76,6 +76,7 @@ typedef struct {
     int way;                  /* which way: 1 = into a folder, -1 = out of it */
     int add;                  /* 1 = every list of cards starts with a row that isn't one, "New card" (its idx is -1):
                                  a card file is being installed, as a new card or over one of these */
+    int create;               /* 1 = the Cards group starts with "New card": a card is made there (the main screen) */
     int all;                  /* 1 = the folders of the Games group start with one, "All saves": every game card's
                                  saves on one screen (the main screen, with more than one game card) */
     char newGame[48];         /* a save is on its way to a card: its game's folder ("" = no game can be told). The
@@ -160,6 +161,8 @@ struct fb_s {
 extern struct fb_s fb;
 extern int fbExit;
 extern int fbPick;
+extern int (*fbHere)(const char *dir);   /* a folder picked: △ hands the one shown to it (1 = done with the folders) */
+extern int fbHereText;
 extern char fbPicked[200];
 struct psu_s {
     save_view_t v;
@@ -178,6 +181,13 @@ void memcard_hint(void);
 void memcard_upload(void);               /* the whole card, as a backup of its own on Drive */
 
 /* ------------------------------------------------------------ cardops.c */
+typedef struct {
+    card_t *card;          /* a save, by the card it is on and its folder */
+    const char *folder;
+} save_ref_t;
+/* a new card, with those saves in it (n = 0: empty): its place picked (a group of the device, or a file of a
+ * folder), and its size. 1 = it was made (a card of the device: cards[] has it at its end, cardsUnsorted) */
+int card_create(const save_ref_t *saves, int n);
 void card_resize_screen(card_t *c);      /* the card made again of another size, picked and asked */
 int card_rename_screen(card_t *c);       /* its name on the sd2psx, or its folder's: 1 = cards[] changed */
 int card_delete(card_t *c);              /* asked, and deleted: 1 = cards[] changed (the main screen lists them again) */
@@ -207,6 +217,7 @@ int dest_new_place(const char *game);    /* "New card" of that game picked: wher
 int ask_more_channels(int max);
 extern int cardsUnsorted;
 int card_size_pick(int title, long long room, int current, int device);   /* a card's size, in MB (0 = back): dest.c */
+int card_size_pick_in(int title, long long room, int current, int device, int minMb, int maxMb);   /* (within those) */
 int dest_new_size(long long room);       /* the new card's size (destNew.size), picked: 1 = it was, 0 = back */
 const char *dest_new_note(void);         /* what the question about making it says of it */
 card_t *dest_real(card_t *to);
@@ -229,6 +240,7 @@ int choose_noted(const char *title, const char *const *items, int n, int start, 
 
 /* ------------------------------------------------------------ format.c */
 void format_size(long long bytes, char *out, size_t size);
+void format_save_when(unsigned long long w, char *out, size_t size);   /* when a save was saved, for the screen */
 const char *format_name(int ps2);
 void backup_when(const card_t *c, const drive_file_t *f, char *out, size_t size);
 void last_backup(const card_t *c, char *out, size_t size);
@@ -305,6 +317,7 @@ struct marks_s {
 extern struct marks_s marks;
 int marked(const card_t *c, const char *folder);
 int mark_toggle(const save_view_t *v);
+int mark_same_folder(const save_view_t *v);   /* one of its folder marked on another card: asked (0 = not marked) */
 void marks_reset(void);
 int mark_saves(void);
 save_view_t *mark_view(int i);

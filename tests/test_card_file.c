@@ -361,8 +361,32 @@ static void made_again_of_another_size(void)
     CHECK(same_save(DEST, "BADATA-SYSTEM"));
 }
 
+/* a card written as a file of its own: as it is, and as a .ps2 with its ECC bytes, each opened again as a card */
+static void written_as_a_file(void)
+{
+    card_t c = dest_card(), to = dest_card();
+    card_file_t f;
+    make_source(DEST);
+    CHECK_INT(card_write_file(DEST, "out.mcd", 0, NULL), 0);
+    CHECK(t_same("out.mcd", DEST));
+    CHECK_INT(card_write_file(DEST, "out.ps2", 1, NULL), 0);
+    CHECK_INT(t_size("out.ps2"), CARD_BYTES / 512 * 528);
+    CHECK_INT(card_file_open(&f, "out.ps2", NULL), 0);
+    CHECK_INT(f.ecc, 1);
+    CHECK_INT(f.size, CARD_BYTES);
+    snprintf(to.path, sizeof(to.path), "sd/MemoryCards/PS2/Card1/Card1-2.mcd");
+    CHECK_INT(card_file_install(&f, &to, NULL), 0);
+    card_file_close(&f);
+    CHECK(t_same(to.path, DEST));   /* (its ECC taken off again: the same card) */
+    (void)c;
+    /* a card that isn't there */
+    CHECK(card_write_file("nothing.mcd", "out2.mcd", 0, NULL) != 0);
+    CHECK_INT(t_size("out2.mcd"), -1);
+}
+
 void suite_card_file(void)
 {
+    RUN(written_as_a_file);
     RUN(from_memory);
     RUN(straight_from_the_file);
     RUN(a_file_that_stops_reading);

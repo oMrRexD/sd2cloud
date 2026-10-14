@@ -30,6 +30,14 @@ static void format_when(int year, int month, int day, int hour, int minute, char
     snprintf(out, size, "%s %02d:%02d", date, hour, minute);
 }
 
+/* when a save was saved (a card's time, as mcfs_save_t has it) in the console's time zone: 12/10/2026 13:05 */
+void format_save_when(unsigned long long w, char *out, size_t size)
+{
+    datetime_t d;
+    card_time_local((int)(w >> 40), (w >> 32) & 0xFF, (w >> 24) & 0xFF, (w >> 16) & 0xFF, (w >> 8) & 0xFF, w & 0xFF, &d);
+    format_when(d.year, d.month, d.day, d.hour, d.minute, out, size);
+}
+
 /* the date of a backup, from its name ("<card> YYYY-MM-DD HHhMM.zip"); else from Drive's createdTime (UTC) */
 void backup_when(const card_t *c, const drive_file_t *f, char *out, size_t size)
 {

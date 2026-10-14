@@ -649,10 +649,10 @@ u32 browser_wait(u32 buttons)
  * the row it is on, and nothing on the screen underneath: the saves are shown the new way once, when the box is
  * closed. The settings keep both */
 
-enum { OPT_SYNC, OPT_SORT, OPT_REPEATED };
+enum { OPT_SYNC, OPT_SORT, OPT_REPEATED, OPT_EXPORT };
 #define OPT_W 380
 static struct {
-    int n, cursor, id[3];
+    int n, cursor, id[4];
     int sort, repeated;   /* as the rows say, for now */
 } opt;
 
@@ -668,7 +668,7 @@ static void scene_options(float t)
     look_title(W / 2.0f, y + 20, T(T_OPTIONS), 1);
     for (i = 0; i < opt.n; i++) {   /* what it is on the left, how it is now on the right */
         const char *label = T(opt.id[i] == OPT_SYNC ? (brw.card == &slotCard ? T_TO_CLOUD : T_SYNC_NOW)
-                              : opt.id[i] == OPT_SORT ? T_SORT_BY : T_REPEATED);
+                              : opt.id[i] == OPT_SORT ? T_SORT_BY : opt.id[i] == OPT_EXPORT ? T_EXPORT_ALL : T_REPEATED);
         const char *value = opt.id[i] == OPT_SORT ? T(sortText[opt.sort])
                             : opt.id[i] == OPT_REPEATED ? T(opt.repeated ? T_REPEATED_SHOWN : T_REPEATED_HIDDEN) : "";
         float ry = y + 56 + i * 32;
@@ -681,13 +681,14 @@ static void scene_options(float t)
         }
     }
     {
-        legend_t l[2] = {{BUTTON_CIRCLE, T(T_BACK)}, {BUTTON_CROSS, T(opt.id[opt.cursor] == OPT_SYNC ? T_SELECT : T_TPL_CHANGE)}};
+        legend_t l[2] = {{BUTTON_CIRCLE, T(T_BACK)}, {BUTTON_CROSS, T(opt.id[opt.cursor] == OPT_SYNC || opt.id[opt.cursor] == OPT_EXPORT
+                                                                     ? T_SELECT : T_TPL_CHANGE)}};
         look_legend(l, 2, 0);
     }
 }
 
 /* the box, until it is closed. Returns 1 when the saves are to be shown another way, + 2 when the card is to be
- * synced */
+ * synced, + 4 when every save shown is to go into a new card */
 static int browser_options(const card_t *c)
 {
     static const char *const sortName[] = {"date", "date_asc", "name"};
@@ -697,8 +698,10 @@ static int browser_options(const card_t *c)
     if (c != &allGames && c != &fileCard)   /* (the device's cards are synced; the Memory Card is sent whole) */
         opt.id[opt.n++] = OPT_SYNC;
     opt.id[opt.n++] = OPT_SORT;
-    if (c == &allGames)
+    if (c == &allGames) {
         opt.id[opt.n++] = OPT_REPEATED;
+        opt.id[opt.n++] = OPT_EXPORT;
+    }
     opt.sort = cfg.sort;
     opt.repeated = cfg.show_repeated;
     ui_unlock();
@@ -717,8 +720,8 @@ static int browser_options(const card_t *c)
             continue;
         }
         sound_play(SND_CONFIRM);
-        if (opt.id[opt.cursor] == OPT_SYNC) {
-            r = 2;
+        if (opt.id[opt.cursor] == OPT_SYNC || opt.id[opt.cursor] == OPT_EXPORT) {
+            r = opt.id[opt.cursor] == OPT_SYNC ? 2 : 4;
             break;
         }
         ui_lock();
@@ -739,6 +742,68 @@ static int browser_options(const card_t *c)
         r |= 1;
     }
     return r;
+}
+
+/* "Export all to a card", on every game card's saves: each save shown goes into a new card (card_create). A folder
+ * that is on more than one card, saved differently on each, can only be one of them there: asked, once for all
+ * (the newest of each) or one by one. 1 = a card was made */
+static int export_all(void)
+{
+    static const char *items[MAX_CARDS];
+    static char text[MAX_CARDS][100];
+    save_ref_t *refs = malloc(sizeof(save_ref_t) * (brw.n ? brw.n : 1));
+    int *of = malloc(sizeof(int) * (brw.n ? brw.n : 1)), i, j, k, n = 0, twice = 0, oneByOne = -1, made = 0;
+    if (!refs || !of)
+        goto out;
+    for (i = 0; i < brw.n; i++) {   /* (of[i] = the save that its folder's place went to, among those before it) */
+        for (of[i] = -1, j = 0; j < i; j++)
+            if (of[j] < 0 && !strcmp(brw.saves[j].s.folder, brw.saves[i].s.folder))
+                of[i] = j;
+        twice += of[i] >= 0;
+    }
+    if (twice) {
+        static const char *how[2];
+        char t[200];
+        how[0] = T(T_REPEATED_NEWEST);
+        how[1] = T(T_REPEATED_EACH);
+        snprintf(t, sizeof(t), T(T_REPEATED_ASK), twice);
+        if ((oneByOne = choose(t, how, 2, 0)) < 0)
+            goto out;
+    }
+    for (i = 0; i < brw.n; i++) {
+        int best = i;
+        if (of[i] >= 0)
+            continue;   /* (one of a folder that came before: that one's turn picks) */
+        for (k = 0, j = i; j < brw.n; j++)
+            if (j == i || of[j] == i) {
+                if (brw.saves[j].s.when > brw.saves[best].s.when)
+                    best = j;
+                k++;
+            }
+        if (k > 1 && oneByOne == 1) {   /* the folder's saves, each with its card and its date: the one that goes */
+            int at[MAX_CARDS], m = 0, pick;
+            char when[40], title[100];
+            for (j = i; j < brw.n && m < MAX_CARDS; j++)
+                if (j == i || of[j] == i) {
+                    format_save_when(brw.saves[j].s.when, when, sizeof(when));
+                    snprintf(text[m], sizeof(text[0]), "%s  %s", brw.saves[j].card->base, when);
+                    items[m] = text[m];
+                    at[m++] = j;
+                }
+            save_name(&brw.saves[i], title, sizeof(title));
+            fit(FONT_TEXT, title, sizeof(title), 320);
+            if ((pick = choose(title, items, m, 0)) < 0)
+                goto out;
+            best = at[pick];
+        }
+        refs[n].card = brw.saves[best].card;
+        refs[n++].folder = brw.saves[best].s.folder;
+    }
+    made = card_create(refs, n);
+out:
+    free(refs);
+    free(of);
+    return made;
 }
 
 /* a card's saves. &allGames = every game card's, as if they were on one card. While saves are being marked (marks.c)
@@ -769,8 +834,14 @@ void card_screen(card_t *c)
             return;
         }
         if (marks.on) {   /* X marks and unmarks, START ends the marking (with something marked) */
-            if ((b & PAD_CROSS) && n)
-                sound_play(mark_toggle(&brw.saves[brw.cursor]) ? SND_CONFIRM : SND_BACK);
+            if ((b & PAD_CROSS) && n) {
+                /* (one of that folder marked on another card: asked first, on a screen of its own) */
+                int asked = marks.copy ? mark_same_folder(&brw.saves[brw.cursor]) : 1;
+                if (asked)
+                    sound_play(mark_toggle(&brw.saves[brw.cursor]) ? SND_CONFIRM : SND_BACK);
+                if (asked != 1)
+                    ui_scene(scene_browser);
+            }
             else if ((b & PAD_START) && marks.n && marks.copy && !paste_here(c)) {
                 /* nowhere here to paste them (every game card's saves aren't a card, and this card has them all):
                  * on to the list of cards, to paste them into another, as circle goes */
@@ -843,6 +914,8 @@ void card_screen(card_t *c)
                 memcard_upload();
             else if (k & 2)
                 sync_card(c);
+            else if (k & 4)
+                export_all();
             ui_scene(scene_browser);
         } else if (b & PAD_SQUARE) {   /* (a card file's saves) */
             sound_play(SND_CONFIRM);

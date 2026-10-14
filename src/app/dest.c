@@ -333,17 +333,21 @@ static const char *size_note(int i)
  * back (or no size is big enough, which is said) */
 int card_size_pick(int title, long long room, int current, int device)
 {
+    return card_size_pick_in(title, room, current, device, dev->minMb, dev->maxMb);
+}
+
+int card_size_pick_in(int title, long long room, int current, int device, int minMb, int maxMb)
+{
     char items[8][48], need[24];
     const char *list[8];
-    int mb, n = 0, start = 0, r, rec = room ? mcfs_recommended_mb(room, dev->minMb, dev->maxMb)
-                                            : (dev->minMb <= 8 && dev->maxMb >= 8 ? 8 : dev->minMb);
+    int mb, n = 0, start = 0, r, rec = room ? mcfs_recommended_mb(room, minMb, maxMb) : (minMb <= 8 && maxMb >= 8 ? 8 : minMb);
     sz.device = device;
     sz.room = room;
     if (!rec) {
         message_wait(0, NULL, COLOR_WARN, T(T_SIZE_NONE));
         return 0;
     }
-    for (mb = dev->minMb; mb <= dev->maxMb && n < 8; mb *= 2) {
+    for (mb = minMb; mb <= maxMb && n < 8; mb *= 2) {
         if (room > mcfs_card_room((long long)mb << 20))
             continue;   /* (too small for them) */
         snprintf(items[n], sizeof(items[0]), T(mb == current ? T_SIZE_CURRENT : mb == rec ? T_SIZE_RECOMMENDED : T_SIZE_MB), mb);

@@ -724,6 +724,44 @@ T_DELETE_FILE_ASK = Удалить файл %s?
 T_DELETE_FILE_FAILED = Не удалось удалить файл.
 # Up to 3 lines. English: This file is one of the sd2psx's cards: use its options in the list of cards.
 T_FILE_IS_CARD = Этот файл — карта sd2psx: используйте её параметры в списке карт.
+# Up to 2 lines. English: In a group of the sd2psx, or as a file.
+T_CREATE_HINT = В группе sd2psx или в виде файла.
+# One line. English: Where to create the card
+T_CREATE_WHERE = Где создать карту
+# One line. English: Numbered card: %s
+T_CREATE_NUMBERED = Нумерованная карта: %s
+# One line. English: %s group: %s
+T_CREATE_IN_GROUP = Группа %s: %s
+# One line. English: New group...
+T_CREATE_NEW_GROUP = Новая группа...
+# One line. English: File on the MMCE...
+T_CREATE_FILE_SD = Файл на MMCE...
+# One line. English: File on the USB drive...
+T_CREATE_FILE_USB = Файл на USB-накопителе...
+# Button. English: Create here
+T_CREATE_HERE = Создать здесь
+# One line. English: File format
+T_CREATE_FORMAT = Формат файла
+# Up to 2 lines. English: Create the card %s (%d MB)?
+T_CREATE_ASK = Создать карту %s (%d МБ)?
+# Up to 2 lines. English: Create the file %s (%d MB)?
+T_CREATE_FILE_ASK = Создать файл %s (%d МБ)?
+# One line. English: Saves that go into it: %d
+T_CREATE_SAVES = Сохранений на ней будет: %d
+# Up to 2 lines. English: Card created: %s
+T_CREATE_DONE = Карта создана: %s
+# One line. English: Export all to a card
+T_EXPORT_ALL = Экспорт всех на карту
+# One line. English: Saves with the same folder: %d
+T_REPEATED_ASK = Сохранения с той же папкой: %d
+# One line. English: Keep the newest of each
+T_REPEATED_NEWEST = Оставить самое новое
+# One line. English: Choose one by one
+T_REPEATED_EACH = Выбрать по одному
+# Up to 2 lines. English: "%s" is already marked on %s.
+T_MARK_SAME_ASK = «%s» уже отмечено на %s.
+# Up to 4 lines. English: A card can have only one save of that folder. The one on %s is from %s; the one on %s, from %s. Mark this one instead?
+T_MARK_SAME_TEXT = На карте может быть только одно сохранение с этой папкой. На %s — от %s, на %s — от %s. Отметить это вместо него?
 # Up to 3 lines. English: Choose an ELF...
 T_PICK_ELF = Выберите ELF...
 # Up to 3 lines. English: Unable to read this memory card.

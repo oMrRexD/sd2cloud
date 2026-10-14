@@ -727,6 +727,44 @@ T_DELETE_FILE_ASK = Delete the file %s?
 T_DELETE_FILE_FAILED = Unable to delete the file.
 # Up to 3 lines.
 T_FILE_IS_CARD = This file is one of the sd2psx's cards: use its options in the list of cards.
+# Up to 2 lines.
+T_CREATE_HINT = In a group of the sd2psx, or as a file.
+# One line.
+T_CREATE_WHERE = Where to create the card
+# One line.
+T_CREATE_NUMBERED = Numbered card: %s
+# One line.
+T_CREATE_IN_GROUP = %s group: %s
+# One line.
+T_CREATE_NEW_GROUP = New group...
+# One line.
+T_CREATE_FILE_SD = File on the MMCE...
+# One line.
+T_CREATE_FILE_USB = File on the USB drive...
+# Button.
+T_CREATE_HERE = Create here
+# One line.
+T_CREATE_FORMAT = File format
+# Up to 2 lines.
+T_CREATE_ASK = Create the card %s (%d MB)?
+# Up to 2 lines.
+T_CREATE_FILE_ASK = Create the file %s (%d MB)?
+# One line.
+T_CREATE_SAVES = Saves that go into it: %d
+# Up to 2 lines.
+T_CREATE_DONE = Card created: %s
+# One line.
+T_EXPORT_ALL = Export all to a card
+# One line.
+T_REPEATED_ASK = Saves with the same folder: %d
+# One line.
+T_REPEATED_NEWEST = Keep the newest of each
+# One line.
+T_REPEATED_EACH = Choose one by one
+# Up to 2 lines.
+T_MARK_SAME_ASK = "%s" is already marked on %s.
+# Up to 4 lines.
+T_MARK_SAME_TEXT = A card can have only one save of that folder. The one on %s is from %s; the one on %s, from %s. Mark this one instead?
 # Up to 3 lines.
 T_PICK_ELF = Choose an ELF...
 # Up to 3 lines.

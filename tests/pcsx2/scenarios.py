@@ -194,6 +194,33 @@ SCENARIOS = [
      "files": {"Files/save.psu": "save.psu"}, "script": ">>XXTXXSC"},
     {"name": "file-delete", "what": "a .psu of a folder of the microSD deleted from its options", "cards": CARDS,
      "files": {"Files/save.psu": "save.psu"}, "script": ">>XXTDXXXC"},
+    # "New card", the last row of the Cards group (up from the first card): where it goes (a numbered card, a new
+    # group typed on the keyboard, or a file of a folder, made with triangle there: its format, size and name), and
+    # its size (8 MB, with nothing in it)
+    {"name": "card-create", "what": "an empty numbered card made from the main screen", "cards": CARDS,
+     "script": "UXXXXXC"},
+    {"name": "group-create", "what": "a card made in a new group of the user's own (a folder with a name)", "cards": CARDS,
+     "script": "UXDXXSXXXC"},
+    {"name": "card-create-file", "what": "an empty card made as an .mcd file of a folder of the microSD", "cards": CARDS,
+     "files": {"Files/save.psu": "save.psu"}, "script": "UXDDXXTXXSXXC"},
+    {"name": "card-create-ps2", "what": "an empty card made as a PCSX2 .ps2 file (with its ECC) of a folder of the microSD",
+     "cards": CARDS, "files": {"Files/save.psu": "save.psu"}, "script": "UXDDXXTDDXXSXXC"},
+    # a save marked for a copy goes into a card made for it: "New card" at the end of the Cards group of the list
+    {"name": "marked-new-card", "what": "a marked save copied into a new numbered card, of the size recommended for it",
+     "cards": CARDS, "script": "XXXOUXXXXXC"},
+    # "Export all to a card", the last of the options of "All saves": every save shown into a new card. A folder on
+    # two cards, saved differently on each, is asked about: the newest of each
+    {"name": "all-saves-export", "what": "every save of the game cards exported to a new card",
+     "cards": {"Card1/Card1-1": "empty", "SLUS-21065/SLUS-21065-1": "game", "SLUS-20001/SLUS-20001-1": "game"},
+     "script": ">XTDDXXXXXC"},
+    {"name": "all-saves-export-repeated", "what": "every save exported to a new card, the newest of a folder saved twice",
+     "cards": {"Card1/Card1-1": "empty", "SLUS-21065/SLUS-21065-1": "game", "SLUS-20001/SLUS-20001-1": "empty"},
+     "files": {"Files/alpha.psu": "alpha-other.psu"}, "script": ">>XXXX>DXXXXOOO<XTDDXXXXXXC"},
+    # marking for a copy a save whose folder is marked on another card: asked first (with each one's card and date);
+    # X marks this one in the other's place
+    {"name": "mark-same-folder", "what": "a save of a folder marked on another card, marked in its place once asked",
+     "cards": {"Card1/Card1-1": "empty", "SLUS-21065/SLUS-21065-1": "game", "SLUS-20001/SLUS-20001-1": "empty"},
+     "files": {"Files/alpha.psu": "alpha-other.psu"}, "script": ">>XXXX>DXXXXOOO<XXX>XXC"},
     # Settings (START), the fifth row: the size the sd2psx makes a game's first card of, written to its settings.ini
     {"name": "settings-card-size", "what": "the size of the sd2psx's new cards set to 32 MB in its settings.ini",
      "cards": CARDS, "files": {".sd2psx/settings.ini": SD2PSX_SETTINGS}, "script": "SDDDDXDDXXC"},

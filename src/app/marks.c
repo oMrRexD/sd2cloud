@@ -46,6 +46,34 @@ int mark_toggle(const save_view_t *v)
     return ok;
 }
 
+/* X on a save of a copy whose folder is marked on another card: a card can't have two saves of one folder, so the
+ * new one would take the other's place. Asked (with the card and the date of each). 1 = it can be marked, nothing
+ * was asked; 2 = it can, asked; 0 = it can't (asked) */
+int mark_same_folder(const save_view_t *v)
+{
+    char t[300], a[40], b[40], name[100];
+    int i;
+    for (i = 0; i < marks.n && !(marks.save[i].card != v->card && !strcmp(marks.save[i].s.folder, v->s.folder)); i++)
+        ;
+    if (i == marks.n)
+        return 1;
+    save_name(v, name, sizeof(name));
+    snprintf(t, sizeof(t), T(T_MARK_SAME_ASK), name, marks.save[i].card->base);
+    dlg_new(COLOR_WARN, t);
+    format_save_when(marks.save[i].s.when, a, sizeof(a));
+    format_save_when(v->s.when, b, sizeof(b));
+    snprintf(t, sizeof(t), T(T_MARK_SAME_TEXT), marks.save[i].card->base, a, v->card->base, b);
+    dlg_line(FONT_TEXT, COLOR_TEXT, 0, t);
+    dlg_buttons(BUTTON_CIRCLE, T_BACK, BUTTON_CROSS, T_REPLACE);
+    next.wide = 1;
+    dlg_show();
+    if (!(wait_button(PAD_CROSS | PAD_CIRCLE, 0) & PAD_CROSS)) {
+        sound_play(SND_BACK);
+        return 0;
+    }
+    return 2;
+}
+
 /* nothing is marked any more, and nothing is marking (the device was taken out, or what the marks were for is over) */
 void marks_reset(void)
 {
@@ -99,7 +127,8 @@ static void scene_mark(float t)
     }
     if (mk.g.n && mk.g.idx[mk.g.cursor] == ROW_NEW) {   /* "New card": the card to be, under the count */
         look_card(CARD_X, CARD_Y, "+", NULL);
-        ui_text_center(FONT_SMALL, CARD_CX, CARD_Y + LOOK_CARD_H + 26, COLOR_OK, mk.newName);
+        if (mk.g.tab == TAB_GAMES)   /* (their game's: its name; any other card has its place and size picked) */
+            ui_text_center(FONT_SMALL, CARD_CX, CARD_Y + LOOK_CARD_H + 26, COLOR_OK, mk.newName);
         return;
     }
     if (mk.g.n && mk.g.idx[mk.g.cursor] < 0) {   /* "All saves": the game cards together */
@@ -150,10 +179,21 @@ static int mark_game(void)
     return 1;
 }
 
-/* START (or X) on "New card": the copy goes into a new card of their game, made once it is agreed to. 1 = picked */
+/* START (or X) on "New card". In the Games group: the copy goes into a new card of their game, made once it is agreed
+ * to (1 = picked). In the Cards group: a card made for them, wherever its place is picked, with them in it (2 = made,
+ * and the copy is over) */
 static int mark_new_card(void)
 {
     sound_play(SND_CONFIRM);
+    if (mk.g.tab == TAB_CARDS) {
+        static save_ref_t refs[MARKS_MAX];
+        int i;
+        for (i = 0; i < marks.n; i++) {
+            refs[i].card = marks.save[i].card;
+            refs[i].folder = marks.save[i].s.folder;
+        }
+        return card_create(refs, marks.n) ? 2 : 0;
+    }
     if (!dest_new_place(mk.g.newGame))
         return 0;
     marks.into = &destNew;
@@ -197,6 +237,7 @@ static int mark_cards(const card_t *at, int again)
     }
     tabs_init(&mk.g, NULL, marks.copy);
     mk.g.all = 1;
+    mk.g.create = marks.copy;   /* (a copy's saves can go into a card made for them) */
     mark_game();
     tabs_show(&mk.g, mk.g.tab);
     if (at == &allGames)
@@ -258,8 +299,10 @@ shown:
         } else if (b & PAD_START) {   /* a copy's: pasted into the card START is on */
             if (!marks.n || !mk.g.n || mk.g.idx[mk.g.cursor] == ROW_ALL)   /* ("All saves" isn't a card) */
                 sound_play(SND_BACK);
-            else if (mk.g.idx[mk.g.cursor] == ROW_NEW)
-                r = mark_new_card() ? 1 : -1;
+            else if (mk.g.idx[mk.g.cursor] == ROW_NEW) {
+                int made = mark_new_card();
+                r = made ? made : -1;
+            }
             else if (tabs_on_folders(&mk.g))
                 r = mark_folder() ? 1 : -1;
             else if (paste_here(tabs_card(&mk.g))) {
@@ -269,7 +312,8 @@ shown:
             } else   /* (the card they are all on) */
                 sound_play(SND_BACK);
         } else if ((b & PAD_CROSS) && mk.g.n && mk.g.idx[mk.g.cursor] == ROW_NEW) {   /* (nothing to open: pasted) */
-            r = mark_new_card() ? 1 : -1;
+            int made = mark_new_card();
+            r = made ? made : -1;
         } else if ((b & PAD_CROSS) && mk.g.n) {
             card_t *c = mk.g.idx[mk.g.cursor] == ROW_ALL ? &allGames : tabs_card(&mk.g);
             if (c) {

@@ -48,7 +48,7 @@ void list_rows(int n, int cursor, int top, const char *(*text)(int i, char *buf)
     for (i = top, y = ROW_Y0; i < n && i < top + ROWS; i++, y += ROW_H) {
         const char *s = text(i, buf);
         float x = LIST_X + rowsDx;
-        if (dot) {   /* the card's status: a small colored light */
+        if (dot && dot(i)) {   /* the card's status: a small colored light (0 = none on that row) */
             float cy = y + ui_line_height(FONT_TEXT) / 2.0f + 1;
             ui_image(IMG_GLOW, x + 21, cy - 7, 14, 14, dot(i), 0x80);
             ui_rect(x + 27, cy - 1, 2, 2, dot(i), 0x80);
@@ -104,8 +104,18 @@ int tab_of(const card_t *c)
 /* what a game card's folder is called: the game, or the card's own folder when the game isn't known */
 const char *game_of(const card_t *c) { return c->game[0] ? c->game : c->folder; }
 
-/* is the list one of folders right now? */
-int tabs_on_folders(const tabs_t *g) { return g->tab == TAB_GAMES && g->open < 0; }
+/* the groups whose cards come in folders: every game's in the Games group; in the Cards group, the folders the user
+ * named (the numbered cards are each a row of their own) */
+static int folder_tab(int tab) { return tab == TAB_GAMES || tab == TAB_CARDS; }
+
+/* is row k a folder (none is open)? */
+static int row_folder(const tabs_t *g, int k)
+{
+    return folder_tab(g->tab) && g->open < 0 && k < g->n && g->fold[k] >= 0 && g->idx[k] >= 0;
+}
+
+/* is the selected row a folder? */
+int tabs_on_folders(const tabs_t *g) { return g->n && row_folder(g, g->cursor); }
 
 /* the folder of the list that is the game of the save on its way (newGame). -1 = none is (a folder of the list is a
  * game, which may be more than one folder of the microSD: versions of the same game under one name) */
@@ -176,13 +186,70 @@ static void tabs_games(tabs_t *g)
         }
 }
 
+/* The Cards group's list (with ui_lock held): each numbered card, then each folder the user named, and "New card"
+ * when it is offered (first, for a card file to go there; last, to make one: up from the first card reaches it); or
+ * the cards of the folder that is open. The folders' cards are kept as the Games group keeps its games' (games[],
+ * first[], label[]): one group is shown at a time */
+static void tabs_cards(tabs_t *g)
+{
+    int i;
+    g->nGames = g->folders = 0;
+    for (i = 0; i < nCards; i++)   /* (cards[] has them in order already: by folder, then channel) */
+        if (&cards[i] != g->skip && cards[i].type == TYPE_NAMED)
+            g->games[g->nGames++] = i;
+    for (i = 0; i < g->nGames; i++)
+        if (!i || strcasecmp(cards[g->games[i - 1]].folder, cards[g->games[i]].folder) != 0) {
+            snprintf(g->label[g->folders], sizeof(g->label[0]), "%s", cards[g->games[i]].folder);
+            fit(FONT_TEXT, g->label[g->folders], sizeof(g->label[0]), 150);
+            g->first[g->folders++] = i;
+        }
+    g->first[g->folders] = g->nGames;
+    if (g->open >= g->folders)
+        g->open = -1;
+    g->n = 0;
+    g->lit = -1;
+    if (g->open >= 0) {
+        for (i = g->first[g->open]; i < g->first[g->open + 1]; i++) {
+            g->fold[g->n] = g->open;
+            g->idx[g->n++] = g->games[i];
+        }
+        return;
+    }
+    if (g->add) {
+        g->fold[g->n] = -1;
+        g->idx[g->n++] = ROW_NEW;
+    }
+    for (i = 0; i < nCards; i++)
+        if (&cards[i] != g->skip && tab_of(&cards[i]) == TAB_CARDS && cards[i].type != TYPE_NAMED) {
+            g->fold[g->n] = -1;
+            g->idx[g->n++] = i;
+        }
+    for (i = 0; i < g->folders; i++) {
+        g->fold[g->n] = i;
+        g->idx[g->n++] = g->games[g->first[i]];
+    }
+    if (g->create && !g->add) {
+        g->fold[g->n] = -1;
+        g->idx[g->n++] = ROW_NEW;
+    }
+}
+
+/* the list of a group whose cards come in folders, made again */
+static void tabs_folders(tabs_t *g)
+{
+    if (g->tab == TAB_GAMES)
+        tabs_games(g);
+    else
+        tabs_cards(g);
+}
+
 /* X on a folder: its cards take the list's place */
 void tabs_open(tabs_t *g)
 {
     g->open = g->fold[g->cursor];
     g->openTop = g->top;
     g->cursor = g->top = 0;
-    tabs_games(g);
+    tabs_folders(g);
     g->moved = ui_clock();
     g->way = 1;
 }
@@ -193,7 +260,7 @@ static void tabs_close(tabs_t *g, int slide)
     int k, was = g->open;
     g->top = g->openTop;
     g->open = -1;
-    tabs_games(g);
+    tabs_folders(g);
     for (k = g->cursor = 0; k < g->n; k++)
         if (g->fold[k] == was)
             g->cursor = k;
@@ -208,24 +275,30 @@ static void tabs_close(tabs_t *g, int slide)
 void tabs_show(tabs_t *g, int tab)
 {
     int i;
-    if (g->tab == TAB_GAMES && g->open >= 0)
+    if (folder_tab(g->tab) && g->open >= 0)
         tabs_close(g, 0);
     g->keep[g->tab][0] = g->cursor;
     g->keep[g->tab][1] = g->top;
     memset(g->count, 0, sizeof(g->count));
     g->n = 0;
     g->lit = -1;
-    if (g->add) {   /* a group that has no card yet is offered too: one can be added to it */
-        g->count[TAB_CARDS] = g->count[TAB_GAMES] = 1;
-        g->count[TAB_BOOT] = dev->sd2psx;
+    if (g->add || g->create) {   /* a group that has no card yet is offered too: one can be added to it */
+        g->count[TAB_CARDS] = 1;
+        if (g->add)
+            g->count[TAB_GAMES] = 1, g->count[TAB_BOOT] = dev->sd2psx;
+    }
+    if (g->add) {   /* every list starts with "New card" (the Cards and Games groups' are made again below) */
+        g->fold[g->n] = -1;
         g->idx[g->n++] = ROW_NEW;
     }
     for (i = 0; i < nCards; i++) {
         if (&cards[i] == g->skip)
             continue;
         g->count[tab_of(&cards[i])]++;
-        if (tab_of(&cards[i]) == tab)
+        if (tab_of(&cards[i]) == tab) {
+            g->fold[g->n] = -1;
             g->idx[g->n++] = i;
+        }
     }
     if (g->newGame[0] && !g->count[TAB_GAMES])   /* no game card yet: the group is there for the new one */
         g->count[TAB_GAMES] = 1;
@@ -236,8 +309,8 @@ void tabs_show(tabs_t *g, int tab)
     if (tab == TAB_FILES)
         g->n = g->count[TAB_FILES];
     g->tab = tab;
-    if (tab == TAB_GAMES)
-        tabs_games(g);
+    if (folder_tab(tab))
+        tabs_folders(g);
     g->cursor = g->keep[tab][0] < g->n ? g->keep[tab][0] : 0;
     g->top = g->keep[tab][1];
     scroll_to(g->cursor, &g->top);
@@ -304,9 +377,9 @@ void tabs_find(tabs_t *g, int card)
     for (k = 0; k < g->n; k++)
         if (g->idx[k] == card)
             g->cursor = k;
-    if (tabs_on_folders(g))
-        for (k = 0; k < g->n; k++)
-            for (i = g->fold[k] < 0 ? 0 : g->first[g->fold[k]]; g->fold[k] >= 0 && i < g->first[g->fold[k] + 1]; i++)
+    for (k = 0; k < g->n; k++)   /* (on its folder, when it is in one) */
+        if (row_folder(g, k))
+            for (i = g->first[g->fold[k]]; i < g->first[g->fold[k] + 1]; i++)
                 if (g->games[i] == card)
                     g->cursor = k;
     scroll_to(g->cursor, &g->top);
@@ -322,7 +395,7 @@ int tabs_folder_nav(tabs_t *g, u32 b)
         ui_unlock();
         return 1;
     }
-    if ((b & PAD_CIRCLE) && g->tab == TAB_GAMES && g->open >= 0) {
+    if ((b & PAD_CIRCLE) && folder_tab(g->tab) && g->open >= 0) {
         sound_play(SND_BACK);
         ui_lock();
         tabs_close(g, 1);
@@ -367,10 +440,14 @@ static const char *tabs_text(int i, char *buf)
         return i < (rowsOf->files ? FDEVS : 0) ? T(deviceText[i]) : T(T_MEMCARD);
     if (rowsOf->idx[i] < 0)
         return T(rowsOf->idx[i] == ROW_NEW ? T_NEW_CARD : T_ALL_SAVES);
-    return tabs_on_folders(rowsOf) ? rowsOf->label[rowsOf->fold[i]] : cards[rowsOf->idx[i]].base;
+    return row_folder(rowsOf, i) ? rowsOf->label[rowsOf->fold[i]] : cards[rowsOf->idx[i]].base;
 }
 
-static u32 tabs_dot(int i) { return rowsOf->idx[i] < 0 ? COLOR_DIM : status_color(&cards[rowsOf->idx[i]]); }
+/* (a folder of the Cards group has no light of its own: the arrow that opens it is in its place) */
+static u32 tabs_dot(int i)
+{
+    return rowsOf->idx[i] == ROW_NEW || row_folder(rowsOf, i) ? 0 : rowsOf->idx[i] < 0 ? COLOR_DIM : status_color(&cards[rowsOf->idx[i]]);
+}
 
 /* the groups over the list (the one shown bright, in a soft light; the others dim; a small arrow on each side that
  * has another group) and the shown group's cards. dots = each card's status light */
@@ -405,9 +482,9 @@ void tabs_draw(const tabs_t *g, int dots)
     rowsOf = g;
     {
         /* a folder just opened or closed: the list comes in from the side it went to, fading in */
-        int folders = tabs_on_folders(g), sliding = 0, i;
+        int folders = g->tab == TAB_GAMES && g->open < 0, sliding = 0, i;
         float p = (ui_clock() - g->moved) / 0.22f;
-        if (g->tab == TAB_GAMES && g->moved >= 0 && p < 1) {
+        if (folder_tab(g->tab) && g->moved >= 0 && p < 1) {
             sliding = 1;
             rowsDx = g->way * (1 - p) * (1 - p) * 44;
             ui_alpha((int)(128 * p));
@@ -418,27 +495,31 @@ void tabs_draw(const tabs_t *g, int dots)
         for (k = g->top; g->tab != TAB_FILES && k < g->n && k < g->top + ROWS; k++) {
             float x = LIST_X + rowsDx, y = ROW_Y0 + (k - g->top) * ROW_H + ui_line_height(FONT_TEXT) / 2.0f + 1;
             int here = g->idx[k] >= 0 && g->idx[k] == activeCard;
-            if (g->idx[k] == ROW_NEW) {   /* "New card": a plus where a folder has its picture */
-                ui_rect(x + 4, y - 1, 12, 2, k == rowsLit ? COLOR_OK : COLOR_ACCENT, 0x70);
-                ui_rect(x + 9, y - 6, 2, 12, k == rowsLit ? COLOR_OK : COLOR_ACCENT, 0x70);
+            if (g->idx[k] == ROW_NEW) {   /* "New card": a plus where a folder has its picture (among cards, their light) */
+                float px = !folders && dots ? x + 22 : x + 4;
+                ui_rect(px, y - 1, 12, 2, k == rowsLit ? COLOR_OK : COLOR_ACCENT, 0x70);
+                ui_rect(px + 5, y - 6, 2, 12, k == rowsLit ? COLOR_OK : COLOR_ACCENT, 0x70);
             } else if (g->idx[k] < 0) {   /* "All saves": two small cards, one behind the other */
                 ui_rect(x + 8, y - 11, 10, 13, 0x6E9AE0, 0x38);   /* (in the arrows' blue, the one behind fainter) */
                 ui_rect(x + 2, y - 6, 11, 14, 0x6E9AE0, 0x80);
                 ui_rect(x + 4, y + 1, 7, 4, 0x16223C, 0x58);     /* the label's place on the one in front */
-            } else if (folders) {   /* a game's folder: a small arrow, as the tabs have (it opens) */
-                /* (grey, when the device opens another folder for that game now) */
-                ui_triangle(x + 5, y - 6, x + 5, y + 6, x + 14, y,
+            } else if (row_folder(g, k)) {   /* a folder: a small arrow, as the tabs have (it opens) */
+                /* (grey, when the device opens another folder for that game now). The Cards group's folders are
+                 * among cards, which have their light there: the arrow goes where the light would */
+                float ax = folders ? x + 5 : x + 23;
+                ui_triangle(ax, y - 6, ax, y + 6, ax + 9, y,
                             cards[g->games[g->first[g->fold[k]]]].moved[0] ? 0x5A6478 : k == rowsLit ? COLOR_OK : 0x6E9AE0, 0x80);
                 for (i = g->first[g->fold[k]]; i < g->first[g->fold[k] + 1]; i++)
                     here |= g->games[i] == activeCard;
-                x -= 22;   /* the mark of the card in use goes before the folder */
+                if (folders)
+                    x -= 22;   /* the mark of the card in use goes before the folder */
             }
             if (here) {   /* the card the sd2psx is using: before it, the big card's own glass, small */
                 ui_image(IMG_GLOW, x - 6, y - 15, 30, 30, COLOR_ACCENT, 0x48);
                 ui_image(IMG_CARD, x + 1, y - 10, 17, 20, 0xFFFFFF, 0x80);
             }
         }
-        if (g->tab == TAB_GAMES && g->open >= 0) {   /* over a folder's cards, small: which folder this is */
+        if (folder_tab(g->tab) && g->open >= 0) {   /* over a folder's cards, small: which folder this is */
             ui_triangle(LIST_X + 27, LIST_Y + 23, LIST_X + 27, LIST_Y + 33, LIST_X + 35, LIST_Y + 28, 0x6E9AE0, 0x70);
             ui_text_fit(FONT_SMALL, LIST_X + 44, LIST_Y + 21, FOLDER_W - 20, 0x8E98AA, game_of(&cards[g->games[g->first[g->open]]]));
         }

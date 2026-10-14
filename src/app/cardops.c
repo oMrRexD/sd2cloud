@@ -3,6 +3,7 @@
 #include "app.h"
 
 static void cards_gone(const char *active);
+static int name_free(const char *name);
 
 /* ------------------------------------------------------------ another size */
 
@@ -88,6 +89,257 @@ void card_resize_screen(card_t *c)
     else
         snprintf(t, sizeof(t), "%s", googleError[0] ? googleError : T(T_ERR_MC_WRITE));
     message_wait(0, NULL, r == 0 ? COLOR_OK : COLOR_ERROR, t);
+}
+
+/* ------------------------------------------------------------ a new card
+ *
+ * Made empty from the main screen ("New card" in the Cards group), or with saves in it: the ones marked for a copy,
+ * or every one "All saves" shows. It goes into a group of the device (the numbered cards, a folder of the user's
+ * own, or a new one), or is a file of a folder of the microSD or of a USB drive, in the format of whatever is to open
+ * it. Its size is picked, the one recommended for its saves first. */
+
+/* the formats a new card can be a file in: the sd2psx's, a MemCard PRO2's, PCSX2's (with the ECC bytes of the card's
+ * flash), OPL's (a VMC); each with the sizes the one that opens it takes */
+static const struct {
+    const char *ext, *name;
+    int ecc, minMb, maxMb;
+} formats[] = {{".mcd", ".mcd (sd2psx)", 0, 1, 64}, {".mc2", ".mc2 (MemCard PRO2)", 0, 8, 128},
+               {".ps2", ".ps2 (PCSX2)", 1, 8, 64}, {".bin", ".bin (OPL)", 0, 8, 64}};
+#define FORMATS ((int)(sizeof(formats) / sizeof(formats[0])))
+
+static struct {
+    const save_ref_t *saves;   /* what goes into it (n = 0: it is made empty) */
+    int n;
+    long long room;            /* what they take of a card, at most (mcfs_save_room) */
+    int made;                  /* a card was made (as a file, from the folders) */
+} nc;
+
+static void made_progress(long long done, long long total) { upload_screen(done, total); }
+static int written_progress(long long done, long long total)
+{
+    upload_screen(done, total);
+    return 0;
+}
+
+/* The card made at path (size, as a .mcd; ecc = a .ps2, made as a .mcd in the data folder first and written with
+ * its ECC), with the saves copied into it, each read back. name = what the screen calls it. How many saves went in
+ * (failed = how many didn't), or -1 = it couldn't be made (nothing is left at path) */
+static int make_card(const char *path, const char *name, long long size, int ecc, int *failed)
+{
+    card_t shown;
+    char tmp[260];
+    const char *at = path;
+    int i, r, ok = 0;
+    memset(&shown, 0, sizeof(shown));
+    snprintf(shown.base, sizeof(shown.base), "%.55s", name);
+    snprintf(shown.path, sizeof(shown.path), "%s", path);
+    shown.type = TYPE_NAMED;
+    if (ecc) {
+        snprintf(tmp, sizeof(tmp), "%snew-card.tmp", dataDir);
+        unlink(tmp);
+        at = tmp;
+    }
+    *failed = 0;
+    card_work(&shown, 0, T(T_NEWCARD_MAKING), 1);
+    r = mcfs_new_card(at, size, made_progress);
+    for (i = 0; r == MCFS_OK && i < nc.n; i++) {
+        ui_lock();
+        workText = T(T_RESIZE_COPYING);
+        ui_unlock();
+        upload_screen(i, nc.n);
+        if (mcfs_copy_save(nc.saves[i].card->path, nc.saves[i].folder, at, NULL) == MCFS_OK)
+            ok++;
+        else
+            (*failed)++;
+        log_msg("new card: %s from %s", nc.saves[i].folder, nc.saves[i].card->id);
+    }
+    if (r == MCFS_OK && ecc) {
+        ui_lock();
+        workText = T(T_RESTORE_STEP_WRITE);
+        ui_unlock();
+        r = card_write_file(tmp, path, 1, written_progress) == 0 ? MCFS_OK : MCFS_ERR_IO;
+        unlink(tmp);
+    }
+    card_work_done();
+    log_msg("new card %s of %lld MB: %d, %d save(s) in, %d not", path, size >> 20, r, ok, *failed);
+    if (r != MCFS_OK) {
+        unlink(path);
+        return -1;
+    }
+    return ok;
+}
+
+/* how it went: made, with how many of the saves */
+static void made_report(const char *name, int ok, int failed)
+{
+    char t[200];
+    if (ok < 0) {
+        message_wait(0, NULL, COLOR_ERROR, T(T_NEWCARD_FAILED));
+        return;
+    }
+    snprintf(t, sizeof(t), T(T_CREATE_DONE), name);
+    dlg_new(failed ? COLOR_WARN : COLOR_OK, t);
+    if (nc.n) {
+        snprintf(t, sizeof(t), T(T_TPL_COPIED_N), ok);
+        dlg_line(FONT_TEXT, COLOR_TEXT, 4, t);
+    }
+    if (failed) {
+        snprintf(t, sizeof(t), T(T_TPL_NOT_COPIED), failed);
+        dlg_line(FONT_SMALL, COLOR_WARN, 0, t);
+    }
+    dlg_buttons(BUTTON_CROSS, T_BACK, 0, 0);
+    dlg_show();
+    wait_button(PAD_CROSS | PAD_CIRCLE, 0);
+    sound_play(SND_BACK);
+}
+
+/* asked before it is made: title (a card's or a file's), its name, its size, and what goes into it. 1 = yes */
+static int ask_make(int title, const char *name, int mb, const char *where)
+{
+    char t[300];
+    snprintf(t, sizeof(t), T(title), name, mb);
+    dlg_new(COLOR_TITLE, t);
+    if (where)
+        dlg_line(FONT_SMALL, COLOR_DIM, 6, where);
+    if (nc.n) {
+        snprintf(t, sizeof(t), T(T_CREATE_SAVES), nc.n);
+        dlg_line(FONT_TEXT, COLOR_TEXT, 0, t);
+    }
+    dlg_buttons(BUTTON_CIRCLE, T_BACK, BUTTON_CROSS, T_TPL_CREATE);
+    next.wide = 1;
+    dlg_show();
+    if (!(wait_button(PAD_CROSS | PAD_CIRCLE, 0) & PAD_CROSS)) {
+        sound_play(SND_BACK);
+        return 0;
+    }
+    sound_play(SND_CONFIRM);
+    return 1;
+}
+
+/* △ in a folder of the Files group: the new card made there, as a file. Its format, its size and its name are
+ * picked. 1 = it was made, or couldn't be (said): the folders are left */
+static int create_here(const char *dir)
+{
+    const char *names[FORMATS];
+    char name[48], file[64], path[700];
+    int f, i, mb, ok, failed;
+    for (i = 0; i < FORMATS; i++)
+        names[i] = formats[i].name;
+    if ((f = choose(T(T_CREATE_FORMAT), names, FORMATS, dev->sd2psx ? 0 : 1)) < 0)
+        return 0;
+    if (!(mb = card_size_pick_in(T_SIZE_TITLE, nc.room, 0, 0, formats[f].minMb, formats[f].maxMb)))
+        return 0;
+    snprintf(name, sizeof(name), "MemoryCard");
+    for (;;) {   /* (a name a file of the folder has: said, and typed again) */
+        if (!keyboard(T(T_FILE_NAME_TITLE), name, 33))
+            return 0;
+        snprintf(file, sizeof(file), "%s%s", name, formats[f].ext);
+        snprintf(path, sizeof(path), "%s%s", dir, file);
+        if (!file_exists(path))
+            break;
+        message_wait(0, NULL, COLOR_WARN, T(T_RENAME_EXISTS));
+    }
+    if (!ask_make(T_CREATE_FILE_ASK, file, mb, fb.title))
+        return 0;
+    ok = make_card(path, file, (long long)mb << 20, formats[f].ecc, &failed);
+    made_report(file, ok, failed);
+    nc.made = ok >= 0;
+    return 1;
+}
+
+/* the cards of the device's own new card: in that folder, the next channel (base), made at its place */
+static int make_device_card(const char *folder, const char *base)
+{
+    char dir[200], path[260], file[80];
+    card_t *c;
+    int mb, ok, failed;
+    if (!(mb = card_size_pick(T_SIZE_TITLE, nc.room, 0, 0)) || !ask_make(T_CREATE_ASK, base, mb, NULL))
+        return 0;
+    snprintf(dir, sizeof(dir), "%s%s/%s/", sdRoot, dev->cards, folder);
+    ensure_dir(dir);
+    snprintf(file, sizeof(file), "%s%s", base, dev->ext);
+    snprintf(path, sizeof(path), "%s%s", dir, file);
+    ok = make_card(path, base, (long long)mb << 20, 0, &failed);
+    if (ok >= 0 && (c = cards_append(folder, file)) != NULL) {
+        cards_recheck(c);
+        cardsUnsorted = 1;
+    } else if (ok < 0) {   /* (a folder made for it goes too) */
+        dir[strlen(dir) - 1] = 0;
+        rmdir(dir);
+    }
+    made_report(base, ok, failed);
+    return ok >= 0;
+}
+
+int card_create(const save_ref_t *saves, int n)
+{
+    enum { W_NUMBERED, W_GROUP, W_NEW_GROUP, W_FILE_SD, W_FILE_USB };
+    static char text[40][100], folderOf[40][48], baseOf[40][56];
+    const char *items[40];
+    int kind[40], k = 0, i, j, pick;
+    long long bytes;
+    int files;
+    nc.saves = saves;
+    nc.n = n;
+    nc.made = 0;
+    for (nc.room = 0, i = 0; i < n; i++) {
+        bytes = 0, files = 0;
+        mcfs_save_info(saves[i].card->path, saves[i].folder, &bytes, &files);
+        nc.room += mcfs_save_room(bytes, files);
+    }
+    /* where it can go: the next numbered card; the next channel of each folder of the user's own that has one free; a
+     * new folder; a file */
+    new_card(TAB_CARDS, "", 0, folderOf[k], baseOf[k]);
+    snprintf(text[k], sizeof(text[0]), T(T_CREATE_NUMBERED), baseOf[k]);
+    kind[k++] = W_NUMBERED;
+    for (i = 0; i < nCards && k < 36; i++) {
+        if (cards[i].type != TYPE_NAMED)
+            continue;
+        for (j = 0; j < i && !(cards[j].type == TYPE_NAMED && !strcasecmp(cards[j].folder, cards[i].folder)); j++)
+            ;
+        if (j < i || !new_card(TAB_GAMES, cards[i].folder, max_channels(cards[i].folder), folderOf[k], baseOf[k]))
+            continue;
+        snprintf(text[k], sizeof(text[0]), T(T_CREATE_IN_GROUP), cards[i].folder, baseOf[k]);
+        kind[k++] = W_GROUP;
+    }
+    if (dev->sd2psx) {
+        snprintf(text[k], sizeof(text[0]), "%s", T(T_CREATE_NEW_GROUP));
+        kind[k++] = W_NEW_GROUP;
+    }
+    snprintf(text[k], sizeof(text[0]), "%s", T(T_CREATE_FILE_SD));
+    kind[k++] = W_FILE_SD;
+    snprintf(text[k], sizeof(text[0]), "%s", T(T_CREATE_FILE_USB));
+    kind[k++] = W_FILE_USB;
+    for (i = 0; i < k; i++)
+        items[i] = text[i];
+    for (pick = 0;;) {   /* (back from what comes next: where it goes, again) */
+        if ((pick = choose(T(T_CREATE_WHERE), items, k, pick)) < 0)
+            return 0;
+        if (kind[pick] == W_NUMBERED || kind[pick] == W_GROUP) {
+            if (make_device_card(folderOf[pick], baseOf[pick]))
+                return 1;
+        } else if (kind[pick] == W_NEW_GROUP) {
+            char name[48] = "", base[56];
+            for (;;) {   /* (a name that can't be: said, and typed again) */
+                if (!keyboard(T(T_FOLDER_NAME_TITLE), name, 16)) {
+                    name[0] = 0;
+                    break;
+                }
+                if (name_free(name))
+                    break;
+            }
+            snprintf(base, sizeof(base), "%.44s-1", name);
+            if (name[0] && make_device_card(name, base))
+                return 1;
+        } else {
+            fbHere = create_here;
+            fbHereText = T_CREATE_HERE;
+            files_screen(kind[pick] == W_FILE_SD ? FDEV_SD : FDEV_USB);
+            fbHere = NULL;
+            if (nc.made)
+                return 1;
+        }
+    }
 }
 
 /* ------------------------------------------------------------ another name */
