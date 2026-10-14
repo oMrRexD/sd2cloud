@@ -119,24 +119,24 @@ SCENARIOS = [
     # The Memory Card: a PS2 memory card in the console's other slot, in the Files group (run.py puts
     # fixtures/memcard.ps2.gz in PCSX2's slot 2)
     {"name": "memcard-open", "what": "the Memory Card in the Files group, opened: its saves", "cards": CARDS,
-     "memcard": "memcard.ps2", "script": ">>DDXC"},
+     "memcard": "memcard.ps2", "script": ">>DDDXC"},
     {"name": "memcard-copy-out", "what": "a save of the Memory Card copied to a card", "cards": CARDS,
-     "memcard": "memcard.ps2", "script": ">>DDXXXS<<SXXC"},
+     "memcard": "memcard.ps2", "script": ">>DDDXXXS<<SXXC"},
     {"name": "memcard-copy-in", "what": "a save of a card copied to the Memory Card, picked in the Files group",
-     "cards": CARDS, "memcard": "memcard.ps2", "script": "XXXS>>DDSXXC"},
+     "cards": CARDS, "memcard": "memcard.ps2", "script": "XXXS>>DDDSXXC"},
     {"name": "memcard-move-out", "what": "a save of the Memory Card moved to a card", "cards": CARDS,
-     "memcard": "memcard.ps2", "script": ">>DDXXDXXXXC"},
+     "memcard": "memcard.ps2", "script": ">>DDDXXDXXXXC"},
     {"name": "memcard-delete", "what": "a save of the Memory Card deleted", "cards": CARDS, "memcard": "memcard.ps2",
-     "script": ">>DDXXDDXXXC"},
+     "script": ">>DDDXXDDXXXC"},
     {"name": "memcard-psu-in", "what": "a .psu file imported into the Memory Card", "cards": CARDS,
      "memcard": "memcard.ps2", "files": {"Files/save.psu": "save.psu"}, "script": ">>XXXX>>XXXC"},
     # (its options, "Upload to Drive": read into a card file, sent as a dry sync sends, "B": nothing goes)
     {"name": "memcard-upload", "what": "the whole Memory Card uploaded to Drive (dry: PCSX2 has no Google account)",
-     "cards": CARDS, "memcard": "memcard.ps2", "script": ">>DDXTXXBwC"},
+     "cards": CARDS, "memcard": "memcard.ps2", "script": ">>DDDXTXXBwC"},
     {"name": "memcard-paste-back", "what": "a paste on the Memory Card given up at its question: back on the Memory Card, "
-     "pasted there", "cards": CARDS, "memcard": "memcard.ps2", "script": "XXXO>>DDSOSXXC"},
+     "pasted there", "cards": CARDS, "memcard": "memcard.ps2", "script": "XXXO>>DDDSOSXXC"},
     {"name": "memcard-paste-list", "what": "a save marked on a card, pasted with START on the Memory Card in the list of "
-     "cards", "cards": CARDS, "memcard": "memcard.ps2", "script": "XXXO>>DDSXXC"},
+     "cards", "cards": CARDS, "memcard": "memcard.ps2", "script": "XXXO>>DDDSXXC"},
     {"name": "settings", "what": "settings changed (how many backups are kept, their format, the language) and About",
      "cards": CARDS, "script": "SDDDDDDXDXDXDXUUXUXDDDDDDXOOC"},
     # (a sync with nothing sent, "B": SELECT shows its cards; X on one still to go: resolved; on the next, its sync off)

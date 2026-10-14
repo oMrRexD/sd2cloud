@@ -15,7 +15,7 @@ code is written around. Each source file says what it is for at its top.
 | `src/main.c` | Where the program starts, and the state its screens share |
 | `src/app/` | The screens and what they do, one file for each screen or flow |
 | `src/core/` | The rules, with no screen and no PS2 hardware: memory cards, backups, settings, Google Drive |
-| `src/platform/` | The PS2 itself: IOP modules, controller, clock, network, the MMCE device, other programs |
+| `src/platform/` | The PS2 itself: IOP modules, controller, clock, network, the MMCE device, the other drives (`drives.c`: USB, MX4SIO, hard disk), other programs |
 | `src/ui/` | Drawing: the scenes, the font, images, icons, sound, and the texts in each language |
 | `igr/` | The two small programs that live on the memory card: the IGR helper and the shortcut |
 | `tests/` | The regression tests: `core` on a PC, the screens on PCSX2 ([tests/README.md](../tests/README.md)) |
@@ -37,7 +37,7 @@ a PC's compiler. `src/app` is the only place that knows the screens; it calls do
 | `dest.c` | Where a save goes when it is moved or imported: a card picked among the others, or a new card made on the spot (a copy's new card too), and the size it is made of |
 | `migrate.c` | A card's saves sent each to its game's card, as the sd2psx's Game ID keeps them: listed by game, picked, copied |
 | `cardops.c` | A card as a whole: made (empty, or with saves: the marked ones, or every one of "All saves"), in a group of the device or as a file; from its options, made again of another size, renamed (its name on the sd2psx, or its folder's), deleted, or its whole folder deleted |
-| `browse.c` | The Files group: folders of the microSD and of a USB drive, `.psu` files, exporting; a file renamed or deleted |
+| `browse.c` | The Files group: folders of the microSD, a USB drive, the internal hard disk (exFAT, FAT32, or APA with its partitions) and an MX4SIO, `.psu` files, exporting; a file renamed or deleted |
 | `install.c` | A memory card file looked into, its saves copied out of it or into it, and installed as a card |
 | `memcard.c` | The Memory Card: a PS2 memory card in the console's other slot, in the Files group, and uploading it whole |
 | `backup.c`, `autosync.c`, `synclist.c` | The sync to Google Drive; the one that runs by itself after a game; the list of a sync's cards (SELECT) |
@@ -109,7 +109,8 @@ reads them (`core/lang.c`) the first time a text is needed, and a text a languag
 The code is shaped by what an sd2psx can and can't do. Breaking one of these corrupts a card or hangs the console.
 
 - **One file open at a time.** The device can't handle two operations at once. A copy between two of its files
-  opens one, reads a piece, closes it, opens the other. Only a file on another device (a USB drive) stays open.
+  opens one, reads a piece, closes it, opens the other. Only a file on another device (a USB drive, the hard disk, an
+  MX4SIO) stays open.
 - **No renaming.** `file_replace()` writes a `.new` file, reads it back, and writes the real one again.
 - **The card in use is not the file.** The device keeps the card it is emulating in its own memory and writes back
   only what the PS2 changes. Writing that card's file under it would mix the two, so before a card's file is

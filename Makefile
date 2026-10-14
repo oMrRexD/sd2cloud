@@ -27,7 +27,7 @@ endif
 # (one name each, whatever the folder: the objects all go to the same place)
 SOURCES = main format dialog leave work synclist account backup tabs memcard history active saves save dest install browse menu settings autosync \
           keyboard tools marks cardops migrate \
-          boot log input net mmce usb launch debug helper ui font image look sound icon i18n files json config state cards mcfs stream google update restore templates \
+          boot log input net mmce drives launch debug helper ui font image look sound icon i18n files json config state cards mcfs stream google update restore templates \
           lang
 # where the sources are: the screens and what they do (app), the rules with no screen and no PS2 hardware (core),
 # the PS2 itself (platform) and the drawing (ui). See docs/ARCHITECTURE.md
@@ -50,7 +50,7 @@ ASSET_OBJS = $(addprefix asset_, $(addsuffix _png.o, $(IMAGES)) $(addsuffix _adp
              asset_fontja_gz.o
 # the IOP modules embedded in the program: mmceman (the sd2psx), and the drivers of the other devices a program can be
 # opened from after SD2Cloud (loaded only for that, see run_elf)
-EMBEDDED_IRX = mmceman mcman mcserv usbd usbmass_bd bdm bdmfs_fatfs mx4sio_bd ata_bd ps2dev9 ps2atad ps2hdd ps2fs
+EMBEDDED_IRX = mmceman mcman mcserv usbd usbmass_bd bdm bdmfs_fatfs mx4sio_bd ata_bd ps2dev9 ps2atad ps2hdd ps2hdd_bdm ps2fs
 # the texts on screen: a file per language in lang/ (en.txt, pt.txt...), each one built into the program as it is,
 # and langs.c listing them (i18n.c reads them). A file added there is a language more, with nothing else to change
 LANGS = $(basename $(notdir $(wildcard lang/*.txt)))
@@ -169,6 +169,12 @@ $(OBJ_DIR)/irx_mmceman.c: $(MMCEMAN)
 $(OBJ_DIR)/irx_ps2hdd.c: $(PS2SDK)/iop/irx/ps2hdd-osd.irx
 	@mkdir -p $(OBJ_DIR)
 	bin2c $< $@ ps2hdd_irx
+
+# and the one that reads a hard disk formatted APA through the BDM's ATA driver: the file browser's, which reads an
+# exFAT one through that driver too (the two ATA drivers can't be loaded together)
+$(OBJ_DIR)/irx_ps2hdd_bdm.c: $(PS2SDK)/iop/irx/ps2hdd-bdm.irx
+	@mkdir -p $(OBJ_DIR)
+	bin2c $< $@ ps2hdd_bdm_irx
 
 # (with a 0 after it: i18n.c reads the text where it is, and lang_parse ends its last line there)
 $(OBJ_DIR)/lang_%.c: lang/%.txt

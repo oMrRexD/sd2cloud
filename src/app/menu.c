@@ -71,15 +71,17 @@ static void card_options(card_t *c)
         case OPT_MOVE:
             card_move_saves(c);
             return;
-        case OPT_DEVICE:   /* the whole card, as a file, to a folder of the microSD or of a USB drive */
-            for (d = 0; d < FDEVS; d++)
-                devices[d] = T(deviceText[d]);
-            if ((d = choose(T(T_COPY_DEVICE), devices, FDEVS, 0)) >= 0) {
+        case OPT_DEVICE: {   /* the whole card, as a file, to a folder of one of the devices */
+            int list[FDEVS], n = fdev_list(list);
+            for (d = 0; d < n; d++)
+                devices[d] = T(deviceText[list[d]]);
+            if ((d = choose(T(T_COPY_DEVICE), devices, n, 0)) >= 0) {
                 fbCard = c;
-                files_screen(d);
+                files_screen(list[d]);
                 fbCard = NULL;
             }
             break;
+        }
         default: {
             icon_t *ic = newest_icon(c);
             history_screen(c, ic);
@@ -152,7 +154,7 @@ static void scene_menu(float t)
             memcard_hint();
             return;
         }
-        ui_text_center(FONT_TEXT, CARD_CX, 82, 0x7E8AA0, T(deviceText[menu.g.cursor]));
+        ui_text_center(FONT_TEXT, CARD_CX, 82, 0x7E8AA0, T(deviceText[tabs_device(&menu.g)]));
         ui_paragraph_center(FONT_SMALL, CARD_CX, CARD_Y + 70, LOOK_CARD_W + 32, COLOR_DIM, T(T_FILES_HINT));
         return;
     }
@@ -433,7 +435,7 @@ void manual(void)
             if (tabs_device(&menu.g) < 0)
                 memcard_screen();
             else
-                files_screen(menu.g.cursor);
+                files_screen(tabs_device(&menu.g));
             ui_lock();
             tabs_show(&menu.g, TAB_FILES);   /* (the Memory Card may have been taken out meanwhile) */
             ui_unlock();

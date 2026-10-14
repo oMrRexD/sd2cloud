@@ -62,6 +62,8 @@ extern unsigned char ps2atad_irx[];
 extern unsigned int size_ps2atad_irx;
 extern unsigned char ps2hdd_irx[];
 extern unsigned int size_ps2hdd_irx;
+extern unsigned char ps2hdd_bdm_irx[];
+extern unsigned int size_ps2hdd_bdm_irx;
 extern unsigned char ps2fs_irx[];
 extern unsigned int size_ps2fs_irx;
 extern unsigned char mmceman_irx[];

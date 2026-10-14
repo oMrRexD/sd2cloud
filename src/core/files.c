@@ -202,6 +202,16 @@ int dir_list(const char *path, dir_entry_t *list, int max)
     while (n < max && fileXioDread(fd, &e) > 0) {
         if (!strcmp(e.name, ".") || !strcmp(e.name, ".."))
             continue;
+        if (!strcmp(c, "hdd0:")) {   /* a hard disk formatted APA: its partitions with files, as folders */
+            if (e.stat.mode != 0x0100 || (e.stat.attr & 1))   /* (PFS; not a partition's extension) */
+                continue;
+            snprintf(list[n].name, sizeof(list[0].name), "%s", e.name);
+            list[n].dir = 1;
+            list[n].size = (long long)e.stat.size * 512;   /* (its size, in sectors) */
+            memset(list[n].mtime, 0, sizeof(list[0].mtime));
+            n++;
+            continue;
+        }
         snprintf(list[n].name, sizeof(list[0].name), "%s", e.name);
         list[n].dir = FIO_S_ISDIR(e.stat.mode) ? 1 : 0;
         list[n].size = ((long long)e.stat.hisize << 32) | e.stat.size;

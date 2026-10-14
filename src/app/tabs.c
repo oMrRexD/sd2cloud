@@ -92,7 +92,36 @@ void scroll_to(int cursor, int *top)
 static const int tabText[TABS] = {T_TAB_CARDS, T_TAB_GAMES, T_TAB_BOOT, T_TAB_FILES};
 #define TAB_Y      78     /* the tabs: over the list, on the line of the title on the right */
 #define TAB_GAP    22
-const int deviceText[FDEVS] = {T_DEV_SD, T_DEV_USB};
+const int deviceText[FDEVS] = {T_DEV_SD, T_DEV_USB, T_DEV_HDD, T_DEV_MX4SIO};
+
+/* The MX4SIO is listed when the program doesn't run from an sd2psx: its driver and the sd2psx's were never tried
+ * together on a console, and on PCSX2 the MX4SIO's doesn't come back when it is loaded. The debug build lists it with
+ * mx4sio.txt in the data folder, for the two to be tried together */
+static int mx4sio_listed(void)
+{
+    static int listed = -1;
+    if (listed < 0) {
+        listed = strncmp(sdRoot, "mmce", 4) != 0 && strncmp(sdRoot, "host", 4) != 0;
+#ifdef DEBUG_BUILD
+        {
+            char c[260];
+            snprintf(c, sizeof(c), "%smx4sio.txt", dataDir);
+            if (file_exists(c))
+                listed = 1;
+        }
+#endif
+    }
+    return listed;
+}
+
+int fdev_list(int out[FDEVS])
+{
+    int d, n = 0;
+    for (d = 0; d < FDEVS; d++)
+        if (d != FDEV_MX4SIO || mx4sio_listed())
+            out[n++] = d;
+    return n;
+}
 
 #define FOLDER_W   236    /* a folder's name in the list: up to where the big card's picture starts */
 
@@ -274,7 +303,7 @@ static void tabs_close(tabs_t *g, int slide)
 /* shows a group, on the card it was left on (with ui_lock held) */
 void tabs_show(tabs_t *g, int tab)
 {
-    int i;
+    int i, list[FDEVS];
     if (folder_tab(g->tab) && g->open >= 0)
         tabs_close(g, 0);
     g->keep[g->tab][0] = g->cursor;
@@ -305,7 +334,7 @@ void tabs_show(tabs_t *g, int tab)
     if (tab == TAB_FILES && g->files)   /* (one put in or taken out meanwhile: asked again each time) */
         g->memcard = g->skip != &slotCard && memcard_there();
     if (g->files || g->memcard)
-        g->count[TAB_FILES] = (g->files ? FDEVS : 0) + g->memcard;
+        g->count[TAB_FILES] = (g->files ? fdev_list(list) : 0) + g->memcard;
     if (tab == TAB_FILES)
         g->n = g->count[TAB_FILES];
     g->tab = tab;
@@ -362,7 +391,11 @@ static int tabs_next(const tabs_t *g, int dir)
 }
 
 /* in the Files group: the device the cursor is on (FDEV_*), or -1 on the Memory Card */
-int tabs_device(const tabs_t *g) { return g->files && g->cursor < FDEVS ? g->cursor : -1; }
+int tabs_device(const tabs_t *g)
+{
+    int list[FDEVS], n = fdev_list(list);
+    return g->files && g->cursor < n ? list[g->cursor] : -1;
+}
 
 /* the selected card, or the first card of the selected folder (NULL = the group has none, or it's the Files group) */
 card_t *tabs_card(const tabs_t *g)
@@ -436,8 +469,11 @@ static const tabs_t *rowsOf;   /* the groups list_rows is drawing (its callbacks
 static const char *tabs_text(int i, char *buf)
 {
     (void)buf;
-    if (rowsOf->tab == TAB_FILES)
-        return i < (rowsOf->files ? FDEVS : 0) ? T(deviceText[i]) : T(T_MEMCARD);
+    {
+        int list[FDEVS], n = rowsOf->files ? fdev_list(list) : 0;
+        if (rowsOf->tab == TAB_FILES)
+            return i < n ? T(deviceText[list[i]]) : T(T_MEMCARD);
+    }
     if (rowsOf->idx[i] < 0)
         return T(rowsOf->idx[i] == ROW_NEW ? T_NEW_CARD : T_ALL_SAVES);
     return row_folder(rowsOf, i) ? rowsOf->label[rowsOf->fold[i]] : cards[rowsOf->idx[i]].base;

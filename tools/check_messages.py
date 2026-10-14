@@ -202,7 +202,7 @@ PLACE = {
     # under the title of the screen it opens
     "T_ALL_SAVES": ("text", 200, 1), "T_GAME_CARDS_N": ("text", 200, 1), "T_SAVES_COUNT": ("text", 300, 1),
     # the Files group: the devices in the list, what the group is for on the right, a folder that has nothing to show
-    "T_DEV_SD": ("text", 172, 1), "T_DEV_USB": ("text", 172, 1), "T_FILES_HINT": ("small", 212, 5),
+    "T_DEV_SD": ("text", 172, 1), "T_DEV_USB": ("text", 172, 1), "T_DEV_HDD": ("text", 172, 1), "T_DEV_MX4SIO": ("text", 172, 1), "T_FILES_HINT": ("small", 212, 5),
     # the Memory Card: a row of the Files group (and a card's name in the questions), and what it is for on the right
     "T_MEMCARD": ("text", 140, 1), "T_MEMCARD_HINT": ("small", 212, 5),   # (140: also on the picture of a card)
     "T_MEMCARD_READING": ("text", DIALOG, 1), "T_MEMCARD_READ_FAILED": ("text", DIALOG, 3),
@@ -278,7 +278,7 @@ PLACE = {
     # "All saves" (no value on its right); the question of a folder marked on another card, in a wide box
     "T_CREATE_HINT": ("small", 212, 2), "T_CREATE_WHERE": ("text", 320, 1), "T_CREATE_NUMBERED": ("text", 320, 1),
     "T_CREATE_IN_GROUP": ("text", 320, 1), "T_CREATE_NEW_GROUP": ("text", 320, 1), "T_CREATE_FILE_SD": ("text", 320, 1),
-    "T_CREATE_FILE_USB": ("text", 320, 1), "T_CREATE_FORMAT": ("text", 320, 1), "T_CREATE_ASK": ("text", WIDE, 2),
+    "T_CREATE_FILE_USB": ("text", 320, 1), "T_CREATE_FILE_HDD": ("text", 320, 1), "T_CREATE_FILE_MX4SIO": ("text", 320, 1), "T_CREATE_FORMAT": ("text", 320, 1), "T_CREATE_ASK": ("text", WIDE, 2),
     "T_CREATE_FILE_ASK": ("text", WIDE, 2), "T_CREATE_SAVES": ("text", WIDE, 1), "T_CREATE_DONE": ("text", DIALOG, 2),
     "T_EXPORT_ALL": ("text", 320, 1), "T_REPEATED_ASK": ("text", 320, 1), "T_REPEATED_NEWEST": ("text", 320, 1),
     "T_REPEATED_EACH": ("text", 320, 1), "T_MARK_SAME_ASK": ("text", WIDE, 2), "T_MARK_SAME_TEXT": ("text", WIDE, 2), "T_MARK_SAME_SELECTED": ("text", WIDE, 1),

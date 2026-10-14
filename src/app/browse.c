@@ -98,7 +98,10 @@ static void fb_title(void)
     char path[400];
     const char *p = path, *q;
     size_t n;
-    snprintf(path, sizeof(path), "/%s", fb.dir + strlen(fb.root));
+    if (fb.parts && strcmp(fb.root, "hdd0:") != 0)   /* (inside a partition of the hard disk: its name first) */
+        snprintf(path, sizeof(path), "/%s/%s", hdd_partition(fb.root), fb.dir + strlen(fb.root));
+    else
+        snprintf(path, sizeof(path), "/%s", fb.dir + strlen(fb.root));
     if ((n = strlen(path)) > 1)
         path[n - 1] = 0;
     utf8_fix(path, sizeof(path));
@@ -168,6 +171,18 @@ static void fb_load(const char *on)
 static void fb_enter(const char *name)
 {
     size_t n = strlen(fb.dir);
+    if (fb.parts && !strcmp(fb.dir, "hdd0:")) {   /* a partition of the hard disk: mounted, and its folders shown */
+        char root[sizeof(fb.root)];
+        message(0, NULL, COLOR_TEXT, T(T_LOADING));
+        if (hdd_mount(name, root, sizeof(root)) != 0) {
+            message_wait(0, NULL, COLOR_ERROR, T(T_DIR_ERROR));
+            return;
+        }
+        snprintf(fb.root, sizeof(fb.root), "%s", root);
+        snprintf(fb.dir, sizeof(fb.dir), "%s", root);
+        fb_load(NULL);
+        return;
+    }
     if (n + strlen(name) + 2 > sizeof(fb.dir)) {
         message_wait(0, NULL, COLOR_ERROR, T(T_DIR_ERROR));
         return;
@@ -181,6 +196,13 @@ static int fb_up(void)
 {
     char from[256], *p;
     size_t n = strlen(fb.dir);
+    if (n <= strlen(fb.root) && fb.parts && strcmp(fb.root, "hdd0:") != 0) {
+        snprintf(from, sizeof(from), "%s", hdd_partition(fb.root));
+        snprintf(fb.root, sizeof(fb.root), "hdd0:");
+        snprintf(fb.dir, sizeof(fb.dir), "hdd0:");
+        fb_load(from);
+        return 1;
+    }
     if (n <= strlen(fb.root))
         return 0;
     fb.dir[n - 1] = 0;
@@ -634,19 +656,28 @@ static void file_options(const dir_entry_t *e)
     fb_load(NULL);
 }
 
+/* a folder things can be written into (the list of the hard disk's partitions isn't one) */
+static int fb_writable(void) { return !fb.error && strcmp(fb.dir, "hdd0:") != 0; }
+
 static void browse(int dev)
 {
-    if (dev == FDEV_USB) {
-        message(0, NULL, COLOR_TEXT, T(T_USB_SEARCHING));
-        if (usb_open(6000) != 0) {
-            message_wait(0, NULL, COLOR_WARN, T(T_USB_NONE));
+    static const int drive[FDEVS] = {-1, DRIVE_USB, DRIVE_HDD, DRIVE_MX4SIO};
+    static const int looking[FDEVS] = {0, T_USB_SEARCHING, T_HDD_SEARCHING, T_MX4SIO_SEARCHING};
+    static const int none[FDEVS] = {0, T_USB_NONE, T_HDD_NONE, T_MX4SIO_NONE};
+    char root[sizeof(fb.root)];
+    snprintf(root, sizeof(root), "%s", sdRoot);
+    if (dev != FDEV_SD) {   /* (the hard disk takes longest: it may have to spin up) */
+        message(0, NULL, COLOR_TEXT, T(looking[dev]));
+        if (drive_open(drive[dev], dev == FDEV_HDD ? 12000 : 6000, root, sizeof(root)) != 0) {
+            message_wait(0, NULL, COLOR_WARN, T(none[dev]));
             return;
         }
     }
     if (!fb.list && !(fb.list = calloc(FB_MAX, sizeof(dir_entry_t))))
         return;
     fb.dev = dev;
-    snprintf(fb.root, sizeof(fb.root), "%s", dev == FDEV_USB ? "mass0:/" : sdRoot);
+    fb.parts = !strcmp(root, "hdd0:");
+    snprintf(fb.root, sizeof(fb.root), "%s", root);
     snprintf(fb.dir, sizeof(fb.dir), "%s", fb.root);
     fb_load(NULL);
     for (;;) {
@@ -731,7 +762,7 @@ static void browse(int dev)
                 sound_play(SND_CONFIRM);
                 psu_screen("", 0);
             }
-        } else if ((b & PAD_TRIANGLE) && fbHere && !fb.error) {   /* the folder shown, for what it was picked for */
+        } else if ((b & PAD_TRIANGLE) && fbHere && fb_writable()) {   /* the folder shown, for what it was picked for */
             sound_play(SND_CONFIRM);
             if (fbHere(fb.dir))
                 return;
@@ -739,7 +770,7 @@ static void browse(int dev)
         } else if ((b & PAD_TRIANGLE) && fb_file_options()) {
             sound_play(SND_CONFIRM);
             file_options(&fb.list[fb.cursor]);
-        } else if ((b & PAD_TRIANGLE) && !fb.error && fbCard) {   /* from a card's options: the whole card goes into this folder */
+        } else if ((b & PAD_TRIANGLE) && fb_writable() && fbCard) {   /* from a card's options: the whole card goes into this folder */
             sound_play(SND_CONFIRM);
             if (export_card(fbCard))
                 return;
@@ -749,13 +780,13 @@ static void browse(int dev)
             sound_play(SND_CONFIRM);
             if (card_file_go(name, 2))
                 return;
-        } else if ((b & PAD_START) && !fb.error && fbGive.c) {   /* "Paste", from a save's "Copy": into this folder */
+        } else if ((b & PAD_START) && fb_writable() && fbGive.c) {   /* "Paste", from a save's "Copy": into this folder */
             sound_play(SND_CONFIRM);
             if (fbGive.v ? export_save(fbGive.c, fbGive.v) : export_marked()) {
                 fbGive.done = 1;
                 return;   /* back to the saves they are of */
             }
-        } else if ((b & PAD_START) && !fb.error && card_file_marks()) {   /* the same, card files' saves, back here */
+        } else if ((b & PAD_START) && fb_writable() && card_file_marks()) {   /* the same, card files' saves, back here */
             sound_play(SND_CONFIRM);
             if (export_marked()) {
                 card_file_let_go();
@@ -771,7 +802,7 @@ void files_screen(int dev)
 {
     static int open;
     char root[sizeof(fb.root)], dir[sizeof(fb.dir)], on[sizeof(fb.list[0].name)] = "";
-    int under = open && fb.list, d = fb.dev;
+    int under = open && fb.list, d = fb.dev, parts = fb.parts;
     if (under) {
         snprintf(root, sizeof(root), "%s", fb.root);
         snprintf(dir, sizeof(dir), "%s", fb.dir);
@@ -783,6 +814,7 @@ void files_screen(int dev)
     open--;
     if (under) {
         fb.dev = d;
+        fb.parts = parts;
         snprintf(fb.root, sizeof(fb.root), "%s", root);
         snprintf(fb.dir, sizeof(fb.dir), "%s", dir);
         fb_load(on[0] ? on : NULL);

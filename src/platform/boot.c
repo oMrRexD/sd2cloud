@@ -235,6 +235,7 @@ void iop_cleanup(int card)
     }
     ui_end();
     sound_end();
+    drives_close();
     iop_reset();
     if (card) {
         SifExecModuleBuffer(iomanX_irx, size_iomanX_irx, 0, NULL, NULL);

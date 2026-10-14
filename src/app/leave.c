@@ -189,7 +189,11 @@ void list_apps(void)
 /* a path as the .ini keeps it ("mmce?:" = the microSD's slot, which can change) and as it is on this console */
 void target_for_ini(const char *path, char *out, size_t size)
 {
-    snprintf(out, size, "%s", path);
+    const char *part = hdd_partition(path);
+    if (part[0])   /* a partition of the hard disk, at the pfsN: it was mounted at here: as the loaders name it */
+        snprintf(out, size, "hdd0:%s:pfs:%s", part, strchr(path, ':') + 1);
+    else
+        snprintf(out, size, "%s", path);
     if (!strncmp(out, "mmce", 4) && out[4] && out[5] == ':')
         out[4] = '?';
 }

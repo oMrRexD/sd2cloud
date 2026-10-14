@@ -273,10 +273,11 @@ static int make_device_card(const char *folder, const char *base)
 
 int card_create(const save_ref_t *saves, int n)
 {
-    enum { W_NUMBERED, W_GROUP, W_NEW_GROUP, W_FILE_SD, W_FILE_USB };
+    enum { W_NUMBERED, W_GROUP, W_NEW_GROUP, W_FILE };
+    static const int fileText[FDEVS] = {T_CREATE_FILE_SD, T_CREATE_FILE_USB, T_CREATE_FILE_HDD, T_CREATE_FILE_MX4SIO};
     static char text[40][100], folderOf[40][48], baseOf[40][56];
     const char *items[40];
-    int kind[40], k = 0, i, j, pick;
+    int kind[40], fileDev[40], devs[FDEVS], nDevs = fdev_list(devs), k = 0, i, j, pick;
     long long bytes;
     int files;
     nc.saves = saves;
@@ -292,7 +293,7 @@ int card_create(const save_ref_t *saves, int n)
     new_card(TAB_CARDS, "", 0, folderOf[k], baseOf[k]);
     snprintf(text[k], sizeof(text[0]), T(T_CREATE_NUMBERED), baseOf[k]);
     kind[k++] = W_NUMBERED;
-    for (i = 0; i < nCards && k < 36; i++) {
+    for (i = 0; i < nCards && k < 40 - 2 - FDEVS; i++) {
         if (cards[i].type != TYPE_NAMED)
             continue;
         for (j = 0; j < i && !(cards[j].type == TYPE_NAMED && !strcasecmp(cards[j].folder, cards[i].folder)); j++)
@@ -306,10 +307,11 @@ int card_create(const save_ref_t *saves, int n)
         snprintf(text[k], sizeof(text[0]), "%s", T(T_CREATE_NEW_GROUP));
         kind[k++] = W_NEW_GROUP;
     }
-    snprintf(text[k], sizeof(text[0]), "%s", T(T_CREATE_FILE_SD));
-    kind[k++] = W_FILE_SD;
-    snprintf(text[k], sizeof(text[0]), "%s", T(T_CREATE_FILE_USB));
-    kind[k++] = W_FILE_USB;
+    for (i = 0; i < nDevs; i++) {   /* (a file, on each of the devices) */
+        snprintf(text[k], sizeof(text[0]), "%s", T(fileText[devs[i]]));
+        fileDev[k] = devs[i];
+        kind[k++] = W_FILE;
+    }
     for (i = 0; i < k; i++)
         items[i] = text[i];
     for (pick = 0;;) {   /* (back from what comes next: where it goes, again) */
@@ -334,7 +336,7 @@ int card_create(const save_ref_t *saves, int n)
         } else {
             fbHere = create_here;
             fbHereText = T_CREATE_HERE;
-            files_screen(kind[pick] == W_FILE_SD ? FDEV_SD : FDEV_USB);
+            files_screen(fileDev[pick]);
             fbHere = NULL;
             if (nc.made)
                 return 1;

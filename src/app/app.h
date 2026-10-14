@@ -54,7 +54,7 @@ enum { TAB_CARDS, TAB_GAMES, TAB_BOOT, TAB_FILES, TABS };
 #define TAB_KEYS   (PAD_LEFT | PAD_RIGHT | PAD_L1 | PAD_R1)
 
 /* the devices of the Files group: the sd2psx's own microSD and a USB drive */
-enum { FDEV_SD, FDEV_USB, FDEVS };
+enum { FDEV_SD, FDEV_USB, FDEV_HDD, FDEV_MX4SIO, FDEVS };
 typedef struct {
     int tab;                  /* the group shown */
     int count[TABS];          /* how many cards each group has (the Files group: how many devices) */
@@ -155,6 +155,8 @@ extern card_t *fbCard;
 struct fb_s {
     int dev;                   /* FDEV_* */
     char root[16], dir[400];   /* the device's root and the folder shown: a name can be appended to either */
+    int parts;                 /* the hard disk formatted APA: its partitions are above the root (root "hdd0:" = the
+                                  list of them, which isn't a folder: nothing is written there) */
     dir_entry_t *list;
     int n, cursor, top;
     int loading, error;        /* the folder is being read; it couldn't be read */
@@ -397,6 +399,8 @@ extern int rowsWide;
 void list_rows(int n, int cursor, int top, const char *(*text)(int i, char *buf), u32 (*dot)(int i));
 void scroll_to(int cursor, int *top);
 extern const int deviceText[FDEVS];
+/* the devices the Files group lists (FDEV_*), in order; how many */
+int fdev_list(int out[FDEVS]);
 int tab_of(const card_t *c);
 const char *game_of(const card_t *c);
 int tabs_on_folders(const tabs_t *g);

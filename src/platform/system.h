@@ -94,9 +94,16 @@ extern int deviceBoth;
 const device_t *device_other(void);
 void device_view(int other);
 const device_t *device_here(void);   /* the one in the slot */
-/* a USB drive (mass0:), for the file browser: loads its drivers the first time, then waits up to ms for the drive.
- * 0 = it's there */
-int usb_open(int ms);
+/* the drives of the file browser besides the microSD (drives.c): each one's drivers are loaded the first time it is
+ * asked for, then up to ms is waited for it. 0 = it's there, and root has its folders ("usb0:/"; a hard disk
+ * formatted APA: "hdd0:", whose folders are its partitions, each opened with hdd_mount) */
+enum { DRIVE_USB, DRIVE_MX4SIO, DRIVE_HDD };
+int drive_open(int drive, int ms, char *root, size_t size);
+/* a partition of the hard disk mounted, for its files to be read and written: at a pfsN: of its own, while the
+ * program runs (up to four; the one opened longest ago gives its place). 0 = done, its root in root ("pfs1:/") */
+int hdd_mount(const char *partition, char *root, size_t size);
+const char *hdd_partition(const char *path);   /* the partition a pfsN: path is on ("" = it isn't one) */
+void drives_close(void);                       /* the partitions let go of (what is written is on the disk then) */
 void go_osd(void) __attribute__((noreturn));
 #ifdef DEBUG_BUILD
 int debug_has_script(void);

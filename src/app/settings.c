@@ -471,13 +471,14 @@ static void pick_return(void)
     if ((k = choose(T(T_SET_IGR_RETURN), items, n, start)) < 0)
         return;
     if (!strcmp(values[k], "files")) {   /* the folders: X on an ELF chooses it */
-        for (i = 0; i < FDEVS; i++)
-            devices[i] = T(deviceText[i]);
-        if ((i = choose(T(T_PICK_ELF), devices, FDEVS, 0)) < 0)
+        int list[FDEVS], nd = fdev_list(list);
+        for (i = 0; i < nd; i++)
+            devices[i] = T(deviceText[list[i]]);
+        if ((i = choose(T(T_PICK_ELF), devices, nd, 0)) < 0)
             return;
         fbPicked[0] = 0;
         fbPick = 1;
-        files_screen(i);
+        files_screen(list[i]);
         fbPick = 0;
         if (!fbPicked[0])
             return;
@@ -640,9 +641,11 @@ void exit_menu(void)
     if ((k = choose(T(T_EXIT_TO), items, n, start)) < 0)
         return;
     if (!strcmp(values[k], "files")) {
-        for (i = 0; i < FDEVS; i++)
-            devices[i] = T(deviceText[i]);
-        if ((i = choose(T(T_EXIT_FILES), devices, FDEVS, 0)) >= 0) {
+        int list[FDEVS], nd = fdev_list(list);
+        for (i = 0; i < nd; i++)
+            devices[i] = T(deviceText[list[i]]);
+        if ((i = choose(T(T_EXIT_FILES), devices, nd, 0)) >= 0) {
+            i = list[i];
             fbExit = 1;
             files_screen(i);   /* only comes back when nothing was run */
             fbExit = 0;
