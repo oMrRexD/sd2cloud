@@ -625,6 +625,125 @@ static void cards_drop(card_t *c)
     nCards--;
 }
 
+int card_set_name(card_t *c, const char *name)
+{
+    char path[260], ch[8];
+    int r;
+    folder_ini(c->folder, path, sizeof(path));
+    snprintf(ch, sizeof(ch), "%d", c->channel);
+    r = ini_set(path, "ChannelName", ch, name);
+    log_msg("%s: [ChannelName] %s = %s (%d)", path, ch, name, r);
+    if (r == 0)
+        snprintf(c->name, sizeof(c->name), "%s", name);
+    return r;
+}
+
+int folder_renamable(const char *folder)
+{
+    size_t n = strlen(dev->numbered);
+    return dev->sd2psx && strcasecmp(folder, "BOOT") && !is_game_id(folder) &&
+           !(!strncasecmp(folder, dev->numbered, n) && folder[n] && strspn(folder + n, "0123456789") == strlen(folder + n));
+}
+
+/* Game2Folder.ini's games of a folder given to the one it is called now */
+static void game2folder_rename(const char *from, const char *to)
+{
+    char path[64], *line, *eq;
+    buffer_t b = {0};
+    int ps2 = 0;
+    snprintf(path, sizeof(path), "%s.sd2psx/Game2Folder.ini", sdRoot);
+    if (file_read(path, &b) != 0 || !b.len) {
+        buf_free(&b);
+        return;
+    }
+    for (line = strtok((char *)b.data, "\r\n"); line; line = strtok(NULL, "\r\n")) {
+        char l[200], key[100], value[100];
+        snprintf(l, sizeof(l), "%s", line);
+        trim(l);
+        if (l[0] == '[')
+            ps2 = !strncasecmp(l, "[PS2]", 5);
+        else if (ps2 && (eq = strchr(l, '=')) != NULL) {
+            snprintf(key, sizeof(key), "%.*s", (int)(eq - l), l);
+            snprintf(value, sizeof(value), "%s", eq + 1);
+            trim(key);
+            trim(value);
+            if (!strcasecmp(value, from))
+                ini_set(path, "PS2", key, to);
+        }
+    }
+    buf_free(&b);
+}
+
+int cards_rename_folder(const char *folder, const char *name)
+{
+    static dir_entry_t list[256];
+    static char dest[256][64];   /* each file's new name */
+    char from[200], to[200], a[520], b[520], old[48];
+    size_t len;
+    int n, i, k, r = 0, whole;
+    snprintf(old, sizeof(old), "%s", folder);
+    len = strlen(old);
+    snprintf(from, sizeof(from), "%s%s/%s/", sdRoot, dev->cards, old);
+    snprintf(to, sizeof(to), "%s%s/%s/", sdRoot, dev->cards, name);
+    if (strlen(name) > 15 || !folder_renamable(name) || dir_list(to, list, 1) >= 0 || (n = dir_list(from, list, 256)) < 0)
+        return -1;
+    for (i = 0; i < n; i++)   /* (Exemplo-1.mcd, Exemplo.ini, Exemplo-1.bin: Novo-1.mcd, Novo.ini, Novo-1.bin) */
+        snprintf(dest[i], sizeof(dest[0]), "%s%s", strncasecmp(list[i].name, old, len) ? "" : name,
+                 list[i].name + (strncasecmp(list[i].name, old, len) ? 0 : len));
+    /* the folder itself renamed, where that can be: then only its files, which are named after it, are left */
+    from[strlen(from) - 1] = to[strlen(to) - 1] = 0;
+    whole = rename(from, to) == 0;
+    strcat(from, "/");
+    strcat(to, "/");
+    if (!whole)
+        ensure_dir(to);
+    /* without the folder renamed, every file is copied first, and only when all of them are is the old folder let
+     * go of */
+    for (i = 0; i < n && r == 0; i++) {
+        if (list[i].dir)
+            continue;
+        snprintf(a, sizeof(a), "%s%s", whole ? to : from, list[i].name);
+        snprintf(b, sizeof(b), "%s%s", to, dest[i]);
+        if (whole ? strcmp(a, b) && file_move(a, b) != 0 : file_copy(a, b) != 0)
+            r = -1;
+    }
+    if (r != 0 && !whole) {   /* (the copies go: the folder is as it was) */
+        for (k = 0; k < i; k++) {
+            snprintf(b, sizeof(b), "%s%s", to, dest[k]);
+            if (!list[k].dir)
+                unlink(b);
+        }
+        to[strlen(to) - 1] = 0;
+        rmdir(to);
+        log_msg("%s couldn't be called %s: as it was", old, name);
+        return -1;
+    }
+    if (!whole) {
+        for (i = 0; i < n; i++) {
+            snprintf(a, sizeof(a), "%s%s", from, list[i].name);
+            if (!list[i].dir)
+                unlink(a);
+        }
+        from[strlen(from) - 1] = 0;
+        rmdir(from);
+    }
+    game2folder_rename(old, name);
+    /* its cards, under their new names: and what is known of each, which goes on being theirs */
+    for (i = 0; i < nCards; i++)
+        if (!strcasecmp(cards[i].folder, old)) {
+            char id[96];
+            snprintf(id, sizeof(id), "%s", cards[i].id);
+            snprintf(cards[i].folder, sizeof(cards[i].folder), "%s", name);
+            snprintf(cards[i].base, sizeof(cards[i].base), "%s-%d", name, cards[i].channel);
+            snprintf(cards[i].id, sizeof(cards[i].id), "%s/%s", name, cards[i].base);
+            snprintf(cards[i].path, sizeof(cards[i].path), "%s%s/%s/%s%s", sdRoot, dev->cards, name, cards[i].base, dev->ext);
+            state_rename(id, cards[i].id);
+        }
+    state_write();
+    log_msg("%s is called %s now (%s)%s", old, name, whole ? "renamed" : "copied", r ? ", not all of its files" : "");
+    return r;
+}
+
 int cards_delete(card_t *c)
 {
     char id[96];
@@ -757,7 +876,7 @@ void card_keep_synced(card_t *c, int synced, int resolved)
         c->resolved = 1;
     }
     state_write();
-    log_msg("%s: a template's saves only: still %s", c->id, synced ? "synced" : "resolved");
+    log_msg("%s: changed with nothing a backup needs: still %s", c->id, synced ? "synced" : "resolved");
 }
 
 int card_set_included(card_t *c, int on)

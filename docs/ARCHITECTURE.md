@@ -35,8 +35,8 @@ a PC's compiler. `src/app` is the only place that knows the screens; it calls do
 | `saves.c`, `save.c` | One card's saves, as the PS2 browser shows them; one save's page and what is done with it |
 | `marks.c` | Saves marked on the cards, whichever cards they are on: for a template, or to be copied together to a card or a folder (pasted with START on the card, in the list of cards, where their game's folder comes first) |
 | `dest.c` | Where a save goes when it is moved or imported: a card picked among the others, or a new card made on the spot (a copy's new card too), and the size it is made of |
-| `cardops.c` | A card as a whole, from its options: deleted, or its whole folder deleted |
-| `browse.c` | The Files group: folders of the microSD and of a USB drive, `.psu` files, exporting |
+| `cardops.c` | A card as a whole, from its options: made again of another size, renamed (its name on the sd2psx, or its folder's), deleted, or its whole folder deleted |
+| `browse.c` | The Files group: folders of the microSD and of a USB drive, `.psu` files, exporting; a file renamed or deleted |
 | `install.c` | A memory card file looked into, its saves copied out of it or into it, and installed as a card |
 | `memcard.c` | The Memory Card: a PS2 memory card in the console's other slot, in the Files group, and uploading it whole |
 | `backup.c`, `autosync.c`, `synclist.c` | The sync to Google Drive; the one that runs by itself after a game; the list of a sync's cards (SELECT) |

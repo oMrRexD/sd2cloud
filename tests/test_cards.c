@@ -304,6 +304,69 @@ static void cards_are_deleted(void)
     CHECK_INT(cards_delete_folder("Nothing"), -1);
 }
 
+/* a card's name on the sd2psx, in its folder's .ini; a folder of the user's own called something else, with its
+ * files, its games in Game2Folder.ini and what is known of its cards. Renamed, and, on a device that can't rename,
+ * copied: either way, the same */
+static void cards_are_renamed(void)
+{
+    buffer_t b;
+    card_t *c;
+    int pass;
+    CHECK(!folder_renamable("Card1") && !folder_renamable("Card12") && !folder_renamable("BOOT") &&
+          !folder_renamable("SLUS-21065"));
+    CHECK(folder_renamable("Racing") && folder_renamable("Card") && folder_renamable("Cards 2") && folder_renamable("Card1a"));
+    for (pass = 0; pass < 2; pass++) {
+        t_fresh();
+        hostNoRename = pass;
+        put_card("Card1", "Card1-1.mcd");
+        put_card("Racing", "Racing-1.mcd");
+        put_card("Racing", "Racing-2.mcd");
+        t_text("sd/MemoryCards/PS2/Racing/Racing.ini", "[ChannelName]\n2=Second\n[Settings]\nMaxChannels=8\n");
+        t_text("sd/MemoryCards/PS2/Racing/Racing-1.bin", "a picture");
+        t_mkdir("sd/.sd2psx");
+        t_text("sd/.sd2psx/Game2Folder.ini", "[PS2]\nSLUS-30001=Racing\nSLUS-30002=Other\n");
+        config_read();
+        state_read();
+        CHECK_INT(cards_scan(), 3);
+        cards_check(no_progress);
+        state_card("Racing/Racing-2", 1);
+        /* the name the sd2psx shows */
+        c = card("Card1/Card1-1");
+        CHECK(c != NULL);
+        if (c) {
+            CHECK_INT(card_set_name(c, "My saves"), 0);
+            CHECK_STR(c->name, "My saves");
+        }
+        /* the folder: not to a name a folder has, nor to one the sd2psx finds by itself */
+        CHECK_INT(cards_rename_folder("Racing", "Card1"), -1);
+        CHECK_INT(cards_rename_folder("Racing", "Card7"), -1);
+        CHECK_INT(cards_rename_folder("Racing", "A name too long for it"), -1);
+        CHECK_INT(cards_rename_folder("Racing", "Speed"), 0);
+        CHECK_INT(t_size("sd/MemoryCards/PS2/Racing/Racing-1.mcd"), -1);
+        CHECK(t_size("sd/MemoryCards/PS2/Speed/Speed-1.mcd") > 0 && t_size("sd/MemoryCards/PS2/Speed/Speed-2.mcd") > 0);
+        CHECK(t_size("sd/MemoryCards/PS2/Speed/Speed.ini") > 0 && t_size("sd/MemoryCards/PS2/Speed/Speed-1.bin") > 0);
+        CHECK(card("Speed/Speed-2") != NULL && card("Racing/Racing-2") == NULL);
+        CHECK(state_card("Speed/Speed-2", 0) != NULL && state_card("Racing/Racing-2", 0) == NULL);
+        b = t_read("sd/.sd2psx/Game2Folder.ini");
+        CHECK(b.len && strstr((char *)b.data, "SLUS-30001 = Speed") && strstr((char *)b.data, "SLUS-30002=Other"));
+        buf_free(&b);
+        {
+            DIR *d = opendir("sd/MemoryCards/PS2/Racing");
+            CHECK(d == NULL);
+            if (d)
+                closedir(d);
+        }
+        /* listed again: the same cards, with the channel names */
+        state_read();
+        CHECK_INT(cards_scan(), 3);
+        c = card("Speed/Speed-2");
+        CHECK(c != NULL && !strcmp(c->name, "Second"));
+        c = card("Card1/Card1-1");
+        CHECK(c != NULL && !strcmp(c->name, "My saves"));
+        CHECK(state_card("Speed/Speed-2", 0) != NULL);
+    }
+}
+
 void suite_cards(void)
 {
     RUN(cards_are_listed);
@@ -311,4 +374,5 @@ void suite_cards(void)
     RUN(settings_choose_the_cards);
     RUN(device_card_size);
     RUN(cards_are_deleted);
+    RUN(cards_are_renamed);
 }

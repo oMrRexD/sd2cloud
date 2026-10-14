@@ -16,6 +16,13 @@ int file_write(const char *path, const unsigned char *d, size_t n);
 int file_replace(const char *path, const unsigned char *d, size_t n);   /* .new -> verify -> rename */
 int file_write_checked(const char *path, const unsigned char *d, size_t n);   /* written and read back: 1 = it's there, as it should be */
 int file_exists(const char *path);
+/* a file copied a piece at a time, with one file open at a time (the sd2psx's way), read back and compared. 0 =
+ * copied; -1 = not (a file at to already; or it couldn't be, and nothing is left at to) */
+int file_copy(const char *from, const char *to);
+/* a file moved to another name, or another folder of the same device: renamed where that can be (an sd2psx since its
+ * firmware 1.4.0, a USB drive, PCSX2); else copied (file_copy) and only then the original deleted. 0 = moved; -1 =
+ * not (the original is as it was, and nothing is left at to) */
+int file_move(const char *from, const char *to);
 /* one "key = value" of an .ini, changed or added (at the end of its section; a section that isn't there, at the end
  * of the file; a file that isn't there is made): everything else stays as it was. 0 = written */
 int ini_set(const char *path, const char *section, const char *key, const char *value);

@@ -112,6 +112,72 @@ int file_replace(const char *path, const unsigned char *d, size_t n)
     return 0;
 }
 
+/* n bytes of a file from at, the file open only while they are read. Returns how many were read */
+#define MOVE_PIECE (64 * 1024)
+static int piece_at(const char *path, long long at, unsigned char *d, int n)
+{
+    int fd = open(path, O_RDONLY), got = 0, k;
+    if (fd < 0)
+        return -1;
+    if (!at || lseek(fd, (long)at, SEEK_SET) == (long)at)
+        while (got < n && (k = read(fd, d + got, n - got)) > 0)
+            got += k;
+    close(fd);
+    return got;
+}
+
+int file_copy(const char *from, const char *to)
+{
+    static unsigned char a[MOVE_PIECE], b[MOVE_PIECE];
+    long long at, size;
+    int fd, n, k, w, r = 0;
+    if (file_exists(to) || (fd = open(from, O_RDONLY)) < 0)
+        return -1;
+    size = lseek(fd, 0, SEEK_END);
+    close(fd);
+    if (size < 0)
+        r = -1;
+    else if (!size)   /* (an empty file: made empty) */
+        r = (fd = open(to, O_WRONLY | O_CREAT | O_TRUNC, 0666)) >= 0 && close(fd) == 0 ? 0 : -1;
+    for (at = 0; at < size && r == 0; at += n) {
+        n = size - at > MOVE_PIECE ? MOVE_PIECE : (int)(size - at);
+        if (piece_at(from, at, a, n) != n || (fd = open(to, at ? O_WRONLY : O_WRONLY | O_CREAT | O_TRUNC, 0666)) < 0) {
+            r = -1;
+            break;
+        }
+        if (at)
+            lseek(fd, (long)at, SEEK_SET);
+        for (k = 0; k < n && (w = write(fd, a + k, n - k)) > 0; k += w)
+            ;
+        if (close(fd) != 0 || k < n)
+            r = -1;
+    }
+    for (at = 0; at < size && r == 0; at += n) {   /* read back, and compared with the original */
+        n = size - at > MOVE_PIECE ? MOVE_PIECE : (int)(size - at);
+        if (piece_at(from, at, a, n) != n || piece_at(to, at, b, n) != n || memcmp(a, b, n) != 0)
+            r = -1;
+    }
+    if (r != 0) {
+        unlink(to);
+        log_msg("files: %s not copied to %s", from, to);
+    }
+    return r;
+}
+
+int file_move(const char *from, const char *to)
+{
+    if (file_exists(to))
+        return -1;
+    if (rename(from, to) == 0)
+        return 0;
+    /* a file system that can't rename (an sd2psx before its firmware 1.4.0): copied, and only then deleted */
+    if (file_copy(from, to) != 0)
+        return -1;
+    if (unlink(from) != 0 && file_exists(from))   /* (it is where it was meant to go, and still where it was: a copy) */
+        log_msg("files: %s copied to %s, but couldn't be deleted", from, to);
+    return 0;
+}
+
 static int by_kind_and_name(const void *a, const void *b)
 {
     const dir_entry_t *x = a, *y = b;

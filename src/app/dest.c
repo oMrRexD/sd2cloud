@@ -327,9 +327,10 @@ static const char *size_note(int i)
 }
 
 /* A card's size, picked among the ones the device makes (dev->minMb to maxMb) that saves taking room (as
- * mcfs_save_room counts them; 0 = none go into it now) fit in, under title. The cursor starts on current, or on the
- * one recommended for them (mcfs_recommended_mb; with none, the 8 MB of a real card). device = the size the device
- * makes its own cards of. The size in MB, or 0 = back (or no size is big enough, which is said) */
+ * mcfs_save_room counts them; 0 = none go into it now) fit in, under title. current = the size it is now (0 = none),
+ * marked so. The cursor starts on the one recommended for the saves (mcfs_recommended_mb), or, with none going in, on
+ * current (or the 8 MB of a real card). device = the size the device makes its own cards of. The size in MB, or 0 =
+ * back (or no size is big enough, which is said) */
 int card_size_pick(int title, long long room, int current, int device)
 {
     char items[8][48], need[24];
@@ -345,9 +346,9 @@ int card_size_pick(int title, long long room, int current, int device)
     for (mb = dev->minMb; mb <= dev->maxMb && n < 8; mb *= 2) {
         if (room > mcfs_card_room((long long)mb << 20))
             continue;   /* (too small for them) */
-        snprintf(items[n], sizeof(items[0]), T(mb == rec ? T_SIZE_RECOMMENDED : T_SIZE_MB), mb);
+        snprintf(items[n], sizeof(items[0]), T(mb == current ? T_SIZE_CURRENT : mb == rec ? T_SIZE_RECOMMENDED : T_SIZE_MB), mb);
         list[n] = items[n];
-        if (mb == (current ? current : rec))
+        if (mb == (room || !current ? rec : current))   /* (saves going in: the one recommended for them) */
             start = n;
         sz.mb[n++] = mb;
     }

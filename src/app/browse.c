@@ -190,6 +190,13 @@ static int fb_up(void)
     return 1;
 }
 
+/* △ offers what can be done to the selected file (file_options): while the folders aren't open for something else (a
+ * card or saves on their way here, a program being picked) */
+static int fb_file_options(void)
+{
+    return fb.n && !fb.loading && !fb.list[fb.cursor].dir && !fbCard && !fbGive.c && !fbPick && !fbExit && !card_file_marks();
+}
+
 static void scene_files(float t)
 {
     int i, y, lh = ui_line_height(FONT_TEXT);
@@ -246,7 +253,7 @@ static void scene_files(float t)
     }
     {
         /* only what can be done with the selected entry is offered */
-        legend_t l[3] = {{BUTTON_CIRCLE, T(T_BACK)}};
+        legend_t l[4] = {{BUTTON_CIRCLE, T(T_BACK)}};
         const dir_entry_t *e = fb.n ? &fb.list[fb.cursor] : NULL;
         int n = 1;
         if (e && fb_opens(e))
@@ -262,6 +269,8 @@ static void scene_files(float t)
             l[n].button = BUTTON_SQUARE, l[n++].text = T(T_INSTALL);
         else if (fbHereSave)   /* or the folder shown, a save's */
             l[n].button = BUTTON_SQUARE, l[n++].text = T(T_INSTALL_SAVE);
+        if (fb_file_options())
+            l[n].button = BUTTON_TRIANGLE, l[n++].text = T(T_OPTIONS);
         look_legend(l, n, 0);
     }
 }
@@ -557,6 +566,66 @@ static int card_file_go(const char *name, int how)
     return 0;
 }
 
+/* △ on a file of the folder shown: renamed (its name typed, its extension kept), or deleted, asked first. One of the
+ * sd2psx's own cards isn't touched here: its options are the card's, on the main screen */
+static void file_options(const dir_entry_t *e)
+{
+    const char *items[2] = {T(T_RENAME), T(T_DELETE)};
+    char path[660], name[256], base[64], ext[16], to[700], t[400], title[100];
+    const char *dot;
+    int i, r;
+    snprintf(name, sizeof(name), "%s", e->name);
+    snprintf(path, sizeof(path), "%s%s", fb.dir, name);
+    for (i = 0; i < nCards; i++)
+        if (!strcasecmp(cards[i].path, path)) {
+            message_wait(0, NULL, COLOR_WARN, T(T_FILE_IS_CARD));
+            return;
+        }
+    snprintf(title, sizeof(title), "%s", name);
+    utf8_fix(title, sizeof(title));
+    fit(FONT_TEXT, title, sizeof(title), 320);
+    if ((r = choose(title, items, 2, 0)) < 0)
+        return;
+    if (r == 0) {
+        dot = strrchr(name, '.');
+        snprintf(base, sizeof(base), "%.*s", dot ? (int)(dot - name) : (int)strlen(name), name);
+        snprintf(ext, sizeof(ext), "%s", dot && strlen(dot) < sizeof(ext) ? dot : "");
+        if (!keyboard(T(T_FILE_NAME_TITLE), base, 33))
+            return;
+        snprintf(to, sizeof(to), "%s%s%s", fb.dir, base, ext);
+        if (!strcmp(to, path))
+            return;
+        if (file_exists(to)) {
+            message_wait(0, NULL, COLOR_WARN, T(T_RENAME_EXISTS));
+            return;
+        }
+        message(0, NULL, COLOR_TEXT, T(T_RENAMING));
+        r = file_move(path, to);
+        log_msg("file %s renamed to %s%s: %d", path, base, ext, r);
+        if (r != 0)
+            message_wait(0, NULL, COLOR_ERROR, T(T_RENAME_FAILED));
+        snprintf(name, sizeof(name), "%s%s", r == 0 ? base : "", r == 0 ? ext : e->name);
+        fb_load(name);
+        return;
+    }
+    snprintf(t, sizeof(t), T(T_DELETE_FILE_ASK), name);
+    dlg_new(COLOR_WARN, t);
+    snprintf(t, sizeof(t), T(T_DELETE_TEXT), T(deviceText[fb.dev]));
+    dlg_line(FONT_TEXT, COLOR_TEXT, 0, t);
+    dlg_buttons(BUTTON_CIRCLE, T_BACK, BUTTON_CROSS, T_DELETE);
+    next.wide = 1;
+    dlg_show();
+    if (!(wait_button(PAD_CROSS | PAD_CIRCLE, 0) & PAD_CROSS)) {
+        sound_play(SND_BACK);
+        return;
+    }
+    sound_play(SND_CONFIRM);
+    r = unlink(path) == 0 || !file_exists(path) ? 0 : -1;
+    log_msg("file %s deleted: %d", path, r);
+    message_wait(0, NULL, r == 0 ? COLOR_OK : COLOR_ERROR, T(r == 0 ? T_DONE_DELETE : T_DELETE_FILE_FAILED));
+    fb_load(NULL);
+}
+
 static void browse(int dev)
 {
     if (dev == FDEV_USB) {
@@ -654,6 +723,9 @@ static void browse(int dev)
                 sound_play(SND_CONFIRM);
                 psu_screen("", 0);
             }
+        } else if ((b & PAD_TRIANGLE) && fb_file_options()) {
+            sound_play(SND_CONFIRM);
+            file_options(&fb.list[fb.cursor]);
         } else if ((b & PAD_TRIANGLE) && !fb.error && fbCard) {   /* from a card's options: the whole card goes into this folder */
             sound_play(SND_CONFIRM);
             if (export_card(fbCard))

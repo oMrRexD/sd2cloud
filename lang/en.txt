@@ -677,6 +677,56 @@ T_DELETE_CARD_FAILED = Unable to delete the memory card.
 T_DONE_DELETE_FOLDER = Folder deleted.
 # Up to 3 lines.
 T_DELETE_FOLDER_FAILED = Unable to delete the whole folder.
+# One line.
+T_SIZE_CURRENT = %d MB (current)
+# One line.
+T_RESIZE = Change size
+# One line.
+T_RESIZE_TITLE = New size of the card
+# Up to 2 lines.
+T_RESIZE_ASK = Change the size of %s from %d MB to %d MB?
+# Up to 4 lines.
+T_RESIZE_TEXT = The saves are copied to a new card of that size, which takes the current one's place once checked. If anything fails, the current card is not changed.
+# One line.
+T_RESIZE_MAKING = Creating the new card...
+# One line.
+T_RESIZE_COPYING = Copying the saves...
+# Up to 2 lines.
+T_RESIZE_DONE = %s is now %d MB.
+# Up to 5 lines.
+T_RESIZE_LEFT = Unable to put the new card in the place of %s. It is whole and checked, in the file %s of the same folder.
+# Up to 4 lines.
+T_RESIZE_ODD = This card has files outside folders, or a folder inside a save: its size can't be changed.
+# Up to 3 lines.
+T_RESIZE_FULL = The saves didn't fit in a %d MB card. The card was not changed.
+# Button.
+T_RENAME = Rename
+# One line.
+T_CARD_NAME_TITLE = Card name
+# One line.
+T_FOLDER_NAME_TITLE = Folder name
+# One line.
+T_FILE_NAME_TITLE = File name
+# Up to 3 lines.
+T_RENAME_EXISTS = A folder or file with that name already exists.
+# Up to 3 lines.
+T_RENAME_RESERVED = The sd2psx uses that name for its own folders (CardN, BOOT or a game's ID). Choose another one.
+# Up to 2 lines.
+T_RENAME_FOLDER_ASK = Rename the folder %s to %s?
+# Up to 3 lines.
+T_RENAME_FOLDER_TEXT = Its cards and files take the new name. The backups already on Google Drive keep the old one.
+# One line.
+T_RENAMING = Renaming...
+# Up to 3 lines.
+T_RENAME_FAILED = Unable to rename. Nothing was changed.
+# Up to 2 lines.
+T_RENAME_DONE_FOLDER = The folder is now called %s.
+# Up to 2 lines.
+T_DELETE_FILE_ASK = Delete the file %s?
+# Up to 3 lines.
+T_DELETE_FILE_FAILED = Unable to delete the file.
+# Up to 3 lines.
+T_FILE_IS_CARD = This file is one of the sd2psx's cards: use its options in the list of cards.
 # Up to 3 lines.
 T_PICK_ELF = Choose an ELF...
 # Up to 3 lines.

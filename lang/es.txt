@@ -674,6 +674,56 @@ T_DELETE_CARD_FAILED = No se pudo eliminar la tarjeta de memoria.
 T_DONE_DELETE_FOLDER = Se eliminó la carpeta.
 # Up to 3 lines. English: Unable to delete the whole folder.
 T_DELETE_FOLDER_FAILED = No se pudo eliminar la carpeta entera.
+# One line. English: %d MB (current)
+T_SIZE_CURRENT = %d MB (actual)
+# One line. English: Change size
+T_RESIZE = Cambiar tamaño
+# One line. English: New size of the card
+T_RESIZE_TITLE = Nuevo tamaño de la tarjeta
+# Up to 2 lines. English: Change the size of %s from %d MB to %d MB?
+T_RESIZE_ASK = ¿Desea cambiar el tamaño de %s de %d MB a %d MB?
+# Up to 4 lines. English: The saves are copied to a new card of that size, which takes the current one's place once checked. If anything fails, the current card is not changed.
+T_RESIZE_TEXT = Las partidas se copian a una tarjeta nueva de ese tamaño, que sustituye a la actual una vez comprobada. Si algo falla, la tarjeta actual no se modifica.
+# One line. English: Creating the new card...
+T_RESIZE_MAKING = Creando la tarjeta nueva...
+# One line. English: Copying the saves...
+T_RESIZE_COPYING = Copiando las partidas...
+# Up to 2 lines. English: %s is now %d MB.
+T_RESIZE_DONE = %s ahora tiene %d MB.
+# Up to 5 lines. English: Unable to put the new card in the place of %s. It is whole and checked, in the file %s of the same folder.
+T_RESIZE_LEFT = No se pudo poner la tarjeta nueva en lugar de %s. Está completa y comprobada en el archivo %s de la misma carpeta.
+# Up to 4 lines. English: This card has files outside folders, or a folder inside a save: its size can't be changed.
+T_RESIZE_ODD = Esta tarjeta tiene archivos fuera de carpetas, o una carpeta dentro de una partida: no se puede cambiar su tamaño.
+# Up to 3 lines. English: The saves didn't fit in a %d MB card. The card was not changed.
+T_RESIZE_FULL = Las partidas no cupieron en una tarjeta de %d MB. La tarjeta no se modificó.
+# Button. English: Rename
+T_RENAME = Cambiar nombre
+# One line. English: Card name
+T_CARD_NAME_TITLE = Nombre de la tarjeta
+# One line. English: Folder name
+T_FOLDER_NAME_TITLE = Nombre de la carpeta
+# One line. English: File name
+T_FILE_NAME_TITLE = Nombre del archivo
+# Up to 3 lines. English: A folder or file with that name already exists.
+T_RENAME_EXISTS = Ya existe una carpeta o un archivo con ese nombre.
+# Up to 3 lines. English: The sd2psx uses that name for its own folders (CardN, BOOT or a game's ID). Choose another one.
+T_RENAME_RESERVED = El sd2psx usa ese nombre para sus propias carpetas (CardN, BOOT o el ID de un juego). Elija otro.
+# Up to 2 lines. English: Rename the folder %s to %s?
+T_RENAME_FOLDER_ASK = ¿Desea cambiar el nombre de la carpeta %s a %s?
+# Up to 3 lines. English: Its cards and files take the new name. The backups already on Google Drive keep the old one.
+T_RENAME_FOLDER_TEXT = Sus tarjetas y archivos pasan a tener el nombre nuevo. Las copias ya hechas en Google Drive conservan el nombre antiguo.
+# One line. English: Renaming...
+T_RENAMING = Cambiando el nombre...
+# Up to 3 lines. English: Unable to rename. Nothing was changed.
+T_RENAME_FAILED = No se pudo cambiar el nombre. No se modificó nada.
+# Up to 2 lines. English: The folder is now called %s.
+T_RENAME_DONE_FOLDER = La carpeta ahora se llama %s.
+# Up to 2 lines. English: Delete the file %s?
+T_DELETE_FILE_ASK = ¿Desea eliminar el archivo %s?
+# Up to 3 lines. English: Unable to delete the file.
+T_DELETE_FILE_FAILED = No se pudo eliminar el archivo.
+# Up to 3 lines. English: This file is one of the sd2psx's cards: use its options in the list of cards.
+T_FILE_IS_CARD = Este archivo es una tarjeta del sd2psx: use sus opciones en la lista de tarjetas.
 # Up to 3 lines. English: Choose an ELF...
 T_PICK_ELF = Elegir un ELF...
 # Up to 3 lines. English: Unable to read this memory card.

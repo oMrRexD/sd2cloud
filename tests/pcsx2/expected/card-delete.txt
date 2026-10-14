@@ -11,6 +11,8 @@ SLUS-21065/SLUS-21065-1: 2 folders, fingerprint 64fbc81ffd3ff7a8, new
 [script] D
 [script] D
 [script] D
+[script] D
+[script] D
 [script] X
 [script] X
 Card1/Card1-1 deleted: 2 on the microSD

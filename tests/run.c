@@ -40,6 +40,7 @@ void t_fresh(void)
     wipe(".");
     t_mkdir("sd/SD2Cloud");
     hostMallocLimit = 0;
+    hostNoRename = 0;
     googleError[0] = 0;
 }
 

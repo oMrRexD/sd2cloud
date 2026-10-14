@@ -178,6 +178,8 @@ void memcard_hint(void);
 void memcard_upload(void);               /* the whole card, as a backup of its own on Drive */
 
 /* ------------------------------------------------------------ cardops.c */
+void card_resize_screen(card_t *c);      /* the card made again of another size, picked and asked */
+int card_rename_screen(card_t *c);       /* its name on the sd2psx, or its folder's: 1 = cards[] changed */
 int card_delete(card_t *c);              /* asked, and deleted: 1 = cards[] changed (the main screen lists them again) */
 int folder_delete(card_t *c);            /* that card's whole folder, the same way */
 

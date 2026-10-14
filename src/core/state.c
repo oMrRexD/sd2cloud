@@ -52,6 +52,13 @@ void state_forget(const char *id)
         }
 }
 
+void state_rename(const char *from, const char *to)
+{
+    card_state_t *e = state_card(from, 0);
+    if (e && !state_card(to, 0))
+        COPY(e->id, to);
+}
+
 const char *state_folder(const char *name)
 {
     int i;

@@ -666,6 +666,66 @@ static int file_write_card(card_file_t *f, const char *dest, unsigned char *piec
     return r;
 }
 
+/* ------------------------------------------------------------ a card made again of another size */
+
+static int (*resizeProgress)(int phase, long long done, long long total);
+
+static void resize_made(long long done, long long total)
+{
+    if (resizeProgress)
+        resizeProgress(RESIZE_MAKE, done, total);
+}
+
+static int resize_copied(int i, int n, const char *folder)
+{
+    (void)folder;
+    return resizeProgress ? resizeProgress(RESIZE_COPY, i, n) : 0;
+}
+
+int card_resize(card_t *c, long long size, int (*progress)(int phase, long long done, long long total))
+{
+    card_file_t f;
+    char tmp[220];
+    int r;
+    snprintf(tmp, sizeof(tmp), "%s.new", c->path);
+    googleError[0] = 0;
+    resizeProgress = progress;
+    unlink(tmp);   /* (one that was left by a resize cut short) */
+    r = mcfs_new_card(tmp, size, resize_made);
+    if (r == MCFS_OK)
+        r = mcfs_copy_card(c->path, tmp, resize_copied);
+    resizeProgress = NULL;
+    if (r != MCFS_OK) {   /* the card is as it was: the new one goes */
+        unlink(tmp);
+        log_msg("resize: %s to %lld MB: %d, the card is as it was", c->id, size >> 20, r);
+        if (r == MCFS_ERR_CANCELLED)
+            return -2;
+        if (r == MCFS_ERR_FULL)   /* (the size was picked by what the card has in use: it shouldn't come to this) */
+            snprintf(googleError, sizeof(googleError), T(T_RESIZE_FULL), (int)(size >> 20));
+        else
+            snprintf(googleError, sizeof(googleError), "%s", T(r == MCFS_ERR_BAD ? T_RESIZE_ODD : T_ERR_MC_WRITE));
+        return -1;
+    }
+    /* the new card takes the old one's place: renamed (an sd2psx since its firmware 1.4.0, a USB drive, PCSX2) or,
+     * where a file can't be renamed, written over it and read back */
+    if (rename(tmp, c->path) == 0 || ((unlink(c->path) == 0 || !file_exists(c->path)) && rename(tmp, c->path) == 0)) {
+        c->size = size;
+        log_msg("resize: %s is a %lld MB card now (renamed into place)", c->id, size >> 20);
+        return 0;
+    }
+    if ((r = card_file_open(&f, tmp, NULL)) == 0) {
+        r = card_file_install(&f, c, progress);
+        card_file_close(&f);
+    }
+    if (r != 0) {   /* the card, made again, is still whole in its .new: said */
+        log_msg("resize: %s couldn't take the new card's place, which is left in %s", c->id, tmp);
+        return -3;
+    }
+    unlink(tmp);
+    log_msg("resize: %s is a %lld MB card now (written over)", c->id, size >> 20);
+    return 0;
+}
+
 int card_file_install(card_file_t *f, card_t *to, int (*progress)(int phase, long long done, long long total))
 {
     unsigned char *piece;

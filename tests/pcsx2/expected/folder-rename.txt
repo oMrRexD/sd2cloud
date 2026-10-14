@@ -1,0 +1,27 @@
+# log
+SD2Cloud <version> -- program in host:APPS/SD2Cloud/ (host:SD2CLOUD-DEBUG.ELF), data in host:SD2Cloud/, manual
+settings: [app] app_path = host:SD2CLOUD-DEBUG.ELF (0)
+2 card(s) on the microSD
+Card2/Card2-1: 0 folders, fingerprint e3b0c44298fc1c14, new
+Racing/Racing-1: 2 folders, fingerprint 64fbc81ffd3ff7a8, new
+2 card(s) seen for the first time: fingerprint kept as the reference (0)
+[script] D
+[script] T
+[script] D
+[script] D
+[script] D
+[script] D
+[script] X
+[script] X
+[script] S
+[script] X
+Racing is called A now (copied)
+[script] X
+(end: capture)
+
+# files
+e67be4206c58f05d290d04e24ef9bd240e0a329b479dd8d202f12d40f464d347  MemoryCards/PS2/A/A-1.mcd
+8ac207d1d9e80e7876e3389f63329aaf7173a172b072ebdafa35a2ef8c585585  MemoryCards/PS2/A/A.ini
+9b26f87a6ae6b13ddf74cec52f77df98dccf3447dd4041c66394f113efddc738  MemoryCards/PS2/Card2/Card2-1.mcd
+17df2e2a16cbab4cb8357fe9a735f1765b89ed8fcaf21c00a1634ed98fb36c3e  SD2Cloud/sd2cloud.ini
+8209ea094cfaac641b285bee93604d71d2a793e13f01adc01232b88a08ecdb2d  SD2Cloud/state-debug.ini

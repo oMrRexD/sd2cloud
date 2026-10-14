@@ -33,5 +33,13 @@ void card_file_close(card_file_t *f);
  * or read back gives up as well (-2), which is for the caller to allow only of a card that wasn't there, and to
  * delete it then. A card that was there and didn't get written whole is left empty */
 int card_file_install(card_file_t *f, card_t *to, int (*progress)(int phase, long long done, long long total));
+/* A card of the microSD made again of another size (the caller makes sure the sd2psx isn't using it): a new card of
+ * that size beside it (its path and ".new"), every folder of it copied there and read back, and then the new card in
+ * its place. progress: RESIZE_MAKE (bytes of the new card), RESIZE_COPY (folders, done of total; != 0 gives up), then,
+ * when the file can't be renamed, as card_file_install. 0 = done (c->size is the new one); -2 = given up, -1 = it
+ * couldn't be (googleError says why), and in both the card is as it was; -3 = the new card couldn't take the old
+ * one's place: it is whole in the .new, and the card may be gone */
+enum { RESIZE_MAKE = 10, RESIZE_COPY };
+int card_resize(card_t *c, long long size, int (*progress)(int phase, long long done, long long total));
 
 #endif

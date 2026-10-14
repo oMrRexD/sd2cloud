@@ -20,6 +20,7 @@ typedef struct {
 } card_state_t;
 card_state_t *state_card(const char *id, int create);
 void state_forget(const char *id);                       /* a card that is no more: what was known of it goes */
+void state_rename(const char *from, const char *to);     /* a card that is called another thing now keeps it */
 const char *state_folder(const char *name);              /* Drive folder id (cache) */
 void state_set_folder(const char *name, const char *id);
 void state_read(void);

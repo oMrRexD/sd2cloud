@@ -14,7 +14,7 @@ OUT = build
 
 CC ?= cc
 CFLAGS += -O1 -g -Wall -Wno-format-truncation -Ihost -I$(SRC) -I$(CORE) -I$(SRC)/platform -I$(SRC)/ui -I.
-LDFLAGS += -Wl,--wrap=malloc
+LDFLAGS += -Wl,--wrap=malloc -Wl,--wrap=rename
 LDLIBS += -lz
 
 COMMON = $(addprefix $(OUT)/, $(addsuffix .o, $(ENGINE) util host sha256))

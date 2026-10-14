@@ -282,6 +282,85 @@ static void out_to_a_zip_and_back(void)
     CHECK(card_file_open(&f, "damaged.zip", NULL) != 0);
 }
 
+static int resizeGiveUp;   /* the resize's progress gives up when it is told of the folders (1) */
+static int resize_progress(int phase, long long done, long long total)
+{
+    (void)done;
+    (void)total;
+    return phase == RESIZE_COPY && resizeGiveUp;
+}
+
+/* does that card's folder export to the same .psu as the copy of the source's (source.keep)? */
+static int same_save(const char *card, const char *folder)
+{
+    buffer_t a = {0}, b = {0};
+    int same = mcfs_export_psu("source.keep", folder, &a) == MCFS_OK && mcfs_export_psu(card, folder, &b) == MCFS_OK &&
+               a.len == b.len && !memcmp(a.data, b.data, a.len);
+    buf_free(&a);
+    buf_free(&b);
+    return same;
+}
+
+/* a card made again of another size: smaller and bigger, each folder as it was (the system's data too); one too
+ * small for what it has, and one given up, leave it as it was */
+static void made_again_of_another_size(void)
+{
+    static const unsigned int sys[] = {64, 2000}, big[] = {700000}, more[] = {500000};
+    card_t c = dest_card();
+    buffer_t b;
+    long long used;
+    make_source(DEST);
+    make_psu("sys.psu", "BADATA-SYSTEM", sys, 2, 5);
+    CHECK_INT(mcfs_import_psu("sys.psu", DEST, NULL), MCFS_OK);
+    b = t_read(DEST);
+    t_write("source.keep", b.data, b.len);
+    buf_free(&b);
+    c.size = CARD_BYTES;
+    used = mcfs_card_used(DEST);
+    CHECK(used >= 255000 && used < 300 * 1024);
+    /* smaller */
+    CHECK_INT(card_resize(&c, 1 << 20, resize_progress), 0);
+    CHECK_INT(c.size, 1 << 20);
+    CHECK_INT(t_size(DEST), 1 << 20);
+    CHECK_INT(t_size(DEST ".new"), -1);
+    CHECK(same_save(DEST, SAVE));
+    CHECK(same_save(DEST, "BADATA-SYSTEM"));
+    CHECK(mcfs_card_used(DEST) == used);
+    /* bigger */
+    CHECK_INT(card_resize(&c, 16 << 20, NULL), 0);
+    CHECK_INT(t_size(DEST), 16 << 20);
+    CHECK(same_save(DEST, SAVE));
+    CHECK(same_save(DEST, "BADATA-SYSTEM"));
+    /* too small for what it has: the card is as it was, and nothing is left beside it */
+    make_psu("big.psu", "BASLUS-99998BIG", big, 1, 7);
+    make_psu("more.psu", "BASLUS-99997MORE", more, 1, 9);
+    CHECK_INT(mcfs_import_psu("big.psu", DEST, NULL), MCFS_OK);
+    CHECK_INT(mcfs_import_psu("more.psu", DEST, NULL), MCFS_OK);
+    b = t_read(DEST);
+    t_write("before.keep", b.data, b.len);
+    buf_free(&b);
+    CHECK_INT(card_resize(&c, 1 << 20, NULL), -1);
+    CHECK(t_same(DEST, "before.keep"));
+    CHECK_INT(t_size(DEST ".new"), -1);
+    CHECK_INT(c.size, 16 << 20);
+    /* given up while the folders are copied: the same */
+    resizeGiveUp = 1;
+    CHECK_INT(card_resize(&c, 2 << 20, resize_progress), -2);
+    resizeGiveUp = 0;
+    CHECK(t_same(DEST, "before.keep"));
+    CHECK_INT(t_size(DEST ".new"), -1);
+    /* a size no card is */
+    CHECK_INT(card_resize(&c, 3 << 20, NULL), -1);
+    CHECK(t_same(DEST, "before.keep"));
+    /* on a device that can't rename (an sd2psx before its firmware 1.4.0): the new card written over the old one */
+    hostNoRename = 1;
+    CHECK_INT(card_resize(&c, 4 << 20, NULL), 0);
+    CHECK_INT(t_size(DEST), 4 << 20);
+    CHECK_INT(t_size(DEST ".new"), -1);
+    CHECK(same_save(DEST, SAVE));
+    CHECK(same_save(DEST, "BADATA-SYSTEM"));
+}
+
 void suite_card_file(void)
 {
     RUN(from_memory);
@@ -289,4 +368,5 @@ void suite_card_file(void)
     RUN(a_file_that_stops_reading);
     RUN(with_ecc_and_what_is_no_card);
     RUN(out_to_a_zip_and_back);
+    RUN(made_again_of_another_size);
 }

@@ -1230,6 +1230,62 @@ int mcfs_copy_save(const char *from, const char *folder, const char *to, mcfs_st
     return r;
 }
 
+/* ------------------------------------------------------------ a whole card into another one */
+
+static struct {
+    char name[MAX_ROOT][33];
+    int n, other;   /* other: something at the root that isn't a folder */
+} rootList;
+
+static int on_root_folder(mc_t *m, const unsigned char *e, void *u)
+{
+    (void)m;
+    (void)u;
+    if (!is_live(e))
+        return 0;
+    if (!(le16(e) & DF_DIRECTORY))
+        rootList.other++;
+    else if (rootList.n < MAX_ROOT)
+        snprintf(rootList.name[rootList.n++], 33, "%.32s", (const char *)e + 64);
+    return 0;
+}
+
+long long mcfs_card_used(const char *path)
+{
+    long long used = -1;
+    if (mc_open(&mc, path) < 0)
+        return -1;
+    if (mc.allocEnd > 1)   /* (the root folder's own cluster is no part of it: a new card has it too) */
+        used = (long long)(mc.allocEnd - free_clusters(&mc) - 1) * mc.csz;
+    mc_close();
+    return used;
+}
+
+int mcfs_copy_card(const char *from, const char *to, int (*progress)(int i, int n, const char *folder))
+{
+    int rootdir = mc_open(&mc, from), r = MCFS_OK, i;
+    if (rootdir < 0)
+        return MCFS_ERR_IO;
+    rootList.n = rootList.other = 0;
+    if (walk_root(&mc, rootdir, on_root_folder, NULL) != 0)
+        r = MCFS_ERR_IO;
+    mc_close();
+    if (r == MCFS_OK && rootList.other) {
+        log_msg("mcfs: %s has %d file(s) at its root, not in a folder: not copied whole", from, rootList.other);
+        r = MCFS_ERR_BAD;
+    }
+    for (i = 0; r == MCFS_OK && i < rootList.n; i++) {
+        if (progress && progress(i, rootList.n, rootList.name[i]))
+            r = MCFS_ERR_CANCELLED;
+        else
+            r = mcfs_copy_save(from, rootList.name[i], to, NULL);
+    }
+    if (r == MCFS_OK && progress)
+        progress(rootList.n, rootList.n, "");
+    log_msg("mcfs: %s into %s: %d folder(s), %d", from, to, rootList.n, r);
+    return r;
+}
+
 int mcfs_delete_save(const char *path, const char *folder)
 {
     static unsigned char ent[ENT];

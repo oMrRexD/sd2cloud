@@ -172,12 +172,28 @@ SCENARIOS = [
     {"name": "all-saves-progress", "what": "two saves of the same name saved at different moments are both shown",
      "cards": {"Card1/Card1-1": "empty", "SLUS-21065/SLUS-21065-1": "game", "SLUS-20001/SLUS-20001-1": "empty"},
      "files": {"Files/alpha.psu": "alpha-other.psu"}, "script": ">>XXXX>DXXXXOOO<XC"},
-    # △ on a card: "Delete card", fifth of its options (on PCSX2 there is no "Insert"); the last card of its folder takes
-    # the folder with it. With more than one card in its folder, "Delete whole folder" comes after it
+    # △ on a card: "Delete card", seventh of its options (on PCSX2 there is no "Insert"), after "Rename" and "Change
+    # size"; the last card of its folder takes the folder with it. With more than one card in its folder, "Delete
+    # whole folder" comes after it
     {"name": "card-delete", "what": "a card deleted from its options: its file and its folder go", "cards": CARDS,
-     "script": "TDDDDXXXC"},
+     "script": "TDDDDDDXXXC"},
     {"name": "folder-delete", "what": "a game's folder of two cards deleted whole: triangle on its row, the folder's options",
      "cards": dict(CARDS, **{"SLUS-21065/SLUS-21065-2": "empty"}), "script": ">DTXXXC"},
+    # "Change size", sixth of its options: the cursor starts on the size recommended for what it has (1 MB)
+    {"name": "card-resize", "what": "a card made again of another size (8 MB to 1 MB): its saves as they were", "cards": CARDS,
+     "script": "TDDDDDXXXXC"},
+    # "Rename", fifth of a card's options: a numbered card keeps its file, and its name on the sd2psx is typed (X types
+    # the key under the cursor, A; START takes it); a folder of the user's own is called something else, asked first
+    {"name": "card-rename", "what": "a numbered card's name on the sd2psx typed: its folder's .ini", "cards": CARDS,
+     "script": "TDDDDXXSC"},
+    {"name": "folder-rename", "what": "a folder of the user's own renamed: its cards and files under the new name",
+     "cards": {"Card2/Card2-1": "empty", "Racing/Racing-1": "game"}, "files": {"MemoryCards/PS2/Racing/Racing.ini":
+     b"[ChannelName]\n1=Laps\n"}, "script": "DTDDDDXXSXXC"},
+    # △ on a file of the Files group: renamed (its extension kept), or deleted
+    {"name": "file-rename", "what": "a .psu of a folder of the microSD renamed from its options", "cards": CARDS,
+     "files": {"Files/save.psu": "save.psu"}, "script": ">>XXTXXSC"},
+    {"name": "file-delete", "what": "a .psu of a folder of the microSD deleted from its options", "cards": CARDS,
+     "files": {"Files/save.psu": "save.psu"}, "script": ">>XXTDXXXC"},
     # Settings (START), the fifth row: the size the sd2psx makes a game's first card of, written to its settings.ini
     {"name": "settings-card-size", "what": "the size of the sd2psx's new cards set to 32 MB in its settings.ini",
      "cards": CARDS, "files": {".sd2psx/settings.ini": SD2PSX_SETTINGS}, "script": "SDDDDXDDXXC"},

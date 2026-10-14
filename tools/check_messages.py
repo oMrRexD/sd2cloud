@@ -262,6 +262,17 @@ PLACE = {
     "T_DELETE_FOLDER_ASK": ("text", WIDE, 2), "T_DELETE_FOLDER_TEXT": ("text", WIDE, 3),
     "T_DELETE_FOLDER_NO_BACKUP": ("small", WIDE, 1), "T_DELETE_FOLDER_BACKUPS": ("small", WIDE, 2),
     "T_DELETING": ("text", DIALOG, 1), "T_DONE_DELETE_CARD": ("text", DIALOG, 1), "T_DONE_DELETE_FOLDER": ("text", DIALOG, 1),
+    # a card made again of another size: its option, the box of sizes (title, an item), the question in a wide box,
+    # what the work screen says on its way (as T_TPL_COPYING), and how it went
+    "T_RESIZE": ("text", 320, 1), "T_RESIZE_TITLE": ("text", 480, 1), "T_SIZE_CURRENT": ("text", 230, 1),
+    "T_RESIZE_ASK": ("text", WIDE, 2), "T_RESIZE_TEXT": ("text", WIDE, 4), "T_RESIZE_MAKING": ("text", 296, 1),
+    "T_RESIZE_COPYING": ("text", 296, 1), "T_RESIZE_DONE": ("text", DIALOG, 2), "T_RESIZE_LEFT": ("text", DIALOG, 5),
+    "T_RESIZE_ODD": ("text", DIALOG, 4), "T_RESIZE_FULL": ("text", DIALOG, 3),
+    # renaming: the option, the keyboard's titles, the question of a folder in a wide box, how it went; a file of the
+    # Files group deleted (its question, in a wide box)
+    "T_RENAME": ("text", 320, 1), "T_CARD_NAME_TITLE": ("text", 400, 1), "T_FOLDER_NAME_TITLE": ("text", 400, 1),
+    "T_FILE_NAME_TITLE": ("text", 400, 1), "T_RENAME_FOLDER_ASK": ("text", WIDE, 2), "T_RENAME_FOLDER_TEXT": ("text", WIDE, 3),
+    "T_RENAMING": ("text", DIALOG, 1), "T_RENAME_DONE_FOLDER": ("text", DIALOG, 2), "T_DELETE_FILE_ASK": ("text", WIDE, 2),
 }
 PARAGRAPH = ("text", DIALOG, 3)     # error messages and the rest: up to 3 lines in a box
 # what only an sd2psx is ever told (being moved to another card, its boot cards, one more channel for a folder): not
@@ -302,6 +313,9 @@ LEGENDS = [
     (("T_BACK", "T_MARK", "T_PASTE"), False), (("T_BACK", "T_OPEN", "T_PASTE"), False), (("T_BACK", "T_COPY"), False), (("T_BACK", "T_PASTE"), False),
     # a card's saves, with the options of how they are shown
     (("T_BACK", "T_OPEN", "T_OPTIONS", "T_INSTALL"), False), (("T_BACK", "T_TPL_CHANGE"), False),
+    # a file of the Files group, with its options; renaming a folder of cards
+    (("T_BACK", "T_OPEN", "T_INSTALL", "T_OPTIONS"), False), (("T_BACK", "T_OPEN", "T_INSTALL_SAVE", "T_OPTIONS"), False),
+    (("T_BACK", "T_RUN", "T_OPTIONS"), False), (("T_BACK", "T_OPTIONS"), False), (("T_BACK", "T_RENAME"), False),
 ]
 
 

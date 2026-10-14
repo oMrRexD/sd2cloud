@@ -5,7 +5,8 @@
 
 static void card_options(card_t *c)
 {
-    enum { OPT_SYNC, OPT_INCLUDED, OPT_RESTORE, OPT_DEVICE, OPT_MOVE, OPT_INSERT, OPT_DELETE, OPT_DELETE_FOLDER, OPTS };
+    enum { OPT_SYNC, OPT_INCLUDED, OPT_RESTORE, OPT_DEVICE, OPT_MOVE, OPT_INSERT, OPT_RENAME, OPT_RESIZE, OPT_DELETE,
+           OPT_DELETE_FOLDER, OPTS };
     static const char *devices[FDEVS];
     static char move[96];
     const char *items[OPTS];
@@ -26,12 +27,21 @@ static void card_options(card_t *c)
         } else if (can_insert(c) && c != (activeCard >= 0 ? &cards[activeCard] : NULL))
             /* only a card the device can be told to take, and isn't on already */
             items[n] = T(dev->sd2psx ? T_INSERT : T_INSERT_PREVIEW), id[n++] = OPT_INSERT;
+        items[n] = T(T_RENAME), id[n++] = OPT_RENAME;
+        items[n] = T(T_RESIZE), id[n++] = OPT_RESIZE;
         items[n] = T(T_DELETE_CARD), id[n++] = OPT_DELETE;
         if (mates)
             items[n] = T(T_DELETE_FOLDER), id[n++] = OPT_DELETE_FOLDER;
         if ((k = choose(c->base, items, n, k < n ? k : 0)) < 0)
             return;
         switch (id[k]) {
+        case OPT_RENAME:
+            if (card_rename_screen(c))
+                return;   /* (its folder renamed: back to the main screen, which lists the cards again) */
+            break;
+        case OPT_RESIZE:
+            card_resize_screen(c);
+            return;   /* (back to the main screen, where its size and status show) */
         case OPT_DELETE:
             if (card_delete(c))
                 return;   /* (gone: back to the main screen, which lists the cards again) */

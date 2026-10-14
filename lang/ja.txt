@@ -675,6 +675,56 @@ T_DELETE_CARD_FAILED = メモリーカードを削除できませんでした。
 T_DONE_DELETE_FOLDER = フォルダーを削除しました。
 # Up to 3 lines. English: Unable to delete the whole folder.
 T_DELETE_FOLDER_FAILED = フォルダーをまるごと削除できませんでした。
+# One line. English: %d MB (current)
+T_SIZE_CURRENT = %d MB（現在）
+# One line. English: Change size
+T_RESIZE = 容量を変更
+# One line. English: New size of the card
+T_RESIZE_TITLE = カードの新しい容量
+# Up to 2 lines. English: Change the size of %s from %d MB to %d MB?
+T_RESIZE_ASK = %s の容量を %d MB から %d MB に変更しますか？
+# Up to 4 lines. English: The saves are copied to a new card of that size, which takes the current one's place once checked. If anything fails, the current card is not changed.
+T_RESIZE_TEXT = セーブデータはこの容量の新しいカードにコピーされ、確認後に現在のカードと置き換わります。失敗した場合、現在のカードは変更されません。
+# One line. English: Creating the new card...
+T_RESIZE_MAKING = 新しいカードを作成中...
+# One line. English: Copying the saves...
+T_RESIZE_COPYING = セーブデータをコピー中...
+# Up to 2 lines. English: %s is now %d MB.
+T_RESIZE_DONE = %s の容量は %d MB になりました。
+# Up to 5 lines. English: Unable to put the new card in the place of %s. It is whole and checked, in the file %s of the same folder.
+T_RESIZE_LEFT = 新しいカードを %s と置き換えられませんでした。新しいカードは確認済みで、同じフォルダーのファイル %s にあります。
+# Up to 4 lines. English: This card has files outside folders, or a folder inside a save: its size can't be changed.
+T_RESIZE_ODD = このカードにはフォルダー外のファイル、またはセーブデータ内のフォルダーがあるため、容量を変更できません。
+# Up to 3 lines. English: The saves didn't fit in a %d MB card. The card was not changed.
+T_RESIZE_FULL = セーブデータが %d MB のカードに収まりませんでした。カードは変更されていません。
+# Button. English: Rename
+T_RENAME = 名前を変更
+# One line. English: Card name
+T_CARD_NAME_TITLE = カードの名前
+# One line. English: Folder name
+T_FOLDER_NAME_TITLE = フォルダー名
+# One line. English: File name
+T_FILE_NAME_TITLE = ファイル名
+# Up to 3 lines. English: A folder or file with that name already exists.
+T_RENAME_EXISTS = 同じ名前のフォルダーまたはファイルがすでにあります。
+# Up to 3 lines. English: The sd2psx uses that name for its own folders (CardN, BOOT or a game's ID). Choose another one.
+T_RENAME_RESERVED = この名前は sd2psx が独自のフォルダー（CardN、BOOT、ゲーム ID）に使用します。別の名前を選んでください。
+# Up to 2 lines. English: Rename the folder %s to %s?
+T_RENAME_FOLDER_ASK = フォルダー %s の名前を %s に変更しますか？
+# Up to 3 lines. English: Its cards and files take the new name. The backups already on Google Drive keep the old one.
+T_RENAME_FOLDER_TEXT = フォルダー内のカードとファイルは新しい名前になります。Google ドライブの既存のバックアップは古い名前のままです。
+# One line. English: Renaming...
+T_RENAMING = 名前を変更中...
+# Up to 3 lines. English: Unable to rename. Nothing was changed.
+T_RENAME_FAILED = 名前を変更できませんでした。何も変更されていません。
+# Up to 2 lines. English: The folder is now called %s.
+T_RENAME_DONE_FOLDER = フォルダー名を %s に変更しました。
+# Up to 2 lines. English: Delete the file %s?
+T_DELETE_FILE_ASK = ファイル %s を削除しますか？
+# Up to 3 lines. English: Unable to delete the file.
+T_DELETE_FILE_FAILED = ファイルを削除できませんでした。
+# Up to 3 lines. English: This file is one of the sd2psx's cards: use its options in the list of cards.
+T_FILE_IS_CARD = このファイルは sd2psx のカードです。カード一覧でカードのオプションを使ってください。
 # Up to 3 lines. English: Choose an ELF...
 T_PICK_ELF = ELF を選択...
 # Up to 3 lines. English: Unable to read this memory card.

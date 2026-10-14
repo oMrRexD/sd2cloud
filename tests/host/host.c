@@ -173,6 +173,13 @@ int fileXioDclose(int fd)
 /* SD2Cloud asks for a whole card's worth of memory and goes another way when there isn't that much: the tests say
  * how much is "too much" (the build wraps malloc, as the program's own does) */
 size_t hostMallocLimit;
+/* a file system that can't rename, as an sd2psx's before its firmware 1.4.0 (the build wraps rename too) */
+int hostNoRename;
+int __real_rename(const char *from, const char *to);
+int __wrap_rename(const char *from, const char *to)
+{
+    return hostNoRename ? -1 : __real_rename(from, to);
+}
 void *__real_malloc(size_t n);
 
 void *__wrap_malloc(size_t n)

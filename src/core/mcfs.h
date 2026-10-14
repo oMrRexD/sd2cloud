@@ -61,6 +61,14 @@ int mcfs_export_psu(const char *path, const char *folder, buffer_t *out);
 #define MCFS_MAX_MB 128
 #define MCFS_CARD_8MB (8LL * 1024 * 1024)
 int mcfs_new_card(const char *path, long long size, void (*progress)(long long done, long long total));
+/* what a card's folders take of it, in bytes: every cluster in use but the root folder's first (its saves, the
+ * system's data, and whatever the FAT says is taken). -1 = it couldn't be read */
+long long mcfs_card_used(const char *path);
+/* Every folder of a card (its saves and the system's B?DATA-SYSTEM) copied into another card, each read back and
+ * compared: a card made again of another size. progress(i, n, folder) before each one (and with i = n at the end)
+ * gives up when it answers != 0 (MCFS_ERR_CANCELLED: the folders copied so far stay). A card with a file at its root,
+ * or a folder inside a save, isn't copied whole: MCFS_ERR_BAD, or the save's error. MCFS_OK or MCFS_ERR_* */
+int mcfs_copy_card(const char *from, const char *to, int (*progress)(int i, int n, const char *folder));
 /* what an empty card of that size has for saves, in bytes, as the PS2 counts it (8 MB: 8000 KB). 0 = not a size */
 long long mcfs_card_room(long long size);
 /* what a save of those files (bytes, as their sizes add up) takes of a card at most: its folder's entries, each file

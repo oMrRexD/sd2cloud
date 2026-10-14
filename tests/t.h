@@ -63,6 +63,7 @@ void make_psu(const char *path, const char *folder, const unsigned int *sizes, i
 
 /* what the tests can ask of the stand-ins for the PS2 (host/host.c) */
 extern size_t hostMallocLimit;   /* a malloc bigger than this fails (0 = none does): "it doesn't fit in memory" */
+extern int hostNoRename;         /* rename fails, as on a device that can't */
 
 void suite_host(void);
 void suite_json(void);

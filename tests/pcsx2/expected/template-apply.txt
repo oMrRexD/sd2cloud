@@ -25,7 +25,7 @@ Card2/Card2-1: 0 folders, fingerprint e3b0c44298fc1c14, no backup
 mcfs: import of host:SD2Cloud/templates/Net/save.psu: 0, 48 reads and 8 writes of the card in N ms
 templates: Net into host:MemoryCards/PS2/Card2/Card2-1.mcd: 1 save(s) put, 0
 Card2/Card2-1: 1 folders, fingerprint ca650e8e4cb77f49, changed
-Card2/Card2-1: a template's saves only: still synced
+Card2/Card2-1: changed with nothing a backup needs: still synced
 [script] X
 (end: capture)
 

@@ -674,6 +674,56 @@ T_DELETE_CARD_FAILED = Не вдалося видалити картку пам�
 T_DONE_DELETE_FOLDER = Папку видалено.
 # Up to 3 lines. English: Unable to delete the whole folder.
 T_DELETE_FOLDER_FAILED = Не вдалося видалити всю папку.
+# One line. English: %d MB (current)
+T_SIZE_CURRENT = %d МБ (поточний)
+# One line. English: Change size
+T_RESIZE = Змінити розмір
+# One line. English: New size of the card
+T_RESIZE_TITLE = Новий розмір картки
+# Up to 2 lines. English: Change the size of %s from %d MB to %d MB?
+T_RESIZE_ASK = Змінити розмір %s з %d МБ на %d МБ?
+# Up to 4 lines. English: The saves are copied to a new card of that size, which takes the current one's place once checked. If anything fails, the current card is not changed.
+T_RESIZE_TEXT = Збереження копіюються на нову картку цього розміру, яка після перевірки замінить поточну. У разі помилки поточна картка не зміниться.
+# One line. English: Creating the new card...
+T_RESIZE_MAKING = Створення нової картки...
+# One line. English: Copying the saves...
+T_RESIZE_COPYING = Копіювання збережень...
+# Up to 2 lines. English: %s is now %d MB.
+T_RESIZE_DONE = Тепер розмір %s — %d МБ.
+# Up to 5 lines. English: Unable to put the new card in the place of %s. It is whole and checked, in the file %s of the same folder.
+T_RESIZE_LEFT = Не вдалося поставити нову картку на місце %s. Вона ціла й перевірена: файл %s у тій самій папці.
+# Up to 4 lines. English: This card has files outside folders, or a folder inside a save: its size can't be changed.
+T_RESIZE_ODD = На цій картці є файли поза папками або папка всередині збереження: її розмір не можна змінити.
+# Up to 3 lines. English: The saves didn't fit in a %d MB card. The card was not changed.
+T_RESIZE_FULL = Збереження не вмістилися на картку %d МБ. Картку не змінено.
+# Button. English: Rename
+T_RENAME = Перейменувати
+# One line. English: Card name
+T_CARD_NAME_TITLE = Назва картки
+# One line. English: Folder name
+T_FOLDER_NAME_TITLE = Назва папки
+# One line. English: File name
+T_FILE_NAME_TITLE = Назва файлу
+# Up to 3 lines. English: A folder or file with that name already exists.
+T_RENAME_EXISTS = Папка або файл із такою назвою вже існує.
+# Up to 3 lines. English: The sd2psx uses that name for its own folders (CardN, BOOT or a game's ID). Choose another one.
+T_RENAME_RESERVED = sd2psx використовує цю назву для власних папок (CardN, BOOT або ID гри). Виберіть іншу.
+# Up to 2 lines. English: Rename the folder %s to %s?
+T_RENAME_FOLDER_ASK = Перейменувати папку %s на %s?
+# Up to 3 lines. English: Its cards and files take the new name. The backups already on Google Drive keep the old one.
+T_RENAME_FOLDER_TEXT = Картки й файли папки отримають нову назву. Уже зроблені копії в Google Drive збережуть стару.
+# One line. English: Renaming...
+T_RENAMING = Перейменування...
+# Up to 3 lines. English: Unable to rename. Nothing was changed.
+T_RENAME_FAILED = Не вдалося перейменувати. Нічого не змінено.
+# Up to 2 lines. English: The folder is now called %s.
+T_RENAME_DONE_FOLDER = Тепер папка називається %s.
+# Up to 2 lines. English: Delete the file %s?
+T_DELETE_FILE_ASK = Видалити файл %s?
+# Up to 3 lines. English: Unable to delete the file.
+T_DELETE_FILE_FAILED = Не вдалося видалити файл.
+# Up to 3 lines. English: This file is one of the sd2psx's cards: use its options in the list of cards.
+T_FILE_IS_CARD = Цей файл — картка sd2psx: скористайтеся її параметрами в списку карток.
 # Up to 3 lines. English: Choose an ELF...
 T_PICK_ELF = Виберіть ELF...
 # Up to 3 lines. English: Unable to read this memory card.
