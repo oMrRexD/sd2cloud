@@ -15,7 +15,7 @@ SLUS-21065/SLUS-21065-1: 2 folders, fingerprint 64fbc81ffd3ff7a8, new
 [script] D
 [script] X
 [script] X
-safety copy of SLUS-21065/SLUS-21065-1: host:SD2Cloud/Safety/SLUS-21065/SLUS-21065-1 <when>.mcd
+safety copy of SLUS-21065/SLUS-21065-1: host:SD2Cloud/Safety/SLUS-21065/0001 SLUS-21065-1 <when>.mcd
 mcfs: new card host:MemoryCards/PS2/MCCG-10045/MCCG-10045-1.mcd of 8 MB: 0
 MCCG-10045/MCCG-10045-1 joined the cards: 3 on the microSD
 MCCG-10045/MCCG-10045-1: 0 folders, fingerprint e3b0c44298fc1c14, new
@@ -36,6 +36,6 @@ d2a90303f0cc915437f0fed6ed9d0140851e01d574659db7bf4df643c37311ca  .sd2psx/Game2F
 e67be4206c58f05d290d04e24ef9bd240e0a329b479dd8d202f12d40f464d347  MemoryCards/PS2/Card1/Card1-1.mcd
 e67be4206c58f05d290d04e24ef9bd240e0a329b479dd8d202f12d40f464d347  MemoryCards/PS2/MCCG-10045/MCCG-10045-1.mcd
 507da4cfe1991d95eac8b690cbffd9958e9a5e09326169d1dce3180f497b03d6  MemoryCards/PS2/SLUS-21065/SLUS-21065-1.mcd
-e67be4206c58f05d290d04e24ef9bd240e0a329b479dd8d202f12d40f464d347  SD2Cloud/Safety/SLUS-21065/SLUS-21065-1 <when>.mcd
+e67be4206c58f05d290d04e24ef9bd240e0a329b479dd8d202f12d40f464d347  SD2Cloud/Safety/SLUS-21065/0001 SLUS-21065-1 <when>.mcd
 17df2e2a16cbab4cb8357fe9a735f1765b89ed8fcaf21c00a1634ed98fb36c3e  SD2Cloud/sd2cloud.ini
 ca0920c04bd05f655b37969af8f62b9ca0969e21e6463c946b39e14913f51113  SD2Cloud/state-debug.ini

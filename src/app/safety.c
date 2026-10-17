@@ -5,9 +5,12 @@
 #define SAFETY_KEEP 10
 #define SAFETY_MAX  64
 
-/* <data>Safety/<folder>/<base> <yyyy-mm-dd hhhmmmss><ext>: the card's folder and name, and when it was kept */
+/* <data>Safety/<folder>/<n> <base> <yyyy-mm-dd hhhmmmss><ext>: the card's folder and name, and when it was kept. The
+ * moment is the console clock's, which may be anything (years ahead, or back to 2000 with a flat battery): the copies
+ * are told apart in age by n, one more than the newest's each time, so the clock never decides which ones go */
 typedef struct {
     char folder[48], file[120];
+    int n;   /* 0 = a copy made before they were numbered */
 } copy_t;
 static copy_t copies[SAFETY_MAX];
 static int nCopies;
@@ -22,9 +25,25 @@ static const char *stamp_of(const char *file)
     return n > STAMP + 1 && file[n - STAMP - 1] == ' ' ? file + n - STAMP : NULL;
 }
 
+/* the number a copy's name starts with ("0012 Card1-1 ..."), and how long it is with its space; 0 if it has none */
+static int number_of(const char *file, int *len)
+{
+    int i = 0;
+    while (file[i] >= '0' && file[i] <= '9')
+        i++;
+    if (i < 4 || file[i] != ' ')
+        return 0;
+    if (len)
+        *len = i + 1;
+    return atoi(file);
+}
+
 static int newest_first(const void *a, const void *b)
 {
-    return strncmp(stamp_of(((const copy_t *)b)->file), stamp_of(((const copy_t *)a)->file), STAMP);
+    const copy_t *x = a, *y = b;
+    if (x->n != y->n)
+        return y->n - x->n;
+    return strncmp(stamp_of(y->file), stamp_of(x->file), STAMP);
 }
 
 static int list_copies(void)
@@ -45,6 +64,7 @@ static int list_copies(void)
             if (!files[j].dir && stamp_of(files[j].name)) {
                 snprintf(copies[nCopies].folder, sizeof(copies[0].folder), "%s", folders[i].name);
                 snprintf(copies[nCopies].file, sizeof(copies[0].file), "%s", files[j].name);
+                copies[nCopies].n = number_of(files[j].name, NULL);
                 nCopies++;
             }
     }
@@ -57,9 +77,11 @@ static void copy_path(const copy_t *k, char *out, size_t size) { snprintf(out, s
 /* its card's name, and when it was kept, as the screen says it */
 static void copy_names(const copy_t *k, char *base, size_t baseSize, char *when, size_t whenSize)
 {
-    const char *s = stamp_of(k->file);
-    int y = 0, mo = 0, d = 0, h = 0, mi = 0;
-    snprintf(base, baseSize, "%.*s", (int)(s - 1 - k->file), k->file);
+    const char *s = stamp_of(k->file), *name = k->file;
+    int y = 0, mo = 0, d = 0, h = 0, mi = 0, len = 0;
+    if (number_of(name, &len))
+        name += len;
+    snprintf(base, baseSize, "%.*s", (int)(s - 1 - name), name);
     sscanf(s, "%d-%d-%d %dh%d", &y, &mo, &d, &h, &mi);
     format_when(y, mo, d, h, mi, when, whenSize);
 }
@@ -69,14 +91,15 @@ int safety_copy(const card_t *c)
     char dir[200], path[320];
     const char *ext = strrchr(c->path, '.');
     datetime_t t;
-    int i;
+    int i, n;
     if (mcfs_slot_port(c->path) >= 0 || card_file_card(c) || !ext)
         return 0;   /* (not one of the microSD's cards) */
     snprintf(dir, sizeof(dir), "%sSafety/%s/", dataDir, c->folder);
     ensure_dir(dir);
+    n = list_copies() ? copies[0].n + 1 : 1;
     local_time(&t);
-    snprintf(path, sizeof(path), "%s%s %04d-%02d-%02d %02dh%02dm%02d%s", dir, c->base, t.year, t.month, t.day, t.hour,
-             t.minute, t.second, ext);
+    snprintf(path, sizeof(path), "%s%04d %s %04d-%02d-%02d %02dh%02dm%02d%s", dir, n, c->base, t.year, t.month,
+             t.day, t.hour, t.minute, t.second, ext);
     message(0, NULL, COLOR_TEXT, T(T_SAFETY_MAKING));
     if (file_copy(c->path, path) != 0) {
         log_msg("safety copy of %s: not made", c->id);
