@@ -286,6 +286,16 @@ void load_sd_drivers(int sd)
     fileXioInit();
 }
 
+/* the log as it is, written now to the data folder: what a test that hangs the IOP (and the rescue with it) leaves */
+void debug_log_save(void)
+{
+    char c[260];
+    if (!hasScript || !logRam.len || rescuing)
+        return;
+    snprintf(c, sizeof(c), "%sdebug-log.txt", dataDir);
+    file_write(c, logRam.data, logRam.len);
+}
+
 void rescue(const char *why)
 {
     static char c[260], part[80];
@@ -297,6 +307,13 @@ void rescue(const char *why)
         log_msg("[rescue] %s", why);
     ui_abort();
     padOpen = 0;
+    if (GetThreadId() == mainThread) {   /* (the script's end: the hard disk let go of first, as on the way out. Not
+                                          * from the watch: the main thread may be stopped inside a call to fileXio) */
+        drives_close();
+        log_msg("[rescue] the IOP is reset next");
+        snprintf(c, sizeof(c), "%sdebug-log.txt", dataDir);
+        file_write(c, logRam.data, logRam.len);
+    }
     iop_reset();
     load_sd_drivers(1);
     if (!again && logRam.len) {

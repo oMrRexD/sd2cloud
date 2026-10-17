@@ -522,6 +522,10 @@ T_DEV_MX4SIO = MX4SIO
 T_HDD_SEARCHING = Пошук внутрішнього HDD...
 # Up to 3 lines. English: No internal HDD was found. It must be formatted as APA, exFAT or FAT32.
 T_HDD_NONE = Внутрішній HDD не знайдено. Він має бути у форматі APA, exFAT або FAT32.
+# One line. English: exFAT partition
+T_HDD_EXFAT = Розділ exFAT
+# One line. English: APA partitions
+T_HDD_APA = Розділи APA
 # Up to 3 lines. English: Looking for an MX4SIO...
 T_MX4SIO_SEARCHING = Пошук MX4SIO...
 # Up to 3 lines. English: No MX4SIO was found in slot 2. Its card must be formatted as FAT32 or exFAT.

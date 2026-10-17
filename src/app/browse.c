@@ -672,6 +672,16 @@ static void browse(int dev)
             message_wait(0, NULL, COLOR_WARN, T(none[dev]));
             return;
         }
+        if (dev == FDEV_HDD && hddBoth) {   /* (an exFAT partition and APA ones, as the PSBBN's installer leaves a disk) */
+            const char *parts[2];
+            int k;
+            parts[0] = T(T_HDD_EXFAT);
+            parts[1] = T(T_HDD_APA);
+            if ((k = choose(T(T_DEV_HDD), parts, 2, 0)) < 0)
+                return;
+            if (k == 1)
+                snprintf(root, sizeof(root), "hdd0:");
+        }
     }
     if (!fb.list && !(fb.list = calloc(FB_MAX, sizeof(dir_entry_t))))
         return;

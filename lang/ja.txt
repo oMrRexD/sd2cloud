@@ -523,6 +523,10 @@ T_DEV_MX4SIO = MX4SIO
 T_HDD_SEARCHING = 内蔵 HDD を探しています...
 # Up to 3 lines. English: No internal HDD was found. It must be formatted as APA, exFAT or FAT32.
 T_HDD_NONE = 内蔵 HDD が見つかりません。APA、exFAT、FAT32 のいずれかでフォーマットされている必要があります。
+# One line. English: exFAT partition
+T_HDD_EXFAT = exFAT パーティション
+# One line. English: APA partitions
+T_HDD_APA = APA パーティション
 # Up to 3 lines. English: Looking for an MX4SIO...
 T_MX4SIO_SEARCHING = MX4SIO を探しています...
 # Up to 3 lines. English: No MX4SIO was found in slot 2. Its card must be formatted as FAT32 or exFAT.

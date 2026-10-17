@@ -2,19 +2,27 @@
  * Each one's drivers are loaded the first time it is asked for: the backups, and IGR, never pay for them. */
 #include "platform.h"
 #include <ps2_dev9_driver.h>
+#include <hdd-ioctl.h>
 
 /* ------------------------------------------------------------ the drivers
 
    The three go through the BDM, which names each kind of drive on its own (usb0:, mx4sio0:, ata0:), whatever order
    they came in; a BDM that only knows "mass" numbers them in that order, so its mass0: is only taken for a drive
-   when no other kind was loaded. The hard disk formatted APA is read through the same driver as an exFAT one
-   (ata_bd), by ps2hdd-bdm: hdd0:, whose partitions are mounted with ps2fs, each at a pfsN: of its own while the
-   program runs. The DEV9 (the network adapter's bus, which the hard disk is on too) comes from the same library as
-   the network's, which loads it once for both */
+   when no other kind was loaded. The hard disk's APA partitions are read by ps2hdd through that same ATA driver
+   (ata_bd is the ATA driver with the BDM's side added): hdd0:, whose partitions are mounted with ps2fs, each at a
+   pfsN: of its own while the program runs. Not through the BDM (ps2hdd-bdm): on a disk the PSBBN's installer left
+   with an exFAT partition beside the APA ones, the BDM gives the disk to its MBR reader, which only hands on the
+   exFAT partition, and the APA ones are never seen. The DEV9 (the network adapter's bus, which the hard disk is on
+   too) comes from the same library as the network's, which loads it once for both */
 
 static int load(const char *what, const char *name, void *irx, unsigned int size, int argLen, const char *args)
 {
-    int ret = 0, id = SifExecModuleBuffer(irx, size, argLen, args, &ret);
+    int ret = 0, id;
+#ifdef DEBUG_BUILD
+    log_msg("%s: loading %s", what, name);
+    debug_log_save();   /* (a driver that hangs the IOP takes the rescue with it: what was reached is on the microSD) */
+#endif
+    id = SifExecModuleBuffer(irx, size, argLen, args, &ret);
     log_msg("%s: %s loaded (%d, %d)", what, name, id, ret);
     return id < 0 || ret == 1 ? -1 : 0;
 }
@@ -75,16 +83,41 @@ static int drivers(int drive)
              load("usb", "usbmass_bd", usbmass_bd_irx, size_usbmass_bd_irx, 0, NULL) == 0;
     else if (ok && drive == DRIVE_MX4SIO)
         ok = load("mx4sio", "mx4sio_bd", mx4sio_bd_irx, size_mx4sio_bd_irx, 0, NULL) == 0;
-    else if (ok)
-        ok = load("hdd", "ata_bd", ata_bd_irx, size_ata_bd_irx, 0, NULL) == 0 &&
-             load("hdd", "ps2hdd-bdm", ps2hdd_bdm_irx, size_ps2hdd_bdm_irx, sizeof(hddArgs), hddArgs) == 0 &&
-             load("hdd", "ps2fs", ps2fs_irx, size_ps2fs_irx, sizeof(pfsArgs), pfsArgs) == 0;
+    else if (ok && (ok = load("hdd", "ata_bd", ata_bd_irx, size_ata_bd_irx, 0, NULL) == 0)) {
+        /* (the APA side is a part of it, not the whole: a disk with none is still read as exFAT. The drive settles
+         * first: ps2hdd started at once can hang on a disk still spinning up, as NHDDL and OPL have found) */
+        sleep_ms(1000);
+        if (load("hdd", "ps2hdd", ps2hdd_irx, size_ps2hdd_irx, sizeof(hddArgs), hddArgs) != 0 ||
+            load("hdd", "ps2fs", ps2fs_irx, size_ps2fs_irx, sizeof(pfsArgs), pfsArgs) != 0)
+            log_msg("hdd: its APA partitions can't be read");
+    }
     bdmKinds++;
     loaded[drive] = ok ? 1 : -1;
 #ifdef DEBUG_BUILD
     debug_log_memory("after a drive's drivers");
 #endif
     return ok ? 0 : -1;
+}
+
+int hddBoth;
+
+/* a disk opened at its exFAT partition: has it APA ones too? (ps2hdd read the disk while it was loaded) */
+static void hdd_apa_too(void)
+{
+    static iox_dirent_t e;
+    int fd = fileXioDopen("hdd0:"), n = 0;
+    if (fd < 0) {
+        log_msg("hdd: no APA partitions (%d)", fd);
+        return;
+    }
+    hddBoth = 1;
+    while (fileXioDread(fd, &e) > 0)
+        if (e.stat.mode == 0x0100 && !(e.stat.attr & 1)) {
+            log_msg("hdd: APA partition %s, %u MB", e.name, (unsigned)(e.stat.size / 2048));
+            n++;
+        }
+    fileXioDclose(fd);
+    log_msg("hdd: APA too, %d partition(s)", n);
 }
 
 int drive_open(int drive, int ms, char *root, size_t size)
@@ -101,6 +134,8 @@ int drive_open(int drive, int ms, char *root, size_t size)
         }
         if (there) {
             log_msg("%s: there, at %s (after %d ms)", what[drive], root, t);
+            if (drive == DRIVE_HDD && strcmp(root, "hdd0:") != 0)
+                hdd_apa_too();   /* (an exFAT partition and APA ones, as the PSBBN's installer leaves a disk) */
             return 0;
         }
         if (t >= ms)
@@ -163,10 +198,19 @@ void drives_close(void)
 {
     int i;
     char dev[8];
+    if (loaded[DRIVE_HDD] > 0)
+        fileXioDevctl("pfs:", PDIOC_CLOSEALL, NULL, 0, NULL, 0);
     for (i = 0; i < PFS_SLOTS; i++)
         if (pfs[i].partition[0]) {   /* (what ps2fs still holds of them is written as they are let go of) */
             snprintf(dev, sizeof(dev), "pfs%d:", i);
             fileXioUmount(dev);
             pfs[i].partition[0] = 0;
         }
+    /* the disk at rest and the DEV9 off, as OPL leaves them: an IOP reset while ps2hdd still held the disk, with a
+     * partition of it mounted, hung a console (the next program never started) */
+    if (loaded[DRIVE_HDD] > 0) {
+        int idle = fileXioDevctl("hdd0:", HDIOC_IDLEIMM, NULL, 0, NULL, 0);
+        log_msg("hdd: let go of (idle %d, DEV9 off %d)", idle, fileXioDevctl("dev9x:", DDIOC_OFF, NULL, 0, NULL, 0));
+        loaded[DRIVE_HDD] = 0;
+    }
 }

@@ -525,6 +525,10 @@ T_DEV_MX4SIO = MX4SIO
 T_HDD_SEARCHING = Looking for the internal HDD...
 # Up to 3 lines.
 T_HDD_NONE = No internal HDD was found. It must be formatted as APA, exFAT or FAT32.
+# One line.
+T_HDD_EXFAT = exFAT partition
+# One line.
+T_HDD_APA = APA partitions
 # Up to 3 lines.
 T_MX4SIO_SEARCHING = Looking for an MX4SIO...
 # Up to 3 lines.

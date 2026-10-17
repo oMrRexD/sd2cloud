@@ -50,7 +50,7 @@ ASSET_OBJS = $(addprefix asset_, $(addsuffix _png.o, $(IMAGES)) $(addsuffix _adp
              asset_fontja_gz.o
 # the IOP modules embedded in the program: mmceman (the sd2psx), and the drivers of the other devices a program can be
 # opened from after SD2Cloud (loaded only for that, see run_elf)
-EMBEDDED_IRX = mmceman mcman mcserv usbd usbmass_bd bdm bdmfs_fatfs mx4sio_bd ata_bd ps2dev9 ps2atad ps2hdd ps2hdd_bdm ps2fs
+EMBEDDED_IRX = mmceman mcman mcserv usbd usbmass_bd bdm bdmfs_fatfs mx4sio_bd ata_bd ps2dev9 ps2atad ps2hdd ps2fs
 # the texts on screen: a file per language in lang/ (en.txt, pt.txt...), each one built into the program as it is,
 # and langs.c listing them (i18n.c reads them). A file added there is a language more, with nothing else to change
 LANGS = $(basename $(notdir $(wildcard lang/*.txt)))
@@ -165,16 +165,12 @@ $(OBJ_DIR)/irx_mmceman.c: $(MMCEMAN)
 	@mkdir -p $(OBJ_DIR)
 	bin2c $< $@ mmceman_irx
 
-# the HDD driver variant that also handles the PS2's own (OSD) partitions
+# the HDD driver variant that also handles the PS2's own (OSD) partitions. It reads the disk through the ATA driver's
+# own functions, which ata_bd has as well: the file browser loads it over ata_bd (the two ATA drivers can't be loaded
+# together), and so reads the APA partitions of a disk that has an exFAT one beside them
 $(OBJ_DIR)/irx_ps2hdd.c: $(PS2SDK)/iop/irx/ps2hdd-osd.irx
 	@mkdir -p $(OBJ_DIR)
 	bin2c $< $@ ps2hdd_irx
-
-# and the one that reads a hard disk formatted APA through the BDM's ATA driver: the file browser's, which reads an
-# exFAT one through that driver too (the two ATA drivers can't be loaded together)
-$(OBJ_DIR)/irx_ps2hdd_bdm.c: $(PS2SDK)/iop/irx/ps2hdd-bdm.irx
-	@mkdir -p $(OBJ_DIR)
-	bin2c $< $@ ps2hdd_bdm_irx
 
 # (with a 0 after it: i18n.c reads the text where it is, and lang_parse ends its last line there)
 $(OBJ_DIR)/lang_%.c: lang/%.txt

@@ -104,6 +104,7 @@ const device_t *device_here(void);   /* the one in the slot */
  * formatted APA: "hdd0:", whose folders are its partitions, each opened with hdd_mount) */
 enum { DRIVE_USB, DRIVE_MX4SIO, DRIVE_HDD };
 int drive_open(int drive, int ms, char *root, size_t size);
+extern int hddBoth;   /* the hard disk opened has APA partitions (hdd0:) besides the exFAT one it was opened at */
 /* a partition of the hard disk mounted, for its files to be read and written: at a pfsN: of its own, while the
  * program runs (up to four; the one opened longest ago gives its place). 0 = done, its root in root ("pfs1:/") */
 int hdd_mount(const char *partition, char *root, size_t size);
@@ -113,6 +114,7 @@ void go_osd(void) __attribute__((noreturn));
 #ifdef DEBUG_BUILD
 int debug_has_script(void);
 int debug_take(char mark);                   /* the next letter of the script is this one: consume it */
+void debug_log_save(void);                   /* the log written to the microSD now */
 int debug_digit(void);                       /* the next letter is a digit: consume it (-1 = it isn't) */
 void debug_capture_if(char mark);            /* the next letter of the script is this one: capture and stop */
 void debug_capture_and_stop(void) __attribute__((noreturn));
