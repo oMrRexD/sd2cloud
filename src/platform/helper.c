@@ -806,11 +806,12 @@ int mc_card_in(int port)
     for (tries = 0;; tries++) {
         mcGetInfo(port, 0, &type, &freeKb, &format);
         got = mc_wait();   /* (0, or -1: another card than when it was last asked; both come with what it is) */
-        /* a PS2 memory card there that didn't answer this once (-11, its authentication, now and then on a console):
-         * asked again, as the next asking finds it */
-        if (got == 0 || got == -1 || type != 2 || tries == 2)
+        /* a PS2 memory card there that didn't answer this once (-11, its authentication), or one that was there a
+         * moment ago and now seems gone (0 with no card, now and then on a console with no sd2psx): asked again, as
+         * the next asking finds it. A slot that was empty isn't asked again */
+        if ((got >= -2 && type == 2) || (type != 2 && slotType[port] != 2) || tries == 2)   /* (-2: one not formatted) */
             break;
-        log_msg("memory card: slot %d didn't answer (%d), asked again", port + 1, got);
+        log_msg("memory card: slot %d didn't answer (%d, type %d), asked again", port + 1, got, type);
         sleep_ms(200);
     }
     slotType[port] = type;   /* (a memory card that answers badly is still one: what mc_ps2_card asks) */
