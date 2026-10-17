@@ -110,7 +110,7 @@ static void scene_mark(float t)
     {
         /* only what the row does: "New card" has nothing to open (X pastes there too), and START pastes only where
          * the saves can go ("All saves" isn't a card, and the card they are all on has them) */
-        legend_t l[3] = {{BUTTON_CIRCLE, T(T_BACK)}};
+        legend_t l[4] = {{BUTTON_CIRCLE, T(T_BACK)}};
         int n = 1, row = mk.g.n ? mk.g.idx[mk.g.cursor] : ROW_ALL;
         if (mk.g.n && row != ROW_NEW)
             l[n].button = BUTTON_CROSS, l[n++].text = T(T_OPEN);
@@ -119,7 +119,10 @@ static void scene_mark(float t)
         else if (mk.g.tab == TAB_FILES ? tabs_device(&mk.g) >= 0 || paste_here(&slotCard)
                  : row == ROW_NEW || (row >= 0 && (tabs_on_folders(&mk.g) || paste_here(&cards[row]))))
             l[n].button = BUTTON_START, l[n++].text = T(T_PASTE);
-        look_legend(l, n, 0);
+        if (view_legend(l, n))   /* (R2 to the other device's cards, apart from the rest) */
+            look_legend(l, n + 1, 1);
+        else
+            look_legend(l, n, 0);
     }
     look_title(CARD_CX, 82, mk.title, 1);
     snprintf(s, sizeof(s), T(T_MARKED_N), marks.n);

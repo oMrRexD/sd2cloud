@@ -569,26 +569,27 @@ void view_switch(void)
 /* at the top, after the program's name, when the microSD has both devices' cards: the two devices, as the groups of
  * cards are shown (the one whose cards are listed lit; the one in the slot first), and R2, which goes from one to the
  * other */
+/* A microSD with the cards of both devices: the one whose cards are shown, beside the program's name, quietly; R2
+ * goes to the other one, said in the legend as any other button is (view_legend) */
 void view_draw(void)
 {
-    const device_t *d[2] = {device_here(), device_other()};
-    int k, x, lh = ui_line_height(FONT_SMALL);
+    int x, lh = ui_line_height(FONT_SMALL);
     float cy = 40 + lh / 2.0f + 1;
-    if (!d[1])
+    if (!device_other())
         return;
     x = 48 + ui_measure(FONT_HEADER, "SD2Cloud") + 16;
-    ui_rect(x, cy - 9, 1, 18, 0x5C6476, 0x80);   /* (a thin line between the name and the devices) */
-    x += 17;
-    for (k = 0; k < 2; k++) {
-        int tw = ui_measure(FONT_SMALL, d[k]->name);
-        if (k == viewOther) {
-            ui_light(x + tw / 2.0f, cy, tw / 2.0f + 26, lh * 0.8f, COLOR_GLOW, 0x30);
-            ui_text(FONT_SMALL, x, 40, COLOR_ITEM_ON, d[k]->name);
-        } else
-            ui_text(FONT_SMALL, x, 40, 0x6F7C94, d[k]->name);
-        x += tw + 18;
-    }
-    look_key(x - 4, cy, "R2");
+    ui_rect(x, cy - 9, 1, 18, 0x5C6476, 0x80);   /* (a thin line between the name and the device) */
+    ui_text(FONT_SMALL, x + 17, 40, 0x8E98AA, dev->name);
+}
+
+/* the legend's R2 to the other device's cards, put at l[n] when there is another device: 1 if it was */
+int view_legend(legend_t *l, int n)
+{
+    if (!device_other())
+        return 0;
+    l[n].button = BUTTON_R2;
+    l[n].text = viewOther ? device_here()->name : device_other()->name;
+    return 1;
 }
 
 /* Everything that came from the microSD is let go of and read again from the start (main.c, at reloadPoint): the

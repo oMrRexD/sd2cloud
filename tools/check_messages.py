@@ -334,6 +334,9 @@ ONLY_SD2PSX = {"T_INSERT", "T_INSERT_NEEDS_BOOT", "T_INSERT_BOOT_ASK", "T_SWITCH
 # the right edge (x = 596) toward the left and must not pass x = 40
 LEGENDS = [
     (("T_MENU_EXIT", "T_OPEN", "T_OPTIONS", "T_TOOLS", "T_SETTINGS"), 2), (("T_BACK", "T_OPEN", "T_SYNC"), False),
+    # (R2 to the other device's cards, in place of the tools and the settings: named by the device, not a text)
+    (("T_MENU_EXIT", "T_OPEN", "T_OPTIONS", "MemCard PRO2"), 1), (("T_BACK", "T_OPEN", "T_OPTIONS", "MemCard PRO2"), 1),
+    (("T_BACK", "T_OPEN", "T_PASTE", "MemCard PRO2"), 1), (("T_BACK", "T_OPEN", "T_FINISH", "MemCard PRO2"), 1),
     (("T_BACK", "T_DELETE"), False), (("T_BACK", "T_SELECT"), False), (("T_BACK", "T_RESTORE"), False),
     (("T_CANCEL_NO", "T_CANCEL_YES"), False), (("T_LATER", "T_YES"), False),
     (("T_BACK", "T_HELPER_INSTALL"), False), (("T_CANCEL",), False), (("T_BACK", "T_SYNC"), False),
@@ -559,15 +562,16 @@ def main():
                 bad += 1
                 print(f"  DOESN'T FIT  {id_} [{code}] {w} px / {width} px ({n} lines, max {max_lines}): {s}")
         for row, apart in LEGENDS:
-            if all(i in texts for i in row):
+            if all(i in texts or not i.startswith("T_") for i in row):
+                said = [texts.get(i, i) for i in row]
                 # (one longer than the line is written in the small letters: it has to fit in those)
-                w = legend_width([texts[i] for i in row], apart)
-                if w > 596 - 40 and legend_width([texts[i] for i in row], apart, "small") > 596 - 40:
+                w = legend_width(said, apart)
+                if w > 596 - 40 and legend_width(said, apart, "small") > 596 - 40:
                     bad += 1
-                    print(f"  LEGEND TOO WIDE [{code}] {legend_width([texts[i] for i in row], apart, 'small')} px in "
-                          f"the small letters: {' / '.join(texts[i] for i in row)}")
+                    print(f"  LEGEND TOO WIDE [{code}] {legend_width(said, apart, 'small')} px in "
+                          f"the small letters: {' / '.join(said)}")
                 elif w > 596 - 40:
-                    small.append(" / ".join(texts[i] for i in row))
+                    small.append(" / ".join(said))
         # the five tabs in a row, 12 px apart at least (tabs.c): from x = 58, past TABS_W if they must, up to where
         # the right panel's title can start (x = 440, their arrow 18 px after them: 360 px)
         tabs = ("T_TAB_CARDS", "T_TAB_GAMES", "T_TAB_BOOT", "T_TAB_VMC", "T_TAB_FILES")

@@ -147,7 +147,10 @@ static void scene_menu(float t)
     if (menu.g.tab == TAB_FILES) {   /* the devices: what the group is for, where a card's picture would be */
         legend_t l[4] = {{BUTTON_CIRCLE, T(T_MENU_EXIT)}, {BUTTON_CROSS, T(T_OPEN)}, {BUTTON_SELECT, T(T_TOOLS)},
                          {BUTTON_START, T(T_SETTINGS)}};
-        look_legend(l, 4, 2);
+        if (view_legend(l, 2))   /* (the other device's cards: see below) */
+            look_legend(l, 3, 1);
+        else
+            look_legend(l, 4, 2);
         if (tabs_device(&menu.g) < 0) {   /* (the Memory Card) */
             memcard_hint(tabs_memcard_port(&menu.g));
             return;
@@ -158,15 +161,18 @@ static void scene_menu(float t)
     }
     {
         /* inside a folder circle goes back to the folders ("Back" and the other four don't fit the line: the tools
-         * and the settings stay on SELECT and START, unsaid) */
-        int inside = menu.g.open >= 0, made = menu.g.n && menu.g.idx[menu.g.cursor] == ROW_NEW;
+         * and the settings stay on SELECT and START, unsaid). The cards of another device on the same microSD: R2 to
+         * them, in place of those two (six buttons don't fit either) */
+        int inside = menu.g.open >= 0, made = menu.g.n && menu.g.idx[menu.g.cursor] == ROW_NEW, n = 5, apart = 2;
         legend_t l[5] = {{BUTTON_CIRCLE, T(inside ? T_BACK : T_MENU_EXIT)}, {BUTTON_CROSS, T(made ? T_TPL_CREATE : T_OPEN)},
                          {BUTTON_TRIANGLE, T(T_OPTIONS)}, {BUTTON_SELECT, T(T_TOOLS)}, {BUTTON_START, T(T_SETTINGS)}};
-        if (menu.g.n && menu.g.idx[menu.g.cursor] < 0) {   /* "All saves", "New card": not a card, no options of one */
-            l[2] = l[3], l[3] = l[4];
-            look_legend(l, 4, 2);
-        } else
-            look_legend(l, inside ? 3 : 5, inside ? 0 : 2);
+        if (menu.g.n && menu.g.idx[menu.g.cursor] < 0)   /* "All saves", "New card": not a card, no options of one */
+            l[2] = l[3], l[3] = l[4], n = 4;
+        else if (inside)
+            n = 3, apart = 0;
+        if (view_legend(l, apart ? n - 2 : n))
+            n += apart ? -1 : 1, apart = 1;
+        look_legend(l, n, apart);
     }
     if (menu.g.n && menu.g.idx[menu.g.cursor] == ROW_NEW && menu.g.tab == TAB_VMC) {   /* "New VMC" */
         ui_text_center(FONT_TEXT, CARD_CX, 82, 0x7E8AA0, T(T_NEW_VMC));
