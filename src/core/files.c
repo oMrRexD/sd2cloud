@@ -129,37 +129,53 @@ static int piece_at(const char *path, long long at, unsigned char *d, int n)
 int file_copy(const char *from, const char *to)
 {
     static unsigned char a[MOVE_PIECE], b[MOVE_PIECE];
-    long long at, size;
-    int fd, n, k, w, r = 0;
-    if (file_exists(to) || (fd = open(from, O_RDONLY)) < 0)
+    long long at = 0, size;
+    int fd, n = 0, k = 0, w = 0, r = 0;
+    const char *why = NULL;   /* (the step that failed, for the log) */
+    if (file_exists(to) || (fd = open(from, O_RDONLY)) < 0) {
+        log_msg("files: %s not copied to %s: %s", from, to, file_exists(to) ? "it is there already" : "it can't be opened");
         return -1;
+    }
     size = lseek(fd, 0, SEEK_END);
     close(fd);
     if (size < 0)
-        r = -1;
+        r = -1, why = "its size can't be told";
     else if (!size)   /* (an empty file: made empty) */
-        r = (fd = open(to, O_WRONLY | O_CREAT | O_TRUNC, 0666)) >= 0 && close(fd) == 0 ? 0 : -1;
+        r = (fd = open(to, O_WRONLY | O_CREAT | O_TRUNC, 0666)) >= 0 && close(fd) >= 0 ? 0 : -1;
     for (at = 0; at < size && r == 0; at += n) {
         n = size - at > MOVE_PIECE ? MOVE_PIECE : (int)(size - at);
-        if (piece_at(from, at, a, n) != n || (fd = open(to, at ? O_WRONLY : O_WRONLY | O_CREAT | O_TRUNC, 0666)) < 0) {
-            r = -1;
+        if ((k = piece_at(from, at, a, n)) != n) {
+            r = -1, why = "reading it";
             break;
         }
-        if (at)
-            lseek(fd, (long)at, SEEK_SET);
+        if ((fd = open(to, at ? O_WRONLY : O_WRONLY | O_CREAT | O_TRUNC, 0666)) < 0) {
+            r = -1, why = "opening the copy", k = fd;
+            break;
+        }
+        if (at && lseek(fd, (long)at, SEEK_SET) != (long)at) {
+            close(fd);
+            r = -1, why = "moving in the copy";
+            break;
+        }
         for (k = 0; k < n && (w = write(fd, a + k, n - k)) > 0; k += w)
             ;
-        if (close(fd) != 0 || k < n)
-            r = -1;
+        if (k < n)
+            r = -1, why = "writing the copy";
+        /* (the sd2psx's close can answer above 0 for a file it has written whole: only below 0 is a failure, and what
+         * was written is read back below anyway) */
+        if ((w = close(fd)) < 0 && r == 0)
+            r = -1, why = "closing the copy";
+        else if (w > 0 && !at)
+            log_msg("files: closing %s answered %d", to, w);
     }
     for (at = 0; at < size && r == 0; at += n) {   /* read back, and compared with the original */
         n = size - at > MOVE_PIECE ? MOVE_PIECE : (int)(size - at);
-        if (piece_at(from, at, a, n) != n || piece_at(to, at, b, n) != n || memcmp(a, b, n) != 0)
-            r = -1;
+        if (piece_at(from, at, a, n) != n || (k = piece_at(to, at, b, n)) != n || memcmp(a, b, n) != 0)
+            r = -1, why = "comparing it with the copy";
     }
     if (r != 0) {
         unlink(to);
-        log_msg("files: %s not copied to %s", from, to);
+        log_msg("files: %s not copied to %s: %s, at %lld of %lld (%d, %d)", from, to, why ? why : "?", at, size, k, w);
     }
     return r;
 }
