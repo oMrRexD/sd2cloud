@@ -740,6 +740,8 @@ T_DELETE_FILE_FAILED = Не удалось удалить файл.
 T_FILE_IS_CARD = Этот файл — карта sd2psx. Управляйте ею на вкладке «Карты».
 # Up to 2 lines. English: In an sd2psx group or as a file.
 T_CREATE_HINT = В группе sd2psx или в виде файла.
+# Up to 2 lines. English: As a file on a device.
+T_CREATE_HINT_FILE = Как файл на устройстве.
 # One line. English: New card location
 T_CREATE_WHERE = Расположение новой карты
 # One line. English: Numbered card: %s

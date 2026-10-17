@@ -333,11 +333,13 @@ int card_create(const save_ref_t *saves, int n)
     int kind[40], fileDev[40], devs[FDEVS], nDevs = fdev_list(devs), k = 0, i, j, pick;
     nc_saves(saves, n);
     /* where it can go: the next numbered card; the next channel of each folder of the user's own that has one free; a
-     * new folder; a file */
-    new_card(TAB_CARDS, "", 0, folderOf[k], baseOf[k]);
-    snprintf(text[k], sizeof(text[0]), T(T_CREATE_NUMBERED), baseOf[k]);
-    kind[k++] = W_NUMBERED;
-    for (i = 0; i < nCards && k < 40 - 2 - FDEVS; i++) {
+     * new folder; a file. With no sd2psx, only a file: the device's groups mean nothing there */
+    if (!standalone) {
+        new_card(TAB_CARDS, "", 0, folderOf[k], baseOf[k]);
+        snprintf(text[k], sizeof(text[0]), T(T_CREATE_NUMBERED), baseOf[k]);
+        kind[k++] = W_NUMBERED;
+    }
+    for (i = 0; i < nCards && k < 40 - 2 - FDEVS && !standalone; i++) {
         if (cards[i].type != TYPE_NAMED)
             continue;
         for (j = 0; j < i && !(cards[j].type == TYPE_NAMED && !strcasecmp(cards[j].folder, cards[i].folder)); j++)
@@ -347,7 +349,7 @@ int card_create(const save_ref_t *saves, int n)
         snprintf(text[k], sizeof(text[0]), T(T_CREATE_IN_GROUP), cards[i].folder, baseOf[k]);
         kind[k++] = W_GROUP;
     }
-    if (dev->sd2psx) {
+    if (dev->sd2psx && !standalone) {
         snprintf(text[k], sizeof(text[0]), "%s", T(T_CREATE_NEW_GROUP));
         kind[k++] = W_NEW_GROUP;
     }

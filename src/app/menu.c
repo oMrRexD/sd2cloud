@@ -184,7 +184,8 @@ static void scene_menu(float t)
     if (menu.g.n && menu.g.idx[menu.g.cursor] == ROW_NEW) {   /* "New card": what it makes */
         ui_text_center(FONT_TEXT, CARD_CX, 82, 0x7E8AA0, T(T_NEW_CARD));
         look_card(CARD_X, CARD_Y, "+", NULL);
-        ui_paragraph_center(FONT_SMALL, CARD_CX, CARD_Y + LOOK_CARD_H + 4, LOOK_CARD_W + 32, COLOR_DIM, T(T_CREATE_HINT));
+        ui_paragraph_center(FONT_SMALL, CARD_CX, CARD_Y + LOOK_CARD_H + 4, LOOK_CARD_W + 32, COLOR_DIM,
+                            T(standalone ? T_CREATE_HINT_FILE : T_CREATE_HINT));
         return;
     }
     if (menu.g.n && menu.g.idx[menu.g.cursor] < 0) {   /* "All saves": the game cards, and how many they are */

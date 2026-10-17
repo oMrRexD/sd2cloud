@@ -743,6 +743,8 @@ T_DELETE_FILE_FAILED = Unable to delete the file.
 T_FILE_IS_CARD = This file is an sd2psx card. Manage it from the Cards tab.
 # Up to 2 lines.
 T_CREATE_HINT = In an sd2psx group or as a file.
+# Up to 2 lines.
+T_CREATE_HINT_FILE = As a file on a device.
 # One line.
 T_CREATE_WHERE = New card location
 # One line.
