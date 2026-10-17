@@ -120,6 +120,8 @@ The code is shaped by what an sd2psx can and can't do. Breaking one of these cor
   opens one, reads a piece, closes it, opens the other. Only a file on another device (a USB drive, the hard disk, an
   MX4SIO) stays open.
 - **No renaming.** `file_replace()` writes a `.new` file, reads it back, and writes the real one again.
+- **Closing a written file answers 2.** Only a negative answer to `close()` is a failure; `file_copy()` reads the copy
+  back anyway.
 - **The card in use is not the file.** The device keeps the card it is emulating in its own memory and writes back
   only what the PS2 changes. Writing that card's file under it would mix the two, so before a card's file is
   changed, `card_free()` moves the device to another card, or the user is told.
@@ -129,6 +131,12 @@ The code is shaped by what an sd2psx can and can't do. Breaking one of these cor
   is replaced by one of its size is written over in place.
 - **What is written is read back.** A card, a save, a `.psu`, a settings file: each is read again and compared
   before the program says it is done.
+- **The hard disk is let go of before the IOP is reset.** An IOP reset with an APA partition still mounted hung a
+  console: `drives_close()` closes the PFS files, unmounts the partitions, puts the disk at rest and turns the DEV9
+  off, as OPL does. The APA partitions are read by `ps2hdd` through the ATA driver (`ata_bd`), a second after it, not
+  through the BDM, whose MBR reader would hide them on a disk with an exFAT partition too.
+- **An MX4SIO and a memory card can't share slot 2.** The MX4SIO's driver, once loaded, keeps the slot from a memory
+  card until the program starts again, so the MX4SIO is only offered while slot 2 has no PS2 memory card.
 
 ## What it writes, and where
 
