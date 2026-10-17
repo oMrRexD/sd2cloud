@@ -123,17 +123,28 @@ u32 wait_nav_ms(u32 mask, int ms) { return nav_wait(mask, ms, ARROWS); }
 u32 wait_nav(u32 mask) { return nav_wait(mask, -1, ARROWS); }
 u32 wait_nav_repeat(u32 mask, u32 repeat) { return nav_wait(mask, -1, ARROWS | repeat); }
 
+#define BCD(x) (((x) >> 4) * 10 + ((x) & 0xF))
+/* the year of a moment the time zone has moved: the clock only has two digits, and a clock gone back to 2000-01-01
+ * (a flat battery), in a time zone behind Japan's, is in 1999, not 2099 */
+static int zone_year(const sceCdCLOCK *japan, const sceCdCLOCK *here)
+{
+    int was = 2000 + BCD(japan->year), year = 2000 + BCD(here->year);
+    return year > was + 1 ? year - 100 : year < was - 1 ? year + 100 : year;
+}
+#undef BCD
+
 /* the PS2 clock keeps Japan time; convert it with the time zone set on the console */
 void local_time(datetime_t *t)
 {
-    sceCdCLOCK c;
+    sceCdCLOCK c, japan;
     t->year = 2000;
     t->month = t->day = 1;
     t->hour = t->minute = t->second = 0;
     if (sceCdInit(SCECdINoD) && sceCdReadClock(&c)) {
 #define BCD(x) (((x) >> 4) * 10 + ((x) & 0xF))
+        japan = c;
         configConvertToLocalTime(&c);
-        t->year = 2000 + BCD(c.year);
+        t->year = zone_year(&japan, &c);
         t->month = BCD(c.month & 0x1F);
         t->day = BCD(c.day);
         t->hour = BCD(c.hour);
@@ -168,14 +179,15 @@ void card_time_now(unsigned char t[8])
 
 void card_time_local(int year, int month, int day, int hour, int minute, int second, datetime_t *t)
 {
-    sceCdCLOCK c;
+    sceCdCLOCK c, japan;
 #define TOBCD(x) ((((x) / 10) << 4) | ((x) % 10))
 #define BCD(x) (((x) >> 4) * 10 + ((x) & 0xF))
     memset(&c, 0, sizeof(c));
     c.second = TOBCD(second), c.minute = TOBCD(minute), c.hour = TOBCD(hour);
     c.day = TOBCD(day), c.month = TOBCD(month), c.year = TOBCD(year % 100);
+    japan = c;
     configConvertToLocalTime(&c);
-    t->year = 2000 + BCD(c.year);
+    t->year = zone_year(&japan, &c) + (year / 100 - 20) * 100;   /* (the century it was given in) */
     t->month = BCD(c.month & 0x1F);
     t->day = BCD(c.day);
     t->hour = BCD(c.hour);
