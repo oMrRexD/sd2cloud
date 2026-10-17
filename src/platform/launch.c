@@ -90,8 +90,16 @@ int open_device(int dev, char *path, size_t size, char *part, size_t partSize)
             load_irx(mx4sio_bd_irx, size_mx4sio_bd_irx, 0, NULL);
         else
             load_irx(ata_bd_irx, size_ata_bd_irx, 0, NULL);
-        snprintf(path, size, "mass0:%s", rest);   /* the only block device loaded: the first one */
-        return wait_for_file(path, 6000);
+        /* the hard disk and the MX4SIO by their own names (ata0:, mx4sio0:): the next program is told where it is by
+         * argv[0], and finds its folder there (wLaunchELF its network settings, OPL its own): to them mass0: is a USB
+         * drive. A USB drive, and a BDM that names none but "mass", as mass0: (the only block device loaded) */
+        if (dev != DEV_USB) {
+            snprintf(path, size, "%s:%s", dev == DEV_ATA ? "ata0" : "mx4sio0", rest);
+            if (wait_for_file(path, 6000) == 0)
+                return 0;
+        }
+        snprintf(path, size, "mass0:%s", rest);
+        return wait_for_file(path, dev == DEV_USB ? 6000 : 0);
     default: {   /* DEV_HDD: hdd0:PARTITION:pfs:/path or hdd0:PARTITION/path */
         char *p = rest, *end = p + strcspn(p, ":/");
         int t;
@@ -101,6 +109,7 @@ int open_device(int dev, char *path, size_t size, char *part, size_t partSize)
         p = (*end == ':' && starts(end, ":pfs:")) ? end + 5 : end;
         load_irx(ps2dev9_irx, size_ps2dev9_irx, 0, NULL);
         load_irx(ps2atad_irx, size_ps2atad_irx, 0, NULL);
+        sleep_ms(1000);   /* (the drive settles first: ps2hdd started at once can hang on a disk still spinning up) */
         load_irx(ps2hdd_irx, size_ps2hdd_irx, sizeof(hddArgs), hddArgs);
         load_irx(ps2fs_irx, size_ps2fs_irx, sizeof(pfsArgs), pfsArgs);
         for (t = 0; t < 30; t++) {   /* the drive takes a moment to answer */

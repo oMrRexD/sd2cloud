@@ -309,10 +309,10 @@ void rescue(const char *why)
     padOpen = 0;
     if (GetThreadId() == mainThread) {   /* (the script's end: the hard disk let go of first, as on the way out. Not
                                           * from the watch: the main thread may be stopped inside a call to fileXio) */
-        drives_close();
-        log_msg("[rescue] the IOP is reset next");
-        snprintf(c, sizeof(c), "%sdebug-log.txt", dataDir);
+        log_msg("[rescue] the hard disk is let go of, and the IOP reset, next");
+        snprintf(c, sizeof(c), "%sdebug-log.txt", dataDir);   /* (before: the data folder may be on that disk) */
         file_write(c, logRam.data, logRam.len);
+        drives_close();
     }
     iop_reset();
     load_sd_drivers(1);

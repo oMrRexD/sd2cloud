@@ -800,12 +800,20 @@ static int slotType[2];   /* what mc_card_in was last told is in each slot (2 = 
 int mc_card_in(int port)
 {
     static int told[2] = {-100, -100};
-    int type = 0, freeKb = 0, format = 0, r, got;
+    int type = 0, freeKb = 0, format = 0, r, got, tries;
     if (port < 0 || port > 1 || memcard_start() != 0)
         return -1;
-    mcGetInfo(port, 0, &type, &freeKb, &format);
-    got = mc_wait();   /* (0, or -1: another card than when it was last asked; both come with what it is) */
-    slotType[port] = got == 0 || got == -1 ? type : 0;
+    for (tries = 0;; tries++) {
+        mcGetInfo(port, 0, &type, &freeKb, &format);
+        got = mc_wait();   /* (0, or -1: another card than when it was last asked; both come with what it is) */
+        /* a PS2 memory card there that didn't answer this once (-11, its authentication, now and then on a console):
+         * asked again, as the next asking finds it */
+        if (got == 0 || got == -1 || type != 2 || tries == 2)
+            break;
+        log_msg("memory card: slot %d didn't answer (%d), asked again", port + 1, got);
+        sleep_ms(200);
+    }
+    slotType[port] = type;   /* (a memory card that answers badly is still one: what mc_ps2_card asks) */
     r = (got == 0 || got == -1) && type == 2 && format ? port : -1;
     if (r != told[port]) {   /* (said when it changes: it is asked each time the Files group is shown) */
         told[port] = r;
