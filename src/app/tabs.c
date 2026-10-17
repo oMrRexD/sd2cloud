@@ -98,24 +98,22 @@ static const int tabText[TABS] = {T_TAB_CARDS, T_TAB_GAMES, T_TAB_BOOT, T_TAB_VM
 #define TABS_X0    58     /* and where they can start, the arrow before them being 18 px to their left */
 const int deviceText[FDEVS] = {T_DEV_SD, T_DEV_USB, T_DEV_HDD, T_DEV_MX4SIO};
 
-/* The MX4SIO is listed when the program doesn't run from an sd2psx: its driver and the sd2psx's were never tried
- * together on a console, and on PCSX2 the MX4SIO's doesn't come back when it is loaded. The debug build lists it with
- * mx4sio.txt in the data folder, for the two to be tried together */
+/* An MX4SIO is only ever in slot 2, where mcman sees nothing: while a PS2 memory card is there instead, the row isn't
+ * offered (the MX4SIO's driver, once loaded, keeps the slot from the memory card until the program starts again). With
+ * the sd2psx in slot 1 the two get on: tried on a console. Not on PCSX2, whose emulator hangs on that driver */
 static int mx4sio_listed(void)
 {
-    static int listed = -1;
-    if (listed < 0) {
-        listed = strncmp(sdRoot, "mmce", 4) != 0 && strncmp(sdRoot, "host", 4) != 0;
 #ifdef DEBUG_BUILD
-        {
-            char c[260];
-            snprintf(c, sizeof(c), "%smx4sio.txt", dataDir);
-            if (file_exists(c))
-                listed = 1;
-        }
-#endif
+    static int forced = -1;
+    if (forced < 0) {   /* (a test can have it whatever is in the slot: SD2Cloud/mx4sio.txt) */
+        char c[260];
+        snprintf(c, sizeof(c), "%smx4sio.txt", dataDir);
+        forced = file_exists(c);
     }
-    return listed;
+    if (forced)
+        return 1;
+#endif
+    return strncmp(sdRoot, "host", 4) != 0 && !mc_ps2_card(1);
 }
 
 int storage_text(void)

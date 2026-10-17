@@ -795,6 +795,8 @@ int card_app_update(const buffer_t *app, const buffer_t *helper, const char *ver
    mcman's calls: its folders and files with their modes and dates, as a card has them, a file of it read, a .psu
    written into it (mc_put_save) and a save deleted (mc_delete_save). */
 
+static int slotType[2];   /* what mc_card_in was last told is in each slot (2 = a PS2 memory card) */
+
 int mc_card_in(int port)
 {
     static int told[2] = {-100, -100};
@@ -803,6 +805,7 @@ int mc_card_in(int port)
         return -1;
     mcGetInfo(port, 0, &type, &freeKb, &format);
     got = mc_wait();   /* (0, or -1: another card than when it was last asked; both come with what it is) */
+    slotType[port] = got == 0 || got == -1 ? type : 0;
     r = (got == 0 || got == -1) && type == 2 && format ? port : -1;
     if (r != told[port]) {   /* (said when it changes: it is asked each time the Files group is shown) */
         told[port] = r;
@@ -813,6 +816,12 @@ int mc_card_in(int port)
 }
 
 int mc_other_slot(void) { return mc_card_in(1 - mc_slot()); }
+
+int mc_ps2_card(int port)
+{
+    mc_card_in(port);
+    return port >= 0 && port <= 1 && slotType[port] == 2;
+}
 
 static int slot_dir(int port, const char *folder, unsigned char (*ent)[MCFS_ENT], int max)
 {
