@@ -196,8 +196,9 @@ PLACE = {
     "T_START_APP": ("browser", 304, 1), "T_EXIT_FILES": ("text", 320, 1),
     "T_TO_CLOUD": ("browser", 304, 1), "T_SAVE_KB": ("text", 304, 1),
     # the tabs over the list of cards (FONT_SMALL, the four side by side, centered on the 208 px list)
-    "T_TAB_CARDS": ("small", 70, 1), "T_TAB_GAMES": ("small", 60, 1), "T_TAB_BOOT": ("small", 50, 1),
-    "T_TAB_FILES": ("small", 70, 1),
+    # (the tabs, each on one line: the five together are measured below, as they share 300 px)
+    "T_TAB_CARDS": ("small", 300, 1), "T_TAB_GAMES": ("small", 300, 1), "T_TAB_BOOT": ("small", 300, 1),
+    "T_TAB_FILES": ("small", 300, 1),
     # "All saves", the first row of the Games group and the title over the big card; what goes under that card, and
     # under the title of the screen it opens
     "T_ALL_SAVES": ("text", 200, 1), "T_GAME_CARDS_N": ("text", 200, 1), "T_SAVES_COUNT": ("text", 300, 1),
@@ -295,7 +296,7 @@ PLACE = {
     "T_MIGRATE_ASK_KEEP": ("small", WIDE, 2), "T_MIGRATE_THERE_N": ("text", DIALOG, 1),
     "T_MIGRATE_KEPT_N": ("text", DIALOG, 1), "T_VIEW_NOTE": ("text", 200, 1),
     # the VMCs' group: its tab; under a VMC's name, over its big card; the rename's keyboard and question
-    "T_TAB_VMC": ("small", 60, 1), "T_VMC_GAMES": ("small", 200, 1), "T_VMC_NAME_TITLE": ("text", 320, 1),
+    "T_TAB_VMC": ("small", 300, 1), "T_VMC_GAMES": ("small", 200, 1), "T_VMC_NAME_TITLE": ("text", 320, 1),
     "T_RENAME_VMC_ASK": ("text", WIDE, 2), "T_NEW_VMC": ("text", 172, 1), "T_VMC_CREATE_HINT": ("small", 212, 3),
     "T_CREATE_VMC_ASK": ("text", WIDE, 2),
     # the Memory Card put back from a backup: what happens, under the question; how it went
@@ -567,6 +568,13 @@ def main():
                           f"the small letters: {' / '.join(texts[i] for i in row)}")
                 elif w > 596 - 40:
                     small.append(" / ".join(texts[i] for i in row))
+        # the five tabs in a row, 12 px apart at least (tabs.c): from x = 58, past TABS_W if they must, up to where
+        # the right panel's title can start (x = 440, their arrow 18 px after them: 360 px)
+        tabs = ("T_TAB_CARDS", "T_TAB_GAMES", "T_TAB_BOOT", "T_TAB_VMC", "T_TAB_FILES")
+        w = sum(measure("small", texts[i]) for i in tabs) + 12 * (len(tabs) - 1)
+        if w > 360:
+            bad += 1
+            print(f"  TABS TOO WIDE [{code}] {w} px / 360 px: {' / '.join(texts[i] for i in tabs)}")
         h = about_height(texts)
         if h > 372 - 74:   # (LOOK_BOTTOM - LOOK_TOP: between the header's line and the legend's)
             bad += 1

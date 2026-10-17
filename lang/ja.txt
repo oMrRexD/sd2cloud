@@ -803,7 +803,7 @@ T_MIGRATE_SUMMARY = 選択中: %d 件（%d ゲーム）· ゲーム ID なし: %
 T_MIGRATE_SIZE = 容量
 # Button. English: Start
 T_MIGRATE_START = 開始
-# Up to 2 lines. English: %d saves already exist at the destination with different content
+# Up to 2 lines. English: Different saves already at the destination: %d
 T_MIGRATE_DIFFER = コピー先に内容の異なるセーブデータがあります: %d
 # One line. English: Keep existing
 T_MIGRATE_KEEP_GAME = 既存のものを残す
@@ -833,8 +833,8 @@ T_MIGRATE_DONE = ゲームごとの分割が完了しました
 T_MIGRATE_REMOVE = コピー済みを削除
 # One line. English: Not connected
 T_VIEW_NOTE = 未接続
-# One line. English: VMCs
-T_TAB_VMC = VMC
+# One line. English: OPL VMCs
+T_TAB_VMC = OPLのVMC
 # One line. English: Linked games: %d
 T_VMC_GAMES = 関連ゲーム: %d
 # One line. English: VMC name
@@ -901,15 +901,15 @@ T_SAFETY_RESTORE_TEXT = カードは microSD に作り直されます。
 T_SAFETY_RESTORED = 安全コピーを復元しました。
 # Up to 2 lines. English: Unable to restore the safety copy.
 T_SAFETY_RESTORE_FAILED = 安全コピーを復元できませんでした。
-# Up to 2 lines. English: Delete the safety copy of %s from %s?
+# Up to 2 lines. English: Delete the safety copy of %s (%s)?
 T_SAFETY_DELETE_ASK = %s の安全コピー（%s）を削除しますか？
-# One line. English: Individual save backup
-T_SET_SAVE_BACKUP = セーブデータ個別バックアップ
+# One line. English: Backup by save
+T_SET_SAVE_BACKUP = セーブデータごとのバックアップ
 # One line. English: On
 T_SAVE_BACKUP_ON = オン
 # One line. English: Off
 T_SAVE_BACKUP_OFF = オフ
-# Up to 4 lines. English: Each save that changes is also sent by itself to Google Drive, with its versions. The automatic sync also includes the Memory Card in the other slot.
+# Up to 4 lines. English: Besides the whole card, each save that changes is sent to Google Drive by itself, with its versions. The automatic sync includes the Memory Card in the other slot.
 T_SAVE_BACKUP_NOTE = 変更されたセーブデータは、Google ドライブにも個別に送信され、バージョンが保存されます。自動同期では、もう一方のスロットのメモリーカードも対象になります。
 # One line. English: %d saves uploaded
 T_SAVES_SENT_N = %d 件のセーブデータをアップロード
@@ -923,7 +923,7 @@ T_MEMCARD_NO_ANSWER = メモリーカードが応答しませんでした
 T_SAVE_VERSIONS = ドライブのバージョン
 # Up to 3 lines. English: This save has no versions on Google Drive.
 T_SAVE_NO_VERSIONS = このセーブデータには Google ドライブのバージョンがありません。
-# Up to 2 lines. English: Restore the version of "%s" from %s?
+# Up to 2 lines. English: Restore "%s" to its version from %s?
 T_SAVE_VERSION_ASK = 「%s」の %s のバージョンを復元しますか？
 # Up to 2 lines. English: The current save will be replaced by this version.
 T_SAVE_VERSION_TEXT = 現在のセーブデータはこのバージョンで置き換えられます。

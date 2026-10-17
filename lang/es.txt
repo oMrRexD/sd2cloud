@@ -802,8 +802,8 @@ T_MIGRATE_SUMMARY = Seleccionadas: %d (%d juegos) · Sin ID de juego: %d
 T_MIGRATE_SIZE = Tamaño
 # Button. English: Start
 T_MIGRATE_START = Iniciar
-# Up to 2 lines. English: %d saves already exist at the destination with different content
-T_MIGRATE_DIFFER = %d partidas ya existen en el destino con contenido distinto
+# Up to 2 lines. English: Different saves already at the destination: %d
+T_MIGRATE_DIFFER = Partidas distintas ya en el destino: %d
 # One line. English: Keep existing
 T_MIGRATE_KEEP_GAME = Conservar las existentes
 # One line. English: Replace all
@@ -832,8 +832,8 @@ T_MIGRATE_DONE = Separación por juego completada
 T_MIGRATE_REMOVE = Quitar partidas copiadas
 # One line. English: Not connected
 T_VIEW_NOTE = No conectado
-# One line. English: VMCs
-T_TAB_VMC = VMC
+# One line. English: OPL VMCs
+T_TAB_VMC = VMC del OPL
 # One line. English: Linked games: %d
 T_VMC_GAMES = Juegos vinculados: %d
 # One line. English: VMC name
@@ -900,16 +900,16 @@ T_SAFETY_RESTORE_TEXT = La tarjeta se creará de nuevo en la microSD.
 T_SAFETY_RESTORED = Copia de seguridad restaurada.
 # Up to 2 lines. English: Unable to restore the safety copy.
 T_SAFETY_RESTORE_FAILED = No se pudo restaurar la copia de seguridad.
-# Up to 2 lines. English: Delete the safety copy of %s from %s?
-T_SAFETY_DELETE_ASK = ¿Desea eliminar la copia de seguridad de %s del %s?
-# One line. English: Individual save backup
-T_SET_SAVE_BACKUP = Copia de partidas individuales
+# Up to 2 lines. English: Delete the safety copy of %s (%s)?
+T_SAFETY_DELETE_ASK = ¿Desea eliminar la copia de seguridad de %s (%s)?
+# One line. English: Backup by save
+T_SET_SAVE_BACKUP = Copia por partida
 # One line. English: On
 T_SAVE_BACKUP_ON = Activada
 # One line. English: Off
 T_SAVE_BACKUP_OFF = Desactivada
-# Up to 4 lines. English: Each save that changes is also sent by itself to Google Drive, with its versions. The automatic sync also includes the Memory Card in the other slot.
-T_SAVE_BACKUP_NOTE = Cada partida modificada también se enviará individualmente a Google Drive, con sus versiones. La sincronización automática también incluye la Memory Card de la otra ranura.
+# Up to 4 lines. English: Besides the whole card, each save that changes is sent to Google Drive by itself, with its versions. The automatic sync includes the Memory Card in the other slot.
+T_SAVE_BACKUP_NOTE = Además de la tarjeta entera, cada partida modificada se envía a Google Drive por separado, con sus versiones. La sincronización automática incluye la Memory Card de la otra ranura.
 # One line. English: %d saves uploaded
 T_SAVES_SENT_N = %d partidas subidas
 # One line. English: 1 save uploaded
@@ -922,8 +922,8 @@ T_MEMCARD_NO_ANSWER = la Memory Card no respondió
 T_SAVE_VERSIONS = Versiones en Drive
 # Up to 3 lines. English: This save has no versions on Google Drive.
 T_SAVE_NO_VERSIONS = Esta partida no tiene versiones en Google Drive.
-# Up to 2 lines. English: Restore the version of "%s" from %s?
-T_SAVE_VERSION_ASK = ¿Desea restaurar la versión de "%s" del %s?
+# Up to 2 lines. English: Restore "%s" to its version from %s?
+T_SAVE_VERSION_ASK = ¿Desea restaurar "%s" a la versión del %s?
 # Up to 2 lines. English: The current save will be replaced by this version.
 T_SAVE_VERSION_TEXT = La partida actual se reemplazará por esta versión.
 # One line. English: Version restored.

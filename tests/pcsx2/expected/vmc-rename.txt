@@ -21,6 +21,7 @@ the OPL's games' settings: 1 use a VMC
 [script] X
 [script] S
 [script] X
+files: host:VMC/A.bin copied, 8388608 bytes in N ms
 host:CFG/SLUS_210.65.cfg: the VMC SLUS-21065_0 is A now (0)
 OPL-VMC/SLUS-21065_0 is OPL-VMC/A now
 [script] X

@@ -215,7 +215,7 @@ T_COPY = Copiar
 # Button. English: Move
 T_MOVE = Mover
 # Button. English: Delete
-T_DELETE = Eliminar
+T_DELETE = Excluir
 # One line. English: Upload to Drive
 T_TO_CLOUD = Enviar ao Drive
 # One line. English: %d KB
@@ -233,7 +233,7 @@ T_WORKING_COPY = Copiando...
 # Up to 3 lines. English: Moving...
 T_WORKING_MOVE = Movendo...
 # Up to 3 lines. English: Deleting...
-T_WORKING_DELETE = Eliminando...
+T_WORKING_DELETE = Excluindo...
 # Up to 3 lines. English: Copied to %s.
 T_DONE_COPY = Cópia para %s concluída.
 # Up to 3 lines. English: Moved to %s.
@@ -241,7 +241,7 @@ T_DONE_MOVE = Transferência para %s concluída.
 # One line. English: Deleted.
 T_DONE_DELETE = Eliminação concluída.
 # Up to 3 lines. English: Delete "%s"?
-T_DELETE_ASK = Deseja eliminar "%s"?
+T_DELETE_ASK = Deseja excluir "%s"?
 # Up to 3 lines. English: It will be permanently removed from %s. This action cannot be undone.
 T_DELETE_TEXT = Será removido permanentemente de %s. Esta ação não pode ser desfeita.
 # Up to 3 lines. English: %s already contains data with the same name.
@@ -657,11 +657,11 @@ T_SIZE_NEXT_START = A alteração entra em vigor na próxima inicialização do 
 # Up to 3 lines. English: Unable to change the sd2psx's settings.
 T_SIZE_SET_FAILED = Não foi possível alterar as configurações do sd2psx.
 # One line. English: Delete card
-T_DELETE_CARD = Eliminar cartão
+T_DELETE_CARD = Excluir cartão
 # One line. English: Delete folder
-T_DELETE_FOLDER = Eliminar pasta
+T_DELETE_FOLDER = Excluir pasta
 # Up to 2 lines. English: Delete the memory card %s?
-T_DELETE_CARD_ASK = Deseja eliminar o cartão de memória %s?
+T_DELETE_CARD_ASK = Deseja excluir o cartão de memória %s?
 # Up to 3 lines. English: The card and all of its saves will be permanently removed from the MMCE. This action cannot be undone.
 T_DELETE_CARD_TEXT = O cartão e todos os seus saves serão removidos permanentemente do MMCE. Esta ação não pode ser desfeita.
 # Up to 2 lines. English: Last backup: %s. Backups on Google Drive will not be affected.
@@ -669,7 +669,7 @@ T_DELETE_BACKUP = Último backup: %s. Os backups no Google Drive não serão afe
 # One line. English: This card has no backup on Google Drive.
 T_DELETE_NO_BACKUP = Este cartão não tem backup no Google Drive.
 # Up to 2 lines. English: Delete the folder %s?
-T_DELETE_FOLDER_ASK = Deseja eliminar a pasta %s?
+T_DELETE_FOLDER_ASK = Deseja excluir a pasta %s?
 # Up to 3 lines. English: The folder and its %d memory cards will be permanently removed from the MMCE. This action cannot be undone.
 T_DELETE_FOLDER_TEXT = A pasta e os %d cartões de memória nela serão removidos permanentemente do MMCE. Esta ação não pode ser desfeita.
 # One line. English: Cards without a backup on Google Drive: %d
@@ -677,15 +677,15 @@ T_DELETE_FOLDER_NO_BACKUP = Cartões sem backup no Google Drive: %d
 # Up to 2 lines. English: All cards in this folder have a backup on Google Drive. The backups will not be affected.
 T_DELETE_FOLDER_BACKUPS = Todos os cartões desta pasta têm backup no Google Drive. Os backups não serão afetados.
 # One line. English: Deleting...
-T_DELETING = Eliminando...
+T_DELETING = Excluindo...
 # One line. English: Memory card deleted.
-T_DONE_DELETE_CARD = Cartão de memória eliminado.
+T_DONE_DELETE_CARD = Cartão de memória excluído.
 # Up to 3 lines. English: Unable to delete the memory card.
-T_DELETE_CARD_FAILED = Não foi possível eliminar o cartão de memória.
+T_DELETE_CARD_FAILED = Não foi possível excluir o cartão de memória.
 # One line. English: Folder deleted.
-T_DONE_DELETE_FOLDER = Pasta eliminada.
+T_DONE_DELETE_FOLDER = Pasta excluída.
 # Up to 3 lines. English: Unable to delete the folder.
-T_DELETE_FOLDER_FAILED = Não foi possível eliminar a pasta.
+T_DELETE_FOLDER_FAILED = Não foi possível excluir a pasta.
 # One line. English: %d MB (current)
 T_SIZE_CURRENT = %d MB (atual)
 # One line. English: Change size
@@ -731,9 +731,9 @@ T_RENAME_FAILED = Não foi possível renomear. Nada foi alterado.
 # Up to 2 lines. English: Folder renamed to %s.
 T_RENAME_DONE_FOLDER = Pasta renomeada para %s.
 # Up to 2 lines. English: Delete the file %s?
-T_DELETE_FILE_ASK = Deseja eliminar o arquivo %s?
+T_DELETE_FILE_ASK = Deseja excluir o arquivo %s?
 # Up to 3 lines. English: Unable to delete the file.
-T_DELETE_FILE_FAILED = Não foi possível eliminar o arquivo.
+T_DELETE_FILE_FAILED = Não foi possível excluir o arquivo.
 # Up to 3 lines. English: This file is an sd2psx card. Manage it from the Cards tab.
 T_FILE_IS_CARD = Este arquivo é um cartão do sd2psx. Gerencie-o pela aba Cartões.
 # Up to 2 lines. English: In an sd2psx group or as a file.
@@ -800,8 +800,8 @@ T_MIGRATE_SUMMARY = Selecionados: %d saves (%d jogos) · Sem ID de jogo: %d
 T_MIGRATE_SIZE = Tamanho
 # Button. English: Start
 T_MIGRATE_START = Iniciar
-# Up to 2 lines. English: %d saves already exist at the destination with different content
-T_MIGRATE_DIFFER = %d saves já existem no destino com conteúdo diferente
+# Up to 2 lines. English: Different saves already at the destination: %d
+T_MIGRATE_DIFFER = Saves diferentes já no destino: %d
 # One line. English: Keep existing
 T_MIGRATE_KEEP_GAME = Manter os existentes
 # One line. English: Replace all
@@ -830,8 +830,8 @@ T_MIGRATE_DONE = Separação por jogo concluída
 T_MIGRATE_REMOVE = Remover saves copiados
 # One line. English: Not connected
 T_VIEW_NOTE = Não conectado
-# One line. English: VMCs
-T_TAB_VMC = VMCs
+# One line. English: OPL VMCs
+T_TAB_VMC = VMCs do OPL
 # One line. English: Linked games: %d
 T_VMC_GAMES = Jogos vinculados: %d
 # One line. English: VMC name
@@ -898,16 +898,16 @@ T_SAFETY_RESTORE_TEXT = O cartão será criado novamente no microSD.
 T_SAFETY_RESTORED = Cópia de segurança restaurada.
 # Up to 2 lines. English: Unable to restore the safety copy.
 T_SAFETY_RESTORE_FAILED = Não foi possível restaurar a cópia de segurança.
-# Up to 2 lines. English: Delete the safety copy of %s from %s?
-T_SAFETY_DELETE_ASK = Deseja eliminar a cópia de segurança de %s de %s?
-# One line. English: Individual save backup
-T_SET_SAVE_BACKUP = Backup de saves individuais
+# Up to 2 lines. English: Delete the safety copy of %s (%s)?
+T_SAFETY_DELETE_ASK = Deseja excluir a cópia de segurança de %s (%s)?
+# One line. English: Backup by save
+T_SET_SAVE_BACKUP = Backup por save
 # One line. English: On
 T_SAVE_BACKUP_ON = Ativado
 # One line. English: Off
 T_SAVE_BACKUP_OFF = Desativado
-# Up to 4 lines. English: Each save that changes is also sent by itself to Google Drive, with its versions. The automatic sync also includes the Memory Card in the other slot.
-T_SAVE_BACKUP_NOTE = Cada save alterado também será enviado individualmente ao Google Drive, com suas versões. A sincronização automática também inclui o Memory Card do outro slot.
+# Up to 4 lines. English: Besides the whole card, each save that changes is sent to Google Drive by itself, with its versions. The automatic sync includes the Memory Card in the other slot.
+T_SAVE_BACKUP_NOTE = Além do cartão inteiro, cada save alterado é enviado ao Google Drive separadamente, com suas versões. A sincronização automática inclui o Memory Card do outro slot.
 # One line. English: %d saves uploaded
 T_SAVES_SENT_N = %d saves enviados
 # One line. English: 1 save uploaded
@@ -920,8 +920,8 @@ T_MEMCARD_NO_ANSWER = o Memory Card não respondeu
 T_SAVE_VERSIONS = Versões no Drive
 # Up to 3 lines. English: This save has no versions on Google Drive.
 T_SAVE_NO_VERSIONS = Este save não tem versões no Google Drive.
-# Up to 2 lines. English: Restore the version of "%s" from %s?
-T_SAVE_VERSION_ASK = Deseja restaurar a versão de "%s" de %s?
+# Up to 2 lines. English: Restore "%s" to its version from %s?
+T_SAVE_VERSION_ASK = Deseja restaurar "%s" para a versão de %s?
 # Up to 2 lines. English: The current save will be replaced by this version.
 T_SAVE_VERSION_TEXT = O save atual será substituído por esta versão.
 # One line. English: Version restored.
@@ -997,13 +997,13 @@ T_TPL_ADD_SAVES = Adicionar saves
 # One line. English: Rename
 T_TPL_RENAME = Renomear
 # One line. English: Delete template
-T_TPL_DELETE = Eliminar template
+T_TPL_DELETE = Excluir template
 # Up to 3 lines. English: Delete the template "%s"?
-T_TPL_DELETE_ASK = Deseja eliminar o template "%s"?
+T_TPL_DELETE_ASK = Deseja excluir o template "%s"?
 # Up to 3 lines. English: Saves already applied to cards are kept.
 T_TPL_DELETE_NOTE = Os saves já aplicados aos cartões serão mantidos.
 # Up to 3 lines. English: Unable to delete the template.
-T_TPL_DELETE_FAILED = Não foi possível eliminar o template.
+T_TPL_DELETE_FAILED = Não foi possível excluir o template.
 # Button. English: Apply
 T_TPL_APPLY = Aplicar
 # One line. English: Applying the template...

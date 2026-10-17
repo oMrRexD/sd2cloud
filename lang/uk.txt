@@ -802,7 +802,7 @@ T_MIGRATE_SUMMARY = Позначено збережень: %d (ігор: %d) · 
 T_MIGRATE_SIZE = Розмір
 # Button. English: Start
 T_MIGRATE_START = Почати
-# Up to 2 lines. English: %d saves already exist at the destination with different content
+# Up to 2 lines. English: Different saves already at the destination: %d
 T_MIGRATE_DIFFER = Збережень з іншим вмістом у місці призначення: %d
 # One line. English: Keep existing
 T_MIGRATE_KEEP_GAME = Залишити наявні
@@ -832,8 +832,8 @@ T_MIGRATE_DONE = Розподіл за іграми завершено
 T_MIGRATE_REMOVE = Видалити скопійовані
 # One line. English: Not connected
 T_VIEW_NOTE = Не підключено
-# One line. English: VMCs
-T_TAB_VMC = VMC
+# One line. English: OPL VMCs
+T_TAB_VMC = VMC OPL
 # One line. English: Linked games: %d
 T_VMC_GAMES = Пов'язаних ігор: %d
 # One line. English: VMC name
@@ -900,15 +900,15 @@ T_SAFETY_RESTORE_TEXT = Картку буде створено на microSD за
 T_SAFETY_RESTORED = Страхову копію відновлено.
 # Up to 2 lines. English: Unable to restore the safety copy.
 T_SAFETY_RESTORE_FAILED = Не вдалося відновити страхову копію.
-# Up to 2 lines. English: Delete the safety copy of %s from %s?
-T_SAFETY_DELETE_ASK = Видалити страхову копію %s від %s?
-# One line. English: Individual save backup
-T_SET_SAVE_BACKUP = Копії окремих збережень
+# Up to 2 lines. English: Delete the safety copy of %s (%s)?
+T_SAFETY_DELETE_ASK = Видалити страхову копію %s (%s)?
+# One line. English: Backup by save
+T_SET_SAVE_BACKUP = Копії за збереженнями
 # One line. English: On
 T_SAVE_BACKUP_ON = Увімкнено
 # One line. English: Off
 T_SAVE_BACKUP_OFF = Вимкнено
-# Up to 4 lines. English: Each save that changes is also sent by itself to Google Drive, with its versions. The automatic sync also includes the Memory Card in the other slot.
+# Up to 4 lines. English: Besides the whole card, each save that changes is sent to Google Drive by itself, with its versions. The automatic sync includes the Memory Card in the other slot.
 T_SAVE_BACKUP_NOTE = Кожне змінене збереження також надсилатиметься до Google Drive окремо, з версіями. Автосинхронізація також охоплює картку пам’яті в іншому слоті.
 # One line. English: %d saves uploaded
 T_SAVES_SENT_N = %d збер. надіслано
@@ -922,8 +922,8 @@ T_MEMCARD_NO_ANSWER = карта пам'яті не відповіла
 T_SAVE_VERSIONS = Версії в Drive
 # Up to 3 lines. English: This save has no versions on Google Drive.
 T_SAVE_NO_VERSIONS = Це збереження не має версій у Google Drive.
-# Up to 2 lines. English: Restore the version of "%s" from %s?
-T_SAVE_VERSION_ASK = Відновити версію «%s» від %s?
+# Up to 2 lines. English: Restore "%s" to its version from %s?
+T_SAVE_VERSION_ASK = Відновити «%s» до версії від %s?
 # Up to 2 lines. English: The current save will be replaced by this version.
 T_SAVE_VERSION_TEXT = Поточне збереження буде замінено цією версією.
 # One line. English: Version restored.
