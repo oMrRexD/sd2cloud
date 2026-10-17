@@ -21,7 +21,8 @@ static int parse_types(const char *v)
         else if (!strcasecmp(p, "gameid")) t |= TYPE_GAMEID;
         else if (!strcasecmp(p, "boot")) t |= TYPE_BOOT;
         else if (!strcasecmp(p, "named")) t |= TYPE_NAMED;
-        else if (!strcasecmp(p, "all")) t |= TYPE_NORMAL | TYPE_GAMEID | TYPE_BOOT | TYPE_NAMED;
+        else if (!strcasecmp(p, "vmc")) t |= TYPE_VMC;
+        else if (!strcasecmp(p, "all")) t |= TYPE_NORMAL | TYPE_GAMEID | TYPE_BOOT | TYPE_NAMED | TYPE_VMC;
     }
     return t;
 }
@@ -93,7 +94,7 @@ void config_read(void)
     /* by default: CardN, the game cards (Game ID spreads the saves) and the named ones (the user's). The BootCards are
      * left out: the factory microSD comes with 8 exploit cards (FMCB, PS2BBL...), which would take time for nothing;
      * whoever wants them adds "boot" */
-    cfg.types = TYPE_NORMAL | TYPE_GAMEID | TYPE_NAMED;
+    cfg.types = TYPE_NORMAL | TYPE_GAMEID | TYPE_NAMED | TYPE_VMC;
     cfg.keep = 10;
     COPY(cfg.igr_return, "auto");
     cfg.igr_settle = 3;

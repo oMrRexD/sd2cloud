@@ -77,7 +77,7 @@ void find_active(void)
     if (!cardTold) {   /* against each card's root folder as it was read when the cards were checked */
         if (active == -1 && mc_root_signature(sdRoot[4] - '0', seen) == 0)
             for (i = 0; i < nCards && found < 0; i++)
-                if (cards[i].rootSig[0] && !strcmp(seen, cards[i].rootSig))
+                if (cards[i].type != TYPE_VMC && cards[i].rootSig[0] && !strcmp(seen, cards[i].rootSig))
                     found = i;
     } else if (active >= 1) {
         for (i = 0; i < nCards && found < 0; i++)
@@ -140,7 +140,7 @@ int active_sure(char seen[65])
 /* can the device be told to take this card? Not a folder with a name of its own: it has no way to be asked for one.
  * The BootCard and a game's card the sd2psx only takes with Autoboot or Game ID on in its settings, which shows by
  * trying. On a device that isn't the sd2psx this is a preview: it takes the same requests, as far as is known */
-int can_insert(const card_t *c) { return !strncmp(sdRoot, "mmce", 4) && c->type != TYPE_NAMED && !viewOther; }
+int can_insert(const card_t *c) { return !strncmp(sdRoot, "mmce", 4) && c->type != TYPE_NAMED && c->type != TYPE_VMC && !viewOther; }
 
 /* and can it be moved off that card and back, for the card to be changed? Only the sd2psx: there it is known that
  * the card it left was written and closed by the time the next one shows in the slot */
@@ -320,8 +320,8 @@ int card_free(const card_t *c, const card_t *other)
 {
     char t[400];
     int channel = 0, active, r;
-    if (mcfs_slot_port(c->path) >= 0 || card_file_card(c) || viewOther)
-        return 0;   /* (the Memory Card in the other slot, a card file, the other device's card: not in the slot) */
+    if (mcfs_slot_port(c->path) >= 0 || card_file_card(c) || viewOther || c->type == TYPE_VMC)
+        return 0;   /* (the Memory Card in the other slot, a card file, the other device's card, a VMC: not in the slot) */
     active = active_card(&channel);
     r = card_in_use(c, active, channel);
     if (r == 0)

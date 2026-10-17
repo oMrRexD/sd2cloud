@@ -178,7 +178,7 @@ static void settings_read_and_set(void)
     CHECK_INT(configExists, 0);
     CHECK_STR(cfg.drive_folder, "PS2 Memory Card Backups");
     CHECK_INT(cfg.keep, 10);
-    CHECK_INT(cfg.types, TYPE_NORMAL | TYPE_GAMEID | TYPE_NAMED);
+    CHECK_INT(cfg.types, TYPE_NORMAL | TYPE_GAMEID | TYPE_NAMED | TYPE_VMC);
     CHECK_INT(config_set("general", "language", "pt"), 0);
     CHECK(t_size("sd/SD2Cloud/sd2cloud.ini") > 0);
     t_text("sd/SD2Cloud/sd2cloud.ini", "[general]\nlanguage = en\ndrive_folder = My Cards\n"

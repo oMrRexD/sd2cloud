@@ -15,7 +15,9 @@ int card_number(const card_t *c) { return atoi(c->folder + strlen(dev->numbered)
 static void card_label(const card_t *c, char *number, char *label)
 {
     number[0] = label[0] = 0;
-    if (c->type == TYPE_NORMAL && !strncmp(c->folder, dev->numbered, strlen(dev->numbered)))
+    if (c->type == TYPE_VMC)
+        snprintf(label, 48, "VMC");
+    else if (c->type == TYPE_NORMAL && !strncmp(c->folder, dev->numbered, strlen(dev->numbered)))
         snprintf(number, 8, "%s", c->folder + strlen(dev->numbered));
     else
         snprintf(label, 48, "%s", c->folder);
@@ -89,9 +91,11 @@ void scroll_to(int cursor, int *top)
  * The main screen has one more group, which isn't of cards: the devices whose files can be browsed (a .psu to import
  * into a card, a folder to export a save to) */
 
-static const int tabText[TABS] = {T_TAB_CARDS, T_TAB_GAMES, T_TAB_BOOT, T_TAB_FILES};
+static const int tabText[TABS] = {T_TAB_CARDS, T_TAB_GAMES, T_TAB_BOOT, T_TAB_VMC, T_TAB_FILES};
 #define TAB_Y      78     /* the tabs: over the list, on the line of the title on the right */
 #define TAB_GAP    22
+#define TABS_W     300    /* the most the tabs take, between their arrows */
+#define TABS_X0    58     /* and where they can start, the arrow before them being 18 px to their left */
 const int deviceText[FDEVS] = {T_DEV_SD, T_DEV_USB, T_DEV_HDD, T_DEV_MX4SIO};
 
 /* The MX4SIO is listed when the program doesn't run from an sd2psx: its driver and the sd2psx's were never tried
@@ -127,7 +131,7 @@ int fdev_list(int out[FDEVS])
 
 int tab_of(const card_t *c)
 {
-    return c->type == TYPE_GAMEID ? TAB_GAMES : c->type == TYPE_BOOT ? TAB_BOOT : TAB_CARDS;
+    return c->type == TYPE_GAMEID ? TAB_GAMES : c->type == TYPE_BOOT ? TAB_BOOT : c->type == TYPE_VMC ? TAB_VMC : TAB_CARDS;
 }
 
 /* what a game card's folder is called: the game, or the card's own folder when the game isn't known */
@@ -316,7 +320,8 @@ void tabs_show(tabs_t *g, int tab)
         if (g->add)
             g->count[TAB_GAMES] = 1, g->count[TAB_BOOT] = dev->sd2psx;
     }
-    if (g->add) {   /* every list starts with "New card" (the Cards and Games groups' are made again below) */
+    if (g->add && tab != TAB_VMC) {   /* every list starts with "New card" (the Cards and Games groups' are made again
+                                         below; the VMCs' has none: a new card there is a game's) */
         g->fold[g->n] = -1;
         g->idx[g->n++] = ROW_NEW;
     }
@@ -331,6 +336,13 @@ void tabs_show(tabs_t *g, int tab)
     }
     if (g->newGame[0] && !g->count[TAB_GAMES])   /* no game card yet: the group is there for the new one */
         g->count[TAB_GAMES] = 1;
+    if (g->create && vmcFolder && !cardsOther) {   /* the VMCs' group ends with "New VMC": it is there for it */
+        g->count[TAB_VMC]++;
+        if (tab == TAB_VMC) {
+            g->fold[g->n] = -1;
+            g->idx[g->n++] = ROW_NEW;
+        }
+    }
     if (tab == TAB_FILES && g->files)   /* (one put in or taken out meanwhile: asked again each time) */
         g->memcard = g->skip != &slotCard && memcard_there();
     if (g->files || g->memcard)
@@ -475,7 +487,7 @@ static const char *tabs_text(int i, char *buf)
             return i < n ? T(deviceText[list[i]]) : T(T_MEMCARD);
     }
     if (rowsOf->idx[i] < 0)
-        return T(rowsOf->idx[i] == ROW_NEW ? T_NEW_CARD : T_ALL_SAVES);
+        return T(rowsOf->idx[i] != ROW_NEW ? T_ALL_SAVES : rowsOf->tab == TAB_VMC ? T_NEW_VMC : T_NEW_CARD);
     return row_folder(rowsOf, i) ? rowsOf->label[rowsOf->fold[i]] : cards[rowsOf->idx[i]].base;
 }
 
@@ -489,15 +501,20 @@ static u32 tabs_dot(int i)
  * has another group) and the shown group's cards. dots = each card's status light */
 void tabs_draw(const tabs_t *g, int dots)
 {
-    int k, shown = 0, w = 0, x, lh = ui_line_height(FONT_SMALL);
+    int k, shown = 0, w = 0, x, gap = TAB_GAP, lh = ui_line_height(FONT_SMALL);
     float cy = TAB_Y + lh / 2.0f + 1;
     if (g->tab == TAB_FILES)
         dots = 0;
     for (k = 0; k < TABS; k++)
         if (g->count[k])
-            w += (shown++ ? TAB_GAP : 0) + ui_measure(FONT_SMALL, T(tabText[k]));
+            w += ui_measure(FONT_SMALL, T(tabText[k])), shown++;
+    if (shown > 1 && w + (shown - 1) * gap > TABS_W)   /* (many: closer together, as far as they can be) */
+        gap = (TABS_W - w) / (shown - 1) > 12 ? (TABS_W - w) / (shown - 1) : 12;
+    w += (shown - 1) * gap;
     if (shown > 1) {
         x = LIST_X + LIST_W / 2 - w / 2;
+        if (x < TABS_X0)   /* (and from the left edge on, the arrow before them in sight) */
+            x = TABS_X0;
         if (tabs_next(g, -1) >= 0)
             ui_triangle(x - 18, cy, x - 11, cy - 6, x - 11, cy + 6, 0x6E9AE0, 0x70);
         for (k = 0; k < TABS; k++) {
@@ -510,10 +527,10 @@ void tabs_draw(const tabs_t *g, int dots)
                 ui_text(FONT_SMALL, x, TAB_Y, COLOR_ITEM_ON, T(tabText[k]));
             } else
                 ui_text(FONT_SMALL, x, TAB_Y, 0x6F7C94, T(tabText[k]));
-            x += tw + TAB_GAP;
+            x += tw + gap;
         }
         if (tabs_next(g, 1) >= 0)
-            ui_triangle(x - TAB_GAP + 18, cy, x - TAB_GAP + 11, cy + 6, x - TAB_GAP + 11, cy - 6, 0x6E9AE0, 0x70);
+            ui_triangle(x - gap + 18, cy, x - gap + 11, cy + 6, x - gap + 11, cy - 6, 0x6E9AE0, 0x70);
     }
     rowsOf = g;
     {

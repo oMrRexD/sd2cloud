@@ -31,7 +31,7 @@ a PC's compiler. `src/app` is the only place that knows the screens; it calls do
 | File | What it is |
 |---|---|
 | `menu.c` | The main screen: the cards in their groups, the selected one big on the right |
-| `tabs.c` | The groups themselves (numbered cards and the folders the user named, games, boot cards, files) and the big card's picture |
+| `tabs.c` | The groups themselves (numbered cards and the folders the user named, games, boot cards, the OPL's VMCs, files) and the big card's picture |
 | `saves.c`, `save.c` | One card's saves, as the PS2 browser shows them; one save's page and what is done with it |
 | `marks.c` | Saves marked on the cards, whichever cards they are on: for a template, or to be copied together to a card or a folder (pasted with START on the card, in the list of cards, where their game's folder comes first) |
 | `dest.c` | Where a save goes when it is moved or imported: a card picked among the others, or a new card made on the spot (a copy's new card too), and the size it is made of |
@@ -54,7 +54,7 @@ a PC's compiler. `src/app` is the only place that knows the screens; it calls do
 
 | File | What it is |
 |---|---|
-| `cards.c` | Finds the card files on the microSD and tells their kind |
+| `cards.c` | Finds the card files on the microSD and tells their kind; the OPL's VMCs (`VMC/*.bin`) as cards of their own group, and the games whose OPL settings (`CFG/*.cfg`) use them |
 | `mcfs.c` | The memory card's file system, read and written inside a card's file: saves, icons, the fingerprint |
 | `stream.c` | A card read and turned into a `.zip`, piece by piece, without ever holding it whole |
 | `google.c` | Google Drive: the sign-in with a code, folders, the resumable upload, downloads |

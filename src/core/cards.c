@@ -98,7 +98,7 @@ static void on_channel(const char *s, const char *k, const char *v, void *u)
         }
 }
 
-static int type_order(int t) { return t == TYPE_NORMAL ? 0 : t == TYPE_GAMEID ? 1 : t == TYPE_NAMED ? 2 : 3; }
+static int type_order(int t) { return t == TYPE_NORMAL ? 0 : t == TYPE_GAMEID ? 1 : t == TYPE_NAMED ? 2 : t == TYPE_VMC ? 4 : 3; }
 
 static int compare(const void *a, const void *b)
 {
@@ -106,6 +106,8 @@ static int compare(const void *a, const void *b)
     int d = type_order(x->type) - type_order(y->type);
     if (d)
         return d;
+    if (x->type == TYPE_VMC)   /* (the VMCs by name) */
+        return strcasecmp(x->base, y->base);
     if (x->type == TYPE_NORMAL) {   /* Card2 before Card10 */
         d = atoi(x->folder + strlen(dev->numbered)) - atoi(y->folder + strlen(dev->numbered));
         if (d)
@@ -565,6 +567,191 @@ static void set_included(card_t *c)
     c->status = ST_NEW;
 }
 
+/* ------------------------------------------------------------ the OPL's VMCs */
+
+int vmcFolder;
+
+/* a file of VMC/ as the next of cards[], when it is a card (1 to 128 MB, a power of 2). 1 = it is */
+static int add_vmc(const char *dir, const char *file)
+{
+    size_t len = strlen(file);
+    card_t *c = &cards[nCards];
+    int fd;
+    if (nCards == MAX_CARDS || len < 5 || len - 4 >= sizeof(c->base) || strcasecmp(file + len - 4, ".bin") != 0)
+        return 0;
+    memset(c, 0, sizeof(*c));
+    snprintf(c->path, sizeof(c->path), "%s/%s", dir, file);
+    if ((fd = open(c->path, O_RDONLY)) < 0)
+        return 0;
+    c->size = lseek(fd, 0, SEEK_END);
+    close(fd);
+    if (c->size < (1LL << 20) || c->size > (128LL << 20) || (c->size & (c->size - 1)))
+        return 0;
+    snprintf(c->folder, sizeof(c->folder), "%s", VMC_FOLDER);
+    snprintf(c->base, sizeof(c->base), "%.*s", (int)(len - 4), file);
+    snprintf(c->id, sizeof(c->id), "%s/%.*s", VMC_FOLDER, (int)(len - 4), file);
+    c->type = TYPE_VMC;
+    nCards++;
+    return 1;
+}
+
+static void add_vmcs(void)
+{
+    char dir[96];
+    int n, i;
+    snprintf(dir, sizeof(dir), "%sVMC", sdRoot);
+    n = list_dir(dir);
+    vmcFolder = n >= 0;
+    for (i = 0; i < n; i++)
+        add_vmc(dir, names[i]);
+}
+
+card_t *vmc_append(const char *name)
+{
+    char dir[96], file[80];
+    snprintf(dir, sizeof(dir), "%sVMC", sdRoot);
+    snprintf(file, sizeof(file), "%s.bin", name);
+    if (!add_vmc(dir, file))
+        return NULL;
+    set_included(&cards[nCards - 1]);
+    log_msg("%s joined the cards: %d on the microSD", cards[nCards - 1].id, nCards);
+    return &cards[nCards - 1];
+}
+
+static struct {
+    char vmc[56], id[12];
+} links[256];
+static int nLinks = -1;   /* (-1 = not read yet) */
+
+/* SLUS_210.65, the name of an OPL's settings file (the game's startup), as the sd2psx names the game: SLUS-21065 */
+static void startup_id(const char *s, char *id, size_t size)
+{
+    size_t n = 0;
+    for (; *s && *s != ';' && n + 1 < size && strcasecmp(s, ".cfg") != 0; s++)
+        if (*s != '.')
+            id[n++] = *s == '_' ? '-' : *s;
+    id[n] = 0;
+}
+
+static void on_cfg(const char *section, const char *key, const char *value, void *u)
+{
+    (void)section;
+    if ((!strcmp(key, "$VMC_0") || !strcmp(key, "$VMC_1")) && value[0] && nLinks < (int)(sizeof(links) / sizeof(links[0]))) {
+        snprintf(links[nLinks].vmc, sizeof(links[0].vmc), "%s", value);
+        snprintf(links[nLinks].id, sizeof(links[0].id), "%s", (const char *)u);
+        nLinks++;
+    }
+}
+
+void vmc_links_read(void)
+{
+    char dir[96], path[200], id[12];
+    int n, i;
+    if (nLinks >= 0)
+        return;
+    nLinks = 0;
+    snprintf(dir, sizeof(dir), "%sCFG", sdRoot);
+    n = list_dir(dir);
+    for (i = 0; i < n; i++) {
+        size_t len = strlen(names[i]);
+        if (len < 5 || strcasecmp(names[i] + len - 4, ".cfg") != 0)
+            continue;
+        startup_id(names[i], id, sizeof(id));
+        snprintf(path, sizeof(path), "%s/%s", dir, names[i]);
+        ini_read(path, on_cfg, id);
+    }
+    log_msg("the OPL's games' settings: %d use a VMC", nLinks);
+}
+
+int vmc_games(const card_t *c, char (*ids)[12], int max)
+{
+    int i, j, n = 0;
+    if (nLinks < 0)
+        return -1;
+    for (i = 0; i < nLinks; i++) {
+        if (strcmp(links[i].vmc, c->base) != 0)
+            continue;
+        for (j = 0; j < i && !(!strcmp(links[j].vmc, c->base) && !strcmp(links[j].id, links[i].id)); j++)
+            ;
+        if (j < i)
+            continue;   /* (a game that uses it in both slots: once) */
+        if (ids && n < max)
+            snprintf(ids[n], sizeof(ids[0]), "%s", links[i].id);
+        n++;
+    }
+    return n;
+}
+
+/* a game's settings, with its lines "$VMC_N=old" made "$VMC_N=name" (written again only when it had one) */
+static void cfg_rename_vmc(const char *path, const char *old, const char *name)
+{
+    buffer_t b = {0};
+    char *out, *p, *end;
+    size_t n = 0, len = strlen(old);
+    int changed = 0;
+    if (file_read(path, &b) != 0 || !(out = malloc(b.len + 2 * strlen(name) + 2))) {
+        buf_free(&b);
+        return;
+    }
+    for (p = (char *)b.data, end = p + b.len; p < end;) {
+        char *eol = memchr(p, '\n', end - p), *stop = eol ? eol : end;
+        size_t line = stop - p, value = line;
+        if (line > 7 && (!strncmp(p, "$VMC_0=", 7) || !strncmp(p, "$VMC_1=", 7))) {
+            value = line - 7 - (stop[-1] == '\r');
+            if (value == len && !strncmp(p + 7, old, len)) {
+                memcpy(out + n, p, 7);
+                n += 7;
+                memcpy(out + n, name, strlen(name));
+                n += strlen(name);
+                p += 7 + len;   /* (the rest of the line as it was: its \r) */
+                changed = 1;
+                continue;
+            }
+        }
+        memcpy(out + n, p, line + (eol != NULL));
+        n += line + (eol != NULL);
+        p = stop + (eol != NULL);
+    }
+    if (changed)
+        log_msg("%s: the VMC %s is %s now (%d)", path, old, name, file_replace(path, (unsigned char *)out, n));
+    free(out);
+    buf_free(&b);
+}
+
+int vmc_rename(card_t *c, const char *name)
+{
+    char to[200], dir[96], path[200], id[96], old[56];
+    int n, i;
+    snprintf(to, sizeof(to), "%sVMC/%s.bin", sdRoot, name);
+    if (file_exists(to))
+        return -2;
+    if (file_move(c->path, to) != 0) {
+        log_msg("%s couldn't be called %s", c->id, name);
+        return -1;
+    }
+    snprintf(old, sizeof(old), "%s", c->base);
+    snprintf(dir, sizeof(dir), "%sCFG", sdRoot);   /* (the games that use it, by its new name) */
+    n = list_dir(dir);
+    for (i = 0; i < n; i++) {
+        size_t len = strlen(names[i]);
+        if (len < 5 || strcasecmp(names[i] + len - 4, ".cfg") != 0)
+            continue;
+        snprintf(path, sizeof(path), "%s/%s", dir, names[i]);
+        cfg_rename_vmc(path, old, name);
+    }
+    for (i = 0; i < nLinks; i++)
+        if (!strcmp(links[i].vmc, old))
+            snprintf(links[i].vmc, sizeof(links[0].vmc), "%s", name);
+    snprintf(id, sizeof(id), "%s", c->id);
+    snprintf(c->base, sizeof(c->base), "%s", name);
+    snprintf(c->id, sizeof(c->id), "%s/%s", VMC_FOLDER, name);
+    snprintf(c->path, sizeof(c->path), "%s", to);
+    state_rename(id, c->id);
+    state_write();
+    log_msg("%s is %s now", id, c->id);
+    return 0;
+}
+
 int cards_scan(void)
 {
     static char folders[MAX_NAMES][64];
@@ -592,6 +779,8 @@ int cards_scan(void)
             add_file(base, folders[i], names[j]);
         fill_cards(base, folders[i], first);
     }
+    if (!cardsOther)
+        add_vmcs();
     if (nCards == MAX_CARDS)
         log_msg("more memory cards than SD2Cloud handles (%d): the rest are left out", MAX_CARDS);
     qsort(cards, nCards, sizeof(cards[0]), compare);

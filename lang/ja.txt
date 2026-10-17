@@ -823,6 +823,24 @@ T_MIGRATE_DELETE_TEXT = 削除するセーブデータ: %d。ゲーム ID のな
 T_MIGRATE_KEEP = 残す
 # One line. English: Not connected
 T_VIEW_NOTE = 未接続
+# One line. English: VMCs
+T_TAB_VMC = VMC
+# One line. English: Linked games: %d
+T_VMC_GAMES = 関連ゲーム: %d
+# One line. English: VMC name
+T_VMC_NAME_TITLE = VMC の名前
+# Up to 2 lines. English: Rename the VMC "%s" to "%s"?
+T_RENAME_VMC_ASK = VMC「%s」の名前を「%s」に変更しますか？
+# Up to 3 lines. English: The OPL settings of the linked games will be updated with the new name.
+T_RENAME_VMC_TEXT = 関連ゲームの OPL 設定も新しい名前に更新されます。
+# Up to 3 lines. English: VMC renamed to %s.
+T_RENAME_DONE_VMC = VMC の名前を %s に変更しました。
+# One line. English: New VMC
+T_NEW_VMC = 新しい VMC
+# Up to 3 lines. English: In the microSD's VMC folder, for the OPL's games.
+T_VMC_CREATE_HINT = microSD の VMC フォルダーに作成します（OPL のゲーム用）。
+# Up to 2 lines. English: Create the VMC "%s" (%d MB)?
+T_CREATE_VMC_ASK = VMC「%s」（%d MB）を作成しますか？
 # Up to 3 lines. English: Choose an ELF...
 T_PICK_ELF = ELF を選択...
 # Up to 3 lines. English: Unable to read this memory card.

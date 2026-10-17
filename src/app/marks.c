@@ -189,14 +189,14 @@ static int mark_game(void)
 static int mark_new_card(void)
 {
     sound_play(SND_CONFIRM);
-    if (mk.g.tab == TAB_CARDS) {
+    if (mk.g.tab == TAB_CARDS || mk.g.tab == TAB_VMC) {
         static save_ref_t refs[MARKS_MAX];
         int i;
         for (i = 0; i < marks.n; i++) {
             refs[i].card = marks.save[i].card;
             refs[i].folder = marks.save[i].s.folder;
         }
-        return card_create(refs, marks.n) ? 2 : 0;
+        return (mk.g.tab == TAB_VMC ? vmc_create(refs, marks.n) : card_create(refs, marks.n)) ? 2 : 0;
     }
     if (!dest_new_place(mk.g.newGame))
         return 0;

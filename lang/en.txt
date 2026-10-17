@@ -825,6 +825,24 @@ T_MIGRATE_DELETE_TEXT = Saves to remove: %d. Saves without a game ID and saves n
 T_MIGRATE_KEEP = Keep
 # One line.
 T_VIEW_NOTE = Not connected
+# One line.
+T_TAB_VMC = VMCs
+# One line.
+T_VMC_GAMES = Linked games: %d
+# One line.
+T_VMC_NAME_TITLE = VMC name
+# Up to 2 lines.
+T_RENAME_VMC_ASK = Rename the VMC "%s" to "%s"?
+# Up to 3 lines.
+T_RENAME_VMC_TEXT = The OPL settings of the linked games will be updated with the new name.
+# Up to 3 lines.
+T_RENAME_DONE_VMC = VMC renamed to %s.
+# One line.
+T_NEW_VMC = New VMC
+# Up to 3 lines.
+T_VMC_CREATE_HINT = In the microSD's VMC folder, for the OPL's games.
+# Up to 2 lines.
+T_CREATE_VMC_ASK = Create the VMC "%s" (%d MB)?
 # Up to 3 lines.
 T_PICK_ELF = Choose an ELF...
 # Up to 3 lines.

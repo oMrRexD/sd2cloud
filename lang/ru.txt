@@ -822,6 +822,24 @@ T_MIGRATE_DELETE_TEXT = Сохранений к удалению: %d. Сохра
 T_MIGRATE_KEEP = Оставить
 # One line. English: Not connected
 T_VIEW_NOTE = Не подключено
+# One line. English: VMCs
+T_TAB_VMC = VMC
+# One line. English: Linked games: %d
+T_VMC_GAMES = Связанных игр: %d
+# One line. English: VMC name
+T_VMC_NAME_TITLE = Имя VMC
+# Up to 2 lines. English: Rename the VMC "%s" to "%s"?
+T_RENAME_VMC_ASK = Переименовать VMC «%s» в «%s»?
+# Up to 3 lines. English: The OPL settings of the linked games will be updated with the new name.
+T_RENAME_VMC_TEXT = Настройки OPL связанных игр будут обновлены с новым именем.
+# Up to 3 lines. English: VMC renamed to %s.
+T_RENAME_DONE_VMC = VMC переименован в %s.
+# One line. English: New VMC
+T_NEW_VMC = Новый VMC
+# Up to 3 lines. English: In the microSD's VMC folder, for the OPL's games.
+T_VMC_CREATE_HINT = В папке VMC на microSD, для игр OPL.
+# Up to 2 lines. English: Create the VMC "%s" (%d MB)?
+T_CREATE_VMC_ASK = Создать VMC «%s» (%d МБ)?
 # Up to 3 lines. English: Choose an ELF...
 T_PICK_ELF = Выберите ELF...
 # Up to 3 lines. English: Unable to read this memory card.

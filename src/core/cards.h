@@ -65,6 +65,21 @@ int cards_delete(card_t *c);
 /* a folder of cards deleted whole, with whatever else it has (its .ini, its pictures); its cards out of cards[] and
  * the state. 0 = done; -1 = it couldn't be read, or something was left in it (the cards gone are out anyway) */
 int cards_delete_folder(const char *folder);
+/* The OPL's VMCs on the microSD (VMC/<name>.bin, where the OPL keeps them on an MMCE) are cards too, of their own
+ * kind (TYPE_VMC) and group, VMC_FOLDER: a name of its own (a folder of the sd2psx's cards may be called VMC), which
+ * their backups' folder on Drive has too */
+#define VMC_FOLDER "OPL-VMC"
+/* the OPL's settings of its games on the microSD (CFG/<game>.cfg): which VMC each one uses ($VMC_0, $VMC_1). Read
+ * once, the first time they are asked for (it takes a moment) */
+void vmc_links_read(void);
+extern int vmcFolder;   /* the microSD has a VMC folder (the VMCs' group is shown, to make one in it) */
+/* a VMC just made (VMC/<name>.bin) joins cards[], at its end: no other card moves. Returns it, or NULL */
+card_t *vmc_append(const char *name);
+/* how many games use that VMC (-1 = their settings weren't read yet); their IDs (SLUS-21065) in ids, up to max */
+int vmc_games(const card_t *c, char (*ids)[12], int max);
+/* a VMC called name now: its file, and the settings of the games that use it. 0 = done; -1 = not (it is as it was):
+ * -2 = a VMC of that name is there */
+int vmc_rename(card_t *c, const char *name);
 int max_channels(const char *folder);       /* how many channels a folder of cards has (its .ini's MaxChannels, or 8) */
 int max_channels_set(const char *folder, int n);   /* the sd2psx goes up to that many in that folder from now on. 0 = written */
 /* the size, in MB, the sd2psx makes a card it doesn't find (a game's first one): its settings.ini's, which it reads

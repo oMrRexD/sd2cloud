@@ -820,6 +820,24 @@ T_MIGRATE_DELETE_TEXT = Saves a remover: %d. Saves sem ID de jogo e saves não c
 T_MIGRATE_KEEP = Manter
 # One line. English: Not connected
 T_VIEW_NOTE = Não conectado
+# One line. English: VMCs
+T_TAB_VMC = VMCs
+# One line. English: Linked games: %d
+T_VMC_GAMES = Jogos vinculados: %d
+# One line. English: VMC name
+T_VMC_NAME_TITLE = Nome do VMC
+# Up to 2 lines. English: Rename the VMC "%s" to "%s"?
+T_RENAME_VMC_ASK = Deseja renomear o VMC "%s" para "%s"?
+# Up to 3 lines. English: The OPL settings of the linked games will be updated with the new name.
+T_RENAME_VMC_TEXT = As configurações do OPL dos jogos vinculados serão atualizadas com o novo nome.
+# Up to 3 lines. English: VMC renamed to %s.
+T_RENAME_DONE_VMC = VMC renomeado para %s.
+# One line. English: New VMC
+T_NEW_VMC = Novo VMC
+# Up to 3 lines. English: In the microSD's VMC folder, for the OPL's games.
+T_VMC_CREATE_HINT = Na pasta VMC do microSD, para os jogos do OPL.
+# Up to 2 lines. English: Create the VMC "%s" (%d MB)?
+T_CREATE_VMC_ASK = Deseja criar o VMC "%s" (%d MB)?
 # Up to 3 lines. English: Choose an ELF...
 T_PICK_ELF = Escolher um ELF...
 # Up to 3 lines. English: Unable to read this memory card.

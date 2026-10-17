@@ -32,6 +32,9 @@ def psu_folder(psu, folder):
 
 # the cards most scenarios start from: two numbered cards and a game's card
 CARDS = {"Card1/Card1-1": "game", "Card2/Card2-1": "empty", "SLUS-21065/SLUS-21065-1": "game"}
+# an OPL VMC on the microSD, and the settings of the game that uses it
+VMC_FILES = {"VMC/SLUS-21065_0.bin": "game.mcd", "VMC/Extra_0.bin": "empty.mcd",
+             "CFG/SLUS_210.65.cfg": b"$ConfigSource=1\r\n$VMC_0=SLUS-21065_0\r\n$Compatibility=0\r\n"}
 # what the app remembers of the empty card: never sent, marked as resolved as it is (its fingerprint, of no saves)
 RESOLVED = (b"[Card2/Card2-1]\r\nfingerprint = \r\nfingerprint_version = 0\r\nsha256 = \r\nwhen = \r\n"
             b"resolved = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\r\n")
@@ -172,6 +175,14 @@ SCENARIOS = [
     {"name": "device-both-from-other", "what": "a microSD with both devices' cards: a save of the other device's card copied into one of the slot's",
      "cards": CARDS, "files": {"PS2/MemoryCard1/MemoryCard1-1.mc2": "game.mcd"}, "settings": "device = sd2psx\r\n",
      "script": "2XXXO2DSXXC"},
+    # (the OPL's VMCs of the microSD, VMC/*.bin, are cards of a group of their own, with the games whose OPL settings
+    # name them: one is opened, and one is renamed, the settings of its game with it)
+    {"name": "vmc-group", "what": "the OPL's VMCs as a group of cards, with the games that use them",
+     "cards": CARDS, "files": VMC_FILES, "script": ">>.XC"},
+    {"name": "vmc-rename", "what": "a VMC renamed, and the OPL settings of the game that uses it",
+     "cards": CARDS, "files": VMC_FILES, "script": ">>DTDDDDXXSXXC"},
+    {"name": "vmc-new", "what": "a VMC made in the microSD's VMC folder, of the size recommended, named as offered (generic_0)",
+     "cards": CARDS, "files": VMC_FILES, "script": ">>DDXXSXXC"},
     # (two game cards with the same two saves: each is on the screen once, until the options say to show them all;
     # then by name)
     {"name": "all-saves-repeated", "what": "every game card's saves on one screen: the same save on two cards once, then each time, then by name",

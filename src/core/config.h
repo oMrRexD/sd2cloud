@@ -9,6 +9,7 @@
 #define TYPE_GAMEID 2
 #define TYPE_BOOT   4
 #define TYPE_NAMED  8
+#define TYPE_VMC    16   /* an OPL VMC of the microSD (cards.c) */
 #define MAX_RULES   64
 #define SORT_NEWEST 0
 #define SORT_OLDEST 1

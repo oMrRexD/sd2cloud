@@ -50,7 +50,7 @@ typedef struct {
 #define CARD_Y     100
 #define CARD_CX    (CARD_X + LOOK_CARD_W / 2)
 
-enum { TAB_CARDS, TAB_GAMES, TAB_BOOT, TAB_FILES, TABS };
+enum { TAB_CARDS, TAB_GAMES, TAB_BOOT, TAB_VMC, TAB_FILES, TABS };
 #define TAB_KEYS   (PAD_LEFT | PAD_RIGHT | PAD_L1 | PAD_R1)
 
 /* the devices of the Files group: the sd2psx's own microSD and a USB drive */
@@ -193,7 +193,10 @@ typedef struct {
 /* a new card, with those saves in it (n = 0: empty): its place picked (a group of the device, or a file of a
  * folder), and its size. 1 = it was made (a card of the device: cards[] has it at its end, cardsUnsorted) */
 int card_create(const save_ref_t *saves, int n);
-void card_resize_screen(card_t *c);      /* the card made again of another size, picked and asked */
+void card_resize_screen(card_t *c);
+/* "New VMC": an OPL VMC made in the microSD's VMC folder, of the sizes the OPL makes (written whole, at once: the OPL
+ * doesn't take one whose file is in pieces), with those saves in it (n = 0: empty). 1 = made */
+int vmc_create(const save_ref_t *saves, int n);      /* the card made again of another size, picked and asked */
 int card_rename_screen(card_t *c);       /* its name on the sd2psx, or its folder's: 1 = cards[] changed */
 int card_delete(card_t *c);              /* asked, and deleted: 1 = cards[] changed (the main screen lists them again) */
 int folder_delete(card_t *c);            /* that card's whole folder, the same way */

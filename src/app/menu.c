@@ -12,7 +12,8 @@ static void card_options(card_t *c)
     const char *items[OPTS];
     int id[OPTS], n, k = 0, d, i, mates;
     for (;;) {   /* circle in what comes next comes back here; circle here goes back to the main screen */
-        for (i = mates = 0; i < nCards; i++)   /* (the other cards of its folder: the folder can go whole) */
+        for (i = mates = 0; i < nCards && c->type != TYPE_VMC; i++)   /* (the other cards of its folder: the folder
+                                                                              can go whole; not the VMCs' group) */
             mates += &cards[i] != c && !strcasecmp(cards[i].folder, c->folder);
         n = 0;
         if (!viewOther) {   /* (the other device's card, not in the slot: never synced nor restored) */
@@ -170,6 +171,12 @@ static void scene_menu(float t)
         } else
             look_legend(l, inside ? 3 : 5, inside ? 0 : 2);
     }
+    if (menu.g.n && menu.g.idx[menu.g.cursor] == ROW_NEW && menu.g.tab == TAB_VMC) {   /* "New VMC" */
+        ui_text_center(FONT_TEXT, CARD_CX, 82, 0x7E8AA0, T(T_NEW_VMC));
+        look_card(CARD_X, CARD_Y, "+", NULL);
+        ui_paragraph_center(FONT_SMALL, CARD_CX, CARD_Y + LOOK_CARD_H + 4, LOOK_CARD_W + 32, COLOR_DIM, T(T_VMC_CREATE_HINT));
+        return;
+    }
     if (menu.g.n && menu.g.idx[menu.g.cursor] == ROW_NEW) {   /* "New card": what it makes */
         ui_text_center(FONT_TEXT, CARD_CX, 82, 0x7E8AA0, T(T_NEW_CARD));
         look_card(CARD_X, CARD_Y, "+", NULL);
@@ -199,6 +206,10 @@ static void scene_menu(float t)
         return;
     }
     ui_text_center(FONT_TEXT, CARD_CX, 82, 0x7E8AA0, c->name[0] ? c->name : c->base);
+    if (c->type == TYPE_VMC && vmc_games(c, NULL, 0) >= 0) {   /* under its name: the OPL's games that use it */
+        snprintf(s, sizeof(s), T(T_VMC_GAMES), vmc_games(c, NULL, 0));
+        ui_text_center(FONT_SMALL, CARD_CX, 104, COLOR_DIM, s);
+    }
     draw_card_picture(c, menu.iconCard == menu.g.idx[menu.g.cursor] ? menu.icon : NULL, ui_clock());
     if (viewOther) {   /* (the other device's: no sync status, it isn't the slot's) */
         ui_text_center(FONT_TEXT, CARD_CX, CARD_Y + LOOK_CARD_H + 2, COLOR_DIM, T(T_VIEW_NOTE));
@@ -224,6 +235,8 @@ static void menu_icon(void)
         return;
     if (c->type == TYPE_GAMEID)
         ic = newest_icon(c);
+    else if (c->type == TYPE_VMC)
+        vmc_links_read();   /* (the OPL's games that use the VMCs, for their big card: read once) */
     ui_lock();
     icon_free(menu.icon);
     menu.icon = ic;
@@ -426,7 +439,10 @@ void manual(void)
             continue;
         if ((b & PAD_CROSS) && menu.g.tab != TAB_FILES && menu.g.n && menu.g.idx[menu.g.cursor] == ROW_NEW) {   /* "New card" */
             sound_play(SND_CONFIRM);
-            card_create(NULL, 0);
+            if (menu.g.tab == TAB_VMC)
+                vmc_create(NULL, 0);
+            else
+                card_create(NULL, 0);
         } else if ((b & PAD_CROSS) && menu.g.tab == TAB_GAMES && menu.g.n && menu.g.idx[menu.g.cursor] < 0) {
             sound_play(SND_CONFIRM);
             card_screen(&allGames);   /* "All saves" */

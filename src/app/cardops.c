@@ -51,7 +51,11 @@ void card_resize_screen(card_t *c)
         message_wait(0, NULL, COLOR_ERROR, T(T_CARD_UNREADABLE));
         return;
     }
-    if (!(mb = card_size_pick(T_RESIZE_TITLE, used, now, 0)) || mb == now)
+    if (c->type == TYPE_VMC)   /* (a VMC: the sizes the OPL makes) */
+        mb = card_size_pick_in(T_RESIZE_TITLE, used, now, 0, 8, 64);
+    else
+        mb = card_size_pick(T_RESIZE_TITLE, used, now, 0);
+    if (!mb || mb == now)
         return;
     snprintf(t, sizeof(t), T(T_RESIZE_ASK), c->base, now, mb);
     dlg_new(COLOR_TITLE, t);
@@ -271,15 +275,11 @@ static int make_device_card(const char *folder, const char *base)
     return ok >= 0;
 }
 
-int card_create(const save_ref_t *saves, int n)
+/* the saves that go into the card to be made, and the room they take */
+static void nc_saves(const save_ref_t *saves, int n)
 {
-    enum { W_NUMBERED, W_GROUP, W_NEW_GROUP, W_FILE };
-    static const int fileText[FDEVS] = {T_CREATE_FILE_SD, T_CREATE_FILE_USB, T_CREATE_FILE_HDD, T_CREATE_FILE_MX4SIO};
-    static char text[40][100], folderOf[40][48], baseOf[40][56];
-    const char *items[40];
-    int kind[40], fileDev[40], devs[FDEVS], nDevs = fdev_list(devs), k = 0, i, j, pick;
     long long bytes;
-    int files;
+    int i, files;
     nc.saves = saves;
     nc.n = n;
     nc.made = 0;
@@ -288,6 +288,49 @@ int card_create(const save_ref_t *saves, int n)
         mcfs_save_info(saves[i].card->path, saves[i].folder, &bytes, &files);
         nc.room += mcfs_save_room(bytes, files);
     }
+}
+
+int vmc_create(const save_ref_t *saves, int n)
+{
+    char name[56], path[200];
+    card_t *c;
+    int mb, ok, failed, i;
+    nc_saves(saves, n);
+    for (i = 0; i < 100; i++) {   /* (offered: generic_0, as the OPL calls its own, or the first number free) */
+        snprintf(name, sizeof(name), "generic_%d", i);
+        snprintf(path, sizeof(path), "%sVMC/%s.bin", sdRoot, name);
+        if (!file_exists(path))
+            break;
+    }
+    if (!(mb = card_size_pick_in(T_SIZE_TITLE, nc.room, 0, 0, 8, 64)))   /* (the sizes the OPL makes) */
+        return 0;
+    for (;;) {   /* (a name another VMC has: said, and typed again) */
+        if (!keyboard(T(T_VMC_NAME_TITLE), name, 33) || !name[0])
+            return 0;
+        snprintf(path, sizeof(path), "%sVMC/%s.bin", sdRoot, name);
+        if (!file_exists(path))
+            break;
+        message_wait(0, NULL, COLOR_WARN, T(T_RENAME_EXISTS));
+    }
+    if (!ask_make(T_CREATE_VMC_ASK, name, mb, NULL))
+        return 0;
+    ok = make_card(path, name, (long long)mb << 20, 0, &failed);
+    if (ok >= 0 && (c = vmc_append(name)) != NULL) {
+        cards_recheck(c);
+        cardsUnsorted = 1;
+    }
+    made_report(name, ok, failed);
+    return ok >= 0;
+}
+
+int card_create(const save_ref_t *saves, int n)
+{
+    enum { W_NUMBERED, W_GROUP, W_NEW_GROUP, W_FILE };
+    static const int fileText[FDEVS] = {T_CREATE_FILE_SD, T_CREATE_FILE_USB, T_CREATE_FILE_HDD, T_CREATE_FILE_MX4SIO};
+    static char text[40][100], folderOf[40][48], baseOf[40][56];
+    const char *items[40];
+    int kind[40], fileDev[40], devs[FDEVS], nDevs = fdev_list(devs), k = 0, i, j, pick;
+    nc_saves(saves, n);
     /* where it can go: the next numbered card; the next channel of each folder of the user's own that has one free; a
      * new folder; a file */
     new_card(TAB_CARDS, "", 0, folderOf[k], baseOf[k]);
@@ -368,10 +411,40 @@ static int name_free(const char *name)
  * its file's: what changes is the name the sd2psx shows for it, in its folder's .ini. A folder of the user's own is
  * called something else, with its cards and files, asked first. 1 = cards[] changed (the main screen lists them
  * again) */
+/* a VMC called something else: its file, and the settings of the OPL's games that use it. 1 = renamed */
+static int vmc_rename_screen(card_t *c)
+{
+    char name[56], t[300];
+    int r;
+    snprintf(name, sizeof(name), "%s", c->base);
+    if (!keyboard(T(T_VMC_NAME_TITLE), name, 33) || !name[0] || !strcmp(name, c->base))
+        return 0;
+    snprintf(t, sizeof(t), T(T_RENAME_VMC_ASK), c->base, name);
+    dlg_new(COLOR_TITLE, t);
+    dlg_line(FONT_TEXT, COLOR_TEXT, 0, T(T_RENAME_VMC_TEXT));
+    dlg_buttons(BUTTON_CIRCLE, T_BACK, BUTTON_CROSS, T_RENAME);
+    next.wide = 1;
+    dlg_show();
+    if (!(wait_button(PAD_CROSS | PAD_CIRCLE, 0) & PAD_CROSS)) {
+        sound_play(SND_BACK);
+        return 0;
+    }
+    sound_play(SND_CONFIRM);
+    message(0, NULL, COLOR_TEXT, T(T_RENAMING));
+    r = vmc_rename(c, name);
+    cardsUnsorted = 1;   /* (in its place among the others, by its new name) */
+    if (r == 0)
+        snprintf(t, sizeof(t), T(T_RENAME_DONE_VMC), name);
+    message_wait(0, NULL, r == 0 ? COLOR_OK : COLOR_ERROR, r == 0 ? t : T(r == -2 ? T_RENAME_EXISTS : T_RENAME_FAILED));
+    return r == 0;
+}
+
 int card_rename_screen(card_t *c)
 {
     char name[48], t[300], active[96], old[48];
     int i, r;
+    if (c->type == TYPE_VMC)
+        return vmc_rename_screen(c);
     if (!folder_renamable(c->folder)) {
         snprintf(name, sizeof(name), "%s", c->name);
         if (!keyboard(T(T_CARD_NAME_TITLE), name, 33) || !strcmp(name, c->name))
@@ -462,7 +535,7 @@ static int ask_delete(void)
 int card_delete(card_t *c)
 {
     char t[300], active[96], folder[48];
-    int i, others = 0, r;
+    int i, others = 0, r, vmc = c->type == TYPE_VMC;
     snprintf(t, sizeof(t), T(T_DELETE_CARD_ASK), c->base);
     dlg_new(COLOR_WARN, t);
     dlg_line(FONT_TEXT, COLOR_TEXT, 8, T(T_DELETE_CARD_TEXT));
@@ -475,7 +548,7 @@ int card_delete(card_t *c)
     for (i = 0; i < nCards; i++)
         others += &cards[i] != c && !strcasecmp(cards[i].folder, folder);
     r = cards_delete(c);
-    if (r == 0 && !others)   /* (nothing of it is left to keep: its .ini, its pictures, the folder itself) */
+    if (r == 0 && !others && !vmc)   /* (nothing of it is left to keep: its .ini, its pictures, the folder itself) */
         cards_delete_folder(folder);
     cards_gone(active);
     message_wait(0, NULL, r == 0 ? COLOR_OK : COLOR_ERROR, T(r == 0 ? T_DONE_DELETE_CARD : T_DELETE_CARD_FAILED));
