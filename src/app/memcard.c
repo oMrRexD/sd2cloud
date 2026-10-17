@@ -78,7 +78,7 @@ void memcard_hint(int port)
         snprintf(t, sizeof(t), T(T_MEMCARD_SLOT), port + 1);
     else
         snprintf(t, sizeof(t), "%s", T(T_MEMCARD));
-    ui_text_center(FONT_TEXT, CARD_CX, 82, 0x7E8AA0, t);
+    panel_title(t);
     ui_paragraph_center(FONT_SMALL, CARD_CX, CARD_Y + 70, LOOK_CARD_W + 32, COLOR_DIM, T(standalone ? T_MEMCARD_HINT_ALONE : T_MEMCARD_HINT));
 }
 

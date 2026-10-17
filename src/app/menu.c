@@ -155,7 +155,7 @@ static void scene_menu(float t)
             memcard_hint(tabs_memcard_port(&menu.g));
             return;
         }
-        ui_text_center(FONT_TEXT, CARD_CX, 82, 0x7E8AA0, T(deviceText[tabs_device(&menu.g)]));
+        panel_title(T(deviceText[tabs_device(&menu.g)]));
         ui_paragraph_center(FONT_SMALL, CARD_CX, CARD_Y + 70, LOOK_CARD_W + 32, COLOR_DIM, T(T_FILES_HINT));
         return;
     }
@@ -176,13 +176,13 @@ static void scene_menu(float t)
         look_legend(l, n, apart);
     }
     if (menu.g.n && menu.g.idx[menu.g.cursor] == ROW_NEW && menu.g.tab == TAB_VMC) {   /* "New VMC" */
-        ui_text_center(FONT_TEXT, CARD_CX, 82, 0x7E8AA0, T(T_NEW_VMC));
+        panel_title(T(T_NEW_VMC));
         look_card(CARD_X, CARD_Y, "+", NULL);
         ui_paragraph_center(FONT_SMALL, CARD_CX, CARD_Y + LOOK_CARD_H + 4, LOOK_CARD_W + 32, COLOR_DIM, T(T_VMC_CREATE_HINT));
         return;
     }
     if (menu.g.n && menu.g.idx[menu.g.cursor] == ROW_NEW) {   /* "New card": what it makes */
-        ui_text_center(FONT_TEXT, CARD_CX, 82, 0x7E8AA0, T(T_NEW_CARD));
+        panel_title(T(T_NEW_CARD));
         look_card(CARD_X, CARD_Y, "+", NULL);
         ui_paragraph_center(FONT_SMALL, CARD_CX, CARD_Y + LOOK_CARD_H + 4, LOOK_CARD_W + 32, COLOR_DIM,
                             T(standalone ? T_CREATE_HINT_FILE : T_CREATE_HINT));
@@ -190,7 +190,7 @@ static void scene_menu(float t)
     }
     if (menu.g.n && menu.g.idx[menu.g.cursor] < 0) {   /* "All saves": the game cards, and how many they are */
         snprintf(s, sizeof(s), T(T_GAME_CARDS_N), menu.g.nGames);
-        ui_text_center(FONT_TEXT, CARD_CX, 82, 0x7E8AA0, T(T_ALL_SAVES));
+        panel_title(T(T_ALL_SAVES));
         look_card(CARD_X, CARD_Y, NULL, T(T_TAB_GAMES));
         ui_text_center(FONT_TEXT, CARD_CX, CARD_Y + LOOK_CARD_H + 2, COLOR_DIM, s);
         return;
@@ -201,16 +201,13 @@ static void scene_menu(float t)
     }
     if (tabs_on_folders(&menu.g)) {   /* a folder: the game's name whole, and the picture of its first card */
         const char *name = c->type == TYPE_VMC ? vmc_place_name(c->folder) : game_of(c);
-        if (ui_measure(FONT_TEXT, name) <= LOOK_CARD_W + 56)
-            ui_text_center(FONT_TEXT, CARD_CX, 82, 0x7E8AA0, name);
-        else
-            ui_text_fit(FONT_TEXT, CARD_CX - (LOOK_CARD_W + 56) / 2, 82, LOOK_CARD_W + 56, 0x7E8AA0, name);
+        panel_title(name);
         draw_card_picture(c, menu.iconCard == menu.g.idx[menu.g.cursor] ? menu.icon : NULL, ui_clock());
         if (c->moved[0])   /* (the device opens another folder for this game now) */
             ui_text_center(FONT_SMALL, CARD_CX, CARD_Y + LOOK_CARD_H + 4, COLOR_WARN, T(T_CARD_UNUSED));
         return;
     }
-    ui_text_center(FONT_TEXT, CARD_CX, 82, 0x7E8AA0, c->name[0] ? c->name : c->base);
+    panel_title(c->name[0] ? c->name : c->base);
     if (c->type == TYPE_VMC && vmc_games(c, NULL, 0) >= 0) {   /* under its name: the OPL's games that use it */
         snprintf(s, sizeof(s), T(T_VMC_GAMES), vmc_games(c, NULL, 0));
         ui_text_center(FONT_SMALL, CARD_CX, 104, COLOR_DIM, s);

@@ -96,6 +96,17 @@ static const int tabText[TABS] = {T_TAB_CARDS, T_TAB_GAMES, T_TAB_BOOT, T_TAB_VM
 #define TAB_GAP    22
 #define TABS_W     300    /* the most the tabs take, between their arrows */
 #define TABS_X0    58     /* and where they can start, the arrow before them being 18 px to their left */
+/* and where they end at the latest: their arrow after them, then the right side's title (PANEL_TITLE_W) */
+#define TABS_END   (CARD_CX - PANEL_TITLE_W / 2 - 20)
+#define TAB_GAP_MIN 12
+
+void panel_title(const char *text)
+{
+    if (ui_measure(FONT_TEXT, text) <= PANEL_TITLE_W)
+        ui_text_center(FONT_TEXT, CARD_CX, 82, 0x7E8AA0, text);
+    else
+        ui_text_fit(FONT_TEXT, CARD_CX - PANEL_TITLE_W / 2, 82, PANEL_TITLE_W, 0x7E8AA0, text);
+}
 const int deviceText[FDEVS] = {T_DEV_SD, T_DEV_USB, T_DEV_HDD, T_DEV_MX4SIO};
 
 /* An MX4SIO is only ever in slot 2, where mcman sees nothing: while a PS2 memory card is there instead, the row isn't
@@ -567,7 +578,7 @@ static u32 tabs_dot(int i)
  * has another group) and the shown group's cards. dots = each card's status light */
 void tabs_draw(const tabs_t *g, int dots)
 {
-    int k, shown = 0, w = 0, x, gap = TAB_GAP, lh = ui_line_height(FONT_SMALL);
+    int k, shown = 0, w = 0, x, gap = TAB_GAP, lh = ui_line_height(FONT_SMALL), first = 0, last = TABS - 1;
     float cy = TAB_Y + lh / 2.0f + 1;
     if (g->tab == TAB_FILES)
         dots = 0;
@@ -575,15 +586,37 @@ void tabs_draw(const tabs_t *g, int dots)
         if (g->count[k])
             w += ui_measure(FONT_SMALL, T(tabText[k])), shown++;
     if (shown > 1 && w + (shown - 1) * gap > TABS_W)   /* (many: closer together, as far as they can be) */
-        gap = (TABS_W - w) / (shown - 1) > 12 ? (TABS_W - w) / (shown - 1) : 12;
-    w += (shown - 1) * gap;
+        gap = (TABS_W - w) / (shown - 1) > TAB_GAP_MIN ? (TABS_W - w) / (shown - 1) : TAB_GAP_MIN;
+    if (shown > 1 && TABS_X0 + w + (shown - 1) * gap > TABS_END) {
+        /* (more than fit before the right side's title, in a language of long words: the ones that do, from the
+         * first one on, or from as far left as the one shown is still among them. The arrows say there are more) */
+        for (first = 0;; first++) {
+            int fit = 0, end = -1;
+            for (k = first, w = 0; k < TABS; k++) {
+                int tw;
+                if (!g->count[k])
+                    continue;
+                tw = ui_measure(FONT_SMALL, T(tabText[k]));
+                if (TABS_X0 + w + (fit ? gap : 0) + tw > TABS_END)
+                    break;
+                w += (fit++ ? gap : 0) + tw;
+                end = k;
+            }
+            if (end >= g->tab || first >= g->tab) {
+                last = end;
+                break;
+            }
+        }
+        shown = 2;   /* (from the left edge on) */
+    } else
+        w += (shown - 1) * gap;
     if (shown > 1) {
         x = LIST_X + LIST_W / 2 - w / 2;
         if (x < TABS_X0)   /* (and from the left edge on, the arrow before them in sight) */
             x = TABS_X0;
         if (tabs_next(g, -1) >= 0)
             ui_triangle(x - 18, cy, x - 11, cy - 6, x - 11, cy + 6, 0x6E9AE0, 0x70);
-        for (k = 0; k < TABS; k++) {
+        for (k = first; k <= last; k++) {
             int tw;
             if (!g->count[k])
                 continue;
