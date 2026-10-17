@@ -131,6 +131,12 @@ int update_check(int back)
     buf_free(&b);
     log_msg("update: %s release %s (this is %s %s)%s", beta ? "beta" : "latest", latest.tag, APP_VERSION, APP_COMMIT,
             latest.url_app[0] ? "" : ", without a loose SD2CLOUD.ELF");
+#ifdef DEBUG_BUILD
+    /* a debug build is never replaced: what it would install is the program with no script and no rescue, and a test
+     * on a console that went through here would lose its way back */
+    latest.tag[0] = 0;
+    return 0;
+#endif
     if (!latest.tag[0] || !latest.url_app[0]) {
         latest.tag[0] = 0;
         return beta ? -1 : 0;   /* the beta without its file: it is being replaced right now */
