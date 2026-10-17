@@ -77,6 +77,12 @@ the device, and reads the settings. Then one of two things happens:
 - opened by the user: `manual()` (`app/menu.c`) lists the cards and shows the main screen;
 - opened by the IGR helper, with `-igr`, after a game: `igr()` (`app/autosync.c`) syncs what changed and leaves.
 
+With no sd2psx in either slot (`standalone`), the program works from the drive it was started from: `standalone_root()`
+loads that drive's drivers (`platform/drives.c`) and makes its root what the microSD's would be (on a memory card,
+the SAS package's folder holds the data). No card is ever the one in a slot; the Memory Cards of both slots are in the
+Files group (`memcard_pick`), and the texts that say MMCE name the drive (`i18n_storage`). The debug build tries it on
+PCSX2 with `SD2Cloud/standalone.txt`.
+
 ## What a backup does
 
 1. `cards_scan()` lists the card files; `cards_check()` computes each one's **fingerprint**: a SHA-256 of the
