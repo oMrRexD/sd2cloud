@@ -20,12 +20,37 @@
 #include "common.h"
 
 
+/* What mcman answered to what was asked of it, waited for without holding the CPU, and for so long only: on a console
+ * an operation of a Memory Card now and then never ended, and the backup by save hung at IGR with it. One that doesn't
+ * answer in time is given up (MC_NO_ANSWER), and until it ends the next ones fail at once: libmc takes no other while it
+ * is under way, so what they asked wasn't even sent */
+#define MC_ANSWER_MS 15000
+#define MC_NO_ANSWER (-100)
+static int mcStuck;
+
 static int mc_wait(void)
 {
-    int r;
-    mcSync(0, NULL, &r);
-    return r;
+    int r = MC_NO_ANSWER, k;
+    u64 until = now_ms() + MC_ANSWER_MS;
+    if (mcStuck) {
+        if (mcSync(MC_NOWAIT, NULL, &r) == 1) {
+            mcStuck = 0;
+            log_msg("memory card: the operation that didn't answer has ended (%d)", r);
+        }
+        return MC_NO_ANSWER;
+    }
+    while ((k = mcSync(MC_NOWAIT, NULL, &r)) == 0) {
+        if (now_ms() > until) {
+            mcStuck = 1;
+            log_msg("memory card: no answer in %d s", MC_ANSWER_MS / 1000);
+            return MC_NO_ANSWER;
+        }
+        sleep_ms(1);
+    }
+    return k < 0 ? MC_NO_ANSWER : r;   /* (k < 0: nothing was under way, the call itself failed) */
 }
+
+int mc_no_answer(void) { return mcStuck; }
 
 /* mcman's open modes (Sony's; newlib's O_* don't match) */
 #define MC_RDONLY 0x0001

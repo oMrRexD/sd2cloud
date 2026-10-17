@@ -33,12 +33,19 @@ static int signatures(const card_t *c, int n)
         unsigned long long h = 1469598103934665603ULL;   /* (FNV-1a, 64 bits) */
         size_t k;
         svSig[i] = 0;
+#ifdef DEBUG_BUILD
+        log_msg("signature of %s...", sv[i].folder);
+#endif
         if (mcfs_export_psu(c->path, sv[i].folder, &psu) == MCFS_OK) {
             for (k = 0; k < psu.len; k++)
                 h = (h ^ psu.data[k]) * 1099511628211ULL;
             svSig[i] = h ? h : 1;
         }
         buf_free(&psu);
+    }
+    if (mc_no_answer()) {   /* (not "nothing changed": the backup didn't happen) */
+        snprintf(googleError, sizeof(googleError), "%s", T(T_MEMCARD_NO_ANSWER));
+        return -1;
     }
     return 0;
 }
@@ -115,11 +122,13 @@ int saves_backup(card_t *c, const char *folderId)
     char savesId[80] = "", name[160], desc[200], tag[140], hex[17], id[80];
     datetime_t when;
     int n, i, k, m, sent = 0, r, wasN = currentN, wasTotal = totalN, shown = 0, pending;
+    u64 start = now_ms();
     if ((n = mcfs_list_saves(c->path, sv, MCFS_MAX_SAVES, NULL)) <= 0)
         return n < 0 ? -1 : 0;
     if (signatures(c, n) != 0)
         return -1;
     pending = changed(c, n, go);
+    log_msg("%s: %d saves, read in %u ms; %d changed since they were last sent", c->id, n, (unsigned)(now_ms() - start), pending);
     for (i = 0; i < n && !backupCancelled; i++) {
         buffer_t psu = {0};
         if (!go[i])

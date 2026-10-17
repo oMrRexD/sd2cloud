@@ -318,8 +318,19 @@ void rescue(const char *why)
     iop_reset();
     load_sd_drivers(1);
     if (!again && logRam.len) {
+        int d = device_of(dataDir);
         snprintf(c, sizeof(c), "%sdebug-log.txt", dataDir);
-        file_write(c, logRam.data, logRam.len);
+        if (d == DEV_ATA || d == DEV_USB || d == DEV_MX4SIO) {   /* (a data folder on a drive: its drivers back first,
+                                                                  * and the folder by the name they give it) */
+            char *slash;
+            snprintf(c, sizeof(c), "%srescue.txt", dataDir);
+            if (open_device(d, c, sizeof(c), part, sizeof(part)) == 0 && (slash = strrchr(c, '/')) != NULL)
+                snprintf(slash + 1, sizeof(c) - (size_t)(slash + 1 - c), "debug-log.txt");
+            else
+                c[0] = 0;
+        }
+        if (c[0])
+            file_write(c, logRam.data, logRam.len);
     }
     for (i = 0; i < nRescue; i++) {
         char *q;

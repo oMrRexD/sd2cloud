@@ -911,6 +911,8 @@ T_SAVE_BACKUP_NOTE = 変更されたセーブデータは、Google ドライブ�
 T_SAVES_SENT_N = %d 件のセーブデータをアップロード
 # One line. English: 1 save uploaded
 T_SAVES_SENT_ONE = 1 件のセーブデータをアップロード
+# One line. English: the memory card didn't answer
+T_MEMCARD_NO_ANSWER = メモリーカードが応答しませんでした
 # One line. English: Versions on Drive
 T_SAVE_VERSIONS = ドライブのバージョン
 # Up to 3 lines. English: This save has no versions on Google Drive.

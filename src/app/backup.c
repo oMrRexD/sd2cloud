@@ -177,6 +177,7 @@ static void memcard_saves(void)
         if (!memcard_there())
             continue;
         r = DRY ? 0 : card_folder(&slotCard, folderId, sizeof(folderId));
+        log_msg("%s: its folder on Drive %s", slotCard.id, r == 0 ? "found" : "not found");
         if (r == 0)
             r = saves_backup(&slotCard, folderId);
         if (r > 0) {

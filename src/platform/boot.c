@@ -119,14 +119,16 @@ static void locate_self(const char *a0)
     if (!found)   /* (not likely: it was started from there. The first one, then) */
         snprintf(c, sizeof(c), "%s%s%s", tries[0], rest[0] == '/' ? "" : "/", rest);
     snprintf(appPath, sizeof(appPath), "%s", c);
-    /* back to what reads the sd2psx, as when the program started */
+    /* back to what reads the sd2psx, as when the program started. With no sd2psx, not its driver: left talking to the
+     * slots, it now and then kept a Memory Card's read from ever ending (the backup by save hung at IGR) */
     iop_reset();
     SifExecModuleBuffer(iomanX_irx, size_iomanX_irx, 0, NULL, NULL);
     SifExecModuleBuffer(fileXio_irx, size_fileXio_irx, 0, NULL, NULL);
     fileXioExit();
     fileXioInit();
     SifExecModuleBuffer(sio2man_irx, size_sio2man_irx, 0, NULL, NULL);
-    SifExecModuleBuffer(mmceman_irx, size_mmceman_irx, 0, NULL, NULL);
+    if (!standalone)
+        SifExecModuleBuffer(mmceman_irx, size_mmceman_irx, 0, NULL, NULL);
 }
 
 /* No sd2psx: the root and the data folder are the device's the program was started from (its drivers loaded now) */
