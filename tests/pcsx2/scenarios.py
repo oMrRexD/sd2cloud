@@ -35,6 +35,8 @@ CARDS = {"Card1/Card1-1": "game", "Card2/Card2-1": "empty", "SLUS-21065/SLUS-210
 # an OPL VMC on the microSD, and the settings of the game that uses it
 VMC_FILES = {"VMC/SLUS-21065_0.bin": "game.mcd", "VMC/Extra_0.bin": "empty.mcd",
              "CFG/SLUS_210.65.cfg": b"$ConfigSource=1\r\n$VMC_0=SLUS-21065_0\r\n$Compatibility=0\r\n"}
+# a VMC folder on another device (the settings' [vmc] other), with the OPL's settings of a game that uses its VMC
+VMC_OTHER = {"HDD/VMC/Disk_0.bin": "empty.mcd", "HDD/CFG/SLUS_209.46.cfg": b"$ConfigSource=1\r\n$VMC_0=Disk_0\r\n"}
 # what the app remembers of the empty card: never sent, marked as resolved as it is (its fingerprint, of no saves)
 RESOLVED = (b"[Card2/Card2-1]\r\nfingerprint = \r\nfingerprint_version = 0\r\nsha256 = \r\nwhen = \r\n"
             b"resolved = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\r\n")
@@ -146,7 +148,7 @@ SCENARIOS = [
     {"name": "memcard-paste-list", "what": "a save marked on a card, pasted with START on the Memory Card in the list of "
      "cards", "cards": CARDS, "memcard": "memcard.ps2", "script": "XXXO>>DDDSXXC"},
     {"name": "settings", "what": "settings changed (how many backups are kept, their format, the language) and About",
-     "cards": CARDS, "script": "SDDDDDDXDXDXDXXDXDXUUUXUXDDDDDDDXOOC"},
+     "cards": CARDS, "script": "SDDDDDDDXDXDXDXXDXDXUUUXUXDDDDDDDXOOC"},
     # (a sync with nothing sent, "B": SELECT shows its cards; X on one still to go: resolved; on the next, its sync off)
     {"name": "sync-list", "what": "the list of a sync's cards: one card marked as resolved, another's sync turned off",
      "cards": CARDS, "script": "BLDXDXDXDDXwC"},
@@ -201,6 +203,14 @@ SCENARIOS = [
      "cards": CARDS, "files": VMC_FILES, "script": ">>DTDDDDXXSXXC"},
     {"name": "vmc-new", "what": "a VMC made in the microSD's VMC folder, of the size recommended, named as offered (generic_0)",
      "cards": CARDS, "files": VMC_FILES, "script": ">>DDXXSXXC"},
+    # (a VMC folder added in the settings, besides the microSD's: the group in folders, one for each place, with the
+    # games of that place's CFG)
+    {"name": "vmc-places", "what": "the VMCs of a folder added in the settings, in a folder of their own",
+     "cards": CARDS, "files": dict(VMC_FILES, **VMC_OTHER), "settings": "[vmc]\r\nother = host:HDD/VMC\r\n",
+     "script": ">>.DX.C"},
+    {"name": "vmc-places-new", "what": "a VMC made in the folder added in the settings, asked where it goes",
+     "cards": CARDS, "files": dict(VMC_FILES, **VMC_OTHER), "settings": "[vmc]\r\nother = host:HDD/VMC\r\n",
+     "script": ">>DDXDXXSXXC"},
     # (two game cards with the same two saves: each is on the screen once, until the options say to show them all;
     # then by name)
     {"name": "all-saves-repeated", "what": "every game card's saves on one screen: the same save on two cards once, then each time, then by name",

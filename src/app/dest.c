@@ -396,6 +396,8 @@ static void new_card_progress(long long done, long long total)
  * empty one of the size picked (destNew.size; none picked, the 8 MB of a real card), formatted as the PS2 does, in the
  * game's folder and under the device's own extension. It joins the cards at the end of the list, so the card the save
  * comes from stays where it is. NULL = it couldn't be made (said) */
+void (*destProgress)(long long done, long long total);
+
 card_t *dest_real(card_t *to)
 {
     char dir[200], file[80];
@@ -403,20 +405,23 @@ card_t *dest_real(card_t *to)
     int r, there;
     if (to != &destNew)
         return to;
-    card_work(&destNew, 0, T(T_NEWCARD_MAKING), 1);
+    if (!destProgress)
+        card_work(&destNew, 0, T(T_NEWCARD_MAKING), 1);
     snprintf(dir, sizeof(dir), "%s%s/%s/", sdRoot, dev->cards, destNew.folder);
     ensure_dir(dir);
     there = file_exists(destNew.path);   /* (made by the device since the place was picked: left as it is) */
     r = there || (destNewMore && max_channels_set(destNew.folder, destNewMore) != 0)
             ? MCFS_ERR_IO
-            : mcfs_new_card(destNew.path, destNew.size ? destNew.size : MCFS_CARD_8MB, new_card_progress);
+            : mcfs_new_card(destNew.path, destNew.size ? destNew.size : MCFS_CARD_8MB,
+                            destProgress ? destProgress : new_card_progress);
     snprintf(file, sizeof(file), "%s%s", destNew.base, dev->ext);
     if (r == MCFS_OK && (c = cards_append(destNew.folder, file)) != NULL) {
         cards_recheck(c);
         cardsUnsorted = 1;
     }
     log_msg("new card %s: %d%s%s", destNew.id, r, c ? "" : ", not one of the cards", there ? " (its file was there already)" : "");
-    card_work_done();
+    if (!destProgress)
+        card_work_done();
     if (!c) {
         if (!there) {   /* a card that isn't whole is no card; nor is its folder to stay, if it was made for it */
             unlink(destNew.path);

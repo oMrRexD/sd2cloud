@@ -585,7 +585,7 @@ int copy_marked(card_t *into)
     cards_recheck(to);
     card_back();
     if (made && n)   /* (a new game card: its templates too, as the device's new cards get them) */
-        templates_new_card(to);
+        templates_new_card(to, 1);
     if (r == MCFS_ERR_CANCELLED && !n)
         return 0;   /* back to the marked saves, as they were */
     if (total == 1 || !n)

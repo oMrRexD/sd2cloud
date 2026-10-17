@@ -25,6 +25,7 @@ by game: BASLUS-21065ALPHA into SLUS-21065/SLUS-21065-1: 0
 mcfs: copy of BASLUS-21065BETA: 0, 23 reads and 6 writes of the cards in N ms
 by game: BASLUS-21065BETA into SLUS-21065/SLUS-21065-1: 0
 SLUS-21065/SLUS-21065-1: 2 folders, fingerprint 64fbc81ffd3ff7a8, new
+by game: 1 game(s), 2 copied, 0 there, 0 failed
 [script] X
 (end: capture)
 

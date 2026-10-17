@@ -831,7 +831,7 @@ T_MIGRATE_DELETE_TEXT = Saves to remove: %d. Saves without a game ID and saves n
 T_MIGRATE_KEEP = Keep
 # One line.
 T_MIGRATE_DONE = Split by game complete
-# One line.
+# Button.
 T_MIGRATE_REMOVE = Remove copied saves
 # One line.
 T_VIEW_NOTE = Not connected
@@ -1163,3 +1163,33 @@ T_MEMCARD_READING = Reading the Memory Card...
 T_MEMCARD_READ_FAILED = Unable to read the Memory Card.
 # Up to 4 lines.
 T_CARD_FILE_READ_ONLY = Saves can't be pasted into this file. Here, only a .mcd, .mc2 or .bin card outside a .zip can take them.
+# One line.
+T_SET_VMC_FOLDERS = OPL VMC folders
+# One line.
+T_VMC_FOLDER_ADD = Add a folder
+# One line.
+T_VMC_FOLDER_DEVICE = Device of the folder
+# Button.
+T_VMC_FOLDER_USE = Use this folder
+# Up to 3 lines.
+T_VMC_FOLDER_FIXED = This folder is always read.
+# Up to 3 lines.
+T_VMC_FOLDER_THERE = This folder is already read.
+# Up to 3 lines.
+T_VMC_FOLDER_ALL = Every device already has a folder.
+# Up to 2 lines.
+T_VMC_FOLDER_REMOVE_ASK = Remove this folder from the list?
+# Up to 2 lines.
+T_VMC_FOLDER_REMOVE_TEXT = Its VMCs are not deleted; they are only no longer shown in SD2Cloud.
+# Button.
+T_VMC_FOLDER_REMOVE = Remove
+# One line.
+T_VMC_PLACE_APA = Internal HDD (APA)
+# One line.
+T_VMC_PLACE_OTHER = Other folder
+# One line.
+T_VMC_WHERE = New VMC location
+# Up to 3 lines.
+T_DELETE_VMC_TEXT = The VMC and all of its saves will be permanently removed. This action cannot be undone.
+# Up to 3 lines.
+T_VMC_PLACE_GONE = This VMC's folder is not available. Check Settings > OPL VMC folders.

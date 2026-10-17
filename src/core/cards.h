@@ -67,14 +67,30 @@ int cards_delete(card_t *c);
 int cards_delete_folder(const char *folder);
 /* The OPL's VMCs on the microSD (VMC/<name>.bin, where the OPL keeps them on an MMCE) are cards too, of their own
  * kind (TYPE_VMC) and group, VMC_FOLDER: a name of its own (a folder of the sd2psx's cards may be called VMC), which
- * their backups' folder on Drive has too */
+ * their backups' folder on Drive has too.
+ * The OPL keeps them on the device it runs a game from: the VMC folders of the others (the hard disk's, an MX4SIO's, a
+ * USB drive's) are the ones the user added in the settings ([vmc] in sd2cloud.ini). Each is a place of its own, with
+ * a group of its own (VMC_FOLDER-HDD...); the OPL's settings of the games that use them are in the CFG folder beside
+ * its VMC folder, as they are on the microSD */
 #define VMC_FOLDER "OPL-VMC"
-/* the OPL's settings of its games on the microSD (CFG/<game>.cfg): which VMC each one uses ($VMC_0, $VMC_1). Read
+#define VMC_PLACES 6
+typedef struct {
+    char key[8];       /* its key in [vmc] ("" = the microSD's, always looked at) */
+    char folder[48];   /* its VMCs' group: OPL-VMC, OPL-VMC-HDD... */
+    char dir[160];     /* its VMC folder as it is read, without a / at the end: "mmce0:/VMC", "pfs1:/VMC" */
+    char cfg[160];     /* and the OPL's settings of the games, beside it: "mmce0:/CFG" */
+} vmc_place_t;
+extern vmc_place_t vmcPlaces[VMC_PLACES];
+extern int nVmcPlaces;   /* the places whose VMC folder is there (the VMCs' group is shown, to make one in it) */
+/* the folders the user added, found on their devices (the app's, which loads their drivers; none without it): up to
+ * max in more, with their key, folder, dir and cfg. Returns how many */
+extern int (*vmcMore)(vmc_place_t *more, int max);
+const vmc_place_t *vmc_place(const char *folder);   /* a group's place (NULL = none is) */
+/* the OPL's settings of its games, in each place (CFG/<game>.cfg): which VMC each one uses ($VMC_0, $VMC_1). Read
  * once, the first time they are asked for (it takes a moment) */
 void vmc_links_read(void);
-extern int vmcFolder;   /* the microSD has a VMC folder (the VMCs' group is shown, to make one in it) */
-/* a VMC just made (VMC/<name>.bin) joins cards[], at its end: no other card moves. Returns it, or NULL */
-card_t *vmc_append(const char *name);
+/* a VMC just made (<place's dir>/<name>.bin) joins cards[], at its end: no other card moves. Returns it, or NULL */
+card_t *vmc_append(const char *folder, const char *name);
 /* how many games use that VMC (-1 = their settings weren't read yet); their IDs (SLUS-21065) in ids, up to max */
 int vmc_games(const card_t *c, char (*ids)[12], int max);
 /* a VMC called name now: its file, and the settings of the games that use it. 0 = done; -1 = not (it is as it was):

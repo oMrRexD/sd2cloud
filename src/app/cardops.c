@@ -294,12 +294,15 @@ static void nc_saves(const save_ref_t *saves, int n)
 int vmc_create(const save_ref_t *saves, int n)
 {
     char name[56], path[200];
+    const vmc_place_t *p;
     card_t *c;
     int mb, ok, failed, i;
     nc_saves(saves, n);
+    if (!(p = vmc_place_pick()))
+        return 0;
     for (i = 0; i < 100; i++) {   /* (offered: generic_0, as the OPL calls its own, or the first number free) */
         snprintf(name, sizeof(name), "generic_%d", i);
-        snprintf(path, sizeof(path), "%sVMC/%s.bin", sdRoot, name);
+        snprintf(path, sizeof(path), "%s/%s.bin", p->dir, name);
         if (!file_exists(path))
             break;
     }
@@ -308,7 +311,7 @@ int vmc_create(const save_ref_t *saves, int n)
     for (;;) {   /* (a name another VMC has: said, and typed again) */
         if (!keyboard(T(T_VMC_NAME_TITLE), name, 33) || !name[0])
             return 0;
-        snprintf(path, sizeof(path), "%sVMC/%s.bin", sdRoot, name);
+        snprintf(path, sizeof(path), "%s/%s.bin", p->dir, name);
         if (!file_exists(path))
             break;
         message_wait(0, NULL, COLOR_WARN, T(T_RENAME_EXISTS));
@@ -316,7 +319,7 @@ int vmc_create(const save_ref_t *saves, int n)
     if (!ask_make(T_CREATE_VMC_ASK, name, mb, NULL))
         return 0;
     ok = make_card(path, name, (long long)mb << 20, 0, &failed);
-    if (ok >= 0 && (c = vmc_append(name)) != NULL) {
+    if (ok >= 0 && (c = vmc_append(p->folder, name)) != NULL) {
         cards_recheck(c);
         cardsUnsorted = 1;
     }
@@ -586,7 +589,7 @@ int card_delete(card_t *c)
     int i, others = 0, r, vmc = c->type == TYPE_VMC;
     snprintf(t, sizeof(t), T(T_DELETE_CARD_ASK), c->base);
     dlg_new(COLOR_WARN, t);
-    dlg_line(FONT_TEXT, COLOR_TEXT, 8, T(T_DELETE_CARD_TEXT));
+    dlg_line(FONT_TEXT, COLOR_TEXT, 8, T(vmc ? T_DELETE_VMC_TEXT : T_DELETE_CARD_TEXT));
     backup_line(c);
     dlg_line(FONT_SMALL, COLOR_DIM, 0, T(T_SAFETY_NOTE));
     if (!ask_delete() || card_free(c, NULL) || safety_copy(c) != 0)

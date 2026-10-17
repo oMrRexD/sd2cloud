@@ -101,7 +101,7 @@ const int deviceText[FDEVS] = {T_DEV_SD, T_DEV_USB, T_DEV_HDD, T_DEV_MX4SIO};
 /* An MX4SIO is only ever in slot 2, where mcman sees nothing: while a PS2 memory card is there instead, the row isn't
  * offered (the MX4SIO's driver, once loaded, keeps the slot from the memory card until the program starts again). With
  * the sd2psx in slot 1 the two get on: tried on a console. Not on PCSX2, whose emulator hangs on that driver */
-static int mx4sio_listed(void)
+int mx4sio_listed(void)
 {
 #ifdef DEBUG_BUILD
     static int forced = -1;
@@ -143,8 +143,9 @@ int tab_of(const card_t *c)
 const char *game_of(const card_t *c) { return c->game[0] ? c->game : c->folder; }
 
 /* the groups whose cards come in folders: every game's in the Games group; in the Cards group, the folders the user
- * named (the numbered cards are each a row of their own) */
-static int folder_tab(int tab) { return tab == TAB_GAMES || tab == TAB_CARDS; }
+ * named (the numbered cards are each a row of their own); in the VMCs' group, each place's, when there is more than
+ * one (the microSD's and the folders added in the settings) */
+static int folder_tab(int tab) { return tab == TAB_GAMES || tab == TAB_CARDS || (tab == TAB_VMC && nVmcPlaces > 1); }
 
 /* is row k a folder (none is open)? */
 static int row_folder(const tabs_t *g, int k)
@@ -272,11 +273,50 @@ static void tabs_cards(tabs_t *g)
     }
 }
 
+/* The VMCs' list in folders (with ui_lock held): one for each place that has VMCs, by its name, then "New VMC" when
+ * it is offered (where it goes is asked then); or the VMCs of the folder that is open */
+static void tabs_vmcs(tabs_t *g)
+{
+    int i;
+    g->nGames = g->folders = 0;
+    for (i = 0; i < nCards; i++)   /* (cards[] has them in order already: by place, then name) */
+        if (&cards[i] != g->skip && cards[i].type == TYPE_VMC)
+            g->games[g->nGames++] = i;
+    for (i = 0; i < g->nGames; i++)
+        if (!i || strcmp(cards[g->games[i - 1]].folder, cards[g->games[i]].folder) != 0) {
+            snprintf(g->label[g->folders], sizeof(g->label[0]), "%s", vmc_place_name(cards[g->games[i]].folder));
+            fit(FONT_TEXT, g->label[g->folders], sizeof(g->label[0]), FOLDER_W);
+            g->first[g->folders++] = i;
+        }
+    g->first[g->folders] = g->nGames;
+    if (g->open >= g->folders)
+        g->open = -1;
+    g->n = 0;
+    g->lit = -1;
+    if (g->open >= 0) {
+        for (i = g->first[g->open]; i < g->first[g->open + 1]; i++) {
+            g->fold[g->n] = g->open;
+            g->idx[g->n++] = g->games[i];
+        }
+        return;
+    }
+    for (i = 0; i < g->folders; i++) {
+        g->fold[g->n] = i;
+        g->idx[g->n++] = g->games[g->first[i]];
+    }
+    if (g->create && !cardsOther) {
+        g->fold[g->n] = -1;
+        g->idx[g->n++] = ROW_NEW;
+    }
+}
+
 /* the list of a group whose cards come in folders, made again */
 static void tabs_folders(tabs_t *g)
 {
     if (g->tab == TAB_GAMES)
         tabs_games(g);
+    else if (g->tab == TAB_VMC)
+        tabs_vmcs(g);
     else
         tabs_cards(g);
 }
@@ -341,7 +381,7 @@ void tabs_show(tabs_t *g, int tab)
     }
     if (g->newGame[0] && !g->count[TAB_GAMES])   /* no game card yet: the group is there for the new one */
         g->count[TAB_GAMES] = 1;
-    if (g->create && vmcFolder && !cardsOther) {   /* the VMCs' group ends with "New VMC": it is there for it */
+    if (g->create && nVmcPlaces && !cardsOther) {   /* the VMCs' group ends with "New VMC": it is there for it */
         g->count[TAB_VMC]++;
         if (tab == TAB_VMC) {
             g->fold[g->n] = -1;
@@ -560,8 +600,9 @@ void tabs_draw(const tabs_t *g, int dots)
     }
     rowsOf = g;
     {
-        /* a folder just opened or closed: the list comes in from the side it went to, fading in */
-        int folders = g->tab == TAB_GAMES && g->open < 0, sliding = 0, i;
+        /* a folder just opened or closed: the list comes in from the side it went to, fading in. The Games group's
+         * folders and the VMCs' places are all the list has: wider, without the cards' lights */
+        int folders = (g->tab == TAB_GAMES || (g->tab == TAB_VMC && folder_tab(TAB_VMC))) && g->open < 0, sliding = 0, i;
         float p = (ui_clock() - g->moved) / 0.22f;
         if (folder_tab(g->tab) && g->moved >= 0 && p < 1) {
             sliding = 1;
@@ -600,7 +641,8 @@ void tabs_draw(const tabs_t *g, int dots)
         }
         if (folder_tab(g->tab) && g->open >= 0) {   /* over a folder's cards, small: which folder this is */
             ui_triangle(LIST_X + 27, LIST_Y + 23, LIST_X + 27, LIST_Y + 33, LIST_X + 35, LIST_Y + 28, 0x6E9AE0, 0x70);
-            ui_text_fit(FONT_SMALL, LIST_X + 44, LIST_Y + 21, FOLDER_W - 20, 0x8E98AA, game_of(&cards[g->games[g->first[g->open]]]));
+            ui_text_fit(FONT_SMALL, LIST_X + 44, LIST_Y + 21, FOLDER_W - 20, 0x8E98AA,
+                        g->tab == TAB_VMC ? g->label[g->open] : game_of(&cards[g->games[g->first[g->open]]]));
         }
         rowsDx = 0;
         rowsWide = 0;

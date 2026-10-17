@@ -166,7 +166,8 @@ static void scene_menu(float t)
         int inside = menu.g.open >= 0, made = menu.g.n && menu.g.idx[menu.g.cursor] == ROW_NEW, n = 5, apart = 2;
         legend_t l[5] = {{BUTTON_CIRCLE, T(inside ? T_BACK : T_MENU_EXIT)}, {BUTTON_CROSS, T(made ? T_TPL_CREATE : T_OPEN)},
                          {BUTTON_TRIANGLE, T(T_OPTIONS)}, {BUTTON_SELECT, T(T_TOOLS)}, {BUTTON_START, T(T_SETTINGS)}};
-        if (menu.g.n && menu.g.idx[menu.g.cursor] < 0)   /* "All saves", "New card": not a card, no options of one */
+        /* "All saves", "New card": not a card, no options of one; nor a place of the VMCs (its folder is the OPL's) */
+        if ((menu.g.n && menu.g.idx[menu.g.cursor] < 0) || (menu.g.tab == TAB_VMC && tabs_on_folders(&menu.g)))
             l[2] = l[3], l[3] = l[4], n = 4;
         else if (inside)
             n = 3, apart = 0;
@@ -199,7 +200,7 @@ static void scene_menu(float t)
         return;
     }
     if (tabs_on_folders(&menu.g)) {   /* a folder: the game's name whole, and the picture of its first card */
-        const char *name = game_of(c);
+        const char *name = c->type == TYPE_VMC ? vmc_place_name(c->folder) : game_of(c);
         if (ui_measure(FONT_TEXT, name) <= LOOK_CARD_W + 56)
             ui_text_center(FONT_TEXT, CARD_CX, 82, 0x7E8AA0, name);
         else
@@ -434,7 +435,8 @@ void manual(void)
             }
             continue;
         }
-        if ((b & PAD_TRIANGLE) && tabs_on_folders(&menu.g) && tabs_card(&menu.g)) {   /* (X opens it) */
+        /* (X opens it. A place of the VMCs has none: its folder is the OPL's, not to be renamed or deleted here) */
+        if ((b & PAD_TRIANGLE) && tabs_on_folders(&menu.g) && tabs_card(&menu.g) && menu.g.tab != TAB_VMC) {
             sound_play(SND_CONFIRM);
             folder_options(tabs_card(&menu.g));
             continue;

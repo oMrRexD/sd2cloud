@@ -122,11 +122,15 @@ int safety_copy(const card_t *c)
 static card_t *copy_card(const copy_t *k, const char *base, char *target, size_t size, char *file, size_t fileSize)
 {
     const char *ext = strrchr(k->file, '.');
+    const vmc_place_t *p = vmc_place(k->folder);
     int i;
-    if (!strcmp(k->folder, VMC_FOLDER)) {
+    target[0] = 0;
+    if (p) {   /* (a VMC: in its place's folder) */
         snprintf(file, fileSize, "%s.bin", base);
-        snprintf(target, size, "%sVMC/%s", sdRoot, file);
-    } else {
+        snprintf(target, size, "%s/%s", p->dir, file);
+    } else if (!strncmp(k->folder, VMC_FOLDER "-", sizeof(VMC_FOLDER)))   /* (a VMC of a folder not read now) */
+        return NULL;
+    else {
         snprintf(file, fileSize, "%s%s", base, ext ? ext : dev->ext);
         snprintf(target, size, "%s%s/%s/%s", sdRoot, dev->cards, k->folder, file);
     }
@@ -145,6 +149,10 @@ static void restore_copy(const copy_t *k)
     copy_names(k, base, sizeof(base), when, sizeof(when));
     copy_path(k, from, sizeof(from));
     c = copy_card(k, base, target, sizeof(target), file, sizeof(file));
+    if (!target[0]) {
+        message_wait(0, NULL, COLOR_WARN, T(T_VMC_PLACE_GONE));
+        return;
+    }
     snprintf(t, sizeof(t), T(c ? T_SAFETY_REPLACE_ASK : T_SAFETY_RESTORE_ASK), base, when);
     if (!confirm(t, T(c ? T_SAFETY_REPLACE_TEXT : T_SAFETY_RESTORE_TEXT), T_RESTORE))
         return;
@@ -175,7 +183,7 @@ static void restore_copy(const copy_t *k)
         r = file_copy_shown(from, target, upload_screen);
     }
     card_work_done();
-    if (r == 0 && !c && (c = !strcmp(k->folder, VMC_FOLDER) ? vmc_append(base) : cards_append(k->folder, file)) != NULL) {
+    if (r == 0 && !c && (c = vmc_place(k->folder) ? vmc_append(k->folder, base) : cards_append(k->folder, file)) != NULL) {
         cards_recheck(c);
         cardsUnsorted = 1;
     }

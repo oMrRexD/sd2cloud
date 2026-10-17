@@ -108,6 +108,8 @@ extern int hddBoth;   /* the hard disk opened has APA partitions (hdd0:) besides
 /* a partition of the hard disk mounted, for its files to be read and written: at a pfsN: of its own, while the
  * program runs (up to four; the one opened longest ago gives its place). 0 = done, its root in root ("pfs1:/") */
 int hdd_mount(const char *partition, char *root, size_t size);
+/* the same, and it stays mounted there while the program runs: cards are read from it (the VMCs of a folder in it) */
+int hdd_mount_kept(const char *partition, char *root, size_t size);
 const char *hdd_partition(const char *path);   /* the partition a pfsN: path is on ("" = it isn't one) */
 void drives_close(void);                       /* the partitions let go of (what is written is on the disk then) */
 void go_osd(void) __attribute__((noreturn));

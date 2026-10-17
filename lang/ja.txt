@@ -829,7 +829,7 @@ T_MIGRATE_DELETE_TEXT = 削除するセーブデータ: %d。ゲーム ID のな
 T_MIGRATE_KEEP = 残す
 # One line. English: Split by game complete
 T_MIGRATE_DONE = ゲームごとの分割が完了しました
-# One line. English: Remove copied saves
+# Button. English: Remove copied saves
 T_MIGRATE_REMOVE = コピー済みを削除
 # One line. English: Not connected
 T_VIEW_NOTE = 未接続
@@ -1161,3 +1161,33 @@ T_MEMCARD_READING = メモリーカードを読み込んでいます...
 T_MEMCARD_READ_FAILED = メモリーカードを読み込めませんでした。
 # Up to 4 lines. English: Saves can't be pasted into this file. Here, only a .mcd, .mc2 or .bin card outside a .zip can take them.
 T_CARD_FILE_READ_ONLY = このファイルにはセーブデータを貼り付けられません。ここで貼り付けられるのは、.zip に入っていない .mcd、.mc2、.bin のカードだけです。
+# One line. English: OPL VMC folders
+T_SET_VMC_FOLDERS = OPLのVMCフォルダー
+# One line. English: Add a folder
+T_VMC_FOLDER_ADD = フォルダーを追加
+# One line. English: Device of the folder
+T_VMC_FOLDER_DEVICE = フォルダーのデバイス
+# Button. English: Use this folder
+T_VMC_FOLDER_USE = このフォルダーを使用
+# Up to 3 lines. English: This folder is always read.
+T_VMC_FOLDER_FIXED = このフォルダーは常に読み込まれます。
+# Up to 3 lines. English: This folder is already read.
+T_VMC_FOLDER_THERE = このフォルダーはすでに読み込まれています。
+# Up to 3 lines. English: Every device already has a folder.
+T_VMC_FOLDER_ALL = すべてのデバイスにフォルダーが設定済みです。
+# Up to 2 lines. English: Remove this folder from the list?
+T_VMC_FOLDER_REMOVE_ASK = このフォルダーをリストから外しますか？
+# Up to 2 lines. English: Its VMCs are not deleted; they are only no longer shown in SD2Cloud.
+T_VMC_FOLDER_REMOVE_TEXT = VMCは削除されません。SD2Cloudに表示されなくなるだけです。
+# Button. English: Remove
+T_VMC_FOLDER_REMOVE = 外す
+# One line. English: Internal HDD (APA)
+T_VMC_PLACE_APA = 内蔵 HDD (APA)
+# One line. English: Other folder
+T_VMC_PLACE_OTHER = その他のフォルダー
+# One line. English: New VMC location
+T_VMC_WHERE = 新しいVMCの場所
+# Up to 3 lines. English: The VMC and all of its saves will be permanently removed. This action cannot be undone.
+T_DELETE_VMC_TEXT = VMCとそのすべてのセーブデータが完全に削除されます。この操作は取り消せません。
+# Up to 3 lines. English: This VMC's folder is not available. Check Settings > OPL VMC folders.
+T_VMC_PLACE_GONE = このVMCのフォルダーが見つかりません。設定 > OPLのVMCフォルダー を確認してください。

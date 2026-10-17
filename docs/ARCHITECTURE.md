@@ -46,6 +46,7 @@ a PC's compiler. `src/app` is the only place that knows the screens; it calls do
 | `history.c` | A card's backups on Drive, and restoring one |
 | `active.c` | The card the device is using right now: finding it, switching it, noticing it change; R2 on a microSD with both devices' cards, which lists the other device's (`view_switch`) |
 | `settings.c`, `account.c` | The settings; the Google account |
+| `vmcplaces.c` | The OPL's VMC folders on other devices than the microSD (the hard disk's exFAT and APA sides, an MX4SIO, a USB drive): found when the cards are looked for, each device's drivers loaded then; named on the screens; added in the settings |
 | `tools.c`, `keyboard.c` | The tools (SELECT): the templates, made by marking saves on the cards and put into cards; the keyboard on the screen their names are typed on |
 | `leave.c` | Which program is opened when SD2Cloud closes |
 | `dialog.c`, `work.c`, `format.c` | The dialog box; the screen of something being done; how sizes and dates are said |
@@ -56,7 +57,7 @@ a PC's compiler. `src/app` is the only place that knows the screens; it calls do
 
 | File | What it is |
 |---|---|
-| `cards.c` | Finds the card files on the microSD and tells their kind; the OPL's VMCs (`VMC/*.bin`) as cards of their own group, and the games whose OPL settings (`CFG/*.cfg`) use them |
+| `cards.c` | Finds the card files on the microSD and tells their kind; the OPL's VMCs (`VMC/*.bin`, and those of the folders added in the settings, each place a group of its own) as cards, and the games whose OPL settings (the `CFG/*.cfg` beside each VMC folder) use them |
 | `mcfs.c` | The memory card's file system, read and written inside a card's file: saves, icons, the fingerprint |
 | `stream.c` | A card read and turned into a `.zip`, piece by piece, without ever holding it whole |
 | `google.c` | Google Drive: the sign-in with a code, folders, the resumable upload, downloads |

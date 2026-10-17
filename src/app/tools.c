@@ -535,7 +535,7 @@ void templates_after_game(int alone)
 
 /* A game card made for a save (a copy's, a move's or an import's "New card"): the saves of its templates go into it
  * too, as into a card the device made for a new game, and it is settled */
-void templates_new_card(card_t *c)
+void templates_new_card(card_t *c, int show)
 {
     const template_t *list[TPL_MAX];
     int k, count, put, total = 0, r = MCFS_OK;
@@ -547,10 +547,11 @@ void templates_new_card(card_t *c)
     cancelLatched = 0;
     ap.cards = 0;
     for (k = 0; k < count && r == MCFS_OK; k++) {
-        r = template_into(list[k], c, 0, 1, &put);
+        r = template_into(list[k], c, 0, show, &put);
         total += put;
     }
-    apply_done();
+    if (show)
+        apply_done();
     log_msg("templates into the new card %s: %d save(s) (%d)", c->id, total, r);
     if (r == MCFS_OK) {
         templates_settle(c->id, c->folder);

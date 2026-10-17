@@ -15,6 +15,7 @@ Racing/Racing-1: 2 folders, fingerprint 64fbc81ffd3ff7a8, new
 [script] X
 [script] S
 [script] X
+files: host:MemoryCards/PS2/A/A-1.mcd copied, 8388608 bytes in N ms
 Racing is called A now (copied)
 [script] X
 (end: capture)

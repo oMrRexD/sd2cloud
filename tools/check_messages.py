@@ -322,6 +322,19 @@ PLACE = {
     "T_SAVE_VERSION_DONE": ("text", 296, 1), "T_SAVE_VERSION_FAILED": ("text", 296, 2),
     # with no sd2psx, a Memory Card by its slot: a row of the Files group, and its name on the screens
     "T_MEMCARD_SLOT": ("text", 172, 1), "T_RENAME_VMC_TEXT": ("text", WIDE, 3), "T_MIGRATE_DELETE_ASK": ("text", WIDE, 2), "T_MIGRATE_DELETE_TEXT": ("text", WIDE, 3),
+    # the OPL's VMC folders on other devices: their row in the settings; their list (a place's name and its path, "Add
+    # a folder"), the device asked for and what △ does in its folders; taking one out of the list; a place's name as
+    # the VMCs' group shows it (a folder of the list); where a new VMC goes; a VMC deleted
+    "T_SET_VMC_FOLDERS": ("text", 300, 1), "T_VMC_FOLDER_ADD": ("text", 320, 1), "T_VMC_FOLDER_DEVICE": ("text", 320, 1),
+    "T_VMC_FOLDER_REMOVE_ASK": ("text", WIDE, 2), "T_VMC_FOLDER_REMOVE_TEXT": ("small", WIDE, 2),
+    "T_VMC_PLACE_APA": ("text", 236, 1), "T_VMC_PLACE_OTHER": ("text", 236, 1), "T_VMC_WHERE": ("text", 320, 1),
+    "T_DELETE_VMC_TEXT": ("text", WIDE, 3),
+    # the hard disk's two sides, to pick one; with no sd2psx, a card is made as a file (its hint); a split by game done
+    # (the box's title); the Memory Card's saves sent by themselves (one; read first; the card that didn't answer, after
+    # a card's name in the results); a card that had nothing new, in the sync's list
+    "T_HDD_EXFAT": ("text", 320, 1), "T_HDD_APA": ("text", 320, 1), "T_CREATE_HINT_FILE": ("small", 212, 2),
+    "T_MIGRATE_DONE": ("text", WIDE, 1), "T_SAVES_SENT_ONE": ("small", 400, 1), "T_SAVES_CHECKING": ("text", 296, 1),
+    "T_MEMCARD_NO_ANSWER": ("small", 300, 1), "T_SY_UNCHANGED": ("small", 220, 1),
 }
 PARAGRAPH = ("text", DIALOG, 3)     # error messages and the rest: up to 3 lines in a box
 # what only an sd2psx is ever told (being moved to another card, its boot cards, one more channel for a folder): not
@@ -370,6 +383,9 @@ LEGENDS = [
     (("T_BACK", "T_RUN", "T_OPTIONS"), False), (("T_BACK", "T_OPTIONS"), False), (("T_BACK", "T_RENAME"), False),
     # a folder picked for a new card file; "New card" on the main screen
     (("T_BACK", "T_OPEN", "T_CREATE_HERE"), False), (("T_BACK", "T_CREATE_HERE"), False),
+    (("T_BACK", "T_OPEN", "T_VMC_FOLDER_USE"), False), (("T_BACK", "T_VMC_FOLDER_USE"), False),
+    (("T_BACK", "T_VMC_FOLDER_REMOVE"), False),
+    (("T_MIGRATE_REMOVE", "T_CONTINUE"), False),
     (("T_MENU_EXIT", "T_TPL_CREATE", "T_TOOLS", "T_SETTINGS"), 2), (("T_BACK", "T_REPLACE"), False),
     # a card's saves by game; the question of deleting them from it after
     (("T_BACK", "T_MARK", "T_MIGRATE_SIZE", "T_MIGRATE_START"), False), (("T_BACK", "T_MARK", "T_MIGRATE_START"), False),

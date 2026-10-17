@@ -34,6 +34,7 @@ static struct {
     int cursor, top;
     /* what became of each save (MG_*), once START was pressed */
     unsigned char done[MCFS_MAX_SAVES];
+    long long room[MCFS_MAX_SAVES];   /* what each save takes of a card */
 } mg;
 enum { MG_WAITING, MG_COPIED, MG_THERE, MG_KEPT, MG_FAILED };
 
@@ -73,7 +74,8 @@ static int mg_read(void)
         }
         bytes = 0, files = 0;
         mcfs_save_info(mg.src->path, mg.saves[i].folder, &bytes, &files);
-        mg.games[k].room += mcfs_save_room(bytes, files);
+        mg.room[i] = mcfs_save_room(bytes, files);
+        mg.games[k].room += mg.room[i];
         mg.games[k].n++;
         mg.of[i] = k;
     }
@@ -220,12 +222,47 @@ static int mg_conflicts(int *same)
     }
 }
 
-/* START: asked, and then the games' saves copied, a game at a time (its new card made first). 1 = done (the list is
- * over), 0 = back to it */
+/* The whole split on one screen: each game by its name, the icon of its first save turning, and "N of M" of the
+ * games; one bar for all of it, the bytes of the cards made and of the saves copied, with the time left */
+static long long mgDone, mgTotal;
+
+static void mg_made(long long done, long long total)
+{
+    upload_screen(mgDone + done, mgTotal);
+#ifdef DEBUG_BUILD
+    if (done * 2 >= total)
+        debug_capture_if('M');
+#endif
+}
+
+/* the game's name and its first save's icon on the screen (the one before it let go of; g = NULL: only that) */
+static void mg_game_shown(const mg_game_t *g, int n, int of)
+{
+    static icon_t *shown;
+    buffer_t iconsys = {0}, ico = {0};
+    icon_t *ic = NULL, *was = shown;
+    char card[64];
+    if (g && mcfs_save_icon(mg.src->path, &mg.saves[mg.order[g->first]], &iconsys, &ico) == 0)
+        ic = icon_load(&iconsys, &ico);
+    buf_free(&iconsys);
+    buf_free(&ico);
+    shown = ic;
+    if (g) {   /* (its card: the one there, or the one about to be made, as dest_card_sized names it) */
+        if (g->card)
+            snprintf(card, sizeof(card), "%s", g->card->base);
+        else
+            snprintf(card, sizeof(card), "%.44s-1", g->folder);
+        work_item(g->name, card, ic, n, of);
+    }
+    icon_free(was);
+}
+
+/* START: asked, and then the games' saves copied, a game at a time (its new card made first, and its templates put
+ * into it after). 1 = done (the list is over), 0 = back to it */
 static int mg_go(void)
 {
     char t[300], name[100];
-    int k, i, policy, same, copied = 0, there = 0, failed = 0, going = 0, games = 0, made = 0, step = 0;
+    int k, i, policy, same, copied = 0, there = 0, failed = 0, going = 0, games = 0, made = 0, n = 0;
     for (k = 0; k < mg.nGames; k++)
         if (mg.games[k].on)
             going += mg.games[k].n, games++, made += !mg.games[k].card;
@@ -249,25 +286,37 @@ static int mg_go(void)
         return 0;
     }
     sound_play(SND_CONFIRM);
+    for (mgTotal = mgDone = 0, k = 0; k < mg.nGames; k++)
+        if (mg.games[k].on)
+            mgTotal += (mg.games[k].card ? 0 : (long long)mg.games[k].mb << 20) + mg.games[k].room;
+    card_work(mg.src, 0, T(T_RESIZE_COPYING), 1);
+    upload_screen(0, mgTotal);
     for (k = 0; k < mg.nGames; k++) {
         mg_game_t *g = &mg.games[k];
         int fresh = !g->card;
+        long long end = mgDone + (fresh ? (long long)g->mb << 20 : 0) + g->room;   /* (where the bar is after it) */
         if (!g->on)
             continue;
-        if (fresh && !(g->card = dest_card_sized(g->folder, 1, (long long)g->mb << 20))) {
-            for (i = g->first; i < g->first + g->n; i++)   /* (couldn't be made: said, and its saves didn't go) */
-                mg.done[mg.order[i]] = MG_FAILED, failed++;
-            continue;
+        mg_game_shown(g, ++n, games);
+        if (fresh) {
+            work_text(T(T_NEWCARD_MAKING));
+            destProgress = mg_made;
+            g->card = dest_card_sized(g->folder, 1, (long long)g->mb << 20);
+            destProgress = NULL;
+            mgDone += (long long)g->mb << 20;
         }
-        if (card_free(g->card, mg.src)) {   /* (the device is on it, and couldn't be moved off: its saves don't go) */
+        if (!g->card || card_free(g->card, mg.src)) {   /* (it couldn't be made, said; or the device is on it, and
+                                                          couldn't be moved off: its saves don't go) */
             for (i = g->first; i < g->first + g->n; i++)
                 mg.done[mg.order[i]] = MG_FAILED, failed++;
+            mgDone = end;
             continue;
         }
-        card_work(mg.src, 0, T(T_RESIZE_COPYING), 1);
+        work_text(T(T_RESIZE_COPYING));
         for (i = g->first; i < g->first + g->n; i++) {
             int s = mg.order[i], r, newer = mg.done[s] & 0x20;
-            upload_screen(step++, going);
+            upload_screen(mgDone, mgTotal);
+            mgDone += mg.room[s];
             if (mg.done[s] == MG_THERE) {
                 there++;
                 continue;
@@ -287,12 +336,18 @@ static int mg_go(void)
                 failed++;
             log_msg("by game: %s into %s: %d", mg.saves[s].folder, g->card->id, r);
         }
-        card_work_done();
+        upload_screen(mgDone = end, mgTotal);
         cards_recheck(g->card);
         card_back();
-        if (fresh)   /* (a new game card: its templates too, as the device's new cards get them) */
-            templates_new_card(g->card);
+        if (fresh) {   /* (a new game card: its templates too, as the device's new cards get them) */
+            work_text(T(T_TPL_APPLYING));
+            templates_new_card(g->card, 0);
+        }
     }
+    work_item_done();
+    mg_game_shown(NULL, 0, 0);
+    card_work_done();
+    log_msg("by game: %d game(s), %d copied, %d there, %d failed", games, copied, there, failed);
     /* how it went: X goes on. The saves now on their game's card (copied, or there already) can be removed from the
      * card they came from, with R2: out of the way of a press made too fast, and asked again before anything goes */
     dlg_new(failed ? COLOR_WARN : COLOR_OK, T(T_MIGRATE_DONE));

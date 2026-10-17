@@ -375,7 +375,7 @@ static void psu_import(void)
     cards_recheck(to);
     card_back();
     if (made && r == MCFS_OK)   /* (a new game card: its templates too) */
-        templates_new_card(to);
+        templates_new_card(to, 1);
     if (r != MCFS_ERR_CANCELLED)
         op_result(r, T_DONE_IMPORT, to);
 }

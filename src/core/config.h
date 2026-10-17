@@ -14,6 +14,11 @@
 #define SORT_NEWEST 0
 #define SORT_OLDEST 1
 #define SORT_NAME   2
+/* [vmc]: the OPL's VMC folders on other devices than the microSD (cards.c), one for each: its path from the device's
+ * root ("/VMC"); on the hard disk's APA side, its partition first ("+OPL/VMC"); other, any folder as the PS2 names
+ * it ("mass0:/VMC") */
+enum { VMC_HDD, VMC_APA, VMC_MX4SIO, VMC_USB, VMC_OTHER, VMC_KEYS };
+extern const char *const vmcKeys[VMC_KEYS];
 typedef struct {
     char language[8];
     char device[12];             /* [general] device = sd2psx or pro2: which device the microSD is in, when it has the
@@ -52,6 +57,7 @@ typedef struct {
                                     on more than one card is there each time, not once */
     int beta;                    /* [update] channel = beta: updates come from the "beta" pre-release, rebuilt at every
                                     change, instead of the latest release */
+    char vmc[VMC_KEYS][120];     /* [vmc] hdd, apa, mx4sio, usb, other ("" = none) */
 } config_t;
 extern config_t cfg;
 extern int configExists;

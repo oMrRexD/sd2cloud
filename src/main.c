@@ -102,6 +102,7 @@ int main(int argc, char *argv[])
     ui_unlock();
     state_read();
     google_set_poll(watch_cancel);
+    vmc_places_init();
     if (igrMode)
         igr();
     if (setjmp(reloadPoint)) {   /* the device was taken out and is back (device_watch): maybe with another microSD */

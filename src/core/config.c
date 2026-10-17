@@ -8,6 +8,7 @@
 
 config_t cfg;
 int configExists;
+const char *const vmcKeys[VMC_KEYS] = {"hdd", "apa", "mx4sio", "usb", "other"};
 
 #define COPY(dest, v) snprintf(dest, sizeof(dest), "%s", v)
 
@@ -83,6 +84,11 @@ static void on_config(const char *s, const char *k, const char *v, void *u)
     } else if (!strcasecmp(s, "update")) {
         if (!strcasecmp(k, "repo") && *v && !strpbrk(v, " '\"\\")) COPY(cfg.repo, v);
         else if (!strcasecmp(k, "channel")) cfg.beta = !strcasecmp(v, "beta");
+    } else if (!strcasecmp(s, "vmc")) {
+        int i;
+        for (i = 0; i < VMC_KEYS; i++)
+            if (!strcasecmp(k, vmcKeys[i]))
+                COPY(cfg.vmc[i], v);
     }
 }
 

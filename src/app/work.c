@@ -157,6 +157,7 @@ volatile long long shownDone, shownTotal;
  * is being done can't be given up any more, so the legend doesn't offer to */
 const char *workText;
 static int itemN, itemTotal;   /* a save of a card's being sent, of how many: "N of M" (0 = the card count, currentN) */
+static char itemCard[64];      /* the card an item of a long work goes to, under its name ("" = the card's own) */
 int workFixed;
 
 /* the model a card that has no save of its own to turn shows: the device's memory card, or the console's own for the
@@ -216,8 +217,8 @@ void scene_upload(float t)
     look_halo(168, 222, 118, 0x1A);
     icon_draw(saveIcon ? saveIcon : cardIcon, 168, 218, 210, (now_ms() - iconStart) / 1000.0f);
     y = ui_paragraph(FONT_TITLE, x, 138, w, COLOR_TEXT, title) + 2;
-    if (strcmp(title, c->base)) {
-        ui_text_fit(FONT_SMALL, x, y, w, COLOR_DIM, c->base);
+    if (itemCard[0] || strcmp(title, c->base)) {
+        ui_text_fit(FONT_SMALL, x, y, w, COLOR_DIM, itemCard[0] ? itemCard : c->base);
         y += ui_line_height(FONT_SMALL) + 4;
     }
     y += 18;
@@ -417,6 +418,31 @@ void save_sending(const card_t *on, const save_view_t *v, int n, int of)
     itemTotal = of;
     ui_unlock();
     upload_screen(0, 1);
+}
+
+/* A work of many items on one screen (a split by game: its games): the item's name and icon instead of the card's, the
+ * card it goes to under it, and "N of M" of them. The bar and the time left go on as they were: they are the whole
+ * work's. icon = the caller's, let go of by it once another one is shown (or work_item_done) */
+void work_item(const char *title, const char *card, icon_t *icon, int n, int of)
+{
+    ui_lock();
+    saveIcon = icon ? icon : cubeIcon;
+    snprintf(saveTitle, sizeof(saveTitle), "%s", title);
+    snprintf(itemCard, sizeof(itemCard), "%s", card);
+    iconStart = now_ms();
+    itemN = n;
+    itemTotal = of;
+    ui_unlock();
+    upload_screen(shownDone, shownTotal);
+}
+
+void work_item_done(void)
+{
+    ui_lock();
+    saveIcon = NULL;
+    itemCard[0] = 0;
+    itemN = itemTotal = 0;
+    ui_unlock();
 }
 
 void save_sending_done(void)

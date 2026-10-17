@@ -151,7 +151,7 @@ static int save_move(card_t *c, save_view_t *v)
     cards_recheck(c);
     card_back();
     if (made && r == MCFS_OK)   /* (a new game card: its templates too) */
-        templates_new_card(to);
+        templates_new_card(to, 1);
     if (r == MCFS_ERR_CANCELLED)
         return 0;   /* given up, and said so already: back to the save's page */
     op_result(r, T_DONE_MOVE, to);

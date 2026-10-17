@@ -258,6 +258,9 @@ int card_size_pick_in(int title, long long room, int current, int device, int mi
 int dest_new_size(long long room);       /* the new card's size (destNew.size), picked: 1 = it was, 0 = back */
 const char *dest_new_note(void);         /* what the question about making it says of it */
 card_t *dest_real(card_t *to);
+/* a card dest_real makes within a work already on the screen (a split by game): its progress goes there, without a
+ * screen of its own (NULL = its own) */
+extern void (*destProgress)(long long done, long long total);
 card_t *dest_card(const char *folder, int channel);
 card_t *dest_card_sized(const char *folder, int channel, long long size);
 
@@ -430,6 +433,13 @@ void scroll_to(int cursor, int *top);
 extern const int deviceText[FDEVS];
 /* the devices the Files group lists (FDEV_*), in order; how many */
 int fdev_list(int out[FDEVS]);
+int mx4sio_listed(void);   /* an MX4SIO is offered: no PS2 memory card in slot 2 (its driver would take the slot) */
+/* the OPL's VMC folders on other devices (vmcplaces.c): found when the cards are looked for (cards.c's vmcMore) */
+void vmc_places_init(void);
+const char *vmc_place_name(const char *folder);   /* a group of VMCs' place, as the screens name it: "HD interno" */
+const vmc_place_t *vmc_place_pick(void);          /* where a new VMC goes: asked when there is more than one place */
+int vmc_places_count(void);                       /* how many folders are read: the microSD's and the ones added */
+void vmc_places_screen(void);                     /* Settings > "OPL VMC folders" */
 int tabs_memcard_port(const tabs_t *g);
 int memcard_rows(tabs_t *g);   /* (tabs.c) the Memory Cards a list offers: how many, their slots in g->mcPorts */   /* the slot of the Memory Card the cursor is on (-1 = not on one) */
 int storage_text(void);   /* with no sd2psx: the name of the drive the program works from (T_DEV_USB...) */
@@ -451,7 +461,8 @@ int tabs_device(const tabs_t *g);        /* the Files group's device under the c
 int templates_startup(void);              /* the warning of game cards that lack their templates: how many (0 = none) */
 int templates_wanted(void);              /* templates to put into the game cards after a game? */
 void templates_after_game(int alone);
-void templates_new_card(card_t *c);      /* a game card made for a save gets its templates too */
+void templates_new_card(card_t *c, int show);   /* a game card made for a save gets its templates too (show = on a
+                                                   screen of their own; 0 = within the work on the screen) */
 void tools_screen(void);
 
 /* ------------------------------------------------------------ work.c */
@@ -510,5 +521,8 @@ void save_into_done(void);
 void work_text(const char *text);   /* what the screen of the card on its way says it does (NULL = sending) */
 void save_sending(const card_t *on, const save_view_t *v, int n, int of);   /* save n of the card's "of", on its way */
 void save_sending_done(void);
+/* an item of a long work: its name, the card it goes to, its icon, N of M */
+void work_item(const char *title, const char *card, icon_t *icon, int n, int of);
+void work_item_done(void);
 
 #endif

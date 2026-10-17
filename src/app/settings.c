@@ -9,16 +9,26 @@ static void helper_install_now(int doneTitle);
  * sd2cloud.ini at once */
 
 
-enum { SET_SYNC_ALL, SET_AUTO_SYNC, SET_HELPER, SET_IGR_RETURN, SET_DEVICE, SET_CARD_SIZE, SET_LANGUAGE, SET_KEEP,
-       SET_SAVE_BACKUP, SET_FORMAT, SET_UPDATES, SET_CHANNEL, SET_ACCOUNT, SET_ABOUT, SET_MAX };
+enum { SET_SYNC_ALL, SET_AUTO_SYNC, SET_HELPER, SET_IGR_RETURN, SET_DEVICE, SET_CARD_SIZE, SET_VMC_FOLDERS, SET_LANGUAGE,
+       SET_KEEP, SET_SAVE_BACKUP, SET_FORMAT, SET_UPDATES, SET_CHANNEL, SET_ACCOUNT, SET_ABOUT, SET_MAX };
 #define SET_X      80     /* the labels; the values end at SET_RIGHT */
 #define SET_RIGHT  560
-#define SET_Y0     120
+#define SET_Y0     124
 #define SET_ROW    22
+#define SET_ROWS   10     /* the rows on the screen: past them the list scrolls, with arrows */
 static struct {
-    int n, cursor, item[SET_MAX];
+    int n, cursor, top, item[SET_MAX];
     char label[SET_MAX][96], value[SET_MAX][64];
 } st;
+
+/* the cursor's row on the screen */
+static void set_scroll(void)
+{
+    if (st.cursor < st.top)
+        st.top = st.cursor;
+    if (st.cursor >= st.top + SET_ROWS)
+        st.top = st.cursor - SET_ROWS + 1;
+}
 
 static void set_item(int *i, int id, const char *label, const char *value)
 {
@@ -52,6 +62,8 @@ static void build_settings(void)
         snprintf(v, sizeof(v), T(T_SIZE_MB), device_card_mb() ? device_card_mb() : 8);
         set_item(&i, SET_CARD_SIZE, T(T_SET_CARD_SIZE), v);
     }
+    snprintf(v, sizeof(v), "%d", vmc_places_count());
+    set_item(&i, SET_VMC_FOLDERS, T(T_SET_VMC_FOLDERS), v);
     set_item(&i, SET_LANGUAGE, T(T_SET_LANGUAGE), i18n_find(cfg.language) >= 0 ? i18n_name(i18n_find(cfg.language))
                                                                                      : T(T_AUTO));
     snprintf(v, sizeof(v), "%d", cfg.keep);
@@ -70,7 +82,8 @@ static void build_settings(void)
 #endif
     st.n = i;
     if (st.cursor >= i)
-        st.cursor = 0;
+        st.cursor = st.top = 0;
+    set_scroll();
     ui_unlock();
 }
 
@@ -81,9 +94,8 @@ static void scene_settings(float t)
     look_frame();
     ui_alpha(look_fade(t));
     look_title(W / 2.0f, 88, T(T_SETTINGS), 1);
-    for (i = 0; i < st.n; i++) {
-        /* (one or two more rows than usual: closer together) */
-        float y = SET_Y0 + i * (st.n > 13 ? SET_ROW - 4 : st.n > 12 ? SET_ROW - 3 : st.n > 11 ? SET_ROW - 2 : SET_ROW);
+    for (i = st.top; i < st.n && i < st.top + SET_ROWS; i++) {
+        float y = SET_Y0 + (i - st.top) * SET_ROW;
         if (i == st.cursor) {
             look_glow_text(FONT_TEXT, SET_X, y, COLOR_ITEM, COLOR_ITEM_ON, st.label[i]);
             ui_text_right(FONT_TEXT, SET_RIGHT, y, 0xD8E4F4, st.value[i]);
@@ -92,6 +104,10 @@ static void scene_settings(float t)
             ui_text_right(FONT_TEXT, SET_RIGHT, y, COLOR_DIM, st.value[i]);
         }
     }
+    if (st.top > 0)
+        look_arrow(W / 2.0f, SET_Y0 - 12, 0, 0x6E9AE0);
+    if (st.top + SET_ROWS < st.n)
+        look_arrow(W / 2.0f, SET_Y0 + SET_ROWS * SET_ROW + 2, 1, 0x6E9AE0);
     {
         legend_t l[2] = {{BUTTON_CIRCLE, T(T_BACK)}, {BUTTON_CROSS, T(T_SELECT)}};
         look_legend(l, 2, 0);
@@ -715,6 +731,7 @@ void settings_screen(void)
         if (b & (PAD_UP | PAD_DOWN)) {
             ui_lock();
             st.cursor = (b & PAD_UP) ? (st.cursor + st.n - 1) % st.n : (st.cursor + 1) % st.n;
+            set_scroll();
             ui_unlock();
             sound_play(SND_MOVE);
             continue;
@@ -739,6 +756,9 @@ void settings_screen(void)
             break;
         case SET_CARD_SIZE:
             pick_card_size();
+            break;
+        case SET_VMC_FOLDERS:
+            vmc_places_screen();
             break;
         case SET_SAVE_BACKUP:
             pick_save_backup();

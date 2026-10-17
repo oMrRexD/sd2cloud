@@ -826,7 +826,7 @@ T_MIGRATE_DELETE_TEXT = Saves a remover: %d. Saves sem ID de jogo e saves não c
 T_MIGRATE_KEEP = Manter
 # One line. English: Split by game complete
 T_MIGRATE_DONE = Separação por jogo concluída
-# One line. English: Remove copied saves
+# Button. English: Remove copied saves
 T_MIGRATE_REMOVE = Remover saves copiados
 # One line. English: Not connected
 T_VIEW_NOTE = Não conectado
@@ -1158,3 +1158,33 @@ T_MEMCARD_READING = Lendo o Memory Card...
 T_MEMCARD_READ_FAILED = Não foi possível ler o Memory Card.
 # Up to 4 lines. English: Saves can't be pasted into this file. Here, only a .mcd, .mc2 or .bin card outside a .zip can take them.
 T_CARD_FILE_READ_ONLY = Não é possível colar saves neste arquivo. Aqui, só um cartão .mcd, .mc2 ou .bin fora de um .zip pode recebê-los.
+# One line. English: OPL VMC folders
+T_SET_VMC_FOLDERS = Pastas de VMC do OPL
+# One line. English: Add a folder
+T_VMC_FOLDER_ADD = Adicionar pasta
+# One line. English: Device of the folder
+T_VMC_FOLDER_DEVICE = Dispositivo da pasta
+# Button. English: Use this folder
+T_VMC_FOLDER_USE = Usar esta pasta
+# Up to 3 lines. English: This folder is always read.
+T_VMC_FOLDER_FIXED = Esta pasta é sempre lida.
+# Up to 3 lines. English: This folder is already read.
+T_VMC_FOLDER_THERE = Esta pasta já é lida.
+# Up to 3 lines. English: Every device already has a folder.
+T_VMC_FOLDER_ALL = Todos os dispositivos já têm uma pasta.
+# Up to 2 lines. English: Remove this folder from the list?
+T_VMC_FOLDER_REMOVE_ASK = Deseja remover esta pasta da lista?
+# Up to 2 lines. English: Its VMCs are not deleted; they are only no longer shown in SD2Cloud.
+T_VMC_FOLDER_REMOVE_TEXT = Os VMCs dela não serão excluídos; apenas deixarão de aparecer no SD2Cloud.
+# Button. English: Remove
+T_VMC_FOLDER_REMOVE = Remover
+# One line. English: Internal HDD (APA)
+T_VMC_PLACE_APA = HD interno (APA)
+# One line. English: Other folder
+T_VMC_PLACE_OTHER = Outra pasta
+# One line. English: New VMC location
+T_VMC_WHERE = Local do novo VMC
+# Up to 3 lines. English: The VMC and all of its saves will be permanently removed. This action cannot be undone.
+T_DELETE_VMC_TEXT = O VMC e todos os seus saves serão removidos permanentemente. Esta ação não pode ser desfeita.
+# Up to 3 lines. English: This VMC's folder is not available. Check Settings > OPL VMC folders.
+T_VMC_PLACE_GONE = A pasta deste VMC não está disponível. Verifique em Ajustes > Pastas de VMC do OPL.

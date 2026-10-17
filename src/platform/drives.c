@@ -152,20 +152,23 @@ int drive_open(int drive, int ms, char *root, size_t size)
 static struct {
     char partition[33];   /* "" = free */
     unsigned use;         /* when it was last asked for: the oldest one gives its place */
+    int kept;             /* never gives it: cards are read from it (hdd_mount_kept) */
 } pfs[PFS_SLOTS];
 static unsigned pfsUse;
 
-int hdd_mount(const char *partition, char *root, size_t size)
+static int mount(const char *partition, char *root, size_t size, int keep)
 {
     char dev[8], block[48];
-    int i, k = 0;
+    int i, k = -1;
     for (i = 0; i < PFS_SLOTS; i++)
         if (!strcmp(pfs[i].partition, partition))
             break;
     if (i == PFS_SLOTS) {   /* not mounted: the first free place, or the one asked for longest ago */
         for (i = 0; i < PFS_SLOTS && pfs[i].partition[0]; i++)
-            if (pfs[i].use < pfs[k].use)
+            if (!pfs[i].kept && (k < 0 || pfs[i].use < pfs[k].use))
                 k = i;
+        if (i == PFS_SLOTS && k < 0)
+            return -1;
         if (i == PFS_SLOTS)
             i = k;
         snprintf(dev, sizeof(dev), "pfs%d:", i);
@@ -183,9 +186,13 @@ int hdd_mount(const char *partition, char *root, size_t size)
         log_msg("hdd: %s mounted at %s", partition, dev);
     }
     pfs[i].use = ++pfsUse;
+    pfs[i].kept |= keep;
     snprintf(root, size, "pfs%d:/", i);
     return 0;
 }
+
+int hdd_mount(const char *partition, char *root, size_t size) { return mount(partition, root, size, 0); }
+int hdd_mount_kept(const char *partition, char *root, size_t size) { return mount(partition, root, size, 1); }
 
 const char *hdd_partition(const char *path)
 {
@@ -205,6 +212,7 @@ void drives_close(void)
             snprintf(dev, sizeof(dev), "pfs%d:", i);
             fileXioUmount(dev);
             pfs[i].partition[0] = 0;
+            pfs[i].kept = 0;
         }
     /* the disk at rest and the DEV9 off, as OPL leaves them: an IOP reset while ps2hdd still held the disk, with a
      * partition of it mounted, hung a console (the next program never started) */
