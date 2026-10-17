@@ -17,6 +17,7 @@ slot/mc1: 1 saves, 7931904 bytes free
 [script] D
 [script] X
 [script] X
+files: host:SD2Cloud/memcard-restore.mcd copied, 8388608 bytes in N ms
 slot: folder /BASLUS-21065ALPHA made (0)
 slot: /BASLUS-21065ALPHA put into the card in slot 2, 2 file(s)
 mcfs: copy of BASLUS-21065ALPHA from host:SD2Cloud/memcard-restore.mcd to mc1:: 0 in N ms

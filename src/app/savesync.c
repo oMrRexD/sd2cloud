@@ -28,11 +28,17 @@ static int signatures(const card_t *c, int n)
     int i;
     if (mcfs_slot_port(c->path) < 0)
         return mcfs_save_signatures(c->path, sv, n, svSig);
-    for (i = 0; i < n; i++) {
+    for (i = 0; i < n; i++) {   /* (the slot's card is read through mcman, a save at a time: its bar, and a cancel heard) */
         buffer_t psu = {0};
         unsigned long long h = 1469598103934665603ULL;   /* (FNV-1a, 64 bits) */
         size_t k;
         svSig[i] = 0;
+        if (on_progress(i, n))
+            return -1;
+#ifdef DEBUG_BUILD
+        if (i * 2 + 1 >= n)
+            debug_capture_if('J');   /* (script: the screen of the saves being checked, past half of them) */
+#endif
 #ifdef DEBUG_BUILD
         log_msg("signature of %s...", sv[i].folder);
 #endif
@@ -86,12 +92,7 @@ static void sending_show(card_t *c, int i, int k, int m)
     sending.tried = 1;
     save_title(&sending, ic);
     ui_unlock();
-    save_into(c, &sending, T_BACKING_UP);
-    ui_lock();
-    currentN = k;
-    totalN = m;
-    ui_unlock();
-    upload_screen(0, 1);
+    save_sending(c, &sending, k, m);
     if (old)
         icon_free(old);   /* (the screen shows the new one already) */
 #ifdef DEBUG_BUILD
@@ -121,15 +122,19 @@ int saves_backup(card_t *c, const char *folderId)
     static unsigned char go[MCFS_MAX_SAVES];
     char savesId[80] = "", name[160], desc[200], tag[140], hex[17], id[80];
     datetime_t when;
-    int n, i, k, m, sent = 0, r, wasN = currentN, wasTotal = totalN, shown = 0, pending;
+    int n, i, k, m, sent = 0, r, shown = 0, pending;
     u64 start = now_ms();
     if ((n = mcfs_list_saves(c->path, sv, MCFS_MAX_SAVES, NULL)) <= 0)
         return n < 0 ? -1 : 0;
-    if (signatures(c, n) != 0)
+    work_text(T(T_SAVES_CHECKING));   /* (each save read, to tell which changed: a bar for them) */
+    upload_screen(0, n);
+    r = signatures(c, n);
+    work_text(NULL);
+    if (r != 0)
         return -1;
     pending = changed(c, n, go);
     log_msg("%s: %d saves, read in %u ms; %d changed since they were last sent", c->id, n, (unsigned)(now_ms() - start), pending);
-    for (i = 0; i < n && !backupCancelled; i++) {
+    for (i = 0; i < n && !sync_stop(); i++) {
         buffer_t psu = {0};
         if (!go[i])
             continue;
@@ -157,14 +162,10 @@ int saves_backup(card_t *c, const char *folderId)
             sent++;
         }
     }
-    if (shown) {   /* (off the screen, and the count of the cards being sent, if they are, as it was) */
-        save_into_done();
+    if (shown) {   /* (the card's screen again, before the save's icon is let go of) */
+        save_sending_done();
         icon_free(sending.icon);
         memset(&sending, 0, sizeof(sending));
-        ui_lock();
-        currentN = wasN;
-        totalN = wasTotal;
-        ui_unlock();
     }
     state_write();
     return sent;

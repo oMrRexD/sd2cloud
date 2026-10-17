@@ -216,7 +216,7 @@ void safety_screen(void);
  * sent; -1 = they couldn't be */
 int saves_backup(card_t *c, const char *folderId);
 void save_versions_screen(card_t *c, save_view_t *v);   /* "Versions on Drive": one of them put back in its place */
-void memcard_saves_only(void);   /* (backup.c) the Memory Card's saves by themselves, when no card is to be sent */   /* Tools > "Safety copies": each one put back as its card, or deleted */
+int sync_stop(void);            /* (backup.c) the sync was cancelled, or the card on its way skipped: 1 */   /* Tools > "Safety copies": each one put back as its card, or deleted */
 void format_when(int year, int month, int day, int hour, int minute, char *out, size_t size);   /* (format.c) */   /* "Check card": its file system looked through, read only, and what was found */
 /* "New VMC": an OPL VMC made in the microSD's VMC folder, of the sizes the OPL makes (written whole, at once: the OPL
  * doesn't take one whose file is in pieces), with those saves in it (n = 0: empty). 1 = made */
@@ -488,7 +488,7 @@ extern volatile long long shownDone, shownTotal;   /* how far it went */
 
 /* ------------------------------------------------------------ synclist.c */
 /* the cards of the sync under way, in its order, and what became of each */
-enum { SY_WAITING, SY_SENDING, SY_SENT, SY_FAILED, SY_SKIPPED, SY_RESOLVED, SY_OFF };
+enum { SY_WAITING, SY_SENDING, SY_SENT, SY_FAILED, SY_SKIPPED, SY_RESOLVED, SY_OFF, SY_UNCHANGED };
 typedef struct {
     card_t *c;
     int state;   /* SY_*: SKIPPED, RESOLVED and OFF asked from the list (or square) */
@@ -506,5 +506,8 @@ void save_into(const card_t *to, const save_view_t *v, int text);
 int save_progress(int phase, long long done, long long total);
 void save_into_fixed(void);
 void save_into_done(void);
+void work_text(const char *text);   /* what the screen of the card on its way says it does (NULL = sending) */
+void save_sending(const card_t *on, const save_view_t *v, int n, int of);   /* save n of the card's "of", on its way */
+void save_sending_done(void);
 
 #endif

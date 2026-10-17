@@ -23,10 +23,19 @@ static struct {
     u64 repeat;    /* an arrow held: when it moves again */
 } sy;
 
+/* the Memory Cards of a sync: a row each, after the cards, for their saves sent each by itself (the backup by save) */
+static card_t memcards[2];
+
 /* the cards a sync sends (is_selected), in its order: each still to be sent */
 void sync_list_start(int mode)
 {
-    int i;
+    int i, ports[2], np = 0, nm = 0;
+    if (mode != 3 && cfg.save_backup)   /* (asked of the slots before the list is held: it takes a moment) */
+        for (np = memcard_ports(ports), i = 0; i < np; i++) {
+            memcard_pick(ports[i]);
+            if (memcard_there())
+                memcards[nm++] = slotCard;
+        }
     ui_lock();
     for (nSync = i = 0; i < nCards; i++)
         if (is_selected(&cards[i], mode)) {
@@ -37,6 +46,11 @@ void sync_list_start(int mode)
     if (mode == 3 && !nSync && singleCard) {   /* (one that isn't a card of the device: the Memory Card, read whole) */
         syncCards[0].c = (card_t *)singleCard;
         syncCards[0].taken = 0;
+        syncCards[nSync++].state = SY_WAITING;
+    }
+    for (i = 0; i < nm && nSync < MAX_CARDS; i++) {
+        syncCards[nSync].c = &memcards[i];
+        syncCards[nSync].taken = 0;
         syncCards[nSync++].state = SY_WAITING;
     }
     syncListed = mode != 3 && nSync > 1;   /* (a card synced by itself has its own screen only) */
@@ -87,7 +101,7 @@ static int options(void)
 {
     sync_card_t *e = &syncCards[sy.cursor];
     const char *items[3] = {T(T_SKIP), T(T_MARK_RESOLVED), T(T_SYNC_DISABLE)};
-    int k;
+    int k, n = mcfs_slot_port(e->c->path) >= 0 ? 1 : 3;   /* (a Memory Card's saves: only skipped) */
 #ifdef DEBUG_BUILD
     int live = scriptLive;
 #endif
@@ -98,7 +112,7 @@ static int options(void)
 #ifdef DEBUG_BUILD
     scriptLive = 0;   /* (the list waits for its buttons as any other) */
 #endif
-    k = choose(e->c->base, items, 3, 0);
+    k = choose(e->c->base, items, n, 0);
 #ifdef DEBUG_BUILD
     scriptLive = live;
 #endif
@@ -186,8 +200,9 @@ int sync_list_poll(void)
     return (press & PAD_CROSS) ? options() : (press & PAD_SQUARE) ? skip() : 0;
 }
 
-static const int stateText[] = {T_SY_WAITING, T_SY_SENDING, T_SY_SENT, T_SY_FAILED, T_SY_SKIPPED, T_SY_RESOLVED, T_SY_OFF};
-static const u32 stateColor[] = {COLOR_DIM, COLOR_TEXT, COLOR_OK, COLOR_ERROR, COLOR_DIM, 0x6E9AE0, COLOR_DIM};
+static const int stateText[] = {T_SY_WAITING, T_SY_SENDING, T_SY_SENT, T_SY_FAILED, T_SY_SKIPPED, T_SY_RESOLVED, T_SY_OFF,
+                                T_SY_UNCHANGED};
+static const u32 stateColor[] = {COLOR_DIM, COLOR_TEXT, COLOR_OK, COLOR_ERROR, COLOR_DIM, 0x6E9AE0, COLOR_DIM, COLOR_DIM};
 
 /* a card as its row names it: its channel's name, or its game's, or its file's */
 static const char *row_name(const card_t *c)

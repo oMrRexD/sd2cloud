@@ -31,10 +31,7 @@ void igr(void)
         message(COLOR_TITLE, T(T_IGR_TITLE), COLOR_TEXT, T(T_IGR_NOTHING));
         leave(cfg.igr_return);
     }
-    if (n)
-        run_backup(0, 1);
-    else   /* (no card changed: the Memory Card may have, by the backup by save) */
-        memcard_saves_only();
+    run_backup(0, 1);   /* (with no card changed, the Memory Card's row alone: its saves may have) */
     if (!n && !sent && !failed) {
         message(COLOR_TITLE, T(T_IGR_TITLE), COLOR_TEXT, T(T_IGR_NOTHING));
         leave(cfg.igr_return);

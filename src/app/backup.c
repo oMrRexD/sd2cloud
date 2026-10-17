@@ -163,49 +163,50 @@ static const char *saves_sent(int n)
     return t;
 }
 
-/* The backup by save of the Memory Card in the other slot, when it is on and there is one (the automatic sync is
- * after a game it may have saved to) */
-static void memcard_saves(void)
-{
-    char folderId[80];
-    int ports[2], n, i, r;
-    if (!cfg.save_backup)
-        return;
-    n = memcard_ports(ports);
-    for (i = 0; i < n && !backupCancelled; i++) {   /* (with no sd2psx, the ones of both slots) */
-        memcard_pick(ports[i]);
-        if (!memcard_there())
-            continue;
-        r = DRY ? 0 : card_folder(&slotCard, folderId, sizeof(folderId));
-        log_msg("%s: its folder on Drive %s", slotCard.id, r == 0 ? "found" : "not found");
-        if (r == 0)
-            r = saves_backup(&slotCard, folderId);
-        if (r > 0) {
-            add_result(COLOR_OK, "%s: %s", slotCard.base, saves_sent(r));
-            sent++;
-        } else if (r < 0 && !backupCancelled) {
-            add_result(COLOR_ERROR, "%s: %s (%s)", slotCard.base, T(T_UPLOAD_FAILED), googleError);
-            failed++;
-        }
-    }
-}
+/* the sync was cancelled, or the card on its way skipped (what goes by itself, as a card's saves, stops too) */
+int sync_stop(void) { return backupCancelled || backupSkip; }
 
-void memcard_saves_only(void)
+/* A Memory Card's turn in the sync (a row of the list, after the cards, when the backup by save is on): its saves
+ * that changed since they were last sent, each by itself to its Saves folder on Drive */
+static void memcard_turn(int k)
 {
+    card_t *c = syncCards[k].c;
+    char folderId[80];
     int r;
-    nResults = sent = failed = 0;
-    backupCancelled = cancelLatched = 0;
+    sync_set(k, SY_SENDING);
     googleError[0] = 0;
-    rootId[0] = 0;
-    if ((r = DRY ? 0 : ensure_google(!igrMode)) != 0) {
-        if (r > 0) {
-            add_result(COLOR_ERROR, "%s %s", T(r), googleError);
-            failed++;
-        }
+    memcard_pick(mcfs_slot_port(c->path));
+    if (!memcard_there()) {   /* (taken out since the sync started) */
+        sync_set(k, SY_SKIPPED);
         return;
     }
-    memcard_saves();
-    state_write();
+    load_card_icon(&slotCard);
+    upload_screen(0, 1);
+    r = stop_asked() || (!DRY && card_folder(&slotCard, folderId, sizeof(folderId)) != 0) ? -1 : 0;
+    log_msg("%s: its folder on Drive %s", slotCard.id, r == 0 ? "found" : "not found");
+    if (r == 0)
+        r = saves_backup(&slotCard, folderId);
+    if (backupCancelled) {
+        sync_set(k, SY_WAITING);
+        return;
+    }
+    if (backupSkip) {   /* (square, or the list: its saves left out of this sync) */
+        sync_set(k, SY_SKIPPED);
+        left_out(c, SY_SKIPPED, 1);
+        backupSkip = 0;
+        return;
+    }
+    if (r > 0) {
+        sync_set(k, SY_SENT);
+        add_result(COLOR_OK, "%s: %s", c->base, saves_sent(r));
+        sent++;
+    } else if (r == 0)
+        sync_set(k, SY_UNCHANGED);
+    else {
+        sync_set(k, SY_FAILED);
+        add_result(COLOR_ERROR, "%s: %s (%s)", c->base, T(T_UPLOAD_FAILED), googleError);
+        failed++;
+    }
 }
 
 void run_backup(int mode, int rotate)
@@ -248,6 +249,10 @@ void run_backup(int mode, int rotate)
         syncCards[k].taken = 1;
         if (syncCards[k].state != SY_WAITING) {   /* left out on the list before its turn came */
             left_out(c, syncCards[k].state, 1);
+            continue;
+        }
+        if (mcfs_slot_port(c->path) >= 0) {   /* a Memory Card: its saves, each by itself */
+            memcard_turn(k);
             continue;
         }
         sync_set(k, SY_SENDING);
@@ -324,8 +329,6 @@ void run_backup(int mode, int rotate)
         }
         backupSkip = 0;   /* (square while the old backups were deleted: this card was sent already) */
     }
-    if (mode != 3 && !backupCancelled)   /* (a sync of every card, and the automatic one: the Memory Card's saves too) */
-        memcard_saves();
     for (; k < nSync; k++)   /* cancelled: a card resolved or turned off on the list before its turn still is */
         if (syncCards[k].state == SY_RESOLVED || syncCards[k].state == SY_OFF)
             left_out(syncCards[k].c, syncCards[k].state, 0);

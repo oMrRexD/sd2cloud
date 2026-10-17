@@ -911,6 +911,8 @@ T_SAVE_BACKUP_NOTE = 変更されたセーブデータは、Google ドライブ�
 T_SAVES_SENT_N = %d 件のセーブデータをアップロード
 # One line. English: 1 save uploaded
 T_SAVES_SENT_ONE = 1 件のセーブデータをアップロード
+# One line. English: Checking the saves...
+T_SAVES_CHECKING = セーブデータを確認しています...
 # One line. English: the memory card didn't answer
 T_MEMCARD_NO_ANSWER = メモリーカードが応答しませんでした
 # One line. English: Versions on Drive
@@ -1133,6 +1135,8 @@ T_SY_SKIPPED = スキップ
 T_SY_RESOLVED = 解決済み
 # One line. English: Sync disabled
 T_SY_OFF = 同期無効
+# One line. English: No changes
+T_SY_UNCHANGED = 変更なし
 # One line. English: Mark as resolved
 T_MARK_RESOLVED = 解決済みにする
 # Up to 3 lines. English: marked as resolved

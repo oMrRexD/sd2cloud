@@ -156,6 +156,7 @@ volatile long long shownDone, shownTotal;
 /* a save on its way into a card (save_into): the same screen, saying that instead of the upload; workFixed = what
  * is being done can't be given up any more, so the legend doesn't offer to */
 const char *workText;
+static int itemN, itemTotal;   /* a save of a card's being sent, of how many: "N of M" (0 = the card count, currentN) */
 int workFixed;
 
 /* the model a card that has no save of its own to turn shows: the device's memory card, or the console's own for the
@@ -223,8 +224,8 @@ void scene_upload(float t)
     ui_text_fit(FONT_TEXT, x, y, w, COLOR_TEXT, workText ? workText : T(T_BACKING_UP));
     y += ui_line_height(FONT_TEXT) + 12;
     look_bar(x, y, w, total ? (int)(done * 1000 / total) : 0);
-    if (totalN > 1) {
-        snprintf(s, sizeof(s), T(T_UPLOADING), currentN, totalN);
+    if (itemTotal > 1 || totalN > 1) {
+        snprintf(s, sizeof(s), T(T_UPLOADING), itemTotal ? itemN : currentN, itemTotal ? itemTotal : totalN);
         ui_text_right(FONT_SMALL, x + w, y + 12, COLOR_DIM, s);
     }
     if (eta.left >= 10) {   /* (under the bar's start, as the count is under its end) */
@@ -388,6 +389,42 @@ void save_into_fixed(void)
 {
     ui_lock();
     workFixed = 1;
+    ui_unlock();
+}
+
+/* -------- a card's saves sent each by itself (the backup by save), within a sync or by themselves: the screen of the
+ * card goes on (its count of cards too, as the list of the sync has it), with what is being done (work_text: the
+ * saves checked) or the save on its way, its icon and its name, and "N of M" of the saves */
+
+void work_text(const char *text)
+{
+    ui_lock();
+    workText = text;
+    ui_unlock();
+}
+
+void save_sending(const card_t *on, const save_view_t *v, int n, int of)
+{
+    char name[100];
+    save_name(v, name, sizeof(name));
+    ui_lock();
+    current = on;
+    saveIcon = v->icon ? v->icon : cubeIcon;
+    snprintf(saveTitle, sizeof(saveTitle), "%s", name);
+    workText = NULL;
+    iconStart = now_ms();
+    itemN = n;
+    itemTotal = of;
+    ui_unlock();
+    upload_screen(0, 1);
+}
+
+void save_sending_done(void)
+{
+    ui_lock();
+    saveIcon = NULL;   /* (the card's own icon again, for what still comes of it) */
+    workText = NULL;
+    itemN = itemTotal = 0;
     ui_unlock();
 }
 

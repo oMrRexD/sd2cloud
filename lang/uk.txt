@@ -910,6 +910,8 @@ T_SAVE_BACKUP_NOTE = Кожне змінене збереження також �
 T_SAVES_SENT_N = %d збер. надіслано
 # One line. English: 1 save uploaded
 T_SAVES_SENT_ONE = 1 збереження надіслано
+# One line. English: Checking the saves...
+T_SAVES_CHECKING = Перевірка збережень...
 # One line. English: the memory card didn't answer
 T_MEMCARD_NO_ANSWER = карта пам'яті не відповіла
 # One line. English: Versions on Drive
@@ -1132,6 +1134,8 @@ T_SY_SKIPPED = Пропущено
 T_SY_RESOLVED = Позначено як вирішене
 # One line. English: Sync disabled
 T_SY_OFF = Синхронізацію вимкнено
+# One line. English: No changes
+T_SY_UNCHANGED = Без змін
 # One line. English: Mark as resolved
 T_MARK_RESOLVED = Позначити як вирішене
 # Up to 3 lines. English: marked as resolved

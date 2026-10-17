@@ -910,6 +910,8 @@ T_SAVE_BACKUP_NOTE = Cada partida modificada también se enviará individualment
 T_SAVES_SENT_N = %d partidas subidas
 # One line. English: 1 save uploaded
 T_SAVES_SENT_ONE = 1 partida subida
+# One line. English: Checking the saves...
+T_SAVES_CHECKING = Comprobando las partidas...
 # One line. English: the memory card didn't answer
 T_MEMCARD_NO_ANSWER = la Memory Card no respondió
 # One line. English: Versions on Drive
@@ -1132,6 +1134,8 @@ T_SY_SKIPPED = Omitida
 T_SY_RESOLVED = Marcada como resuelta
 # One line. English: Sync disabled
 T_SY_OFF = Sincronización desactivada
+# One line. English: No changes
+T_SY_UNCHANGED = Sin cambios
 # One line. English: Mark as resolved
 T_MARK_RESOLVED = Marcar como resuelta
 # Up to 3 lines. English: marked as resolved

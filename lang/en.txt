@@ -914,6 +914,8 @@ T_SAVES_SENT_N = %d saves uploaded
 # One line.
 T_SAVES_SENT_ONE = 1 save uploaded
 # One line.
+T_SAVES_CHECKING = Checking the saves...
+# One line.
 T_MEMCARD_NO_ANSWER = the memory card didn't answer
 # One line.
 T_SAVE_VERSIONS = Versions on Drive
@@ -1135,6 +1137,8 @@ T_SY_SKIPPED = Skipped
 T_SY_RESOLVED = Marked as resolved
 # One line.
 T_SY_OFF = Sync disabled
+# One line.
+T_SY_UNCHANGED = No changes
 # One line.
 T_MARK_RESOLVED = Mark as resolved
 # Up to 3 lines.

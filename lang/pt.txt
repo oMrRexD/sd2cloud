@@ -908,6 +908,8 @@ T_SAVE_BACKUP_NOTE = Cada save alterado também será enviado individualmente ao
 T_SAVES_SENT_N = %d saves enviados
 # One line. English: 1 save uploaded
 T_SAVES_SENT_ONE = 1 save enviado
+# One line. English: Checking the saves...
+T_SAVES_CHECKING = Verificando os saves...
 # One line. English: the memory card didn't answer
 T_MEMCARD_NO_ANSWER = o Memory Card não respondeu
 # One line. English: Versions on Drive
@@ -1130,6 +1132,8 @@ T_SY_SKIPPED = Pulado
 T_SY_RESOLVED = Marcado como resolvido
 # One line. English: Sync disabled
 T_SY_OFF = Sincronização desativada
+# One line. English: No changes
+T_SY_UNCHANGED = Sem alterações
 # One line. English: Mark as resolved
 T_MARK_RESOLVED = Marcar como resolvido
 # Up to 3 lines. English: marked as resolved
