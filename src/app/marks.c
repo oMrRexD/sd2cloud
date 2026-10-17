@@ -126,7 +126,7 @@ static void scene_mark(float t)
     ui_text_center(FONT_TEXT, CARD_CX, CARD_Y + LOOK_CARD_H + 2, marks.n ? COLOR_OK : COLOR_DIM, s);
     if (mk.g.tab == TAB_FILES) {   /* a device: the marked saves can go to a folder of it; the Memory Card, into it */
         if (tabs_device(&mk.g) < 0)
-            look_card(CARD_X, CARD_Y, NULL, T(T_MEMCARD));
+            look_card(CARD_X, CARD_Y, NULL, standalone ? "" : T(T_MEMCARD));
         return;
     }
     if (mk.g.n && mk.g.idx[mk.g.cursor] == ROW_NEW) {   /* "New card": the card to be, under the count */
@@ -296,12 +296,14 @@ shown:
                 r = 0;
         } else if (mk.g.tab == TAB_FILES && tabs_device(&mk.g) < 0 && (b & PAD_START)) {   /* into the Memory Card */
             sound_play(marks.n ? SND_CONFIRM : SND_BACK);
-            if (marks.n) {
+            memcard_pick(tabs_memcard_port(&mk.g));
+            if (marks.n && memcard_there()) {
                 marks.into = &slotCard;
                 r = 1;
             }
         } else if (mk.g.tab == TAB_FILES && tabs_device(&mk.g) < 0) {   /* its saves, to mark some */
             sound_play(SND_CONFIRM);
+            memcard_pick(tabs_memcard_port(&mk.g));
             memcard_screen();
             if (marks.done)
                 r = 1;

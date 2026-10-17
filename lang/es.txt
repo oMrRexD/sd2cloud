@@ -914,6 +914,10 @@ T_SAVE_VERSION_TEXT = La partida actual se reemplazará por esta versión.
 T_SAVE_VERSION_DONE = Versión restaurada.
 # Up to 2 lines. English: Unable to restore the version.
 T_SAVE_VERSION_FAILED = No se pudo restaurar la versión.
+# One line. English: Memory Card %d
+T_MEMCARD_SLOT = Memory Card %d
+# Up to 5 lines. English: Move saves between the Memory Cards and the other cards, and back them up to Google Drive.
+T_MEMCARD_HINT_ALONE = Transfiera partidas entre las Memory Cards y las demás tarjetas y haga copias en Google Drive.
 # Up to 3 lines. English: Choose an ELF...
 T_PICK_ELF = Elegir un ELF...
 # Up to 3 lines. English: Unable to read this memory card.

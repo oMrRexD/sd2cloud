@@ -156,7 +156,7 @@ static void scene_menu(float t)
                          {BUTTON_START, T(T_SETTINGS)}};
         look_legend(l, 4, 2);
         if (tabs_device(&menu.g) < 0) {   /* (the Memory Card) */
-            memcard_hint();
+            memcard_hint(tabs_memcard_port(&menu.g));
             return;
         }
         ui_text_center(FONT_TEXT, CARD_CX, 82, 0x7E8AA0, T(deviceText[tabs_device(&menu.g)]));
@@ -452,8 +452,10 @@ void manual(void)
             card_screen(&allGames);   /* "All saves" */
         } else if ((b & PAD_CROSS) && menu.g.tab == TAB_FILES) {
             sound_play(SND_CONFIRM);
-            if (tabs_device(&menu.g) < 0)
+            if (tabs_device(&menu.g) < 0) {
+                memcard_pick(tabs_memcard_port(&menu.g));
                 memcard_screen();
+            }
             else
                 files_screen(tabs_device(&menu.g));
             ui_lock();

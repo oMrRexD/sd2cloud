@@ -917,6 +917,10 @@ T_SAVE_VERSION_TEXT = The current save will be replaced by this version.
 T_SAVE_VERSION_DONE = Version restored.
 # Up to 2 lines.
 T_SAVE_VERSION_FAILED = Unable to restore the version.
+# One line.
+T_MEMCARD_SLOT = Memory Card %d
+# Up to 5 lines.
+T_MEMCARD_HINT_ALONE = Move saves between the Memory Cards and the other cards, and back them up to Google Drive.
 # Up to 3 lines.
 T_PICK_ELF = Choose an ELF...
 # Up to 3 lines.

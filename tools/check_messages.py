@@ -204,7 +204,7 @@ PLACE = {
     # the Files group: the devices in the list, what the group is for on the right, a folder that has nothing to show
     "T_DEV_SD": ("text", 172, 1), "T_DEV_USB": ("text", 172, 1), "T_DEV_HDD": ("text", 172, 1), "T_DEV_MX4SIO": ("text", 172, 1), "T_FILES_HINT": ("small", 212, 5),
     # the Memory Card: a row of the Files group (and a card's name in the questions), and what it is for on the right
-    "T_MEMCARD": ("text", 140, 1), "T_MEMCARD_HINT": ("small", 212, 5),   # (140: also on the picture of a card)
+    "T_MEMCARD": ("text", 140, 1), "T_MEMCARD_HINT": ("small", 212, 5), "T_MEMCARD_HINT_ALONE": ("small", 212, 5),   # (140: also on the picture of a card)
     "T_MEMCARD_READING": ("text", DIALOG, 1), "T_MEMCARD_READ_FAILED": ("text", DIALOG, 3),
     "T_CARD_FILE_READ_ONLY": ("text", DIALOG, 4),
     "T_DIR_ERROR": ("text", 500, 1), "T_DIR_EMPTY": ("text", 500, 1),
@@ -317,7 +317,9 @@ PLACE = {
     "T_SET_SAVE_BACKUP": ("text", 300, 1), "T_SAVE_BACKUP_ON": ("text", 150, 1), "T_SAVE_BACKUP_OFF": ("text", 150, 1),
     "T_SAVE_BACKUP_NOTE": ("text", WIDE, 4), "T_SAVES_SENT_N": ("small", 400, 1), "T_SAVE_VERSIONS": ("text", 240, 1),
     "T_SAVE_NO_VERSIONS": ("text", 296, 3), "T_SAVE_VERSION_ASK": ("text", WIDE, 2), "T_SAVE_VERSION_TEXT": ("text", WIDE, 2),
-    "T_SAVE_VERSION_DONE": ("text", 296, 1), "T_SAVE_VERSION_FAILED": ("text", 296, 2), "T_RENAME_VMC_TEXT": ("text", WIDE, 3), "T_MIGRATE_DELETE_ASK": ("text", WIDE, 2), "T_MIGRATE_DELETE_TEXT": ("text", WIDE, 3),
+    "T_SAVE_VERSION_DONE": ("text", 296, 1), "T_SAVE_VERSION_FAILED": ("text", 296, 2),
+    # with no sd2psx, a Memory Card by its slot: a row of the Files group, and its name on the screens
+    "T_MEMCARD_SLOT": ("text", 172, 1), "T_RENAME_VMC_TEXT": ("text", WIDE, 3), "T_MIGRATE_DELETE_ASK": ("text", WIDE, 2), "T_MIGRATE_DELETE_TEXT": ("text", WIDE, 3),
 }
 PARAGRAPH = ("text", DIALOG, 3)     # error messages and the rest: up to 3 lines in a box
 # what only an sd2psx is ever told (being moved to another card, its boot cards, one more channel for a folder): not

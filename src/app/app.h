@@ -67,7 +67,9 @@ typedef struct {
     int keep[TABS][2];        /* each group's cursor and top: switching back lands on the same card */
     const card_t *skip;       /* a card left out (the one a save is copied from) */
     int files;                /* the Files group is offered too, with the devices */
-    int memcard;              /* the Files group offers the Memory Card (memcard.c), after the devices if they are there */
+    int memcard;              /* the Files group offers the Memory Card (memcard.c), after the devices if they are there:
+                                 how many (with no sd2psx, one per slot), and the slots (mcPorts) */
+    int mcPorts[2];
     int games[MAX_CARDS], nGames;         /* the game cards, by game and then as they come in cards[] */
     int first[MAX_CARDS + 1], folders;    /* where each folder starts in games[] (first[folders] = nGames) */
     char label[MAX_CARDS][64];            /* each folder's name, cut to fit the list */
@@ -182,9 +184,15 @@ void files_screen(int dev);
 extern card_t slotCard;                  /* the Memory Card, in the console's other slot */
 int memcard_there(void);
 void memcard_screen(void);
-void memcard_hint(void);
+void memcard_hint(int port);
 void memcard_upload(void);
-#define MEMCARD_ID "slot/memcard"   /* the Memory Card's backups on Drive (and in the state) */
+/* whose backups the Memory Card's are, on Drive and in the state: "slot/memcard" (the slot the device isn't in);
+ * with no sd2psx, "slot/memcard1" or 2, by its slot */
+const char *memcard_id(void);
+/* the slots with a Memory Card that can be offered (with an sd2psx, the other one; with none, both): how many, their
+ * ports in ports. memcard_pick: which of them memcard_there takes (slotCard) */
+int memcard_ports(int ports[2]);
+void memcard_pick(int port);
 void memcard_history(void);         /* its backups on Drive, to put one back */
 int memcard_restore(card_t *c, const drive_file_t *f);   /* that backup's saves into it, asked first. 1 = done */               /* the whole card, as a backup of its own on Drive */
 
@@ -227,6 +235,7 @@ struct dst_s {
     long long need;                   /* the save's size (0 = the card is only being picked, nothing goes into it) */
     long long freeBytes[MAX_CARDS];   /* each card's free space, once read (-2 = not yet, -1 = unknown) */
     long long memFree;                /* the Memory Card's, the same way */
+    int memPort;                      /* (of the slot it was read for) */
     icon_t *icon;                     /* the selected game card's icon, once read */
     int iconCard;                     /* which card that icon is of (-1 = none) */
     char newName[56];                 /* on "New card": the card it would make ("" = not known before asking) */
@@ -420,6 +429,9 @@ void scroll_to(int cursor, int *top);
 extern const int deviceText[FDEVS];
 /* the devices the Files group lists (FDEV_*), in order; how many */
 int fdev_list(int out[FDEVS]);
+int tabs_memcard_port(const tabs_t *g);
+int memcard_rows(tabs_t *g);   /* (tabs.c) the Memory Cards a list offers: how many, their slots in g->mcPorts */   /* the slot of the Memory Card the cursor is on (-1 = not on one) */
+int storage_text(void);   /* with no sd2psx: the name of the drive the program works from (T_DEV_USB...) */
 int tab_of(const card_t *c);
 const char *game_of(const card_t *c);
 int tabs_on_folders(const tabs_t *g);

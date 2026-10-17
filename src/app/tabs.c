@@ -118,11 +118,18 @@ static int mx4sio_listed(void)
     return listed;
 }
 
+int storage_text(void)
+{
+    return !strncmp(sdRoot, "mx4sio", 6) ? T_DEV_MX4SIO : !strncmp(sdRoot, "mc", 2) ? T_MEMCARD
+           : !strncmp(sdRoot, "ata", 3) || !strncmp(sdRoot, "pfs", 3) || !strncmp(sdRoot, "hdd", 3) ? T_DEV_HDD : T_DEV_USB;
+}
+
 int fdev_list(int out[FDEVS])
 {
     int d, n = 0;
     for (d = 0; d < FDEVS; d++)
-        if (d != FDEV_MX4SIO || mx4sio_listed())
+        if ((d != FDEV_MX4SIO || mx4sio_listed()) && (d != FDEV_SD || !standalone))   /* (no sd2psx: its device is
+                                                                                             one of the others) */
             out[n++] = d;
     return n;
 }
@@ -344,7 +351,7 @@ void tabs_show(tabs_t *g, int tab)
         }
     }
     if (tab == TAB_FILES && g->files)   /* (one put in or taken out meanwhile: asked again each time) */
-        g->memcard = g->skip != &slotCard && memcard_there();
+        g->memcard = memcard_rows(g);
     if (g->files || g->memcard)
         g->count[TAB_FILES] = (g->files ? fdev_list(list) : 0) + g->memcard;
     if (tab == TAB_FILES)
@@ -375,6 +382,22 @@ void tabs_redo(tabs_t *g)
     scroll_to(g->cursor, &g->top);
 }
 
+/* the Memory Cards a list offers (the one the saves come from left out): how many; their slots in g->mcPorts */
+int memcard_rows(tabs_t *g)
+{
+    int ports[2], n = memcard_ports(ports), i, k = 0;
+    for (i = 0; i < n; i++)
+        if (!(g->skip == &slotCard && mcfs_slot_port(slotCard.path) == ports[i]))
+            g->mcPorts[k++] = ports[i];
+    return k;
+}
+
+int tabs_memcard_port(const tabs_t *g)
+{
+    int list[FDEVS], n = g->files ? fdev_list(list) : 0;
+    return g->tab == TAB_FILES && g->cursor >= n && g->cursor - n < g->memcard ? g->mcPorts[g->cursor - n] : -1;
+}
+
 /* from scratch, on the first group that has cards; skip = a card to leave out; files = with the Files group (with
  * ui_lock held) */
 void tabs_init(tabs_t *g, const card_t *skip, int files)
@@ -383,7 +406,7 @@ void tabs_init(tabs_t *g, const card_t *skip, int files)
     memset(g, 0, sizeof(*g));
     g->skip = skip;
     g->files = files;
-    g->memcard = files && skip != &slotCard && memcard_there();
+    g->memcard = files ? memcard_rows(g) : 0;
     g->open = -1;
     g->moved = -1;
     tabs_show(g, TAB_CARDS);
@@ -480,11 +503,16 @@ static const tabs_t *rowsOf;   /* the groups list_rows is drawing (its callbacks
 
 static const char *tabs_text(int i, char *buf)
 {
-    (void)buf;
     {
         int list[FDEVS], n = rowsOf->files ? fdev_list(list) : 0;
+        if (rowsOf->tab == TAB_FILES && i < n)
+            return T(deviceText[list[i]]);
+        if (rowsOf->tab == TAB_FILES && standalone && i - n < rowsOf->memcard) {   /* (with no sd2psx, each by its slot) */
+            snprintf(buf, 64, T(T_MEMCARD_SLOT), rowsOf->mcPorts[i - n] + 1);
+            return buf;
+        }
         if (rowsOf->tab == TAB_FILES)
-            return i < n ? T(deviceText[list[i]]) : T(T_MEMCARD);
+            return T(T_MEMCARD);
     }
     if (rowsOf->idx[i] < 0)
         return T(rowsOf->idx[i] != ROW_NEW ? T_ALL_SAVES : rowsOf->tab == TAB_VMC ? T_NEW_VMC : T_NEW_CARD);

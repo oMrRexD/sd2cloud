@@ -915,6 +915,10 @@ T_SAVE_VERSION_TEXT = 現在のセーブデータはこのバージョンで置�
 T_SAVE_VERSION_DONE = バージョンを復元しました。
 # Up to 2 lines. English: Unable to restore the version.
 T_SAVE_VERSION_FAILED = バージョンを復元できませんでした。
+# One line. English: Memory Card %d
+T_MEMCARD_SLOT = メモリーカード %d
+# Up to 5 lines. English: Move saves between the Memory Cards and the other cards, and back them up to Google Drive.
+T_MEMCARD_HINT_ALONE = メモリーカードとほかのカードの間でセーブデータを移動し、Google ドライブにバックアップします。
 # Up to 3 lines. English: Choose an ELF...
 T_PICK_ELF = ELF を選択...
 # Up to 3 lines. English: Unable to read this memory card.

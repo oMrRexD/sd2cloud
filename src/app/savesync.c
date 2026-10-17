@@ -13,7 +13,7 @@ static mcfs_save_t sv[MCFS_MAX_SAVES];
 static unsigned long long svSig[MCFS_MAX_SAVES];
 
 /* whose saves they are, for the state and on Drive: the Memory Card is one, whichever slot it is in */
-static const char *owner_of(const card_t *c) { return mcfs_slot_port(c->path) >= 0 ? MEMCARD_ID : c->id; }
+static const char *owner_of(const card_t *c) { return mcfs_slot_port(c->path) >= 0 ? memcard_id() : c->id; }
 
 /* what a save's versions are tagged with on Drive (google_list lists them by it) */
 static void save_tag(const card_t *c, const char *folder, char *out, size_t size)

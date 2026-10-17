@@ -21,6 +21,9 @@ void i18n_select(const char *language);    /* "auto" (the PS2's language) or a l
 const char *T(int id);
 /* the texts name the sd2psx: on another device, they name that one instead (once, before the first screen) */
 void i18n_device(const char *name);
+/* with no sd2psx, the texts that say "MMCE" name the drive the cards are on instead: text = the text that is its name
+ * (T_DEV_USB...), in each language */
+void i18n_storage(int text);
 int i18n_count(void);                       /* the languages there are, for the settings: */
 const char *i18n_code(int k);               /* each one's code */
 const char *i18n_name(int k);               /* and its name, in itself ("Español") */

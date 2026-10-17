@@ -914,6 +914,10 @@ T_SAVE_VERSION_TEXT = Поточне збереження буде заміне�
 T_SAVE_VERSION_DONE = Версію відновлено.
 # Up to 2 lines. English: Unable to restore the version.
 T_SAVE_VERSION_FAILED = Не вдалося відновити версію.
+# One line. English: Memory Card %d
+T_MEMCARD_SLOT = Картка пам’яті %d
+# Up to 5 lines. English: Move saves between the Memory Cards and the other cards, and back them up to Google Drive.
+T_MEMCARD_HINT_ALONE = Переносьте збереження між картками пам’яті та іншими картками й робіть копії в Google Drive.
 # Up to 3 lines. English: Choose an ELF...
 T_PICK_ELF = Виберіть ELF...
 # Up to 3 lines. English: Unable to read this memory card.

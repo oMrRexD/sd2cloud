@@ -155,37 +155,62 @@ int i18n_japanese(void)
     return langs[current].japanese;
 }
 
-void i18n_device(const char *name)
+/* s with every "old" in it made "name": a new string (NULL = it has none, or no memory) */
+static char *replaced(const char *s, const char *old, const char *name)
 {
-    static const char old[] = "sd2psx";
+    const char *p;
+    char *out, *q;
+    size_t n = 0, len = strlen(old);
+    for (p = s; p && (p = strstr(p, old)) != NULL; p += len)
+        n++;
+    if (!n || !(out = malloc(strlen(s) + n * strlen(name) + 1)))
+        return NULL;
+    for (p = s, q = out; *p;)
+        if (!strncmp(p, old, len)) {
+            strcpy(q, name);
+            q += strlen(name);
+            p += len;
+        } else
+            *q++ = *p++;
+    *q = 0;
+    return out;
+}
+
+static char deviceName[32] = "sd2psx";
+static int storageText;   /* the text that names the drive the cards are on, instead of "MMCE" (0 = the MMCE) */
+
+/* every language's texts again, with the device's name and the drive's */
+static void rename_all(void)
+{
     int k, id;
     load();
     for (k = 0; k < nLangs; k++)
-        for (id = 1; id < T_COUNT; id++) {   /* (the ones of the device before) */
+        for (id = 1; id < T_COUNT; id++) {
+            char *a, *b;
             free((char *)langs[k].renamed[id]);
             langs[k].renamed[id] = NULL;
-        }
-    if (!strcmp(name, old))
-        return;
-    for (k = 0; k < nLangs; k++)
-        for (id = 1; id < T_COUNT; id++) {
-            const char *s = langs[k].text[id], *p;
-            char *out, *q;
-            size_t n = 0;
-            for (p = s; p && (p = strstr(p, old)) != NULL; p += sizeof(old) - 1)
-                n++;
-            if (!n || !(out = malloc(strlen(s) + n * strlen(name) + 1)))
+            if (!langs[k].text[id])
                 continue;
-            for (p = s, q = out; *p;)
-                if (!strncmp(p, old, sizeof(old) - 1)) {
-                    strcpy(q, name);
-                    q += strlen(name);
-                    p += sizeof(old) - 1;
-                } else
-                    *q++ = *p++;
-            *q = 0;
-            langs[k].renamed[id] = out;
+            a = strcmp(deviceName, "sd2psx") ? replaced(langs[k].text[id], "sd2psx", deviceName) : NULL;
+            b = storageText && langs[k].text[storageText] ? replaced(a ? a : langs[k].text[id], "MMCE", langs[k].text[storageText]) : NULL;
+            if (b) {
+                free(a);
+                a = b;
+            }
+            langs[k].renamed[id] = a;
         }
+}
+
+void i18n_device(const char *name)
+{
+    snprintf(deviceName, sizeof(deviceName), "%s", name);
+    rename_all();
+}
+
+void i18n_storage(int text)
+{
+    storageText = text;
+    rename_all();
 }
 
 const char *T(int id)

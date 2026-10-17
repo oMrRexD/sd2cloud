@@ -21,7 +21,8 @@ int mc_root_signature(int port, char hex[65]);   /* mcfs_root_signature of the c
  * can't be asked), deleted (0 = gone), and put there from a .psu, each file read back and with the dates it had
  * (MCFS_OK, or MCFS_ERR_*: EXISTS = the card has that folder, FULL = no room; nothing of it is left then) */
 int mc_slot(void);                               /* the slot the device is in */
-int mc_other_slot(void);                         /* the other one, when a formatted PS2 memory card is in it; else -1 */
+int mc_other_slot(void);
+int mc_card_in(int port);   /* that slot (0 or 1) has a formatted PS2 memory card: its port, else -1 */                         /* the other one, when a formatted PS2 memory card is in it; else -1 */
 int mc_has_folder(int port, const char *folder);
 int mc_delete_save(int port, const char *folder);
 int mc_put_save(int port, const char *psu);

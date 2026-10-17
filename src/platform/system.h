@@ -10,6 +10,11 @@ extern char appPath[260];   /* the program itself, as it was started: mmce?:/APP
                                whichever slot the sd2psx is in). Kept in the settings for the IGR helper */
 /* the program was started from another device (USB, MX4SIO...) and there is no SD2Cloud on the microSD to take
  * over: appDir is then where it would be on the microSD (APPS/SD2Cloud), which is where an update installs it */
+/* No sd2psx answers in either slot: the program works from the device it was started from (a USB drive, an MX4SIO,
+ * the hard disk, a memory card). sdRoot is that device's root (on a memory card: the card's) and dataDir its
+ * SD2Cloud/ (on a memory card, the folder the program is in); its cards are that device's, when it has an sd2psx's or a
+ * MemCard PRO2's folders (a microSD in a card reader), and its VMCs; the Memory Cards are those of both slots */
+extern int standalone;
 extern int appElsewhere;   /* the program is on a device other than the sd2psx and a memory card (USB, MX4SIO, HDD) */
 extern int appTookOver;     /* started by a copy of the program on another device, which handed over to this one */
 /* the program was started from a save folder of a memory card (the Save Application System package) and there is no

@@ -62,9 +62,11 @@ void dest_info(void)
     card_t *c = tabs_card(&dst.g);
     icon_t *ic;
     int k;
-    if (dst.g.tab == TAB_FILES && tabs_device(&dst.g) < 0 && dst.memFree == -2) {   /* (the Memory Card's) */
-        long long f = -1;
-        if (mcfs_list_saves(slotCard.path, NULL, 0, &f) < 0)
+    if (dst.g.tab == TAB_FILES && tabs_device(&dst.g) < 0 && (dst.memFree == -2 || dst.memPort != tabs_memcard_port(&dst.g))) {
+        long long f = -1;   /* (the Memory Card's: of the slot the cursor is on) */
+        dst.memPort = tabs_memcard_port(&dst.g);
+        memcard_pick(dst.memPort);
+        if (!memcard_there() || mcfs_list_saves(slotCard.path, NULL, 0, &f) < 0)
             f = -1;
         ui_lock();
         dst.memFree = f;
@@ -116,11 +118,10 @@ card_t *choose_dest(const card_t *from, int title, long long need, const char *s
     if (again)
         goto shown;
     tabs_init(&dst.g, from, 0);
-    if (!dst.g.memcard && from != &slotCard && memcard_there()) {   /* (moved or installed into it too) */
-        dst.g.memcard = 1;
+    if (!dst.g.memcard && (dst.g.memcard = memcard_rows(&dst.g)) != 0)   /* (moved or installed into it too) */
         tabs_show(&dst.g, dst.g.tab);
-    }
     dst.memFree = -2;
+    dst.memPort = -1;
     if (save && save_game_id(save, id)) {
         game_folder(id, dst.g.newGame, sizeof(dst.g.newGame));
         /* (counted again: the Games group may be there only for this, and is then the one to open on) */
@@ -162,7 +163,7 @@ shown:
             continue;
         }
         if ((b & PAD_CROSS) && dst.g.tab == TAB_FILES && tabs_device(&dst.g) < 0) {   /* the Memory Card */
-            if (dst.memFree == -2)
+            if (dst.memFree == -2 || dst.memPort != tabs_memcard_port(&dst.g))
                 dest_info();
             if (dst.memFree >= 0 && dst.memFree < dst.need) {   /* (no room: said on the screen) */
                 sound_play(SND_BACK);

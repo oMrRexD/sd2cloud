@@ -158,6 +158,13 @@ SCENARIOS = [
     # Card's, in the other slot. Each save's signature is kept in the state, and a save as it was sent isn't sent again)
     {"name": "save-backup", "what": "the backup by save: each card's saves, and the Memory Card's, sent one by one",
      "cards": CARDS, "memcard": "memcard.ps2", "settings": "[cards]\r\nsaves = yes\r\n", "script": "BwC"},
+    # (no sd2psx: standalone.txt makes host: a drive the program was started from, with no device in the slots. Its
+    # VMCs are its cards, the Memory Cards of both slots are in the Files group, and nothing is taken as in use)
+    {"name": "standalone", "what": "no sd2psx: the drive's VMCs as cards, the Memory Cards of both slots in Files",
+     "files": {"SD2Cloud/standalone.txt": b"x", "VMC/generic_0.bin": "game.mcd"}, "memcard": "memcard.ps2",
+     "script": ">C"},
+    {"name": "standalone-memcard", "what": "no sd2psx: the Memory Card of slot 2 opened from its row in Files",
+     "files": {"SD2Cloud/standalone.txt": b"x"}, "memcard": "memcard.ps2", "script": ">DDDXC"},
     {"name": "sync-resolved", "what": "a card marked as resolved is left out of the automatic sync, until it is sent",
      "cards": CARDS, "files": {"SD2Cloud/state-debug.ini": RESOLVED}, "script": "BwC"},
     {"name": "card-sync-toggle", "what": "a card's sync turned off in its options, and on again", "cards": CARDS,

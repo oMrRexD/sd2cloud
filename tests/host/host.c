@@ -19,6 +19,7 @@ char dataDir[32] = "sd/SD2Cloud/";
 static const device_t sd2psx = {"sd2psx", "sd2psx", "MemoryCards/PS2", ".mcd", "Card", 1, 1, 64};
 const device_t *dev = &sd2psx;
 int cardTold = 1;
+int standalone;
 
 /* the log: on the screen when SD2CLOUD_TEST_LOG is set, to see what a failing test did */
 void log_raw(const char *d, size_t n)

@@ -615,6 +615,8 @@ int helper_present(void)
 {
     if (appOnCard)
         return card_app_helper();
+    if (standalone)   /* (no sd2psx, and the program on another device: the helper wouldn't find it) */
+        return 0;
     /* the helper only starts SD2Cloud from the microSD: with this copy started from another device and none there,
      * installing it would do nothing */
     return 1;
@@ -793,23 +795,24 @@ int card_app_update(const buffer_t *app, const buffer_t *helper, const char *ver
    mcman's calls: its folders and files with their modes and dates, as a card has them, a file of it read, a .psu
    written into it (mc_put_save) and a save deleted (mc_delete_save). */
 
-int mc_other_slot(void)
+int mc_card_in(int port)
 {
-    int port = 1 - mc_slot(), type = 0, freeKb = 0, format = 0, r;
-    if (memcard_start() != 0)
+    static int told[2] = {-100, -100};
+    int type = 0, freeKb = 0, format = 0, r, got;
+    if (port < 0 || port > 1 || memcard_start() != 0)
         return -1;
-    static int told = -100;
-    int got;
     mcGetInfo(port, 0, &type, &freeKb, &format);
     got = mc_wait();   /* (0, or -1: another card than when it was last asked; both come with what it is) */
     r = (got == 0 || got == -1) && type == 2 && format ? port : -1;
-    if (r != told) {   /* (said when it changes: it is asked each time the Files group is shown) */
-        told = r;
+    if (r != told[port]) {   /* (said when it changes: it is asked each time the Files group is shown) */
+        told[port] = r;
         log_msg("memory card: slot %d %s (%d: type %d, formatted %d, %d KB free)", port + 1, r >= 0 ? "has one" : "has none",
                 got, type, format, freeKb);
     }
     return r;
 }
+
+int mc_other_slot(void) { return mc_card_in(1 - mc_slot()); }
 
 static int slot_dir(int port, const char *folder, unsigned char (*ent)[MCFS_ENT], int max)
 {

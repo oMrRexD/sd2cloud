@@ -6,21 +6,57 @@
 #include "app.h"
 
 card_t slotCard;
+static int picked = -1;   /* the slot of the one asked for (memcard_pick; -1 = the first there is) */
 
-/* Is there one (a formatted PS2 memory card in the other slot)? 1 = yes, and slotCard is it. Asked each time it may be
- * offered: a card is put in and taken out while the program is open */
+int memcard_ports(int ports[2])
+{
+    int n = 0, p;
+    if (!standalone) {   /* (the slot the device isn't in) */
+        if ((p = mc_other_slot()) >= 0)
+            ports[n++] = p;
+        return n;
+    }
+    for (p = 0; p < 2; p++)   /* (no device: both slots) */
+        if (mc_card_in(p) >= 0)
+            ports[n++] = p;
+    return n;
+}
+
+void memcard_pick(int port) { picked = port; }
+
+/* Is there one (a formatted PS2 memory card in the other slot; with no sd2psx, in the slot picked or in either)? 1 =
+ * yes, and slotCard is it. Asked each time it may be offered: a card is put in and taken out while the program is
+ * open */
 int memcard_there(void)
 {
-    int port = mc_other_slot();
+    int ports[2], n = memcard_ports(ports), port = n ? ports[0] : -1, i;
+    for (i = 0; i < n; i++)
+        if (ports[i] == picked)
+            port = picked;
     if (port < 0)
         return 0;
     memset(&slotCard, 0, sizeof(slotCard));
-    snprintf(slotCard.base, sizeof(slotCard.base), "%s", T(T_MEMCARD));
+    if (standalone)   /* (two can be there: each by its slot) */
+        snprintf(slotCard.base, sizeof(slotCard.base), T(T_MEMCARD_SLOT), port + 1);
+    else
+        snprintf(slotCard.base, sizeof(slotCard.base), "%s", T(T_MEMCARD));
     snprintf(slotCard.id, sizeof(slotCard.id), "slot/mc%d", port);
     snprintf(slotCard.path, sizeof(slotCard.path), "mc%d:", port);
-    snprintf(slotCard.folder, sizeof(slotCard.folder), "Memory Card");   /* (on Drive, its saves sent one by one) */
+    if (standalone)   /* (on Drive, its saves sent one by one, and its backups) */
+        snprintf(slotCard.folder, sizeof(slotCard.folder), "Memory Card %d", port + 1);
+    else
+        snprintf(slotCard.folder, sizeof(slotCard.folder), "Memory Card");
     slotCard.type = TYPE_NORMAL;
     return 1;
+}
+
+const char *memcard_id(void)
+{
+    static char id[24];
+    if (!standalone)
+        return "slot/memcard";
+    snprintf(id, sizeof(id), "slot/memcard%d", mcfs_slot_port(slotCard.path) + 1);
+    return id;
 }
 
 /* X on it in the Files group: its saves */
@@ -35,10 +71,15 @@ void memcard_screen(void)
 }
 
 /* what the Files group says of it, on the right (the main screen's and the list of cards a copy marks saves on) */
-void memcard_hint(void)
+void memcard_hint(int port)
 {
-    ui_text_center(FONT_TEXT, CARD_CX, 82, 0x7E8AA0, T(T_MEMCARD));
-    ui_paragraph_center(FONT_SMALL, CARD_CX, CARD_Y + 70, LOOK_CARD_W + 32, COLOR_DIM, T(T_MEMCARD_HINT));
+    char t[64];
+    if (standalone)
+        snprintf(t, sizeof(t), T(T_MEMCARD_SLOT), port + 1);
+    else
+        snprintf(t, sizeof(t), "%s", T(T_MEMCARD));
+    ui_text_center(FONT_TEXT, CARD_CX, 82, 0x7E8AA0, t);
+    ui_paragraph_center(FONT_SMALL, CARD_CX, CARD_Y + 70, LOOK_CARD_W + 32, COLOR_DIM, T(standalone ? T_MEMCARD_HINT_ALONE : T_MEMCARD_HINT));
 }
 
 /* -------- "Upload to Drive" in its options: the whole card, as a backup of its own on Drive, with its history (in the
@@ -94,8 +135,8 @@ void memcard_upload(void)
     if ((n = mcfs_list_saves(slotCard.path, list, MCFS_MAX_SAVES, &freeBytes)) < 0)
         r = MCFS_ERR_IO;
     memset(&memImage, 0, sizeof(memImage));
-    snprintf(memImage.base, sizeof(memImage.base), "%s", T(T_MEMCARD));
-    snprintf(memImage.id, sizeof(memImage.id), "%s", MEMCARD_ID);
+    snprintf(memImage.base, sizeof(memImage.base), "%s", slotCard.base);
+    snprintf(memImage.id, sizeof(memImage.id), "%s", memcard_id());
     snprintf(memImage.folder, sizeof(memImage.folder), "%s", slotCard.folder);
     snprintf(memImage.path, sizeof(memImage.path), "%smemcard-upload%s", dataDir, dev->ext);
     memImage.type = TYPE_NORMAL;
@@ -163,8 +204,8 @@ void memcard_history(void)
         return;
     }
     memset(&memRestore, 0, sizeof(memRestore));
-    snprintf(memRestore.base, sizeof(memRestore.base), "%s", T(T_MEMCARD));
-    snprintf(memRestore.id, sizeof(memRestore.id), "%s", MEMCARD_ID);
+    snprintf(memRestore.base, sizeof(memRestore.base), "%s", slotCard.base);
+    snprintf(memRestore.id, sizeof(memRestore.id), "%s", memcard_id());
     snprintf(memRestore.folder, sizeof(memRestore.folder), "%s", slotCard.folder);
     snprintf(memRestore.path, sizeof(memRestore.path), "%smemcard-restore%s", dataDir, dev->ext);
     memRestore.type = TYPE_NORMAL;

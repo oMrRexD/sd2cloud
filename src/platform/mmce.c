@@ -97,10 +97,18 @@ int deviceBoth;
 void find_device(void)
 {
     char c[64];
-    int r = mmce_devctl(MMCE_CMD_PING, NULL, 0), product = r >= 0 ? (r >> 8) & 0xFF : 0;
-    int sd2 = has_dir(sdRoot, "MemoryCards/PS2"), pro = has_dir(sdRoot, "PS2");
+    int r, product, sd2 = has_dir(sdRoot, "MemoryCards/PS2"), pro = has_dir(sdRoot, "PS2");
     dev = &devSd2psx;
     deviceBoth = 0;
+    if (standalone) {   /* no device in the slots: the cards of a microSD in a card reader, by its folders */
+        dev = !sd2 && pro ? &devMcp2 : &devSd2psx;
+        devHere = dev;
+        cardTold = devicePings = 0;
+        log_msg("device: none in the slots; %s has %s", sdRoot, sd2 ? "an sd2psx's cards" : pro ? "a MemCard PRO2's cards" : "no device's cards");
+        return;
+    }
+    r = mmce_devctl(MMCE_CMD_PING, NULL, 0);
+    product = r >= 0 ? (r >> 8) & 0xFF : 0;
 #ifdef DEBUG_BUILD
     {   /* PCSX2 has no device: product.txt in the data folder says which one to be */
         buffer_t b = {0};

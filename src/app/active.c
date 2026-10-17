@@ -61,6 +61,8 @@ int card_in_use(const card_t *c, int active, int channel)
  * and there the slot tells (-1) */
 int active_card(int *channel)
 {
+    if (standalone)
+        return -2;   /* (no device in a slot: no card is in use) */
     return cardTold || strncmp(sdRoot, "mmce", 4) != 0 ? mmce_active_card(channel) : -1;
 }
 
@@ -69,7 +71,7 @@ void find_active(void)
     static const int order[3] = {TYPE_BOOT, TYPE_GAMEID, TYPE_NAMED};
     char seen[65], file[65];
     int channel = 0, active, i, pass, found = -1;
-    if (viewOther) {   /* (the other device's cards: none is the one in the slot) */
+    if (viewOther || standalone) {   /* (the other device's cards, or no device: none is the one in the slot) */
         activeCard = -1;
         return;
     }

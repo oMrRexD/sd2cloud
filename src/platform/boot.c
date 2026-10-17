@@ -16,6 +16,7 @@ char appCardDir[64];
 char sdRoot[16];
 char dataDir[32];
 int igrMode;
+int standalone;
 
 /* ------------------------------------------------------------ start and leave */
 
@@ -65,7 +66,17 @@ static void find_sd(const char *a0)
             for (i = 0; i < 2 && !has_dir(options[i], "PS2"); i++)
                 ;
         strcpy(sdRoot, options[i < 2 ? i : 0]);
+        /* none of them: is there a device at all? A microSD with nothing on it still opens */
+        standalone = i == 2 && !has_dir(options[0], "") && !has_dir(options[1], "");
     }
+#ifdef DEBUG_BUILD
+    {   /* PCSX2: standalone.txt in the data folder makes host: the root of a device that isn't an sd2psx */
+        char c[64];
+        snprintf(c, sizeof(c), "%sSD2Cloud/standalone.txt", sdRoot);
+        if (!strncmp(sdRoot, "host:", 5) && file_exists(c))
+            standalone = 1;
+    }
+#endif
     snprintf(dataDir, sizeof(dataDir), "%sSD2Cloud/", sdRoot);
 }
 
@@ -116,6 +127,29 @@ static void locate_self(const char *a0)
     fileXioInit();
     SifExecModuleBuffer(sio2man_irx, size_sio2man_irx, 0, NULL, NULL);
     SifExecModuleBuffer(mmceman_irx, size_mmceman_irx, 0, NULL, NULL);
+}
+
+/* No sd2psx: the root and the data folder are the device's the program was started from (its drivers loaded now) */
+static void standalone_root(void)
+{
+    char root[16] = "", part[40];
+    int d = device_of(appPath);
+    if (appOnCard) {   /* (the Save Application System package's folder on a memory card: the data in it too) */
+        snprintf(sdRoot, sizeof(sdRoot), "mc%d:/", appCardPort);
+        snprintf(dataDir, sizeof(dataDir), "mc%d:%s/", appCardPort, appCardDir);
+        return;
+    }
+    if (d == DEV_USB || d == DEV_MX4SIO || d == DEV_ATA)
+        drive_open(d == DEV_USB ? DRIVE_USB : d == DEV_MX4SIO ? DRIVE_MX4SIO : DRIVE_HDD, 8000, root, sizeof(root));
+    else if (d == DEV_HDD) {   /* hdd0:PARTITION:pfs:/path: that partition */
+        const char *p = strchr(appPath, ':') + 1;
+        snprintf(part, sizeof(part), "%.*s", (int)strcspn(p, ":/"), p);
+        if (drive_open(DRIVE_HDD, 12000, root, sizeof(root)) != 0 || hdd_mount(part, root, sizeof(root)) != 0)
+            root[0] = 0;
+    }
+    if (root[0])
+        snprintf(sdRoot, sizeof(sdRoot), "%s", root);
+    snprintf(dataDir, sizeof(dataDir), "%sSD2Cloud/", sdRoot);
 }
 
 static void started_elsewhere(const char *a0)
@@ -195,9 +229,13 @@ void system_init(int argc, char *argv[])
     if (strncmp(a0, "host:", 5) == 0)
         logFd = open("host:log.txt", O_WRONLY | O_CREAT | O_TRUNC, 0666);
     find_sd(a0);
+    if (standalone && strncmp(a0, "host:", 5) != 0) {   /* (where it was started from is where everything is) */
+        started_elsewhere(a0);
+        standalone_root();
+    }
     config_read();
     find_device();
-    if (strncmp(appPath, "mmce", 4) != 0 && strncmp(appPath, "host:", 5) != 0)
+    if (!standalone && strncmp(appPath, "mmce", 4) != 0 && strncmp(appPath, "host:", 5) != 0)
         started_elsewhere(a0);
     if (init_joystick_driver(false) == JOYSTICK_INIT_STATUS_OK)
         padOpen = padPortOpen(0, 0, padArea);

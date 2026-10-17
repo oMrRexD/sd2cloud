@@ -240,7 +240,7 @@ static void save_to_cloud(card_t *c, save_view_t *v)
             snprintf(name, sizeof(name), "%s %04d-%02d-%02d %02dh%02d.psu", v->s.folder, when.year, when.month, when.day, when.hour,
                      when.minute);
             snprintf(desc, sizeof(desc), "%s%s%s (%s) - " APP_NAME " " APP_VERSION, v->line1, v->line2[0] ? " " : "", v->line2, c->base);
-            snprintf(tag, sizeof(tag), "save:%.80s/%s", mcfs_slot_port(c->path) >= 0 ? MEMCARD_ID : c->id, v->s.folder);
+            snprintf(tag, sizeof(tag), "save:%.80s/%s", mcfs_slot_port(c->path) >= 0 ? memcard_id() : c->id, v->s.folder);
             r = google_upload_buffer(savesId, name, desc, psu.data, psu.len, on_progress, id, sizeof(id), tag);
             state_write();
         }

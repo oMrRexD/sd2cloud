@@ -166,18 +166,24 @@ static const char *saves_sent(int n)
 static void memcard_saves(void)
 {
     char folderId[80];
-    int r;
-    if (!cfg.save_backup || !memcard_there())
+    int ports[2], n, i, r;
+    if (!cfg.save_backup)
         return;
-    r = DRY ? 0 : card_folder(&slotCard, folderId, sizeof(folderId));
-    if (r == 0)
-        r = saves_backup(&slotCard, folderId);
-    if (r > 0) {
-        add_result(COLOR_OK, "%s: %s", slotCard.base, saves_sent(r));
-        sent++;
-    } else if (r < 0 && !backupCancelled) {
-        add_result(COLOR_ERROR, "%s: %s (%s)", slotCard.base, T(T_UPLOAD_FAILED), googleError);
-        failed++;
+    n = memcard_ports(ports);
+    for (i = 0; i < n && !backupCancelled; i++) {   /* (with no sd2psx, the ones of both slots) */
+        memcard_pick(ports[i]);
+        if (!memcard_there())
+            continue;
+        r = DRY ? 0 : card_folder(&slotCard, folderId, sizeof(folderId));
+        if (r == 0)
+            r = saves_backup(&slotCard, folderId);
+        if (r > 0) {
+            add_result(COLOR_OK, "%s: %s", slotCard.base, saves_sent(r));
+            sent++;
+        } else if (r < 0 && !backupCancelled) {
+            add_result(COLOR_ERROR, "%s: %s (%s)", slotCard.base, T(T_UPLOAD_FAILED), googleError);
+            failed++;
+        }
     }
 }
 
