@@ -59,7 +59,8 @@ void card_resize_screen(card_t *c)
         return;
     snprintf(t, sizeof(t), T(T_RESIZE_ASK), c->base, now, mb);
     dlg_new(COLOR_TITLE, t);
-    dlg_line(FONT_TEXT, COLOR_TEXT, 0, T(T_RESIZE_TEXT));
+    dlg_line(FONT_TEXT, COLOR_TEXT, 6, T(T_RESIZE_TEXT));
+    dlg_line(FONT_SMALL, COLOR_DIM, 0, T(T_SAFETY_NOTE));
     dlg_buttons(BUTTON_CIRCLE, T_BACK, BUTTON_CROSS, T_CONTINUE);
     next.wide = 1;
     dlg_show();
@@ -68,7 +69,7 @@ void card_resize_screen(card_t *c)
         return;
     }
     sound_play(SND_CONFIRM);
-    if (card_free(c, NULL))
+    if (card_free(c, NULL) || safety_copy(c) != 0)
         return;
     card_work(c, 1, T(T_RESIZE_MAKING), 1);
     cancelLatched = 0;
@@ -488,6 +489,51 @@ int card_rename_screen(card_t *c)
     return 1;
 }
 
+/* ------------------------------------------------------------ checking */
+
+void card_check_screen(card_t *c)
+{
+    mcfs_check_t r;
+    char t[200];
+    int ok;
+    message(0, NULL, COLOR_TEXT, T(T_CHECKING));
+    if (mcfs_check(c->path, &r) != 0) {
+        message_wait(0, NULL, COLOR_ERROR, T(T_CARD_UNREADABLE));
+        return;
+    }
+    ok = mcfs_check_ok(&r);
+    dlg_new(ok ? COLOR_OK : COLOR_WARN, T(ok ? T_CHECK_OK : T_CHECK_PROBLEMS));
+    dlg_line(FONT_TEXT, COLOR_ACCENT, 6, c->base);
+    snprintf(t, sizeof(t), T(T_CHECK_CONTENTS), r.folders, r.files);
+    dlg_line(FONT_TEXT, COLOR_TEXT, 0, t);
+    snprintf(t, sizeof(t), T(T_CHECK_USED), r.used, r.clusters);
+    dlg_line(FONT_TEXT, COLOR_TEXT, ok ? 0 : 6, t);
+    if (r.badChains) {
+        snprintf(t, sizeof(t), T(T_CHECK_CHAINS), r.badChains);
+        dlg_line(FONT_TEXT, COLOR_WARN, 0, t);
+    }
+    if (r.crossLinked) {
+        snprintf(t, sizeof(t), T(T_CHECK_CROSSED), r.crossLinked);
+        dlg_line(FONT_TEXT, COLOR_WARN, 0, t);
+    }
+    if (r.lost) {
+        snprintf(t, sizeof(t), T(T_CHECK_LOST), r.lost);
+        dlg_line(FONT_TEXT, COLOR_WARN, 0, t);
+    }
+    if (r.badEntries) {
+        snprintf(t, sizeof(t), T(T_CHECK_ENTRIES), r.badEntries);
+        dlg_line(FONT_TEXT, COLOR_WARN, 0, t);
+    }
+    if (!ok)
+        dlg_line(FONT_SMALL, COLOR_DIM, 0, T(T_CHECK_ADVICE));
+    dlg_buttons(BUTTON_CROSS, T_BACK, 0, 0);
+    next.wide = 1;
+    dlg_show();
+    sound_play(ok ? SND_EXIT : SND_BACK);
+    wait_button(PAD_CROSS | PAD_CIRCLE, 0);
+    sound_play(SND_BACK);
+}
+
 /* ------------------------------------------------------------ deleting */
 
 /* After cards went out of cards[], the ones after them moved up: the card in use is found again by its name (gone
@@ -540,7 +586,8 @@ int card_delete(card_t *c)
     dlg_new(COLOR_WARN, t);
     dlg_line(FONT_TEXT, COLOR_TEXT, 8, T(T_DELETE_CARD_TEXT));
     backup_line(c);
-    if (!ask_delete() || card_free(c, NULL))
+    dlg_line(FONT_SMALL, COLOR_DIM, 0, T(T_SAFETY_NOTE));
+    if (!ask_delete() || card_free(c, NULL) || safety_copy(c) != 0)
         return 0;
     message(0, NULL, COLOR_TEXT, T(T_DELETING));
     snprintf(active, sizeof(active), "%s", activeCard >= 0 ? cards[activeCard].id : "");
@@ -577,10 +624,14 @@ int folder_delete(card_t *c)
         dlg_line(FONT_SMALL, COLOR_WARN, 0, t);
     } else
         dlg_line(FONT_SMALL, COLOR_DIM, 0, T(T_DELETE_FOLDER_BACKUPS));
+    dlg_line(FONT_SMALL, COLOR_DIM, 0, T(T_SAFETY_NOTE));
     if (!ask_delete())
         return 0;
     for (i = 0; i < n; i++)   /* (the device is on one of them, at most: that one is let go of) */
         if (card_free(own[i], NULL))
+            return 0;
+    for (i = 0; i < n; i++)   /* (a copy of each, first) */
+        if (safety_copy(own[i]) != 0)
             return 0;
     message(0, NULL, COLOR_TEXT, T(T_DELETING));
     snprintf(active, sizeof(active), "%s", activeCard >= 0 ? cards[activeCard].id : "");

@@ -134,6 +134,10 @@ def run(exe, work, seconds, memcard=None):
     return ended
 
 
+# the moment a safety copy was made, in its name (SD2Cloud/Safety/<folder>/<card> 2026-10-17 03h05m12.mcd)
+STAMP = re.compile(r" \d{4}-\d\d-\d\d \d\dh\d\dm\d\d")
+
+
 def tidy(line):
     """a line of the log as it is on every run, or None for one that isn't the program's doing"""
     if not line.strip() or line.startswith(DROP) or OWN_FILES.match(line):
@@ -141,6 +145,7 @@ def tidy(line):
     line = re.sub(r"\b\d+ ms\b", "N ms", line)
     line = re.sub(r"\b\d+ s (reading|writing)", r"N s \1", line)
     line = re.sub(r"^SD2Cloud [0-9.]+ -- ", "SD2Cloud <version> -- ", line)
+    line = STAMP.sub(" <when>", line)
     return line.rstrip()
 
 
@@ -153,7 +158,7 @@ def result(work):
     lines = log.read_text(encoding="utf-8", errors="replace").splitlines() if log.is_file() else []
     out = ["# log"] + [t for t in map(tidy, lines) if t is not None] + ["", "# files"]
     for path in sorted(p for p in work.rglob("*") if p.is_file()):
-        name = path.relative_to(work).as_posix()
+        name = STAMP.sub(" <when>", path.relative_to(work).as_posix())
         if name in NOT_RESULT:
             continue
         if name.endswith(".zip"):   # the .zip has the date it was made: what counts is what is inside

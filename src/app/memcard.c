@@ -95,7 +95,7 @@ void memcard_upload(void)
         r = MCFS_ERR_IO;
     memset(&memImage, 0, sizeof(memImage));
     snprintf(memImage.base, sizeof(memImage.base), "%s", T(T_MEMCARD));
-    snprintf(memImage.id, sizeof(memImage.id), "slot/memcard");
+    snprintf(memImage.id, sizeof(memImage.id), "%s", MEMCARD_ID);
     snprintf(memImage.folder, sizeof(memImage.folder), "%s", slotCard.folder);
     snprintf(memImage.path, sizeof(memImage.path), "%smemcard-upload%s", dataDir, dev->ext);
     memImage.type = TYPE_NORMAL;
@@ -145,4 +145,123 @@ void memcard_upload(void)
 #ifdef DEBUG_BUILD
     debugDry = 0;
 #endif
+}
+
+/* -------- "Restore backup" in its options: its backups on Drive, and one of them put back. The backup is a card
+ * file: it is downloaded into the data folder, and its saves are copied into the Memory Card, each one replacing a
+ * save of the same folder there; the Memory Card's other saves stay. The file goes once they are copied */
+
+static card_t memRestore;
+#ifdef DEBUG_BUILD
+static int debugLocalRestore;   /* script "Y": the backup is the data folder's restore-test.mcd (PCSX2 has no account) */
+#endif
+
+void memcard_history(void)
+{
+    if (!memcard_there()) {
+        message_wait(0, NULL, COLOR_WARN, T(T_MEMCARD_NONE));
+        return;
+    }
+    memset(&memRestore, 0, sizeof(memRestore));
+    snprintf(memRestore.base, sizeof(memRestore.base), "%s", T(T_MEMCARD));
+    snprintf(memRestore.id, sizeof(memRestore.id), "%s", MEMCARD_ID);
+    snprintf(memRestore.folder, sizeof(memRestore.folder), "%s", slotCard.folder);
+    snprintf(memRestore.path, sizeof(memRestore.path), "%smemcard-restore%s", dataDir, dev->ext);
+    memRestore.type = TYPE_NORMAL;
+#ifdef DEBUG_BUILD
+    if (debug_take('Y')) {
+        drive_file_t f;
+        memset(&f, 0, sizeof(f));
+        snprintf(f.name, sizeof(f.name), "restore-test.mcd");
+        debugLocalRestore = 1;
+        memcard_restore(&memRestore, &f);
+        debugLocalRestore = 0;
+        return;
+    }
+#endif
+    history_screen(&memRestore, NULL);
+}
+
+int memcard_restore(card_t *c, const drive_file_t *f)
+{
+    static mcfs_save_t list[MCFS_MAX_SAVES];
+    static const char regions[] = "AEICK";
+    char when[40], t[300], system[16];
+    int n = 0, i, k, r, ok = 0, failed = 0;
+    backup_when(c, f, when, sizeof(when));
+    dlg_new(COLOR_TITLE, T(T_MEMCARD_RESTORE_ASK));
+    snprintf(t, sizeof(t), T(T_RESTORE_FROM), when);
+    dlg_line(FONT_TEXT, COLOR_ACCENT, 8, t);
+    dlg_line(FONT_TEXT, COLOR_TEXT, 0, T(T_MEMCARD_RESTORE_TEXT));
+    dlg_buttons(BUTTON_CIRCLE, T_BACK, BUTTON_CROSS, T_RESTORE);
+    next.wide = 1;
+    dlg_show();
+    if (!(wait_button(PAD_CROSS | PAD_CIRCLE, 0) & PAD_CROSS)) {
+        sound_play(SND_BACK);
+        return 0;
+    }
+    sound_play(SND_CONFIRM);
+    if (!memcard_there()) {   /* (taken out meanwhile) */
+        message_wait(0, NULL, COLOR_WARN, T(T_MEMCARD_NONE));
+        return 0;
+    }
+    unlink(c->path);   /* (one left by a run that didn't end) */
+    restoreNew = 1;   /* (nothing is written over until the saves are copied: it can be given up on till then) */
+    lastRestoreDraw = 0;
+    lastRestorePhase = -1;
+    card_work(&slotCard, 1, T(T_RESTORE_STEP_DOWNLOAD), 0);
+#ifdef DEBUG_BUILD
+    if (debugLocalRestore) {
+        char from[200];
+        snprintf(from, sizeof(from), "%srestore-test.mcd", dataDir);
+        r = file_copy(from, c->path) == 0 ? 0 : -1;
+    } else
+#endif
+        r = restore_card(c, f, restore_progress);
+    if (r == 0 && (n = mcfs_list_saves(c->path, list, MCFS_MAX_SAVES, NULL)) < 0)
+        r = -1;
+    for (i = 0; r == 0 && i < n; i++) {   /* each save into the Memory Card, in place of one of the same folder */
+        ui_lock();
+        workText = T(T_RESTORE_STEP_WRITE);
+        workFixed = 1;
+        ui_unlock();
+        upload_screen(i, n);
+        k = mcfs_copy_save(c->path, list[i].folder, slotCard.path, NULL);
+        if (k == MCFS_ERR_EXISTS && mcfs_delete_save(slotCard.path, list[i].folder) == MCFS_OK)
+            k = mcfs_copy_save(c->path, list[i].folder, slotCard.path, NULL);
+        log_msg("memory card restore: %s: %d", list[i].folder, k);
+        if (k == MCFS_OK)
+            ok++;
+        else
+            failed++;
+    }
+    for (i = 0; r == 0 && regions[i]; i++) {   /* (and its system data, when the backup has it) */
+        snprintf(system, sizeof(system), "B%cDATA-SYSTEM", regions[i]);
+        if (mcfs_copy_save(c->path, system, slotCard.path, NULL) == MCFS_ERR_EXISTS && mcfs_delete_save(slotCard.path, system) == MCFS_OK)
+            mcfs_copy_save(c->path, system, slotCard.path, NULL);
+    }
+    card_work_done();
+    restoreNew = 0;
+    unlink(c->path);
+    log_msg("memory card restored from %s: %d, %d save(s) in, %d not", f->name, r, ok, failed);
+    if (r == -2)
+        return 0;   /* (given up while downloading: the Memory Card didn't change) */
+    dlg_new(r == 0 && !failed ? COLOR_OK : r == 0 ? COLOR_WARN : COLOR_ERROR, T(r == 0 ? T_MEMCARD_RESTORED : T_RESTORE_FAILED));
+    if (r == 0) {
+        snprintf(t, sizeof(t), T(T_RESTORE_FROM), when);
+        dlg_line(FONT_TEXT, COLOR_ACCENT, 4, t);
+        snprintf(t, sizeof(t), T(T_TPL_COPIED_N), ok);
+        dlg_line(FONT_TEXT, COLOR_TEXT, 2, t);
+        if (failed) {
+            snprintf(t, sizeof(t), T(T_TPL_NOT_COPIED), failed);
+            dlg_line(FONT_SMALL, COLOR_WARN, 0, t);
+        }
+    } else
+        dlg_line(FONT_TEXT, COLOR_TEXT, 0, googleError);
+    dlg_buttons(BUTTON_CROSS, T_BACK, 0, 0);
+    dlg_show();
+    sound_play(r == 0 ? SND_EXIT : SND_BACK);
+    wait_button(PAD_CROSS | PAD_CIRCLE, 0);
+    sound_play(SND_BACK);
+    return r == 0;
 }

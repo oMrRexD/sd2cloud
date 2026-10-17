@@ -64,6 +64,20 @@ int mcfs_new_card(const char *path, long long size, void (*progress)(long long d
 /* what a card's folders take of it, in bytes: every cluster in use but the root folder's first (its saves, the
  * system's data, and whatever the FAT says is taken). -1 = it couldn't be read */
 long long mcfs_card_used(const char *path);
+/* A card's file system looked through, as a PS2 reads it, without anything written: every folder and file from the
+ * root, the clusters each one's chain has, and the FAT. What it found: */
+typedef struct {
+    unsigned int clusters, used;   /* the card's clusters for folders and files; how many of them are in use */
+    int folders, files;
+    int badChains;    /* folders and files whose chain ends before they do, loops, or leaves the card */
+    int crossLinked;  /* clusters that two of them have */
+    int lost;         /* clusters the FAT has in use that no folder or file has */
+    int badEntries;   /* entries of a folder that aren't what one can be (no name, a name with no end) */
+} mcfs_check_t;
+/* 0 = looked through (whatever it found: mcfs_check_ok); -1 = it couldn't be read. Not for a Memory Card in a
+ * slot: mcman reads those */
+int mcfs_check(const char *path, mcfs_check_t *r);
+#define mcfs_check_ok(r) (!(r)->badChains && !(r)->crossLinked && !(r)->lost && !(r)->badEntries)
 /* Every folder of a card (its saves and the system's B?DATA-SYSTEM) copied into another card, each read back and
  * compared: a card made again of another size. progress(i, n, folder) before each one (and with i = n at the end)
  * gives up when it answers != 0 (MCFS_ERR_CANCELLED: the folders copied so far stay). A card with a file at its root,

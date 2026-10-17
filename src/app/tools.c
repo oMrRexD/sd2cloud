@@ -1153,11 +1153,16 @@ static void templates_screen(void)
 
 void tools_screen(void)
 {
-    const char *items[1];
+    const char *items[2];
+    int k = 0;
     for (;;) {
         items[0] = T(T_TEMPLATES);
-        if (choose(T(T_TOOLS), items, 1, 0) < 0)
+        items[1] = T(T_SAFETY_TITLE);
+        if ((k = choose(T(T_TOOLS), items, 2, k)) < 0)
             return;
-        templates_screen();
+        if (k == 0)
+            templates_screen();
+        else
+            safety_screen();
     }
 }

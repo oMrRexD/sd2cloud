@@ -361,7 +361,7 @@ void card_move_saves(card_t *c)
     snprintf(name, sizeof(name), "%.44s-%d", c->moved, c->channel);
     snprintf(t, sizeof(t), T(T_MOVE_SAVES_ASK), c->base, name);
     snprintf(note, sizeof(note), T(T_MOVE_SAVES_NOTE), c->moved);
-    if (!confirm(t, note, T_MOVE))
+    if (!confirm(t, note, T_MOVE) || safety_copy(c) != 0)   /* (a copy of the card they leave, first) */
         return;
     if ((n = mcfs_list_saves(c->path, list, MCFS_MAX_SAVES, NULL)) < 0) {
         message_wait(0, NULL, COLOR_ERROR, T(T_CARD_UNREADABLE));

@@ -325,7 +325,7 @@ static int mg_go(void)
         dlg_buttons(BUTTON_CIRCLE, T_MIGRATE_KEEP, BUTTON_CROSS, T_DELETE);
         next.wide = 1;
         dlg_show();
-        if (wait_button(PAD_CROSS | PAD_CIRCLE, 0) & PAD_CROSS) {
+        if ((wait_button(PAD_CROSS | PAD_CIRCLE, 0) & PAD_CROSS) && safety_copy(mg.src) == 0) {
             int gone = 0;
             sound_play(SND_CONFIRM);
             if (!card_free(mg.src, NULL)) {

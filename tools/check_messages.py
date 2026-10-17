@@ -296,7 +296,22 @@ PLACE = {
     # the VMCs' group: its tab; under a VMC's name, over its big card; the rename's keyboard and question
     "T_TAB_VMC": ("small", 60, 1), "T_VMC_GAMES": ("small", 200, 1), "T_VMC_NAME_TITLE": ("text", 320, 1),
     "T_RENAME_VMC_ASK": ("text", WIDE, 2), "T_NEW_VMC": ("text", 172, 1), "T_VMC_CREATE_HINT": ("small", 212, 3),
-    "T_CREATE_VMC_ASK": ("text", WIDE, 2), "T_RENAME_VMC_TEXT": ("text", WIDE, 3), "T_MIGRATE_DELETE_ASK": ("text", WIDE, 2), "T_MIGRATE_DELETE_TEXT": ("text", WIDE, 3),
+    "T_CREATE_VMC_ASK": ("text", WIDE, 2),
+    # the Memory Card put back from a backup: what happens, under the question; how it went
+    "T_MEMCARD_RESTORE_ASK": ("text", WIDE, 1), "T_MEMCARD_RESTORE_TEXT": ("text", WIDE, 4), "T_MEMCARD_RESTORED": ("text", DIALOG, 1),
+    # "Check card": the option; what was found, in a wide box
+    "T_CHECK_CARD": ("text", 320, 1), "T_CHECK_OK": ("text", WIDE, 1),
+    "T_CHECK_PROBLEMS": ("text", WIDE, 1), "T_CHECK_CONTENTS": ("text", WIDE, 1), "T_CHECK_USED": ("text", WIDE, 1),
+    "T_CHECK_CHAINS": ("text", WIDE, 1), "T_CHECK_CROSSED": ("text", WIDE, 1), "T_CHECK_LOST": ("text", WIDE, 1),
+    "T_CHECK_ENTRIES": ("text", WIDE, 1), "T_CHECK_ADVICE": ("small", WIDE, 2),
+    # the safety copies: the Tools' item and its list's title; the screen while one is made; when it can't be; the
+    # note under the questions it is made after; restoring and deleting one
+    "T_SAFETY_TITLE": ("text", 320, 1), "T_SAFETY_MAKING": ("text", 296, 1), "T_SAFETY_FAILED": ("text", WIDE, 2),
+    "T_SAFETY_FAILED_TEXT": ("text", WIDE, 1), "T_SAFETY_NONE": ("text", 296, 2), "T_SAFETY_NOTE": ("small", WIDE, 2),
+    "T_SAFETY_REPLACE_ASK": ("text", WIDE, 2), "T_SAFETY_REPLACE_TEXT": ("text", WIDE, 2),
+    "T_SAFETY_RESTORE_ASK": ("text", WIDE, 2), "T_SAFETY_RESTORE_TEXT": ("text", WIDE, 2),
+    "T_SAFETY_RESTORED": ("text", 296, 2), "T_SAFETY_RESTORE_FAILED": ("text", 296, 2),
+    "T_SAFETY_DELETE_ASK": ("text", WIDE, 2), "T_RENAME_VMC_TEXT": ("text", WIDE, 3), "T_MIGRATE_DELETE_ASK": ("text", WIDE, 2), "T_MIGRATE_DELETE_TEXT": ("text", WIDE, 3),
 }
 PARAGRAPH = ("text", DIALOG, 3)     # error messages and the rest: up to 3 lines in a box
 # what only an sd2psx is ever told (being moved to another card, its boot cards, one more channel for a folder): not

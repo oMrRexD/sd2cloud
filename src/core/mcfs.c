@@ -1261,6 +1261,108 @@ long long mcfs_card_used(const char *path)
     return used;
 }
 
+/* ------------------------------------------------------------ a card looked through */
+
+typedef struct {
+    mcfs_check_t *r;
+    unsigned char *seen;   /* a bit per cluster: a folder or a file has it */
+    int depth;
+} check_t;
+
+/* the n clusters of a chain from c, as one folder's or file's: each one taken as theirs. 0 = the chain is whole */
+static int check_chain(mc_t *m, check_t *k, unsigned int c, unsigned int n)
+{
+    unsigned int steps = 0, e;
+    while (n) {
+        if (c >= m->allocEnd)
+            return -1;
+        e = fat(m, c);
+        if (!(e & FAT_ALLOC))
+            return -1;   /* (a cluster the FAT says is free) */
+        if (k->seen[c / 8] & (1 << (c % 8)))
+            k->r->crossLinked++;
+        else {
+            k->seen[c / 8] |= 1 << (c % 8);
+            k->r->used++;
+        }
+        if (!--n)
+            break;
+        if (e == FAT_END || ++steps > m->clusters)
+            return -1;   /* (it ends before they do, or goes round) */
+        c = e & ~FAT_ALLOC;
+    }
+    return 0;
+}
+
+static int on_check_entry(mc_t *m, const unsigned char *e, void *u);
+
+/* a folder (its first cluster, how many entries it has): its chain, then each of its entries */
+static int check_folder(mc_t *m, check_t *k, unsigned int c0, unsigned int n)
+{
+    unsigned int need = (n * 512 + m->csz - 1) / m->csz;
+    k->r->folders++;
+    if (!n || n > m->clusters * (m->csz / 512) || check_chain(m, k, c0, need) != 0) {
+        k->r->badChains++;
+        return 0;   /* (its entries can't be gone through: the rest of the card can) */
+    }
+    if (k->depth >= 8)
+        return 0;
+    k->depth++;
+    if (walk_dir(m, c0, n, on_check_entry, k) != 0)
+        k->r->badChains++;
+    k->depth--;
+    return 0;
+}
+
+static int on_check_entry(mc_t *m, const unsigned char *e, void *u)
+{
+    check_t *k = u;
+    const char *name = (const char *)e + 64;
+    unsigned int length = le32(e + 4), c = le32(e + 16);
+    if (!(le16(e) & DF_EXISTS) || !strcmp(name, ".") || !strcmp(name, ".."))
+        return 0;
+    if (!name[0] || !memchr(name, 0, 32)) {
+        k->r->badEntries++;
+        return 0;
+    }
+    if (le16(e) & DF_DIRECTORY)
+        return check_folder(m, k, c, length);
+    k->r->files++;
+    if (length && check_chain(m, k, c, (length + m->csz - 1) / m->csz) != 0)
+        k->r->badChains++;
+    return 0;
+}
+
+int mcfs_check(const char *path, mcfs_check_t *r)
+{
+    check_t k;
+    const unsigned char *root;
+    int rootdir;
+    unsigned int n;
+    memset(r, 0, sizeof(*r));
+    if (mcfs_slot_port(path) >= 0 || (rootdir = mc_open(&mc, path)) < 0)
+        return -1;
+    memset(&k, 0, sizeof(k));
+    k.r = r;
+    r->clusters = mc.allocEnd;
+    if (!(k.seen = calloc(mc.allocEnd / 8 + 1, 1)) || !(root = cluster(&mc, rootdir + mc.alloc))) {
+        free(k.seen);
+        mc_close();
+        return -1;
+    }
+    check_folder(&mc, &k, rootdir, le32(root + 4));
+    r->folders--;   /* (the root isn't one of its folders) */
+    for (n = 0; n < mc.allocEnd; n++)   /* in use by the FAT, and nobody's */
+        if ((fat(&mc, n) & FAT_ALLOC) && !(k.seen[n / 8] & (1 << (n % 8))))
+            r->lost++;
+    free(k.seen);
+    log_msg("mcfs: %s checked: %d folder(s), %d file(s), %u of %u clusters in use; %d broken chain(s), %d cross-linked, "
+            "%d lost, %d bad entr(ies)", path, r->folders, r->files, r->used, r->clusters, r->badChains, r->crossLinked,
+            r->lost, r->badEntries);
+    mc_close();
+    return 0;
+}
+
 int mcfs_copy_card(const char *from, const char *to, int (*progress)(int i, int n, const char *folder))
 {
     int rootdir = mc_open(&mc, from), r = MCFS_OK, i;

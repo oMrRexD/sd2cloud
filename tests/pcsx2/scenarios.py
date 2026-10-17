@@ -134,6 +134,11 @@ SCENARIOS = [
     {"name": "memcard-psu-in", "what": "a .psu file imported into the Memory Card", "cards": CARDS,
      "memcard": "memcard.ps2", "files": {"Files/save.psu": "save.psu"}, "script": ">>XXXX>>XXXC"},
     # (its options, "Upload to Drive": read into a card file, sent as a dry sync sends, "B": nothing goes)
+    # (the Memory Card put back from a backup: "Y" makes the backup the data folder's restore-test.mcd, the "game"
+    # card, two saves of SLUS-21065; they go into the Memory Card, its other saves stay)
+    {"name": "memcard-restore", "what": "the Memory Card restored from a backup: the backup's saves copied into it",
+     "cards": CARDS, "memcard": "memcard.ps2", "files": {"SD2Cloud/restore-test.mcd": "game.mcd"},
+     "script": ">>DDDXTDXYXXC"},
     {"name": "memcard-upload", "what": "the whole Memory Card uploaded to Drive (dry: PCSX2 has no Google account)",
      "cards": CARDS, "memcard": "memcard.ps2", "script": ">>DDDXTXXBwC"},
     {"name": "memcard-paste-back", "what": "a paste on the Memory Card given up at its question: back on the Memory Card, "
@@ -196,8 +201,15 @@ SCENARIOS = [
     # △ on a card: "Delete card", eighth of its options (on PCSX2 there is no "Insert"), after "Rename", "Change
     # size" and "Split saves by game"; the last card of its folder takes the folder with it. With more than one card in its folder, "Delete
     # whole folder" comes after it
+    # "Check card", eighth of a card's options: read through, nothing written
+    {"name": "card-check", "what": "a card's file system checked, read only: no problems on a whole card",
+     "cards": CARDS, "script": "TDDDDDDDXC"},
+    # (a card deleted leaves a safety copy, in SD2Cloud/Safety/: put back from Tools > "Safety copies", it is a card
+    # again, in its place)
+    {"name": "safety-restore", "what": "a deleted card put back from its safety copy",
+     "cards": CARDS, "script": "DTDDDDDDDDXXXLDXXXXXC"},
     {"name": "card-delete", "what": "a card deleted from its options: its file and its folder go", "cards": CARDS,
-     "script": "TDDDDDDDXXXC"},
+     "script": "TDDDDDDDDXXXC"},
     {"name": "folder-delete", "what": "a game's folder of two cards deleted whole: triangle on its row, the folder's options",
      "cards": dict(CARDS, **{"SLUS-21065/SLUS-21065-2": "empty"}), "script": ">DTXXXC"},
     # "Change size", sixth of its options: the cursor starts on the size recommended for what it has (1 MB)

@@ -23,7 +23,7 @@ const char *format_name(int ps2)
 }
 
 /* a date for the screen, as its language writes one (02/10/2026 21:10, 2026-10-02 21:10) */
-static void format_when(int year, int month, int day, int hour, int minute, char *out, size_t size)
+void format_when(int year, int month, int day, int hour, int minute, char *out, size_t size)
 {
     char date[16];
     i18n_date(date, sizeof(date), year, month, day);

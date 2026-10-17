@@ -18,8 +18,8 @@ T_SEARCHING = Buscando tarjetas de memoria...
 T_NO_SD = No se encontró la carpeta de tarjetas del sd2psx (MemoryCards/PS2 en el MMCE).
 # Up to 5 lines. English: No memory cards are included in the sync. Check sd2cloud.ini.
 T_NO_CARDS = No hay tarjetas en la sincronización. Revise el sd2cloud.ini.
-# Up to 3 lines. English: Checking
-T_CHECKING = Verificando
+# Up to 3 lines. English: Checking the card...
+T_CHECKING = Comprobando la tarjeta...
 # One line. English: Never synced
 T_ST_NEW = Nunca sincronizada
 # One line. English: Not synced
@@ -840,6 +840,58 @@ T_NEW_VMC = Nuevo VMC
 T_VMC_CREATE_HINT = En la carpeta VMC de la microSD, para los juegos de OPL.
 # Up to 2 lines. English: Create the VMC "%s" (%d MB)?
 T_CREATE_VMC_ASK = ¿Desea crear el VMC "%s" (%d MB)?
+# One line. English: Restore the Memory Card?
+T_MEMCARD_RESTORE_ASK = ¿Desea restaurar la Memory Card?
+# Up to 4 lines. English: The backup's saves will be copied to the Memory Card. Saves with the same folder will be replaced; the others will be kept.
+T_MEMCARD_RESTORE_TEXT = Las partidas de la copia se copiarán a la Memory Card. Las partidas con la misma carpeta se reemplazarán; las demás se conservarán.
+# One line. English: Memory Card restored
+T_MEMCARD_RESTORED = Memory Card restaurada
+# One line. English: Check card
+T_CHECK_CARD = Comprobar tarjeta
+# One line. English: No problems found
+T_CHECK_OK = No se encontraron problemas
+# One line. English: Problems found
+T_CHECK_PROBLEMS = Se encontraron problemas
+# One line. English: Folders: %d · Files: %d
+T_CHECK_CONTENTS = Carpetas: %d · Archivos: %d
+# One line. English: Clusters in use: %u of %u
+T_CHECK_USED = Clústeres en uso: %u de %u
+# One line. English: Broken chains: %d
+T_CHECK_CHAINS = Cadenas dañadas: %d
+# One line. English: Cross-linked clusters: %d
+T_CHECK_CROSSED = Clústeres cruzados: %d
+# One line. English: Lost clusters: %d
+T_CHECK_LOST = Clústeres perdidos: %d
+# One line. English: Invalid entries: %d
+T_CHECK_ENTRIES = Entradas no válidas: %d
+# Up to 2 lines. English: The card was not changed. Restore a backup, or copy its saves to a new card.
+T_CHECK_ADVICE = La tarjeta no se modificó. Restaure una copia o copie sus partidas a una tarjeta nueva.
+# One line. English: Safety copies
+T_SAFETY_TITLE = Copias de seguridad
+# One line. English: Creating a safety copy...
+T_SAFETY_MAKING = Creando copia de seguridad...
+# Up to 2 lines. English: Unable to create the safety copy.
+T_SAFETY_FAILED = No se pudo crear la copia de seguridad.
+# One line. English: Continue anyway?
+T_SAFETY_FAILED_TEXT = ¿Desea continuar de todos modos?
+# Up to 2 lines. English: There are no safety copies.
+T_SAFETY_NONE = No hay copias de seguridad.
+# Up to 2 lines. English: A safety copy will be created first (Tools > Safety copies).
+T_SAFETY_NOTE = Antes se creará una copia de seguridad (Herramientas > Copias de seguridad).
+# Up to 2 lines. English: Replace %s with its copy from %s?
+T_SAFETY_REPLACE_ASK = ¿Desea reemplazar %s por su copia del %s?
+# Up to 2 lines. English: The card's current content will be replaced.
+T_SAFETY_REPLACE_TEXT = Se reemplazará el contenido actual de la tarjeta.
+# Up to 2 lines. English: Restore %s from its copy from %s?
+T_SAFETY_RESTORE_ASK = ¿Desea restaurar %s desde su copia del %s?
+# Up to 2 lines. English: The card will be created again on the microSD.
+T_SAFETY_RESTORE_TEXT = La tarjeta se creará de nuevo en la microSD.
+# Up to 2 lines. English: Safety copy restored.
+T_SAFETY_RESTORED = Copia de seguridad restaurada.
+# Up to 2 lines. English: Unable to restore the safety copy.
+T_SAFETY_RESTORE_FAILED = No se pudo restaurar la copia de seguridad.
+# Up to 2 lines. English: Delete the safety copy of %s from %s?
+T_SAFETY_DELETE_ASK = ¿Desea eliminar la copia de seguridad de %s del %s?
 # Up to 3 lines. English: Choose an ELF...
 T_PICK_ELF = Elegir un ELF...
 # Up to 3 lines. English: Unable to read this memory card.

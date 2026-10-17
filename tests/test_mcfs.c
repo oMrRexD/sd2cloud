@@ -347,6 +347,58 @@ static void save_from_a_folder(void)
     CHECK_STR(after, before);
 }
 
+/* a FAT entry of a card file written over, as damage would: entry n (of its allocatable clusters) made v */
+static void set_fat_entry(const char *card, unsigned int n, unsigned int v)
+{
+    buffer_t b = t_read(card);
+    unsigned char *d = b.data;
+    unsigned int page = d[40] | d[41] << 8, csz = page * (d[42] | d[43] << 8), per = csz / 4;
+    unsigned int ifc = d[80] | d[81] << 8 | d[82] << 16 | (unsigned int)d[83] << 24, fc;
+    unsigned char *e = d + (size_t)ifc * csz + (n / per) * 4;
+    fc = e[0] | e[1] << 8 | e[2] << 16 | (unsigned int)e[3] << 24;
+    e = d + (size_t)fc * csz + (n % per) * 4;
+    e[0] = v, e[1] = v >> 8, e[2] = v >> 16, e[3] = v >> 24;
+    t_write(card, b.data, b.len);
+    buf_free(&b);
+}
+
+/* a card looked through: a new one, and one with a save, are whole; a cluster of the save's freed in the FAT (a
+ * broken chain) and one taken that nobody has (a lost one) are found; and nothing is written to the card */
+static void card_checked(void)
+{
+    mcfs_check_t r;
+    char before[65], after[65];
+    CHECK_INT(mcfs_new_card("sd/a.mcd", MCFS_CARD_8MB, NULL), MCFS_OK);
+    CHECK_INT(mcfs_check("sd/a.mcd", &r), 0);
+    CHECK(mcfs_check_ok(&r));
+    CHECK_INT(r.folders, 0);
+    CHECK_INT(r.files, 0);
+    CHECK_INT(r.used, 1);   /* (the root folder's own cluster) */
+    make_psu("save.psu", SAVE, SIZES, FILES, 7);
+    CHECK_INT(mcfs_import_psu("save.psu", "sd/a.mcd", NULL), MCFS_OK);
+    CHECK_INT(mcfs_check("sd/a.mcd", &r), 0);
+    CHECK(mcfs_check_ok(&r));
+    CHECK_INT(r.folders, 1);
+    CHECK_INT(r.files, FILES);
+    CHECK(r.used > 70 && r.used < r.clusters);
+    set_fat_entry("sd/a.mcd", r.clusters - 1, 0xFFFFFFFF);   /* (the last cluster, which nothing has: lost) */
+    CHECK_INT(mcfs_check("sd/a.mcd", &r), 0);
+    CHECK(!mcfs_check_ok(&r));
+    CHECK_INT(r.lost, 1);
+    CHECK_INT(r.badChains, 0);
+    set_fat_entry("sd/a.mcd", 3, 0x7FFFFFFF);   /* (one of the save's: its chain broken, and what followed it lost) */
+    CHECK_INT(mcfs_fingerprint("sd/a.mcd", before, NULL), 0);
+    CHECK_INT(mcfs_check("sd/a.mcd", &r), 0);
+    CHECK(r.badChains >= 1);
+    CHECK(r.lost > 1);
+    CHECK_INT(mcfs_fingerprint("sd/a.mcd", after, NULL), 0);
+    CHECK_STR(after, before);
+    /* what isn't a card, and what isn't there */
+    t_text("sd/not.mcd", "this is no memory card");
+    CHECK_INT(mcfs_check("sd/not.mcd", &r), -1);
+    CHECK_INT(mcfs_check("sd/missing.mcd", &r), -1);
+}
+
 void suite_mcfs(void)
 {
     RUN(new_card);
@@ -356,4 +408,5 @@ void suite_mcfs(void)
     RUN(save_given_up_and_card_full);
     RUN(psu_that_is_not_one);
     RUN(save_from_a_folder);
+    RUN(card_checked);
 }

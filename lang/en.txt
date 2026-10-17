@@ -22,7 +22,7 @@ T_NO_SD = The sd2psx memory card folder was not found (MemoryCards/PS2 on the MM
 # Up to 5 lines.
 T_NO_CARDS = No memory cards are included in the sync. Check sd2cloud.ini.
 # Up to 3 lines.
-T_CHECKING = Checking
+T_CHECKING = Checking the card...
 # One line.
 T_ST_NEW = Never synced
 # One line.
@@ -843,6 +843,58 @@ T_NEW_VMC = New VMC
 T_VMC_CREATE_HINT = In the microSD's VMC folder, for the OPL's games.
 # Up to 2 lines.
 T_CREATE_VMC_ASK = Create the VMC "%s" (%d MB)?
+# One line.
+T_MEMCARD_RESTORE_ASK = Restore the Memory Card?
+# Up to 4 lines.
+T_MEMCARD_RESTORE_TEXT = The backup's saves will be copied to the Memory Card. Saves with the same folder will be replaced; the others will be kept.
+# One line.
+T_MEMCARD_RESTORED = Memory Card restored
+# One line.
+T_CHECK_CARD = Check card
+# One line.
+T_CHECK_OK = No problems found
+# One line.
+T_CHECK_PROBLEMS = Problems found
+# One line.
+T_CHECK_CONTENTS = Folders: %d · Files: %d
+# One line.
+T_CHECK_USED = Clusters in use: %u of %u
+# One line.
+T_CHECK_CHAINS = Broken chains: %d
+# One line.
+T_CHECK_CROSSED = Cross-linked clusters: %d
+# One line.
+T_CHECK_LOST = Lost clusters: %d
+# One line.
+T_CHECK_ENTRIES = Invalid entries: %d
+# Up to 2 lines.
+T_CHECK_ADVICE = The card was not changed. Restore a backup, or copy its saves to a new card.
+# One line.
+T_SAFETY_TITLE = Safety copies
+# One line.
+T_SAFETY_MAKING = Creating a safety copy...
+# Up to 2 lines.
+T_SAFETY_FAILED = Unable to create the safety copy.
+# One line.
+T_SAFETY_FAILED_TEXT = Continue anyway?
+# Up to 2 lines.
+T_SAFETY_NONE = There are no safety copies.
+# Up to 2 lines.
+T_SAFETY_NOTE = A safety copy will be created first (Tools > Safety copies).
+# Up to 2 lines.
+T_SAFETY_REPLACE_ASK = Replace %s with its copy from %s?
+# Up to 2 lines.
+T_SAFETY_REPLACE_TEXT = The card's current content will be replaced.
+# Up to 2 lines.
+T_SAFETY_RESTORE_ASK = Restore %s from its copy from %s?
+# Up to 2 lines.
+T_SAFETY_RESTORE_TEXT = The card will be created again on the microSD.
+# Up to 2 lines.
+T_SAFETY_RESTORED = Safety copy restored.
+# Up to 2 lines.
+T_SAFETY_RESTORE_FAILED = Unable to restore the safety copy.
+# Up to 2 lines.
+T_SAFETY_DELETE_ASK = Delete the safety copy of %s from %s?
 # Up to 3 lines.
 T_PICK_ELF = Choose an ELF...
 # Up to 3 lines.

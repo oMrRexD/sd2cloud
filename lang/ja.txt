@@ -19,8 +19,8 @@ T_SEARCHING = メモリーカードを検索しています...
 T_NO_SD = sd2psx のメモリーカードフォルダーが見つかりません（MMCE の MemoryCards/PS2）。
 # Up to 5 lines. English: No memory cards are included in the sync. Check sd2cloud.ini.
 T_NO_CARDS = 同期するメモリーカードがありません。sd2cloud.ini を確認してください。
-# Up to 3 lines. English: Checking
-T_CHECKING = 確認中
+# Up to 3 lines. English: Checking the card...
+T_CHECKING = カードをチェックしています...
 # One line. English: Never synced
 T_ST_NEW = 未同期
 # One line. English: Not synced
@@ -841,6 +841,58 @@ T_NEW_VMC = 新しい VMC
 T_VMC_CREATE_HINT = microSD の VMC フォルダーに作成します（OPL のゲーム用）。
 # Up to 2 lines. English: Create the VMC "%s" (%d MB)?
 T_CREATE_VMC_ASK = VMC「%s」（%d MB）を作成しますか？
+# One line. English: Restore the Memory Card?
+T_MEMCARD_RESTORE_ASK = メモリーカードを復元しますか？
+# Up to 4 lines. English: The backup's saves will be copied to the Memory Card. Saves with the same folder will be replaced; the others will be kept.
+T_MEMCARD_RESTORE_TEXT = バックアップのセーブデータをメモリーカードにコピーします。同じフォルダーのセーブデータは置き換えられ、それ以外は残ります。
+# One line. English: Memory Card restored
+T_MEMCARD_RESTORED = メモリーカードを復元しました
+# One line. English: Check card
+T_CHECK_CARD = カードをチェック
+# One line. English: No problems found
+T_CHECK_OK = 問題は見つかりませんでした
+# One line. English: Problems found
+T_CHECK_PROBLEMS = 問題が見つかりました
+# One line. English: Folders: %d · Files: %d
+T_CHECK_CONTENTS = フォルダー: %d · ファイル: %d
+# One line. English: Clusters in use: %u of %u
+T_CHECK_USED = 使用中のクラスター: %u / %u
+# One line. English: Broken chains: %d
+T_CHECK_CHAINS = 壊れたチェーン: %d
+# One line. English: Cross-linked clusters: %d
+T_CHECK_CROSSED = 交差したクラスター: %d
+# One line. English: Lost clusters: %d
+T_CHECK_LOST = 失われたクラスター: %d
+# One line. English: Invalid entries: %d
+T_CHECK_ENTRIES = 無効なエントリー: %d
+# Up to 2 lines. English: The card was not changed. Restore a backup, or copy its saves to a new card.
+T_CHECK_ADVICE = カードは変更されていません。バックアップを復元するか、セーブデータを新しいカードにコピーしてください。
+# One line. English: Safety copies
+T_SAFETY_TITLE = 安全コピー
+# One line. English: Creating a safety copy...
+T_SAFETY_MAKING = 安全コピーを作成しています...
+# Up to 2 lines. English: Unable to create the safety copy.
+T_SAFETY_FAILED = 安全コピーを作成できませんでした。
+# One line. English: Continue anyway?
+T_SAFETY_FAILED_TEXT = このまま続行しますか？
+# Up to 2 lines. English: There are no safety copies.
+T_SAFETY_NONE = 安全コピーはありません。
+# Up to 2 lines. English: A safety copy will be created first (Tools > Safety copies).
+T_SAFETY_NOTE = 先に安全コピーが作成されます（ツール > 安全コピー）。
+# Up to 2 lines. English: Replace %s with its copy from %s?
+T_SAFETY_REPLACE_ASK = %s を %s のコピーで置き換えますか？
+# Up to 2 lines. English: The card's current content will be replaced.
+T_SAFETY_REPLACE_TEXT = カードの現在の内容は置き換えられます。
+# Up to 2 lines. English: Restore %s from its copy from %s?
+T_SAFETY_RESTORE_ASK = %s を %s のコピーから復元しますか？
+# Up to 2 lines. English: The card will be created again on the microSD.
+T_SAFETY_RESTORE_TEXT = カードは microSD に作り直されます。
+# Up to 2 lines. English: Safety copy restored.
+T_SAFETY_RESTORED = 安全コピーを復元しました。
+# Up to 2 lines. English: Unable to restore the safety copy.
+T_SAFETY_RESTORE_FAILED = 安全コピーを復元できませんでした。
+# Up to 2 lines. English: Delete the safety copy of %s from %s?
+T_SAFETY_DELETE_ASK = %s の安全コピー（%s）を削除しますか？
 # Up to 3 lines. English: Choose an ELF...
 T_PICK_ELF = ELF を選択...
 # Up to 3 lines. English: Unable to read this memory card.

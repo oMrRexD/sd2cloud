@@ -18,8 +18,8 @@ T_SEARCHING = Пошук карток пам’яті...
 T_NO_SD = Папку карток пам’яті sd2psx не знайдено (MemoryCards/PS2 на MMCE).
 # Up to 5 lines. English: No memory cards are included in the sync. Check sd2cloud.ini.
 T_NO_CARDS = Немає карток для синхронізації. Перевірте sd2cloud.ini.
-# Up to 3 lines. English: Checking
-T_CHECKING = Перевірка
+# Up to 3 lines. English: Checking the card...
+T_CHECKING = Перевірка картки...
 # One line. English: Never synced
 T_ST_NEW = Не синхронізована
 # One line. English: Not synced
@@ -840,6 +840,58 @@ T_NEW_VMC = Новий VMC
 T_VMC_CREATE_HINT = У папці VMC на microSD, для ігор OPL.
 # Up to 2 lines. English: Create the VMC "%s" (%d MB)?
 T_CREATE_VMC_ASK = Створити VMC «%s» (%d МБ)?
+# One line. English: Restore the Memory Card?
+T_MEMCARD_RESTORE_ASK = Відновити картку пам’яті?
+# Up to 4 lines. English: The backup's saves will be copied to the Memory Card. Saves with the same folder will be replaced; the others will be kept.
+T_MEMCARD_RESTORE_TEXT = Збереження з копії буде скопійовано на картку пам’яті. Збереження з тією самою папкою буде замінено, інші залишаться.
+# One line. English: Memory Card restored
+T_MEMCARD_RESTORED = Картку пам’яті відновлено
+# One line. English: Check card
+T_CHECK_CARD = Перевірити картку
+# One line. English: No problems found
+T_CHECK_OK = Проблем не знайдено
+# One line. English: Problems found
+T_CHECK_PROBLEMS = Знайдено проблеми
+# One line. English: Folders: %d · Files: %d
+T_CHECK_CONTENTS = Папок: %d · Файлів: %d
+# One line. English: Clusters in use: %u of %u
+T_CHECK_USED = Кластерів зайнято: %u з %u
+# One line. English: Broken chains: %d
+T_CHECK_CHAINS = Пошкоджених ланцюжків: %d
+# One line. English: Cross-linked clusters: %d
+T_CHECK_CROSSED = Перехресних кластерів: %d
+# One line. English: Lost clusters: %d
+T_CHECK_LOST = Втрачених кластерів: %d
+# One line. English: Invalid entries: %d
+T_CHECK_ENTRIES = Неправильних записів: %d
+# Up to 2 lines. English: The card was not changed. Restore a backup, or copy its saves to a new card.
+T_CHECK_ADVICE = Картку не змінено. Відновіть резервну копію або скопіюйте збереження на нову картку.
+# One line. English: Safety copies
+T_SAFETY_TITLE = Страхові копії
+# One line. English: Creating a safety copy...
+T_SAFETY_MAKING = Створення страхової копії...
+# Up to 2 lines. English: Unable to create the safety copy.
+T_SAFETY_FAILED = Не вдалося створити страхову копію.
+# One line. English: Continue anyway?
+T_SAFETY_FAILED_TEXT = Продовжити все одно?
+# Up to 2 lines. English: There are no safety copies.
+T_SAFETY_NONE = Страхових копій немає.
+# Up to 2 lines. English: A safety copy will be created first (Tools > Safety copies).
+T_SAFETY_NOTE = Спочатку буде створено страхову копію (Інструменти > Страхові копії).
+# Up to 2 lines. English: Replace %s with its copy from %s?
+T_SAFETY_REPLACE_ASK = Замінити %s копією від %s?
+# Up to 2 lines. English: The card's current content will be replaced.
+T_SAFETY_REPLACE_TEXT = Поточний вміст картки буде замінено.
+# Up to 2 lines. English: Restore %s from its copy from %s?
+T_SAFETY_RESTORE_ASK = Відновити %s з копії від %s?
+# Up to 2 lines. English: The card will be created again on the microSD.
+T_SAFETY_RESTORE_TEXT = Картку буде створено на microSD заново.
+# Up to 2 lines. English: Safety copy restored.
+T_SAFETY_RESTORED = Страхову копію відновлено.
+# Up to 2 lines. English: Unable to restore the safety copy.
+T_SAFETY_RESTORE_FAILED = Не вдалося відновити страхову копію.
+# Up to 2 lines. English: Delete the safety copy of %s from %s?
+T_SAFETY_DELETE_ASK = Видалити страхову копію %s від %s?
 # Up to 3 lines. English: Choose an ELF...
 T_PICK_ELF = Виберіть ELF...
 # Up to 3 lines. English: Unable to read this memory card.

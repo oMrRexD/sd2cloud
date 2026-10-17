@@ -87,6 +87,8 @@ static int restore_flow(card_t *c, const drive_file_t *f)
 {
     char when[40], t[300];
     int active, channel = 0, inUse, unsure, r;
+    if (!strcmp(c->id, MEMCARD_ID))   /* (the Memory Card: its saves are put back, not a card file) */
+        return memcard_restore(c, f);
     backup_when(c, f, when, sizeof(when));
     for (;;) {
         active = active_card(&channel);

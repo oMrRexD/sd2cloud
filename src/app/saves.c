@@ -649,10 +649,10 @@ u32 browser_wait(u32 buttons)
  * the row it is on, and nothing on the screen underneath: the saves are shown the new way once, when the box is
  * closed. The settings keep both */
 
-enum { OPT_SYNC, OPT_SORT, OPT_REPEATED, OPT_EXPORT, OPT_BY_GAME };
+enum { OPT_SYNC, OPT_SORT, OPT_REPEATED, OPT_EXPORT, OPT_BY_GAME, OPT_RESTORE };
 #define OPT_W 380
 static struct {
-    int n, cursor, id[5];
+    int n, cursor, id[6];
     int sort, repeated;   /* as the rows say, for now */
 } opt;
 
@@ -669,7 +669,8 @@ static void scene_options(float t)
     for (i = 0; i < opt.n; i++) {   /* what it is on the left, how it is now on the right */
         const char *label = T(opt.id[i] == OPT_SYNC ? (brw.card == &slotCard ? T_TO_CLOUD : T_SYNC_NOW)
                               : opt.id[i] == OPT_SORT ? T_SORT_BY : opt.id[i] == OPT_EXPORT ? T_EXPORT_ALL
-                              : opt.id[i] == OPT_BY_GAME ? T_MIGRATE : T_REPEATED);
+                              : opt.id[i] == OPT_BY_GAME ? T_MIGRATE : opt.id[i] == OPT_RESTORE ? T_RESTORE_BACKUP
+                              : T_REPEATED);
         const char *value = opt.id[i] == OPT_SORT ? T(sortText[opt.sort])
                             : opt.id[i] == OPT_REPEATED ? T(opt.repeated ? T_REPEATED_SHOWN : T_REPEATED_HIDDEN) : "";
         float ry = y + 56 + i * 32;
@@ -682,7 +683,8 @@ static void scene_options(float t)
         }
     }
     {
-        int act = opt.id[opt.cursor] == OPT_SYNC || opt.id[opt.cursor] == OPT_EXPORT || opt.id[opt.cursor] == OPT_BY_GAME;
+        int act = opt.id[opt.cursor] == OPT_SYNC || opt.id[opt.cursor] == OPT_EXPORT || opt.id[opt.cursor] == OPT_BY_GAME ||
+                  opt.id[opt.cursor] == OPT_RESTORE;
         legend_t l[2] = {{BUTTON_CIRCLE, T(T_BACK)}, {BUTTON_CROSS, T(act ? T_SELECT : T_TPL_CHANGE)}};
         look_legend(l, 2, 0);
     }
@@ -698,6 +700,8 @@ static int browser_options(const card_t *c)
     opt.n = opt.cursor = 0;
     if (c != &allGames && c != &fileCard && !viewOther)   /* (the device's cards are synced; the Memory Card is sent whole) */
         opt.id[opt.n++] = OPT_SYNC;
+    if (c == &slotCard)   /* (and put back whole, from one of the backups that sent) */
+        opt.id[opt.n++] = OPT_RESTORE;
     opt.id[opt.n++] = OPT_SORT;
     if (c == &allGames) {
         opt.id[opt.n++] = OPT_REPEATED;
@@ -722,8 +726,9 @@ static int browser_options(const card_t *c)
             continue;
         }
         sound_play(SND_CONFIRM);
-        if (opt.id[opt.cursor] == OPT_SYNC || opt.id[opt.cursor] == OPT_EXPORT || opt.id[opt.cursor] == OPT_BY_GAME) {
-            r = opt.id[opt.cursor] == OPT_SYNC ? 2 : opt.id[opt.cursor] == OPT_EXPORT ? 4 : 8;
+        if (opt.id[opt.cursor] == OPT_SYNC || opt.id[opt.cursor] == OPT_EXPORT || opt.id[opt.cursor] == OPT_BY_GAME ||
+            opt.id[opt.cursor] == OPT_RESTORE) {
+            r = opt.id[opt.cursor] == OPT_SYNC ? 2 : opt.id[opt.cursor] == OPT_EXPORT ? 4 : opt.id[opt.cursor] == OPT_BY_GAME ? 8 : 16;
             break;
         }
         ui_lock();
@@ -921,6 +926,9 @@ void card_screen(card_t *c)
             else if (k & 8) {
                 migrate_screen(c);
                 browser_load(c, brw.cursor);   /* (its saves may have gone from it) */
+            } else if (k & 16) {
+                memcard_history();
+                browser_load(c, 0);   /* (with the saves put back) */
             }
             ui_scene(scene_browser);
         } else if (b & PAD_SQUARE) {   /* (a card file's saves) */

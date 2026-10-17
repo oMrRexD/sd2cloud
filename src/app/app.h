@@ -183,7 +183,10 @@ extern card_t slotCard;                  /* the Memory Card, in the console's ot
 int memcard_there(void);
 void memcard_screen(void);
 void memcard_hint(void);
-void memcard_upload(void);               /* the whole card, as a backup of its own on Drive */
+void memcard_upload(void);
+#define MEMCARD_ID "slot/memcard"   /* the Memory Card's backups on Drive (and in the state) */
+void memcard_history(void);         /* its backups on Drive, to put one back */
+int memcard_restore(card_t *c, const drive_file_t *f);   /* that backup's saves into it, asked first. 1 = done */               /* the whole card, as a backup of its own on Drive */
 
 /* ------------------------------------------------------------ cardops.c */
 typedef struct {
@@ -194,6 +197,13 @@ typedef struct {
  * folder), and its size. 1 = it was made (a card of the device: cards[] has it at its end, cardsUnsorted) */
 int card_create(const save_ref_t *saves, int n);
 void card_resize_screen(card_t *c);
+void card_check_screen(card_t *c);
+/* safety.c: a copy of that card's file kept in the data folder (Safety/) before it is deleted, made again of another
+ * size or has its saves moved off it; the newest ten stay. 0 = kept, or the user goes on without one (asked);
+ * -1 = given up */
+int safety_copy(const card_t *c);
+void safety_screen(void);   /* Tools > "Safety copies": each one put back as its card, or deleted */
+void format_when(int year, int month, int day, int hour, int minute, char *out, size_t size);   /* (format.c) */   /* "Check card": its file system looked through, read only, and what was found */
 /* "New VMC": an OPL VMC made in the microSD's VMC folder, of the sizes the OPL makes (written whole, at once: the OPL
  * doesn't take one whose file is in pieces), with those saves in it (n = 0: empty). 1 = made */
 int vmc_create(const save_ref_t *saves, int n);      /* the card made again of another size, picked and asked */
