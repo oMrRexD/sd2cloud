@@ -146,7 +146,7 @@ SCENARIOS = [
     {"name": "memcard-paste-list", "what": "a save marked on a card, pasted with START on the Memory Card in the list of "
      "cards", "cards": CARDS, "memcard": "memcard.ps2", "script": "XXXO>>DDDSXXC"},
     {"name": "settings", "what": "settings changed (how many backups are kept, their format, the language) and About",
-     "cards": CARDS, "script": "SDDDDDDXDXDXDXUUXUXDDDDDDXOOC"},
+     "cards": CARDS, "script": "SDDDDDDXDXDXDXXDXDXUUUXUXDDDDDDDXOOC"},
     # (a sync with nothing sent, "B": SELECT shows its cards; X on one still to go: resolved; on the next, its sync off)
     {"name": "sync-list", "what": "the list of a sync's cards: one card marked as resolved, another's sync turned off",
      "cards": CARDS, "script": "BLDXDXDXDDXwC"},
@@ -154,6 +154,10 @@ SCENARIOS = [
     {"name": "sync-list-skip", "what": "the list of a sync's cards: square skips a card at once, and takes it back",
      "cards": CARDS, "script": "BLDQQQwC"},
     # (a card marked as resolved as it is, the empty one: the automatic sync leaves it; a sync of every card sends it)
+    # (the backup by save on: a sync of every card sends, after each card, its saves one by one; then the Memory
+    # Card's, in the other slot. Each save's signature is kept in the state, and a save as it was sent isn't sent again)
+    {"name": "save-backup", "what": "the backup by save: each card's saves, and the Memory Card's, sent one by one",
+     "cards": CARDS, "memcard": "memcard.ps2", "settings": "[cards]\r\nsaves = yes\r\n", "script": "BwC"},
     {"name": "sync-resolved", "what": "a card marked as resolved is left out of the automatic sync, until it is sent",
      "cards": CARDS, "files": {"SD2Cloud/state-debug.ini": RESOLVED}, "script": "BwC"},
     {"name": "card-sync-toggle", "what": "a card's sync turned off in its options, and on again", "cards": CARDS,

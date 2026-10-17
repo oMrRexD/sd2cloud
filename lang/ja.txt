@@ -893,6 +893,28 @@ T_SAFETY_RESTORED = 安全コピーを復元しました。
 T_SAFETY_RESTORE_FAILED = 安全コピーを復元できませんでした。
 # Up to 2 lines. English: Delete the safety copy of %s from %s?
 T_SAFETY_DELETE_ASK = %s の安全コピー（%s）を削除しますか？
+# One line. English: Individual save backup
+T_SET_SAVE_BACKUP = セーブデータ個別バックアップ
+# One line. English: On
+T_SAVE_BACKUP_ON = オン
+# One line. English: Off
+T_SAVE_BACKUP_OFF = オフ
+# Up to 4 lines. English: Each save that changes is also sent by itself to Google Drive, with its versions. The automatic sync also includes the Memory Card in the other slot.
+T_SAVE_BACKUP_NOTE = 変更されたセーブデータは、Google ドライブにも個別に送信され、バージョンが保存されます。自動同期では、もう一方のスロットのメモリーカードも対象になります。
+# One line. English: Saves sent individually: %d
+T_SAVES_SENT_N = 個別に送信したセーブデータ: %d
+# One line. English: Versions on Drive
+T_SAVE_VERSIONS = ドライブのバージョン
+# Up to 3 lines. English: This save has no versions on Google Drive.
+T_SAVE_NO_VERSIONS = このセーブデータには Google ドライブのバージョンがありません。
+# Up to 2 lines. English: Restore the version of "%s" from %s?
+T_SAVE_VERSION_ASK = 「%s」の %s のバージョンを復元しますか？
+# Up to 2 lines. English: The current save will be replaced by this version.
+T_SAVE_VERSION_TEXT = 現在のセーブデータはこのバージョンで置き換えられます。
+# One line. English: Version restored.
+T_SAVE_VERSION_DONE = バージョンを復元しました。
+# Up to 2 lines. English: Unable to restore the version.
+T_SAVE_VERSION_FAILED = バージョンを復元できませんでした。
 # Up to 3 lines. English: Choose an ELF...
 T_PICK_ELF = ELF を選択...
 # Up to 3 lines. English: Unable to read this memory card.

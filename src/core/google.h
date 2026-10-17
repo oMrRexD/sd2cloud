@@ -30,9 +30,10 @@ int google_delete(const char *id);
 /* uploads a card, streamed, to the folder; progress(read_mcd, total_mcd). id = the file created */
 int google_upload(const card_t *c, const char *folder, const char *name, const datetime_t *t, stream_t *s,
                   int (*progress)(long long done, long long total), char *id, size_t idsize);
-/* a small file from memory (a single save). 0 = ok */
+/* a small file from memory (a single save). tag = whose save it is (appProperties card: google_list lists its
+ * versions by it; NULL = none). 0 = ok */
 int google_upload_buffer(const char *folder, const char *name, const char *description, const unsigned char *d, size_t n,
-                         int (*progress)(long long done, long long total), char *id, size_t idsize);
+                         int (*progress)(long long done, long long total), char *id, size_t idsize, const char *tag);
 /* downloads a Drive file, handing each piece to sink (!= 0 stops). 0 = ok, -2 = stopped by sink, -1 = error */
 int google_download(const char *id, int (*sink)(const unsigned char *d, size_t n, void *u), void *u);
 /* called while curl transfers (to watch the controller during an upload or download) */

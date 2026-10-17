@@ -890,6 +890,28 @@ T_SAFETY_RESTORED = Cópia de segurança restaurada.
 T_SAFETY_RESTORE_FAILED = Não foi possível restaurar a cópia de segurança.
 # Up to 2 lines. English: Delete the safety copy of %s from %s?
 T_SAFETY_DELETE_ASK = Deseja eliminar a cópia de segurança de %s de %s?
+# One line. English: Individual save backup
+T_SET_SAVE_BACKUP = Backup de saves individuais
+# One line. English: On
+T_SAVE_BACKUP_ON = Ativado
+# One line. English: Off
+T_SAVE_BACKUP_OFF = Desativado
+# Up to 4 lines. English: Each save that changes is also sent by itself to Google Drive, with its versions. The automatic sync also includes the Memory Card in the other slot.
+T_SAVE_BACKUP_NOTE = Cada save alterado também será enviado individualmente ao Google Drive, com suas versões. A sincronização automática também inclui o Memory Card do outro slot.
+# One line. English: Saves sent individually: %d
+T_SAVES_SENT_N = Saves enviados individualmente: %d
+# One line. English: Versions on Drive
+T_SAVE_VERSIONS = Versões no Drive
+# Up to 3 lines. English: This save has no versions on Google Drive.
+T_SAVE_NO_VERSIONS = Este save não tem versões no Google Drive.
+# Up to 2 lines. English: Restore the version of "%s" from %s?
+T_SAVE_VERSION_ASK = Deseja restaurar a versão de "%s" de %s?
+# Up to 2 lines. English: The current save will be replaced by this version.
+T_SAVE_VERSION_TEXT = O save atual será substituído por esta versão.
+# One line. English: Version restored.
+T_SAVE_VERSION_DONE = Versão restaurada.
+# Up to 2 lines. English: Unable to restore the version.
+T_SAVE_VERSION_FAILED = Não foi possível restaurar a versão.
 # Up to 3 lines. English: Choose an ELF...
 T_PICK_ELF = Escolher um ELF...
 # Up to 3 lines. English: Unable to read this memory card.

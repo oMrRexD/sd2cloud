@@ -27,11 +27,18 @@ void igr(void)
     /* at IGR what matters is getting back to OPL quickly: nothing changed = say so and return; everything went well =
      * "backup sent" with the exit sound and return. A failure stays on screen a little longer (summary_seconds), else
      * it would go unnoticed. Cancelling returns right away. */
-    if (!n) {
+    if (!n && !(cfg.save_backup && memcard_there())) {
         message(COLOR_TITLE, T(T_IGR_TITLE), COLOR_TEXT, T(T_IGR_NOTHING));
         leave(cfg.igr_return);
     }
-    run_backup(0, 1);
+    if (n)
+        run_backup(0, 1);
+    else   /* (no card changed: the Memory Card may have, by the backup by save) */
+        memcard_saves_only();
+    if (!n && !sent && !failed) {
+        message(COLOR_TITLE, T(T_IGR_TITLE), COLOR_TEXT, T(T_IGR_NOTHING));
+        leave(cfg.igr_return);
+    }
     if (backupCancelled)
         leave(cfg.igr_return);
     if (failed) {

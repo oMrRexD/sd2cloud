@@ -30,8 +30,8 @@ static void start_app(card_t *c, const char *folder, const char *boot)
  * size on the right, and what can be done with it. Also the page of a save still in a .psu file, which has the
  * file's name where the card's would be */
 
-static const int saveOptions[] = {T_COPY, T_MOVE, T_DELETE, T_TO_CLOUD};
-static const int appOptions[] = {T_START_APP, T_COPY, T_MOVE, T_DELETE, T_TO_CLOUD};   /* a save that is a program */
+static const int saveOptions[] = {T_COPY, T_MOVE, T_DELETE, T_TO_CLOUD, T_SAVE_VERSIONS};
+static const int appOptions[] = {T_START_APP, T_COPY, T_MOVE, T_DELETE, T_TO_CLOUD, T_SAVE_VERSIONS};   /* a save that is a program */
 const int psuOptions[] = {T_IMPORT};
 static struct {
     save_view_t *v;
@@ -202,7 +202,7 @@ static void upload_shown(card_t *c, const save_view_t *v, const char *name)
 static void save_to_cloud(card_t *c, save_view_t *v)
 {
     buffer_t psu = {0};
-    char folderId[80], savesId[80] = "", name[160], desc[300], id[80], t[400];
+    char folderId[80], savesId[80] = "", name[160], desc[300], id[80], t[400], tag[140];
     const char *cache;
     char key[200];
     datetime_t when;
@@ -240,7 +240,8 @@ static void save_to_cloud(card_t *c, save_view_t *v)
             snprintf(name, sizeof(name), "%s %04d-%02d-%02d %02dh%02d.psu", v->s.folder, when.year, when.month, when.day, when.hour,
                      when.minute);
             snprintf(desc, sizeof(desc), "%s%s%s (%s) - " APP_NAME " " APP_VERSION, v->line1, v->line2[0] ? " " : "", v->line2, c->base);
-            r = google_upload_buffer(savesId, name, desc, psu.data, psu.len, on_progress, id, sizeof(id));
+            snprintf(tag, sizeof(tag), "save:%.80s/%s", mcfs_slot_port(c->path) >= 0 ? MEMCARD_ID : c->id, v->s.folder);
+            r = google_upload_buffer(savesId, name, desc, psu.data, psu.len, on_progress, id, sizeof(id), tag);
             state_write();
         }
     }
@@ -321,9 +322,9 @@ int save_screen(card_t *c, int i)
     else if (viewOther)
         save_page(v, c->base, bytes, saveOptions, 3);   /* (the other device's card: not in the slot, not synced) */
     else if (mcfs_save_app(c->path, &v->s, boot, sizeof(boot)))
-        save_page(v, c->base, bytes, appOptions, 5);
+        save_page(v, c->base, bytes, appOptions, 6);
     else
-        save_page(v, c->base, bytes, saveOptions, 4);
+        save_page(v, c->base, bytes, saveOptions, 5);
     while ((k = save_page_choice()) != 0) {
         switch (k) {
         case T_START_APP:
@@ -340,6 +341,9 @@ int save_screen(card_t *c, int i)
         case T_DELETE:
             if (save_delete(c, v))
                 return 1;
+            break;
+        case T_SAVE_VERSIONS:
+            save_versions_screen(c, v);
             break;
         default:
             save_to_cloud(c, v);

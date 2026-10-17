@@ -892,6 +892,28 @@ T_SAFETY_RESTORED = Страховая копия восстановлена.
 T_SAFETY_RESTORE_FAILED = Не удалось восстановить страховую копию.
 # Up to 2 lines. English: Delete the safety copy of %s from %s?
 T_SAFETY_DELETE_ASK = Удалить страховую копию %s от %s?
+# One line. English: Individual save backup
+T_SET_SAVE_BACKUP = Копии отдельных сохранений
+# One line. English: On
+T_SAVE_BACKUP_ON = Включено
+# One line. English: Off
+T_SAVE_BACKUP_OFF = Выключено
+# Up to 4 lines. English: Each save that changes is also sent by itself to Google Drive, with its versions. The automatic sync also includes the Memory Card in the other slot.
+T_SAVE_BACKUP_NOTE = Каждое изменённое сохранение будет также отправляться в Google Drive отдельно, с версиями. Автосинхронизация также включает карту памяти в другом слоте.
+# One line. English: Saves sent individually: %d
+T_SAVES_SENT_N = Отправлено отдельных сохранений: %d
+# One line. English: Versions on Drive
+T_SAVE_VERSIONS = Версии в Drive
+# Up to 3 lines. English: This save has no versions on Google Drive.
+T_SAVE_NO_VERSIONS = У этого сохранения нет версий в Google Drive.
+# Up to 2 lines. English: Restore the version of "%s" from %s?
+T_SAVE_VERSION_ASK = Восстановить версию «%s» от %s?
+# Up to 2 lines. English: The current save will be replaced by this version.
+T_SAVE_VERSION_TEXT = Текущее сохранение будет заменено этой версией.
+# One line. English: Version restored.
+T_SAVE_VERSION_DONE = Версия восстановлена.
+# Up to 2 lines. English: Unable to restore the version.
+T_SAVE_VERSION_FAILED = Не удалось восстановить версию.
 # Up to 3 lines. English: Choose an ELF...
 T_PICK_ELF = Выберите ELF...
 # Up to 3 lines. English: Unable to read this memory card.

@@ -202,7 +202,13 @@ void card_check_screen(card_t *c);
  * size or has its saves moved off it; the newest ten stay. 0 = kept, or the user goes on without one (asked);
  * -1 = given up */
 int safety_copy(const card_t *c);
-void safety_screen(void);   /* Tools > "Safety copies": each one put back as its card, or deleted */
+void safety_screen(void);
+/* savesync.c, the backup by save: the saves of that card that changed since they were last sent, each sent by itself
+ * as a .psu to the card's Saves folder on Drive (folderId = the card's folder), the newest of each kept. How many were
+ * sent; -1 = they couldn't be */
+int saves_backup(card_t *c, const char *folderId);
+void save_versions_screen(card_t *c, save_view_t *v);   /* "Versions on Drive": one of them put back in its place */
+void memcard_saves_only(void);   /* (backup.c) the Memory Card's saves by themselves, when no card is to be sent */   /* Tools > "Safety copies": each one put back as its card, or deleted */
 void format_when(int year, int month, int day, int hour, int minute, char *out, size_t size);   /* (format.c) */   /* "Check card": its file system looked through, read only, and what was found */
 /* "New VMC": an OPL VMC made in the microSD's VMC folder, of the sizes the OPL makes (written whole, at once: the OPL
  * doesn't take one whose file is in pieces), with those saves in it (n = 0: empty). 1 = made */

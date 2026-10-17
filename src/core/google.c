@@ -777,19 +777,20 @@ out:
 /* a small file from memory (a single save, .psu): a resumable session and the whole file in one PUT, then the
  * SHA-256 Drive computed must be the one of the data. 0 = ok */
 int google_upload_buffer(const char *folder, const char *name, const char *description, const unsigned char *d, size_t n,
-                         int (*progress)(long long done, long long total), char *id, size_t idsize)
+                         int (*progress)(long long done, long long total), char *id, size_t idsize, const char *tag)
 {
     response_t r = {0};
-    char body[900], nj[160], dj[300], range[80], sha[65], checksum[80] = "", m[200], session[1024];
+    char body[1100], nj[160], dj[300], tj[200], range[80], sha[65], checksum[80] = "", m[200], session[1024];
     struct curl_slist *hdr = NULL;
     CURLcode cc;
     long h;
     json_escape(name, nj, sizeof(nj));
     json_escape(description, dj, sizeof(dj));
+    json_escape(tag ? tag : "", tj, sizeof(tj));
     snprintf(body, sizeof(body),
              "{\"name\":\"%s\",\"mimeType\":\"application/octet-stream\",\"parents\":[\"%s\"],\"description\":\"%s\","
-             "\"appProperties\":{\"sd2cloud\":\"1\",\"save\":\"1\"}}",
-             nj, folder, dj);
+             "\"appProperties\":{\"sd2cloud\":\"1\",\"save\":\"1\"%s%s%s}}",
+             nj, folder, dj, tag ? ",\"card\":\"" : "", tj, tag ? "\"" : "");
     h = api("POST", URL_UPLOAD "?uploadType=resumable&fields=id,sha256Checksum", body, &r);
     if (h != 200 || !r.location[0]) {
         reason(&r, m, sizeof(m));

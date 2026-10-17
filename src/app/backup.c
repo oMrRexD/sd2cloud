@@ -153,6 +153,52 @@ static int dry_upload(const card_t *c, stream_t *s)
 
 /* rotate = delete the backups beyond the configured limit (not before a restore: the backup picked to restore could
  * be the oldest one) */
+/* "Saves sent by themselves: N" */
+static const char *saves_sent(int n)
+{
+    static char t[80];
+    snprintf(t, sizeof(t), T(T_SAVES_SENT_N), n);
+    return t;
+}
+
+/* The backup by save of the Memory Card in the other slot, when it is on and there is one (the automatic sync is
+ * after a game it may have saved to) */
+static void memcard_saves(void)
+{
+    char folderId[80];
+    int r;
+    if (!cfg.save_backup || !memcard_there())
+        return;
+    r = DRY ? 0 : card_folder(&slotCard, folderId, sizeof(folderId));
+    if (r == 0)
+        r = saves_backup(&slotCard, folderId);
+    if (r > 0) {
+        add_result(COLOR_OK, "%s: %s", slotCard.base, saves_sent(r));
+        sent++;
+    } else if (r < 0 && !backupCancelled) {
+        add_result(COLOR_ERROR, "%s: %s (%s)", slotCard.base, T(T_UPLOAD_FAILED), googleError);
+        failed++;
+    }
+}
+
+void memcard_saves_only(void)
+{
+    int r;
+    nResults = sent = failed = 0;
+    backupCancelled = cancelLatched = 0;
+    googleError[0] = 0;
+    rootId[0] = 0;
+    if ((r = DRY ? 0 : ensure_google(!igrMode)) != 0) {
+        if (r > 0) {
+            add_result(COLOR_ERROR, "%s %s", T(r), googleError);
+            failed++;
+        }
+        return;
+    }
+    memcard_saves();
+    state_write();
+}
+
 void run_backup(int mode, int rotate)
 {
     char name[160], folderId[80], t[200];
@@ -262,8 +308,15 @@ void run_backup(int mode, int rotate)
         add_result(COLOR_OK, "%s: %s (%s)", c->base, T(T_UPLOAD_OK), t);
         if (rotate && !DRY)
             delete_old(c, folderId, id);
+        if (cfg.save_backup && !backupCancelled) {   /* (and its saves that changed, each by itself) */
+            int each = saves_backup(c, folderId);
+            if (each > 0)
+                add_result(COLOR_OK, "%s: %s", c->base, saves_sent(each));
+        }
         backupSkip = 0;   /* (square while the old backups were deleted: this card was sent already) */
     }
+    if (mode != 3 && !backupCancelled)   /* (a sync of every card, and the automatic one: the Memory Card's saves too) */
+        memcard_saves();
     for (; k < nSync; k++)   /* cancelled: a card resolved or turned off on the list before its turn still is */
         if (syncCards[k].state == SY_RESOLVED || syncCards[k].state == SY_OFF)
             left_out(syncCards[k].c, syncCards[k].state, 0);

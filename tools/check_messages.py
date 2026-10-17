@@ -311,7 +311,13 @@ PLACE = {
     "T_SAFETY_REPLACE_ASK": ("text", WIDE, 2), "T_SAFETY_REPLACE_TEXT": ("text", WIDE, 2),
     "T_SAFETY_RESTORE_ASK": ("text", WIDE, 2), "T_SAFETY_RESTORE_TEXT": ("text", WIDE, 2),
     "T_SAFETY_RESTORED": ("text", 296, 2), "T_SAFETY_RESTORE_FAILED": ("text", 296, 2),
-    "T_SAFETY_DELETE_ASK": ("text", WIDE, 2), "T_RENAME_VMC_TEXT": ("text", WIDE, 3), "T_MIGRATE_DELETE_ASK": ("text", WIDE, 2), "T_MIGRATE_DELETE_TEXT": ("text", WIDE, 3),
+    "T_SAFETY_DELETE_ASK": ("text", WIDE, 2),
+    # the backup by save: its row in the settings (on the left; its value on the right); what it does, when it is
+    # turned on; a line of the sync's results; a save's versions (the option on its page, the list's title)
+    "T_SET_SAVE_BACKUP": ("text", 300, 1), "T_SAVE_BACKUP_ON": ("text", 150, 1), "T_SAVE_BACKUP_OFF": ("text", 150, 1),
+    "T_SAVE_BACKUP_NOTE": ("text", WIDE, 4), "T_SAVES_SENT_N": ("small", 400, 1), "T_SAVE_VERSIONS": ("text", 240, 1),
+    "T_SAVE_NO_VERSIONS": ("text", 296, 3), "T_SAVE_VERSION_ASK": ("text", WIDE, 2), "T_SAVE_VERSION_TEXT": ("text", WIDE, 2),
+    "T_SAVE_VERSION_DONE": ("text", 296, 1), "T_SAVE_VERSION_FAILED": ("text", 296, 2), "T_RENAME_VMC_TEXT": ("text", WIDE, 3), "T_MIGRATE_DELETE_ASK": ("text", WIDE, 2), "T_MIGRATE_DELETE_TEXT": ("text", WIDE, 3),
 }
 PARAGRAPH = ("text", DIALOG, 3)     # error messages and the rest: up to 3 lines in a box
 # what only an sd2psx is ever told (being moved to another card, its boot cards, one more channel for a folder): not

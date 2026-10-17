@@ -10,7 +10,7 @@ static void helper_install_now(int doneTitle);
 
 
 enum { SET_SYNC_ALL, SET_AUTO_SYNC, SET_HELPER, SET_IGR_RETURN, SET_DEVICE, SET_CARD_SIZE, SET_LANGUAGE, SET_KEEP,
-       SET_FORMAT, SET_UPDATES, SET_CHANNEL, SET_ACCOUNT, SET_ABOUT, SET_MAX };
+       SET_SAVE_BACKUP, SET_FORMAT, SET_UPDATES, SET_CHANNEL, SET_ACCOUNT, SET_ABOUT, SET_MAX };
 #define SET_X      80     /* the labels; the values end at SET_RIGHT */
 #define SET_RIGHT  560
 #define SET_Y0     120
@@ -55,6 +55,7 @@ static void build_settings(void)
                                                                                      : T(T_AUTO));
     snprintf(v, sizeof(v), "%d", cfg.keep);
     set_item(&i, SET_KEEP, T(T_SET_KEEP), cfg.keep ? v : T(T_KEEP_ALL));
+    set_item(&i, SET_SAVE_BACKUP, T(T_SET_SAVE_BACKUP), T(cfg.save_backup ? T_SAVE_BACKUP_ON : T_SAVE_BACKUP_OFF));
     set_item(&i, SET_FORMAT, T(T_SET_FORMAT), format_name(cfg.ps2));
     if (updateAvailable)
         snprintf(v, sizeof(v), T(T_UPDATE_AVAILABLE), update_tag());
@@ -81,7 +82,7 @@ static void scene_settings(float t)
     look_title(W / 2.0f, 88, T(T_SETTINGS), 1);
     for (i = 0; i < st.n; i++) {
         /* (one or two more rows than usual: closer together) */
-        float y = SET_Y0 + i * (st.n > 12 ? SET_ROW - 3 : st.n > 11 ? SET_ROW - 2 : SET_ROW);
+        float y = SET_Y0 + i * (st.n > 13 ? SET_ROW - 4 : st.n > 12 ? SET_ROW - 3 : st.n > 11 ? SET_ROW - 2 : SET_ROW);
         if (i == st.cursor) {
             look_glow_text(FONT_TEXT, SET_X, y, COLOR_ITEM, COLOR_ITEM_ON, st.label[i]);
             ui_text_right(FONT_TEXT, SET_RIGHT, y, 0xD8E4F4, st.value[i]);
@@ -426,6 +427,22 @@ void pick_device(int startup)
 /* where the updates come from: the releases (stable) or the build made from every change (beta, after saying what
  * that means). The channel chosen is looked at right away; leaving the beta, that is the way back to the stable
  * version */
+/* the backup by save, on or off: what it does is said when it is turned on */
+static void pick_save_backup(void)
+{
+    static const char *items[2];
+    int k;
+    items[0] = T(T_SAVE_BACKUP_OFF);
+    items[1] = T(T_SAVE_BACKUP_ON);
+    if ((k = choose(T(T_SET_SAVE_BACKUP), items, 2, cfg.save_backup)) < 0 || k == cfg.save_backup)
+        return;
+    if (k && !confirm(T(T_SET_SAVE_BACKUP), T(T_SAVE_BACKUP_NOTE), T_CONTINUE))
+        return;
+    cfg.save_backup = k;
+    config_set("cards", "saves", k ? "yes" : "no");
+    log_msg("backup by save: %s", k ? "on" : "off");
+}
+
 static void pick_channel(void)
 {
     static const char *items[2];
@@ -703,6 +720,9 @@ void settings_screen(void)
             break;
         case SET_CARD_SIZE:
             pick_card_size();
+            break;
+        case SET_SAVE_BACKUP:
+            pick_save_backup();
             break;
         case SET_LANGUAGE:
             pick_language();

@@ -19,6 +19,13 @@
 
 static card_state_t states[MAX_CARDS];
 static int nStates;
+#define MAX_SAVE_STATES 2048
+static struct {
+    short card;        /* its card's place in states[] */
+    char folder[33];
+    char sig[17];
+} saveStates[MAX_SAVE_STATES];
+static int nSaveStates;
 static struct {
     char name[128];   /* "<main folder>/<card folder>/Saves" whole: cut short, two folders would share a place */
     char id[80];
@@ -43,13 +50,49 @@ card_state_t *state_card(const char *id, int create)
 
 void state_forget(const char *id)
 {
-    int i;
+    int i, j, k;
     for (i = 0; i < nStates; i++)
         if (!strcasecmp(states[i].id, id)) {
             memmove(&states[i], &states[i + 1], (nStates - i - 1) * sizeof(states[0]));
             nStates--;
+            for (j = k = 0; j < nSaveStates; j++)   /* (its saves' go with it; the cards after it moved up one) */
+                if (saveStates[j].card != i) {
+                    saveStates[k] = saveStates[j];
+                    if (saveStates[k].card > i)
+                        saveStates[k].card--;
+                    k++;
+                }
+            nSaveStates = k;
             return;
         }
+}
+
+const char *state_save(const char *card, const char *folder)
+{
+    card_state_t *e = state_card(card, 0);
+    int i, c = e ? (int)(e - states) : -1;
+    for (i = 0; i < nSaveStates && c >= 0; i++)
+        if (saveStates[i].card == c && !strcmp(saveStates[i].folder, folder))
+            return saveStates[i].sig;
+    return NULL;
+}
+
+void state_set_save(const char *card, const char *folder, const char *sig)
+{
+    card_state_t *e = state_card(card, 1);
+    int i, c = e ? (int)(e - states) : -1;
+    if (c < 0)
+        return;
+    for (i = 0; i < nSaveStates; i++)
+        if (saveStates[i].card == c && !strcmp(saveStates[i].folder, folder)) {
+            COPY(saveStates[i].sig, sig);
+            return;
+        }
+    if (nSaveStates < MAX_SAVE_STATES) {
+        saveStates[nSaveStates].card = (short)c;
+        COPY(saveStates[nSaveStates].folder, folder);
+        COPY(saveStates[nSaveStates++].sig, sig);
+    }
 }
 
 void state_rename(const char *from, const char *to)
@@ -107,13 +150,14 @@ static void on_state(const char *s, const char *k, const char *v, void *u)
         else if (!strcasecmp(k, "sha256")) COPY(e->sha, v);
         else if (!strcasecmp(k, "when")) COPY(e->when, v);
         else if (!strcasecmp(k, "resolved")) COPY(e->resolved, v);
+        else if (!strncasecmp(k, "save:", 5)) state_set_save(s, k + 5, v);
     }
 }
 
 void state_read(void)
 {
     char path[260];
-    nStates = nFolders = 0;
+    nStates = nFolders = nSaveStates = 0;
     snprintf(path, sizeof(path), "%s" STATE_FILE, dataDir);
     ini_read(path, on_state, NULL);
 }
@@ -122,7 +166,7 @@ int state_write(void)
 {
     buffer_t b = {0};
     char path[260], t[512];
-    int i, r;
+    int i, j, r;
     const char *head = "; SD2Cloud state -- written by the app. Deleting it is safe: SD2Cloud finds its Drive folders again\r\n"
                        "; and backs up every card once more.\r\n";
     buf_append(&b, head, strlen(head));
@@ -139,6 +183,11 @@ int state_write(void)
             snprintf(t, sizeof(t), "resolved = %s\r\n", states[i].resolved);
             buf_append(&b, t, strlen(t));
         }
+        for (j = 0; j < nSaveStates; j++)
+            if (saveStates[j].card == i) {
+                snprintf(t, sizeof(t), "save:%s = %s\r\n", saveStates[j].folder, saveStates[j].sig);
+                buf_append(&b, t, strlen(t));
+            }
     }
     snprintf(path, sizeof(path), "%s" STATE_FILE, dataDir);
     ensure_data_dir();
