@@ -153,10 +153,12 @@ static int dry_upload(const card_t *c, stream_t *s)
 
 /* rotate = delete the backups beyond the configured limit (not before a restore: the backup picked to restore could
  * be the oldest one) */
-/* "Saves sent by themselves: N" */
+/* "28 saves uploaded", "1 save uploaded" */
 static const char *saves_sent(int n)
 {
     static char t[80];
+    if (n == 1)
+        return T(T_SAVES_SENT_ONE);
     snprintf(t, sizeof(t), T(T_SAVES_SENT_N), n);
     return t;
 }

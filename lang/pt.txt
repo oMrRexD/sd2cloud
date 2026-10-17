@@ -904,8 +904,10 @@ T_SAVE_BACKUP_ON = Ativado
 T_SAVE_BACKUP_OFF = Desativado
 # Up to 4 lines. English: Each save that changes is also sent by itself to Google Drive, with its versions. The automatic sync also includes the Memory Card in the other slot.
 T_SAVE_BACKUP_NOTE = Cada save alterado também será enviado individualmente ao Google Drive, com suas versões. A sincronização automática também inclui o Memory Card do outro slot.
-# One line. English: Saves sent individually: %d
-T_SAVES_SENT_N = Saves enviados individualmente: %d
+# One line. English: %d saves uploaded
+T_SAVES_SENT_N = %d saves enviados
+# One line. English: 1 save uploaded
+T_SAVES_SENT_ONE = 1 save enviado
 # One line. English: Versions on Drive
 T_SAVE_VERSIONS = Versões no Drive
 # Up to 3 lines. English: This save has no versions on Google Drive.

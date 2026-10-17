@@ -12,14 +12,14 @@ SLUS-21065/SLUS-21065-1: 2 folders, fingerprint 64fbc81ffd3ff7a8, new
 Card1-1: uploaded (2.0 MB)
 save BASLUS-21065ALPHA of Card1/Card1-1, by itself to Drive: 0 (dry)
 save BASLUS-21065BETA of Card1/Card1-1, by itself to Drive: 0 (dry)
-Card1-1: Saves sent individually: 2
+Card1-1: 2 saves uploaded
 Card2-1: uploaded (2.0 MB)
 SLUS-21065-1: uploaded (2.0 MB)
 save BASLUS-21065ALPHA of SLUS-21065/SLUS-21065-1, by itself to Drive: 0 (dry)
 save BASLUS-21065BETA of SLUS-21065/SLUS-21065-1, by itself to Drive: 0 (dry)
-SLUS-21065-1: Saves sent individually: 2
+SLUS-21065-1: 2 saves uploaded
 save BASLUS-99999TESTS of slot/mc1, by itself to Drive: 0 (dry)
-Memory Card: Saves sent individually: 1
+Memory Card: 1 save uploaded
 (end: capture)
 
 # files

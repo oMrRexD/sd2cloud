@@ -23,7 +23,8 @@
  * the data folder, stands for the one in the device); "j" there: the question that square brings up while cards are
  * sent; "B" there: a sync of every card with nothing sent, the script's buttons held while it goes. "b": the next
  * download of more than 100 KB breaks off halfway (it is taken up where it stopped). For the rescue (at the end of this file): "@<seconds>" at the very
- * start is the test's time limit, "Y" hangs and "Z" crashes, to try it. */
+ * start is the test's time limit, "Y" hangs and "Z" crashes, to try it. "v" captures the screen of a save sent by
+ * itself to Drive (the backup by save), once past half of them. */
 char script[256];
 int scriptPos, hasScript;
 int nRescue, rescueSeconds = 300, pastEnd;

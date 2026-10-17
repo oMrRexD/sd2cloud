@@ -58,24 +58,74 @@ static int saves_folder(const card_t *c, const char *folderId, char *savesId, si
     return 0;
 }
 
+/* -------- the screen while the saves go: each one's icon turning, its name, its card, a bar for it and "N of M" */
+
+static save_view_t sending;
+
+/* save i of the card, the k-th of m that go, on the screen of a save on its way */
+static void sending_show(card_t *c, int i, int k, int m)
+{
+    buffer_t iconsys = {0}, ico = {0};
+    icon_t *ic = NULL, *old = sending.icon;
+    if (mcfs_save_icon(c->path, &sv[i], &iconsys, &ico) == 0)
+        ic = icon_load(&iconsys, &ico);
+    buf_free(&iconsys);
+    buf_free(&ico);
+    ui_lock();
+    memset(&sending, 0, sizeof(sending));
+    sending.s = sv[i];
+    sending.card = c;
+    sending.icon = ic;
+    sending.tried = 1;
+    save_title(&sending, ic);
+    ui_unlock();
+    save_into(c, &sending, T_BACKING_UP);
+    ui_lock();
+    currentN = k;
+    totalN = m;
+    ui_unlock();
+    upload_screen(0, 1);
+    if (old)
+        icon_free(old);   /* (the screen shows the new one already) */
+#ifdef DEBUG_BUILD
+    if (k * 2 > m)
+        debug_capture_if('v');   /* (script: the screen of a save on its way, past the first half) */
+#endif
+}
+
+/* the saves that changed since they were last sent (each one's signature, as the state has it) */
+static int changed(const card_t *c, int n, unsigned char *go)
+{
+    char hex[17];
+    const char *was;
+    int i, m = 0;
+    for (i = 0; i < n; i++) {
+        snprintf(hex, sizeof(hex), "%016llx", svSig[i]);
+        /* (one that couldn't be read stays as it was) */
+        go[i] = svSig[i] && ((was = state_save(owner_of(c), sv[i].folder)) == NULL || strcmp(was, hex) != 0);
+        m += go[i];
+    }
+    return m;
+}
+
 int saves_backup(card_t *c, const char *folderId)
 {
     static drive_file_t old[200];
+    static unsigned char go[MCFS_MAX_SAVES];
     char savesId[80] = "", name[160], desc[200], tag[140], hex[17], id[80];
-    const char *was;
     datetime_t when;
-    int n, i, k, m, sent = 0, r;
+    int n, i, k, m, sent = 0, r, wasN = currentN, wasTotal = totalN, shown = 0, pending;
     if ((n = mcfs_list_saves(c->path, sv, MCFS_MAX_SAVES, NULL)) <= 0)
         return n < 0 ? -1 : 0;
     if (signatures(c, n) != 0)
         return -1;
+    pending = changed(c, n, go);
     for (i = 0; i < n && !backupCancelled; i++) {
         buffer_t psu = {0};
-        if (!svSig[i])
-            continue;   /* (it couldn't be read: as it was) */
+        if (!go[i])
+            continue;
         snprintf(hex, sizeof(hex), "%016llx", svSig[i]);
-        if ((was = state_save(owner_of(c), sv[i].folder)) != NULL && !strcmp(was, hex))
-            continue;   /* (as it was last sent) */
+        sending_show(c, i, ++shown, pending);
         save_tag(c, sv[i].folder, tag, sizeof(tag));
         r = 0;
         if (!DRY) {
@@ -86,7 +136,7 @@ int saves_backup(card_t *c, const char *folderId)
                      when.hour, when.minute, when.second);
             snprintf(desc, sizeof(desc), "%s (%s) - " APP_NAME " " APP_VERSION, sv[i].folder, c->base);
             r = mcfs_export_psu(c->path, sv[i].folder, &psu) == MCFS_OK
-                    ? google_upload_buffer(savesId, name, desc, psu.data, psu.len, NULL, id, sizeof(id), tag) : -1;
+                    ? google_upload_buffer(savesId, name, desc, psu.data, psu.len, on_progress, id, sizeof(id), tag) : -1;
             if (r == 0 && cfg.keep && (m = google_list(savesId, tag, old, 200)) > cfg.keep)
                 for (k = 0; k < m - cfg.keep; k++)   /* (the oldest first: the newest stay) */
                     google_delete(old[k].id);
@@ -97,6 +147,15 @@ int saves_backup(card_t *c, const char *folderId)
             state_set_save(owner_of(c), sv[i].folder, hex);
             sent++;
         }
+    }
+    if (shown) {   /* (off the screen, and the count of the cards being sent, if they are, as it was) */
+        save_into_done();
+        icon_free(sending.icon);
+        memset(&sending, 0, sizeof(sending));
+        ui_lock();
+        currentN = wasN;
+        totalN = wasTotal;
+        ui_unlock();
     }
     state_write();
     return sent;

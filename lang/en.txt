@@ -910,7 +910,9 @@ T_SAVE_BACKUP_OFF = Off
 # Up to 4 lines.
 T_SAVE_BACKUP_NOTE = Each save that changes is also sent by itself to Google Drive, with its versions. The automatic sync also includes the Memory Card in the other slot.
 # One line.
-T_SAVES_SENT_N = Saves sent individually: %d
+T_SAVES_SENT_N = %d saves uploaded
+# One line.
+T_SAVES_SENT_ONE = 1 save uploaded
 # One line.
 T_SAVE_VERSIONS = Versions on Drive
 # Up to 3 lines.
