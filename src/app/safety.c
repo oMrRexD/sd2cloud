@@ -138,6 +138,7 @@ static card_t *copy_card(const copy_t *k, const char *base, char *target, size_t
 
 static void restore_copy(const copy_t *k)
 {
+    static card_t shown;   /* (on the screen while it is written: the card, or its name when it isn't there) */
     char base[64], when[40], from[320], target[260], file[80], tmp[280], t[300], dir[200];
     card_t *c;
     int r;
@@ -149,11 +150,17 @@ static void restore_copy(const copy_t *k)
         return;
     if (c && card_free(c, NULL))
         return;
-    message(0, NULL, COLOR_TEXT, T(T_RESTORE_STEP_WRITE));
+    if (c)
+        shown = *c;
+    else {
+        memset(&shown, 0, sizeof(shown));
+        snprintf(shown.base, sizeof(shown.base), "%s", base);
+    }
+    card_work(&shown, 0, T(T_RESTORE_STEP_WRITE), 1);
     if (c) {   /* (written beside it first, and only then put in its place) */
         snprintf(tmp, sizeof(tmp), "%s.new", target);
         unlink(tmp);
-        r = file_copy(from, tmp);
+        r = file_copy_shown(from, tmp, upload_screen);
         if (r == 0 && (r = unlink(target)) != 0 && !file_exists(target))
             r = 0;
         if (r == 0)
@@ -165,11 +172,12 @@ static void restore_copy(const copy_t *k)
     } else {
         snprintf(dir, sizeof(dir), "%.*s", (int)(strrchr(target, '/') - target + 1), target);
         ensure_dir(dir);
-        r = file_copy(from, target);
-        if (r == 0 && (c = !strcmp(k->folder, VMC_FOLDER) ? vmc_append(base) : cards_append(k->folder, file)) != NULL) {
-            cards_recheck(c);
-            cardsUnsorted = 1;
-        }
+        r = file_copy_shown(from, target, upload_screen);
+    }
+    card_work_done();
+    if (r == 0 && !c && (c = !strcmp(k->folder, VMC_FOLDER) ? vmc_append(base) : cards_append(k->folder, file)) != NULL) {
+        cards_recheck(c);
+        cardsUnsorted = 1;
     }
     log_msg("safety copy %s put back at %s: %d", from, target, r);
     message_wait(0, NULL, r == 0 ? COLOR_OK : COLOR_ERROR, T(r == 0 ? T_SAFETY_RESTORED : T_SAFETY_RESTORE_FAILED));
