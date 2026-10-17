@@ -6,15 +6,12 @@
 static void card_options(card_t *c)
 {
     enum { OPT_SYNC, OPT_INCLUDED, OPT_RESTORE, OPT_DEVICE, OPT_MOVE, OPT_INSERT, OPT_RENAME, OPT_RESIZE, OPT_BY_GAME,
-           OPT_CHECK, OPT_DELETE, OPT_DELETE_FOLDER, OPTS };
+           OPT_CHECK, OPT_DELETE, OPTS };
     static const char *devices[FDEVS];
     static char move[96];
     const char *items[OPTS];
-    int id[OPTS], n, k = 0, d, i, mates;
+    int id[OPTS], n, k = 0, d;
     for (;;) {   /* circle in what comes next comes back here; circle here goes back to the main screen */
-        for (i = mates = 0; i < nCards && c->type != TYPE_VMC; i++)   /* (the other cards of its folder: the folder
-                                                                              can go whole; not the VMCs' group) */
-            mates += &cards[i] != c && !strcasecmp(cards[i].folder, c->folder);
         n = 0;
         if (!viewOther) {   /* (the other device's card, not in the slot: never synced nor restored) */
             items[n] = T(T_SYNC_NOW), id[n++] = OPT_SYNC;
@@ -34,9 +31,9 @@ static void card_options(card_t *c)
         items[n] = T(T_RESIZE), id[n++] = OPT_RESIZE;
         items[n] = T(T_MIGRATE), id[n++] = OPT_BY_GAME;
         items[n] = T(T_CHECK_CARD), id[n++] = OPT_CHECK;
+        /* (the card alone: its folder, whole, from the folder's own options, triangle on its row in the Games group.
+         * Offered here too, right under this one, it was taken for it, the list going round from its top) */
         items[n] = T(T_DELETE_CARD), id[n++] = OPT_DELETE;
-        if (mates)
-            items[n] = T(T_DELETE_FOLDER), id[n++] = OPT_DELETE_FOLDER;
         if ((k = choose(c->base, items, n, k < n ? k : 0)) < 0)
             return;
         switch (id[k]) {
@@ -56,10 +53,6 @@ static void card_options(card_t *c)
         case OPT_DELETE:
             if (card_delete(c))
                 return;   /* (gone: back to the main screen, which lists the cards again) */
-            break;
-        case OPT_DELETE_FOLDER:
-            if (folder_delete(c))
-                return;
             break;
         case OPT_SYNC:
             if (sync_card(c))

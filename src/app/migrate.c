@@ -293,9 +293,11 @@ static int mg_go(void)
         if (fresh)   /* (a new game card: its templates too, as the device's new cards get them) */
             templates_new_card(g->card);
     }
-    /* how it went */
+    /* how it went: X goes on. The saves now on their game's card (copied, or there already) can be removed from the
+     * card they came from, with R2: out of the way of a press made too fast, and asked again before anything goes */
+    dlg_new(failed ? COLOR_WARN : COLOR_OK, T(T_MIGRATE_DONE));
     snprintf(t, sizeof(t), T(T_TPL_COPIED_N), copied);
-    dlg_new(failed ? COLOR_WARN : COLOR_OK, t);
+    dlg_line(FONT_TEXT, COLOR_TEXT, 2, t);
     if (there) {
         snprintf(t, sizeof(t), T(T_MIGRATE_THERE_N), there);
         dlg_line(FONT_TEXT, COLOR_TEXT, 2, t);
@@ -310,18 +312,24 @@ static int mg_go(void)
         snprintf(t, sizeof(t), T(T_TPL_NOT_COPIED), failed);
         dlg_line(FONT_SMALL, COLOR_WARN, 0, t);
     }
-    dlg_buttons(BUTTON_CROSS, T_BACK, 0, 0);
+    if (copied + there)
+        dlg_buttons(BUTTON_R2, T_MIGRATE_REMOVE, BUTTON_CROSS, T_CONTINUE);
+    else
+        dlg_buttons(BUTTON_CROSS, T_CONTINUE, 0, 0);
+    next.wide = 1;
     dlg_show();
-    wait_button(PAD_CROSS | PAD_CIRCLE, 0);
-    sound_play(SND_BACK);
-    /* the card they came from: left as it is, unless the user says so (the saves that are on their game's card
-     * now, copied or there already, can go) */
-    if (copied + there) {
+    if (!(wait_button(PAD_CROSS | PAD_CIRCLE | (copied + there ? PAD_R2 : 0), 0) & PAD_R2)) {
+        sound_play(SND_BACK);
+        return 1;
+    }
+    sound_play(SND_CONFIRM);
+    {   /* R2: the card they came from loses those saves, once that is said and answered */
         snprintf(name, sizeof(name), "%s", mg.src->base);
         snprintf(t, sizeof(t), T(T_MIGRATE_DELETE_ASK), name);
-        dlg_new(COLOR_TITLE, t);
+        dlg_new(COLOR_WARN, t);
         snprintf(t, sizeof(t), T(T_MIGRATE_DELETE_TEXT), copied + there);
-        dlg_line(FONT_TEXT, COLOR_TEXT, 0, t);
+        dlg_line(FONT_TEXT, COLOR_TEXT, 8, t);
+        dlg_line(FONT_SMALL, COLOR_DIM, 0, T(T_SAFETY_NOTE));
         dlg_buttons(BUTTON_CIRCLE, T_MIGRATE_KEEP, BUTTON_CROSS, T_DELETE);
         next.wide = 1;
         dlg_show();

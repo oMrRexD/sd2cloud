@@ -827,6 +827,10 @@ T_MIGRATE_DELETE_ASK = コピーしたセーブデータを %s から削除し�
 T_MIGRATE_DELETE_TEXT = 削除するセーブデータ: %d。ゲーム ID のないセーブデータと、コピーされなかったセーブデータは残ります。
 # Button. English: Keep
 T_MIGRATE_KEEP = 残す
+# One line. English: Split by game complete
+T_MIGRATE_DONE = ゲームごとの分割が完了しました
+# One line. English: Remove copied saves
+T_MIGRATE_REMOVE = コピー済みを削除
 # One line. English: Not connected
 T_VIEW_NOTE = 未接続
 # One line. English: VMCs

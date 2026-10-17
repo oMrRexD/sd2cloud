@@ -271,9 +271,10 @@ SCENARIOS = [
     # the size recommended (1 MB), and the card they come from stays as it was (circle on the question of deleting).
     # The game's card has them already, the same: nothing is copied, and they are deleted from where they were
     {"name": "split-new-card", "what": "a card's saves split by game: a new card for their game, the card left as it was",
-     "cards": {"Card1/Card1-1": "game", "Card2/Card2-1": "empty"}, "script": "TDDDDDDXSXXOC"},
+     "cards": {"Card1/Card1-1": "game", "Card2/Card2-1": "empty"}, "script": "TDDDDDDXSXXC"},
+    # (R2 on the summary: their removal from the card is asked, and X answers it)
     {"name": "split-there-delete", "what": "a card's saves split by game, on the game's card already: deleted from it after",
-     "cards": CARDS, "script": "TDDDDDDXSXXXXC"},
+     "cards": CARDS, "script": "TDDDDDDXSX2XXC"},
     # Settings (START), the fifth row: the size the sd2psx makes a game's first card of, written to its settings.ini
     {"name": "settings-card-size", "what": "the size of the sd2psx's new cards set to 32 MB in its settings.ini",
      "cards": CARDS, "files": {".sd2psx/settings.ini": SD2PSX_SETTINGS}, "script": "SDDDDXDDXXC"},

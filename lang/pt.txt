@@ -824,6 +824,10 @@ T_MIGRATE_DELETE_ASK = Deseja remover de %s os saves copiados?
 T_MIGRATE_DELETE_TEXT = Saves a remover: %d. Saves sem ID de jogo e saves não copiados serão mantidos.
 # Button. English: Keep
 T_MIGRATE_KEEP = Manter
+# One line. English: Split by game complete
+T_MIGRATE_DONE = Separação por jogo concluída
+# One line. English: Remove copied saves
+T_MIGRATE_REMOVE = Remover saves copiados
 # One line. English: Not connected
 T_VIEW_NOTE = Não conectado
 # One line. English: VMCs

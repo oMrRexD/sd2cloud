@@ -826,6 +826,10 @@ T_MIGRATE_DELETE_ASK = ¿Desea eliminar de %s las partidas copiadas?
 T_MIGRATE_DELETE_TEXT = Partidas a eliminar: %d. Las partidas sin ID de juego y las no copiadas se conservarán.
 # Button. English: Keep
 T_MIGRATE_KEEP = Conservar
+# One line. English: Split by game complete
+T_MIGRATE_DONE = Separación por juego completada
+# One line. English: Remove copied saves
+T_MIGRATE_REMOVE = Quitar partidas copiadas
 # One line. English: Not connected
 T_VIEW_NOTE = No conectado
 # One line. English: VMCs

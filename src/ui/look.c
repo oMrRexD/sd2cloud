@@ -119,6 +119,8 @@ void look_frame(void)
 }
 
 /* the space before the button of item i of a legend (and after the text of the one before it) */
+static int key_width(const char *name) { return ui_measure(FONT_SMALL, name) + 12; }   /* (look_key's) */
+
 static int legend_gap(int n, int apart, int i)
 {
     /* (five of them only fit the line closer together: what tells the two groups is then a wider gap between them.
@@ -136,14 +138,20 @@ void look_legend(const legend_t *items, int n, int apart)
     float x = LOOK_LINE_X1 - 8;
     int i, w = 0, font = FONT_TEXT;
     for (i = 0; i < n; i++)
-        w += (i ? legend_gap(n, apart, i) : 0) + size + 6 + ui_measure(FONT_TEXT, items[i].text);
+        w += (i ? legend_gap(n, apart, i) : 0) + (items[i].button == BUTTON_R2 ? key_width("R2") : size) + 6 +
+             ui_measure(FONT_TEXT, items[i].text);
     if (x - w < LOOK_LINE_X0 + 4)   /* longer than the line (a language of long words): in the smaller letters */
         font = FONT_SMALL;
     for (i = n - 1; i >= 0; i--) {
         x -= ui_measure(font, items[i].text);
         ui_text(font, x, y + (ui_line_height(FONT_TEXT) - ui_line_height(font)) / 2, 0xE6E8EC, items[i].text);
-        x -= size + 6;
-        ui_button(items[i].button, x, y + 1, size);
+        if (items[i].button == BUTTON_R2) {   /* (a shoulder button: its name on a key, as the main screen has it) */
+            x -= key_width("R2") + 6;
+            look_key(x, y + 1 + size / 2.0f, "R2");
+        } else {
+            x -= size + 6;
+            ui_button(items[i].button, x, y + 1, size);
+        }
         x -= legend_gap(n, apart, i);
     }
 }
@@ -169,7 +177,7 @@ static void round_box(float x, float y, float w, float h, float r, u32 color)
 
 int look_key(float x, float cy, const char *name)
 {
-    int w = ui_measure(FONT_SMALL, name) + 12, h = 18;
+    int w = key_width(name), h = 18;
     float y = cy - h / 2.0f;
     round_box(x, y, w, h, 5, 0x969AA4);   /* (as START and SELECT: the rim lighter than the rubber) */
     round_box(x + 1, y + 1, w - 2, h - 2, 4, 0x54575F);

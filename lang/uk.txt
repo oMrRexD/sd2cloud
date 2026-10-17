@@ -826,6 +826,10 @@ T_MIGRATE_DELETE_ASK = Видалити скопійовані збережен�
 T_MIGRATE_DELETE_TEXT = Збережень до видалення: %d. Збереження без ID гри та нескопійовані залишаться на картці.
 # Button. English: Keep
 T_MIGRATE_KEEP = Залишити
+# One line. English: Split by game complete
+T_MIGRATE_DONE = Розподіл за іграми завершено
+# One line. English: Remove copied saves
+T_MIGRATE_REMOVE = Видалити скопійовані
 # One line. English: Not connected
 T_VIEW_NOTE = Не підключено
 # One line. English: VMCs
