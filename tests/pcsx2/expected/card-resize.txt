@@ -15,6 +15,7 @@ SLUS-21065/SLUS-21065-1: 2 folders, fingerprint 64fbc81ffd3ff7a8, new
 [script] X
 [script] X
 [script] X
+files: host:SD2Cloud/Safety/Card1/0001 Card1-1 <when>.mcd copied, 8388608 bytes in N ms
 safety copy of Card1/Card1-1: host:SD2Cloud/Safety/Card1/0001 Card1-1 <when>.mcd
 mcfs: new card host:MemoryCards/PS2/Card1/Card1-1.mcd.new of 1 MB: 0
 mcfs: copy of BASLUS-21065ALPHA: 0, 23 reads and 7 writes of the cards in N ms

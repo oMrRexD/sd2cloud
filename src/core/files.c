@@ -126,11 +126,21 @@ static int piece_at(const char *path, long long at, unsigned char *d, int n)
     return got;
 }
 
-int file_copy(const char *from, const char *to)
+/* FNV-1a of a piece: what the copy's piece is compared with, read back, without reading the original again */
+static u64 piece_sum(const unsigned char *d, int n)
+{
+    u64 h = 0xcbf29ce484222325ULL;
+    while (n--)
+        h = (h ^ *d++) * 0x100000001b3ULL;
+    return h;
+}
+
+int file_copy_shown(const char *from, const char *to, void (*progress)(long long done, long long total))
 {
     static unsigned char a[MOVE_PIECE], b[MOVE_PIECE];
     long long at = 0, size;
-    int fd, n = 0, k = 0, w = 0, r = 0;
+    int fd, n = 0, k = 0, w = 0, r = 0, i;
+    u64 *sums = NULL, start = now_ms();
     const char *why = NULL;   /* (the step that failed, for the log) */
     if (file_exists(to) || (fd = open(from, O_RDONLY)) < 0) {
         log_msg("files: %s not copied to %s: %s", from, to, file_exists(to) ? "it is there already" : "it can't be opened");
@@ -142,12 +152,16 @@ int file_copy(const char *from, const char *to)
         r = -1, why = "its size can't be told";
     else if (!size)   /* (an empty file: made empty) */
         r = (fd = open(to, O_WRONLY | O_CREAT | O_TRUNC, 0666)) >= 0 && close(fd) >= 0 ? 0 : -1;
-    for (at = 0; at < size && r == 0; at += n) {
+    else
+        sums = malloc((size_t)((size + MOVE_PIECE - 1) / MOVE_PIECE) * sizeof(u64));   /* (none: the original is read again) */
+    for (at = 0, i = 0; at < size && r == 0; at += n, i++) {
         n = size - at > MOVE_PIECE ? MOVE_PIECE : (int)(size - at);
         if ((k = piece_at(from, at, a, n)) != n) {
             r = -1, why = "reading it";
             break;
         }
+        if (sums)
+            sums[i] = piece_sum(a, n);
         if ((fd = open(to, at ? O_WRONLY : O_WRONLY | O_CREAT | O_TRUNC, 0666)) < 0) {
             r = -1, why = "opening the copy", k = fd;
             break;
@@ -167,18 +181,27 @@ int file_copy(const char *from, const char *to)
             r = -1, why = "closing the copy";
         else if (w > 0 && !at)
             log_msg("files: closing %s answered %d", to, w);
+        if (progress)
+            progress(at + n, size * 2);
     }
-    for (at = 0; at < size && r == 0; at += n) {   /* read back, and compared with the original */
+    for (at = 0, i = 0; at < size && r == 0; at += n, i++) {   /* read back, and compared with the original */
         n = size - at > MOVE_PIECE ? MOVE_PIECE : (int)(size - at);
-        if (piece_at(from, at, a, n) != n || (k = piece_at(to, at, b, n)) != n || memcmp(a, b, n) != 0)
+        if ((k = piece_at(to, at, b, n)) != n || (sums ? piece_sum(b, n) != sums[i]
+                                                      : piece_at(from, at, a, n) != n || memcmp(a, b, n) != 0))
             r = -1, why = "comparing it with the copy";
+        if (progress)
+            progress(size + at + n, size * 2);
     }
+    free(sums);
     if (r != 0) {
         unlink(to);
         log_msg("files: %s not copied to %s: %s, at %lld of %lld (%d, %d)", from, to, why ? why : "?", at, size, k, w);
-    }
+    } else if (size >= MOVE_PIECE)
+        log_msg("files: %s copied, %lld bytes in %u ms", to, size, (unsigned)(now_ms() - start));
     return r;
 }
+
+int file_copy(const char *from, const char *to) { return file_copy_shown(from, to, NULL); }
 
 int file_move(const char *from, const char *to)
 {

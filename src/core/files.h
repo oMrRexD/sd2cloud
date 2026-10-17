@@ -19,6 +19,8 @@ int file_exists(const char *path);
 /* a file copied a piece at a time, with one file open at a time (the sd2psx's way), read back and compared. 0 =
  * copied; -1 = not (a file at to already; or it couldn't be, and nothing is left at to) */
 int file_copy(const char *from, const char *to);
+/* the same, telling progress how far it has got (the reading back is half of the total) */
+int file_copy_shown(const char *from, const char *to, void (*progress)(long long done, long long total));
 /* a file moved to another name, or another folder of the same device: renamed where that can be (an sd2psx since its
  * firmware 1.4.0, a USB drive, PCSX2); else copied (file_copy) and only then the original deleted. 0 = moved; -1 =
  * not (the original is as it was, and nothing is left at to) */

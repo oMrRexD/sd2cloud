@@ -15,6 +15,7 @@ SLUS-21065/SLUS-21065-1: 2 folders, fingerprint 64fbc81ffd3ff7a8, new
 [script] D
 [script] X
 [script] X
+files: host:SD2Cloud/Safety/SLUS-21065/0001 SLUS-21065-1 <when>.mcd copied, 8388608 bytes in N ms
 safety copy of SLUS-21065/SLUS-21065-1: host:SD2Cloud/Safety/SLUS-21065/0001 SLUS-21065-1 <when>.mcd
 mcfs: new card host:MemoryCards/PS2/MCCG-10045/MCCG-10045-1.mcd of 8 MB: 0
 MCCG-10045/MCCG-10045-1 joined the cards: 3 on the microSD

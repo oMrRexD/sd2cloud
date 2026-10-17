@@ -12,7 +12,9 @@ SLUS-21065/SLUS-21065-2: 0 folders, fingerprint e3b0c44298fc1c14, new
 [script] T
 [script] X
 [script] X
+files: host:SD2Cloud/Safety/SLUS-21065/0001 SLUS-21065-1 <when>.mcd copied, 8388608 bytes in N ms
 safety copy of SLUS-21065/SLUS-21065-1: host:SD2Cloud/Safety/SLUS-21065/0001 SLUS-21065-1 <when>.mcd
+files: host:SD2Cloud/Safety/SLUS-21065/0002 SLUS-21065-2 <when>.mcd copied, 8388608 bytes in N ms
 safety copy of SLUS-21065/SLUS-21065-2: host:SD2Cloud/Safety/SLUS-21065/0002 SLUS-21065-2 <when>.mcd
 SLUS-21065 deleted, folder and all: 2 cards on the microSD
 [script] X

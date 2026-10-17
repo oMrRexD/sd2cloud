@@ -91,7 +91,7 @@ int safety_copy(const card_t *c)
     char dir[200], path[320];
     const char *ext = strrchr(c->path, '.');
     datetime_t t;
-    int i, n;
+    int i, n, r;
     if (mcfs_slot_port(c->path) >= 0 || card_file_card(c) || !ext)
         return 0;   /* (not one of the microSD's cards) */
     snprintf(dir, sizeof(dir), "%sSafety/%s/", dataDir, c->folder);
@@ -100,8 +100,10 @@ int safety_copy(const card_t *c)
     local_time(&t);
     snprintf(path, sizeof(path), "%s%04d %s %04d-%02d-%02d %02dh%02dm%02d%s", dir, n, c->base, t.year, t.month,
              t.day, t.hour, t.minute, t.second, ext);
-    message(0, NULL, COLOR_TEXT, T(T_SAFETY_MAKING));
-    if (file_copy(c->path, path) != 0) {
+    card_work(c, 0, T(T_SAFETY_MAKING), 1);
+    r = file_copy_shown(c->path, path, upload_screen);
+    card_work_done();
+    if (r != 0) {
         log_msg("safety copy of %s: not made", c->id);
         return confirm(T(T_SAFETY_FAILED), T(T_SAFETY_FAILED_TEXT), T_CONTINUE) ? 0 : -1;
     }
