@@ -1,0 +1,14 @@
+# log
+SD2Cloud <version> -- program in host:APPS/SD2Cloud/ (host:SD2CLOUD-DEBUG.ELF), data in host:SD2Cloud/, manual
+settings: [app] app_path = host:SD2CLOUD-DEBUG.ELF (0)
+0 card(s) on the microSD
+[script] S
+0 programs in APPS
+[script] D
+[script] D
+[script] X
+(end: capture)
+
+# files
+17df2e2a16cbab4cb8357fe9a735f1765b89ed8fcaf21c00a1634ed98fb36c3e  SD2Cloud/sd2cloud.ini
+2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881  SD2Cloud/standalone.txt

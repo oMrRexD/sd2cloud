@@ -919,6 +919,10 @@ T_SAVE_VERSION_FAILED = バージョンを復元できませんでした。
 T_MEMCARD_SLOT = メモリーカード %d
 # Up to 5 lines. English: Move saves between the Memory Cards and the other cards, and back them up to Google Drive.
 T_MEMCARD_HINT_ALONE = メモリーカードとほかのカードの間でセーブデータを移動し、Google ドライブにバックアップします。
+# Up to 4 lines. English: Without an sd2psx, the automatic sync works through OPL's IGR with the helper in SD2Cloud's folder on this USB drive. In OPL's settings, set the IGR path to:
+T_HELPER_ALONE_USB = sd2psx がない場合、自動同期はこの USB ドライブの SD2Cloud フォルダーにある補助プログラムと OPL の IGR で動作します。OPL の設定で IGR のパスを次のように指定してください:
+# Up to 5 lines. English: Without an sd2psx, OPL's IGR only starts programs from a memory card or a USB drive. For the automatic sync, install SD2Cloud on a memory card (SAS package) or use it from a USB drive.
+T_HELPER_ALONE_NONE = sd2psx がない場合、OPL の IGR はメモリーカードか USB ドライブのプログラムしか起動できません。自動同期を使うには、SD2Cloud をメモリーカードにインストールする（SAS パッケージ）か、USB ドライブから使ってください。
 # Up to 3 lines. English: Choose an ELF...
 T_PICK_ELF = ELF を選択...
 # Up to 3 lines. English: Unable to read this memory card.

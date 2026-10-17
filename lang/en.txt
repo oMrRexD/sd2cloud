@@ -921,6 +921,10 @@ T_SAVE_VERSION_FAILED = Unable to restore the version.
 T_MEMCARD_SLOT = Memory Card %d
 # Up to 5 lines.
 T_MEMCARD_HINT_ALONE = Move saves between the Memory Cards and the other cards, and back them up to Google Drive.
+# Up to 4 lines.
+T_HELPER_ALONE_USB = Without an sd2psx, the automatic sync works through OPL's IGR with the helper in SD2Cloud's folder on this USB drive. In OPL's settings, set the IGR path to:
+# Up to 5 lines.
+T_HELPER_ALONE_NONE = Without an sd2psx, OPL's IGR only starts programs from a memory card or a USB drive. For the automatic sync, install SD2Cloud on a memory card (SAS package) or use it from a USB drive.
 # Up to 3 lines.
 T_PICK_ELF = Choose an ELF...
 # Up to 3 lines.

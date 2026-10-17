@@ -165,6 +165,8 @@ SCENARIOS = [
      "script": ">C"},
     {"name": "standalone-memcard", "what": "no sd2psx: the Memory Card of slot 2 opened from its row in Files",
      "files": {"SD2Cloud/standalone.txt": b"x"}, "memcard": "memcard.ps2", "script": ">DDDXC"},
+    {"name": "standalone-sas", "what": "no sd2psx, the program on a drive the IGR can't start it from: the SAS package's screen says so",
+     "files": {"SD2Cloud/standalone.txt": b"x"}, "script": "SDDXC"},
     {"name": "sync-resolved", "what": "a card marked as resolved is left out of the automatic sync, until it is sent",
      "cards": CARDS, "files": {"SD2Cloud/state-debug.ini": RESOLVED}, "script": "BwC"},
     {"name": "card-sync-toggle", "what": "a card's sync turned off in its options, and on again", "cards": CARDS,

@@ -47,7 +47,8 @@ static void build_settings(void)
     set_item(&i, SET_IGR_RETURN, T(T_SET_IGR_RETURN), v);
     if (deviceBoth)   /* (a microSD with the cards of both devices: which one it is in is the user's to say) */
         set_item(&i, SET_DEVICE, T(T_SET_DEVICE), dev->name);
-    if (dev->sd2psx) {   /* (the size the sd2psx makes a game's first card of: its own setting, on its microSD) */
+    if (dev->sd2psx && !standalone) {   /* (the size the sd2psx makes a game's first card of: its own setting, on its
+                                          microSD; with none in a slot, nothing to set) */
         snprintf(v, sizeof(v), T(T_SIZE_MB), device_card_mb() ? device_card_mb() : 8);
         set_item(&i, SET_CARD_SIZE, T(T_SET_CARD_SIZE), v);
     }
@@ -231,6 +232,24 @@ static int helper_screen(void)
     char place[80];
     if (appOnCard && helperState == HELPER_SAME) {
         helper_on_card(T_HELPER_TITLE);
+        return 0;
+    }
+    if (standalone && !appOnCard) {   /* no sd2psx, the program on a drive: OPL's IGR runs the helper next to it, from a
+                                         USB drive only (it reads the memory card and USB drives alone) */
+        char path[260];
+        const char *rest = strchr(appDir, ':');
+        dlg_new(COLOR_TITLE, T(T_HELPER_TITLE));
+        if (device_of(appPath) == DEV_USB && rest) {
+            snprintf(path, sizeof(path), "mass:%sSD2CLOUD-IGR.ELF", rest + 1);
+            dlg_line(FONT_TEXT, COLOR_TEXT, 6, T(T_HELPER_ALONE_USB));
+            dlg_line(FONT_TEXT, COLOR_ACCENT, 0, path);
+        } else
+            dlg_line(FONT_TEXT, COLOR_TEXT, 0, T(T_HELPER_ALONE_NONE));
+        next.wide = 1;
+        dlg_buttons(BUTTON_CIRCLE, T_BACK, 0, 0);
+        dlg_show();
+        wait_button(PAD_CIRCLE | PAD_CROSS, 0);
+        sound_play(SND_BACK);
         return 0;
     }
     if (!helper_present()) {
