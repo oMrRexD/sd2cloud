@@ -44,20 +44,20 @@ void log_msg(const char *fmt, ...)
 {
     va_list ap;
     char t[600];
+    size_t n;
     if (!log_kept())
         return;
     va_start(ap, fmt);
-    vsnprintf(t, sizeof(t), fmt, ap);
+    vsnprintf(t, sizeof(t) - 2, fmt, ap);
     va_end(ap);
-    log_raw(t, strlen(t));
-    log_raw("\r\n", 2);
+    n = strlen(t);
+    memcpy(t + n, "\r\n", 2);
+    log_raw(t, n + 2);   /* (the line and its end at once: another thread's line can't come between them) */
     if (igrMode) {   /* (only these lines: never what a transfer prints through log_raw) */
         if (logSema >= 0)
             WaitSema(logSema);
-        if (syncLog.len < 32 * 1024) {
-            buf_append(&syncLog, t, strlen(t));
-            buf_append(&syncLog, "\r\n", 2);
-        }
+        if (syncLog.len < 32 * 1024)
+            buf_append(&syncLog, t, n + 2);
         if (logSema >= 0)
             SignalSema(logSema);
     }
