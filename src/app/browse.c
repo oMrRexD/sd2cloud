@@ -285,10 +285,12 @@ static void scene_files(float t)
         int n = 1;
         if (e && fb_opens(e))
             l[n].button = BUTTON_CROSS, l[n++].text = T(fb_opens(&fb.list[fb.cursor]) == FB_ELF ? T_RUN : T_OPEN);
-        if (fbGive.c || card_file_marks())   /* saves marked for a copy are on their way to the folder shown: START
-                                                pastes them, as on a card */
+        if (fbGive.c || card_file_marks()) {   /* saves marked for a copy are on their way to the folder shown: START
+                                                  pastes them, as on a card (card files' ones: triangle lets them go) */
+            if (!fbGive.c)
+                l[n].button = BUTTON_TRIANGLE, l[n++].text = T(T_CANCEL);
             l[n].button = BUTTON_START, l[n++].text = T(T_PASTE);
-        else if (fbCard)   /* a whole card is */
+        } else if (fbCard)   /* a whole card is */
             l[n].button = BUTTON_TRIANGLE, l[n++].text = T(T_EXPORT);
         else if (fbHere) {   /* a folder is being picked: this one */
             if (!fb.error)
@@ -772,6 +774,9 @@ static void browse(int dev)
                 sound_play(SND_CONFIRM);
                 psu_screen("", 0);
             }
+        } else if ((b & PAD_TRIANGLE) && card_file_marks() && !fbGive.c) {   /* card files' saves marked: given up */
+            if (mark_cancel())
+                card_file_let_go();
         } else if ((b & PAD_TRIANGLE) && fbHere && fb_writable()) {   /* the folder shown, for what it was picked for */
             sound_play(SND_CONFIRM);
             if (fbHere(fb.dir))

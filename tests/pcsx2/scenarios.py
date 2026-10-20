@@ -66,6 +66,12 @@ SCENARIOS = [
      "script": "XXXODXSXXC"},
     {"name": "save-export-many", "what": "two saves marked on a card, exported together as .psu files", "cards": CARDS,
      "script": "XXX>XS>>>XSXXC"},
+    # (triangle gives a copy's marking up: on the saves it began on, asked with two marked, the screen staying as the
+    # card's saves; on the list of cards, the list closing)
+    {"name": "save-copy-cancel", "what": "a save's Copy given up with triangle on its card's saves, two saves marked",
+     "cards": CARDS, "script": "XXX>XTXXC"},
+    {"name": "save-copy-cancel-list", "what": "a save's Copy given up with triangle on the list of cards",
+     "cards": CARDS, "script": "XXXOTC"},
     {"name": "save-move", "what": "a save moved to another card", "cards": CARDS, "script": "XXDXXXXC"},
     {"name": "save-delete", "what": "a save deleted", "cards": CARDS, "script": "XXDDXXXC"},
     # (after "New card", its size: the cursor starts on the one recommended for what goes into it, and X takes it)

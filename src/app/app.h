@@ -357,6 +357,7 @@ struct marks_s {
     int on;                /* the screens of saves are marking */
     int copy;              /* what for: 1 = a save's "Copy" (START is "Paste"); 0 = a template (START is "Done") */
     int n, done;           /* how many are marked; START ended it, on a screen of saves */
+    int cancelled;         /* triangle gave it up (mark_cancel): the list of cards it is under ends too */
     card_t *into;          /* the card START was pressed on (the one whose saves were open, or the one under the
                               cursor in the list of cards; NULL = none): a copy pastes the marked saves into it */
     struct {
@@ -369,6 +370,7 @@ int marked(const card_t *c, const char *folder);
 int mark_toggle(const save_view_t *v);
 int mark_same_folder(const save_view_t *v);   /* one of its folder marked on another card: asked (0 = not marked) */
 void marks_reset(void);
+int mark_cancel(void);
 int mark_saves(void);
 save_view_t *mark_view(int i);
 void mark_show(const card_t *to, int i, int text);

@@ -72,9 +72,22 @@ static void scene_save(float t)
     y += 6;
     text_center_shadow(FONT_TEXT, cx, y, 0xE4E4E8, sp.date);
     text_center_shadow(FONT_TEXT, cx, y + 23, 0xE4E4E8, sp.size);
-    for (i = 0, y = 232; i < sp.nOptions; i++, y += sp.nOptions > 4 ? 28 : 31) {
+    /* what can be done with it, from y = 232, closer together when there are more than four. When the last one would
+     * come down to the legend (a program's six), they all go up, as far as the size above them lets, and closer
+     * together still if that isn't enough (a name of two lines) */
+    float top = y + 23 + ui_line_height(FONT_TEXT) + 8, end = LOOK_BOTTOM - lh - 6, y0 = 232,
+          step = sp.nOptions > 4 ? 28 : 31;
+    if (sp.nOptions > 1 && y0 + (sp.nOptions - 1) * step > end) {
+        y0 = end - (sp.nOptions - 1) * step;
+        if (y0 < top) {
+            y0 = top;
+            step = (end - top) / (sp.nOptions - 1);
+        }
+    }
+    for (i = 0; i < sp.nOptions; i++) {
         const char *s = T(sp.options[i]);
         float x = (int)(cx - ui_measure(FONT_BROWSER, s) / 2);
+        y = (int)(y0 + i * step);
         if (i == sp.cursor)
             look_glow_text(FONT_BROWSER, x, y, 0x3A88C8, 0x7AD8FF, s);
         else

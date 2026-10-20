@@ -143,9 +143,9 @@ static void scene_browser(float t)
     if (last < brw.n)
         look_arrow(W / 2.0f, 340, 1, 0x3A5AE0);
     if (marks.on) {   /* (START says what the marking is for) */
-        legend_t l[3] = {{BUTTON_CIRCLE, T(T_BACK)}, {BUTTON_CROSS, T(T_MARK)},
+        legend_t l[4] = {{BUTTON_CIRCLE, T(T_BACK)}, {BUTTON_CROSS, T(T_MARK)}, {BUTTON_TRIANGLE, T(T_CANCEL)},
                          {BUTTON_START, T(marks.copy ? T_PASTE : T_FINISH)}};
-        look_legend(l, 3, 0);
+        look_legend(l, 4, 0);
     } else if (brw.nLegend)
         look_legend(brw.legend, brw.nLegend, 0);
     else {
@@ -834,7 +834,7 @@ void card_screen(card_t *c)
         browser_load(c, 0);
     ui_scene(scene_browser);
     for (;;) {
-        u32 b = browser_wait(PAD_CROSS | PAD_CIRCLE | (marks.on ? PAD_START : PAD_TRIANGLE | (c == &fileCard ? PAD_SQUARE : 0)));
+        u32 b = browser_wait(PAD_CROSS | PAD_CIRCLE | PAD_TRIANGLE | (marks.on ? PAD_START : (c == &fileCard ? PAD_SQUARE : 0)));
         int n = brw.n;
         if (b & PAD_CIRCLE) {
             sound_play(SND_BACK);
@@ -846,8 +846,15 @@ void card_screen(card_t *c)
             browser_close();
             return;
         }
-        if (marks.on) {   /* X marks and unmarks, START ends the marking (with something marked) */
-            if ((b & PAD_CROSS) && n) {
+        if (marks.on) {   /* X marks and unmarks, START ends the marking (with something marked), triangle gives it up */
+            if (b & PAD_TRIANGLE) {
+                if (mark_cancel() && !mine) {   /* (the list of cards this was opened from ends too) */
+                    browser_close();
+                    return;
+                }
+                mine = marks.on;   /* (begun here: the screen stays, as the card's saves) */
+                ui_scene(scene_browser);
+            } else if ((b & PAD_CROSS) && n) {
                 /* (one of that folder marked on another card: asked first, on a screen of its own) */
                 int asked = marks.copy ? mark_same_folder(&brw.saves[brw.cursor]) : 1;
                 if (asked)

@@ -380,6 +380,10 @@ LEGENDS = [
     (("T_CANCEL", "T_UNDO", "T_VIEW"), False), (("T_CANCEL", "T_VIEW"), False),
     # saves marked for a copy: on a card's saves, and on the list of cards
     (("T_BACK", "T_MARK", "T_PASTE"), False), (("T_BACK", "T_OPEN", "T_PASTE"), False), (("T_BACK", "T_COPY"), False), (("T_BACK", "T_PASTE"), False),
+    # (with triangle, "Cancel": the marking given up, on its saves, the list of cards and a card file's folder)
+    (("T_BACK", "T_MARK", "T_CANCEL", "T_PASTE"), False), (("T_BACK", "T_MARK", "T_CANCEL", "T_FINISH"), False),
+    (("T_BACK", "T_OPEN", "T_CANCEL", "T_PASTE"), False), (("T_BACK", "T_OPEN", "T_CANCEL", "T_FINISH"), False),
+    (("T_BACK", "T_OPEN", "T_CANCEL"), False), (("T_BACK", "T_CANCEL", "T_PASTE"), False),
     # a card's saves, with the options of how they are shown
     (("T_BACK", "T_OPEN", "T_OPTIONS", "T_INSTALL"), False), (("T_BACK", "T_TPL_CHANGE"), False),
     # a file of the Files group, with its options; renaming a folder of cards

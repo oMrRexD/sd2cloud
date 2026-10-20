@@ -85,6 +85,21 @@ void marks_reset(void)
     ui_unlock();
 }
 
+/* Triangle while marking ("Cancel"), on whichever screen of it: the marking is given up at once, asked first when
+ * more than the one save is marked. 1 = given up: nothing is marked, and the list of cards the screen may be over
+ * ends too (marks.cancelled) */
+int mark_cancel(void)
+{
+    int n = marks.n;
+    sound_play(SND_BACK);
+    if (n > 1 && !confirm(T(T_MARK_DROP), NULL, T_MARK_DROP_YES))
+        return 0;
+    marks_reset();
+    marks.cancelled = 1;
+    log_msg("marking given up: %d save(s) marked", n);
+    return 1;
+}
+
 /* ------------------------------------------------------------ the cards the saves are marked on
  *
  * The cards, in their groups as on the main screen; X opens one, and there X marks and unmarks a save (saves.c).
@@ -114,6 +129,7 @@ static void scene_mark(float t)
         int n = 1, row = mk.g.n ? mk.g.idx[mk.g.cursor] : ROW_ALL, lib = mk.g.tab == TAB_LIBRARY;
         if (mk.g.n && row != ROW_NEW && !lib)   /* (the Library, as "New card": X pastes into it too) */
             l[n].button = BUTTON_CROSS, l[n++].text = T(T_OPEN);
+        l[n].button = BUTTON_TRIANGLE, l[n++].text = T(T_CANCEL);
         if (!marks.copy)
             l[n].button = BUTTON_START, l[n++].text = T(T_FINISH);
         else if (lib || (mk.g.tab == TAB_FILES ? tabs_device(&mk.g) >= 0 || paste_here(&slotCard)
@@ -279,11 +295,17 @@ shown:
     mk.iconCard = -1;
     ui_unlock();
     while (r < 0) {
-        u32 keys = PAD_UP | PAD_DOWN | TAB_KEYS | PAD_CROSS | PAD_CIRCLE | PAD_START | (device_other() ? VIEW_KEYS : 0), b;
+        u32 keys = PAD_UP | PAD_DOWN | TAB_KEYS | PAD_CROSS | PAD_CIRCLE | PAD_TRIANGLE | PAD_START |
+                   (device_other() ? VIEW_KEYS : 0), b;
         ui_scene(scene_mark);
         if (!(b = wait_nav_ms(keys, 250))) {
             mark_icon();
             b = wait_nav(keys);
+        }
+        if (b & PAD_TRIANGLE) {   /* (before a folder takes it: triangle opens one too) */
+            if (mark_cancel())
+                r = 0;
+            continue;
         }
         if (tabs_nav(&mk.g, b) || tabs_folder_nav(&mk.g, b))
             continue;
@@ -329,6 +351,8 @@ shown:
             memcard_screen();
             if (marks.done)
                 r = 1;
+            else if (marks.cancelled)   /* (given up on its saves) */
+                r = 0;
             ui_lock();
             mark_library();
             tabs_show(&mk.g, TAB_FILES);
@@ -368,6 +392,8 @@ shown:
                 card_screen(c);
                 if (marks.done)
                     r = 1;
+                else if (marks.cancelled)
+                    r = 0;
                 ui_lock();   /* (saves marked or unmarked there: their game may be another one now) */
                 if (mark_game())
                     tabs_redo(&mk.g);
