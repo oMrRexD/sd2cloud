@@ -328,6 +328,54 @@ static void make_trash(int k, char *method, char *path, char *json)
     strcpy(json, "{\"trashed\":true}");
 }
 
+static int keptAny;   /* (empty_folders: one of them stays) */
+
+static int node_at(const char *id)
+{
+    int i;
+    for (i = 0; i < nNodes; i++)
+        if (!strcmp(nodes[i].id, id))
+            return i;
+    return -1;
+}
+
+/* The first layout's folders that can go to the trash, in todo[]: how many (-1 = none can: they couldn't be listed
+ * again). Each is listed again after the move: one that still has a file (one the first listing missed), or a folder
+ * that isn't going, stays, and so do the folders above it */
+static int empty_folders(void)
+{
+    const char **ids = malloc(sizeof(char *) * MOVE_NODES);
+    drive_node_t *in = malloc(sizeof(drive_node_t) * 1000);
+    unsigned char *keep = calloc(MOVE_NODES, 1);
+    int i, n = 0, k, m = -1;
+    keptAny = 0;
+    if (ids && in && keep) {
+        for (i = 0; i < nNodes; i++)
+            if (nodes[i].folder && !nodes[i].key[0])
+                ids[n++] = nodes[i].id;
+        m = n ? google_nodes(ids, n, in, 1000) : 0;
+    }
+    if (m < 0 || m >= 1000) {   /* (or more in them than the list holds: none is sure to be empty) */
+        log_msg("drive: the first layout's folders couldn't be listed again: they stay");
+        free(ids), free(in), free(keep);
+        return -1;
+    }
+    for (i = 0; i < m; i++) {
+        int at = node_at(in[i].id);
+        if (in[i].folder && at >= 0 && !nodes[at].key[0])
+            continue;   /* (a folder that goes too) */
+        log_msg("drive: %s stays in the first layout's folders: they stay", in[i].name);
+        keptAny = 1;
+        for (k = node_at(in[i].parent); k >= 0 && !keep[k]; k = node_at(nodes[k].parent))
+            keep[k] = 1;
+    }
+    for (i = 0, nTodo = 0; i < nNodes; i++)
+        if (nodes[i].folder && !nodes[i].key[0] && !keep[i])
+            todo[nTodo++] = i;
+    free(ids), free(in), free(keep);
+    return nTodo;
+}
+
 /* the move itself (the user agreed to it). 0 = all of it was done */
 static int move_files(void)
 {
@@ -434,12 +482,9 @@ static int move_files(void)
         return -1;
     }
     /* the first layout's folders, empty now, to the trash (and its main folder, when it wasn't the second's) */
-    for (i = 0, nTodo = 0; i < nNodes; i++)
-        if (nodes[i].folder && !nodes[i].key[0])
-            todo[nTodo++] = i;
-    if (nTodo)
+    if ((nTodo = empty_folders()) > 0)
         batched(nTodo, make_trash, NULL, T(T_DRIVE_MOVE_TIDY));
-    if (nRoots > 1 && google_patch(r1, NULL, "{\"trashed\":true}") != 0)
+    if (nRoots > 1 && nTodo >= 0 && !keptAny && google_patch(r1, NULL, "{\"trashed\":true}") != 0)
         log_msg("drive: the first layout's main folder stays");
     snprintf(t, sizeof(t), "drive: the move is done, %d files", total);
     log_msg("%s", t);
