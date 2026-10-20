@@ -128,9 +128,12 @@ extern u64 debugGone;
 #endif
 void device_watch(void);
 extern int viewOther;                    /* the cards listed are the other device's (a microSD with both devices') */
-void view_switch(void);                  /* R2: the other device's cards listed, or the slot's again */
-void view_draw(void);                    /* at the top: whose cards are listed (a microSD with both devices') */
-int view_legend(legend_t *l, int n);     /* the legend's R2 to the other device's cards, at l[n]: 1 if there is one */
+void view_switch(void);                  /* the other device's cards listed, or the slot's again */
+void view_draw(void);                    /* at the top right: the two devices, L2 and R2 (a microSD with both's cards) */
+/* L2 or R2 pressed (VIEW_KEYS): the slot's device is on the left, the other on the right, as the tabs are (nothing past
+ * either end). 1 = the other side's cards are listed now */
+int view_key(u32 b);
+#define VIEW_KEYS (PAD_L2 | PAD_R2)
 void device_lost(void) __attribute__((noreturn));
 void reload_all(void) __attribute__((noreturn));
 

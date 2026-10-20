@@ -119,10 +119,7 @@ static void scene_mark(float t)
         else if (mk.g.tab == TAB_FILES ? tabs_device(&mk.g) >= 0 || paste_here(&slotCard)
                  : row == ROW_NEW || (row >= 0 && (tabs_on_folders(&mk.g) || paste_here(&cards[row]))))
             l[n].button = BUTTON_START, l[n++].text = T(T_PASTE);
-        if (view_legend(l, n))   /* (R2 to the other device's cards, apart from the rest) */
-            look_legend(l, n + 1, 1);
-        else
-            look_legend(l, n, 0);
+        look_legend(l, n, 0);
     }
     look_title(CARD_CX, 82, mk.title, 1);
     snprintf(s, sizeof(s), T(T_MARKED_N), marks.n);
@@ -267,7 +264,7 @@ shown:
     mk.iconCard = -1;
     ui_unlock();
     while (r < 0) {
-        u32 keys = PAD_UP | PAD_DOWN | TAB_KEYS | PAD_CROSS | PAD_CIRCLE | PAD_START | (device_other() ? PAD_R2 : 0), b;
+        u32 keys = PAD_UP | PAD_DOWN | TAB_KEYS | PAD_CROSS | PAD_CIRCLE | PAD_START | (device_other() ? VIEW_KEYS : 0), b;
         ui_scene(scene_mark);
         if (!(b = wait_nav_ms(keys, 250))) {
             mark_icon();
@@ -275,10 +272,10 @@ shown:
         }
         if (tabs_nav(&mk.g, b) || tabs_folder_nav(&mk.g, b))
             continue;
-        if (b & PAD_R2) {   /* the other device's cards: saves marked on them too, or pasted into them */
+        if (b & VIEW_KEYS) {   /* the other device's cards: saves marked on them too, or pasted into them */
             int tab = mk.g.tab;
-            sound_play(SND_MOVE);
-            view_switch();
+            if (!view_key(b))
+                continue;
             ui_lock();
             tabs_init(&mk.g, NULL, marks.copy);
             mk.g.all = 1;

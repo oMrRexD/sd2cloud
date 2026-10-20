@@ -86,31 +86,29 @@ void look_news(const char *tag) { snprintf(news, sizeof(news), "%s", tag); }
 void look_frame(void)
 {
     char v[48];
-    /* the name alone, in one weight */
+    /* the name alone, in one weight; right after it, smaller, the version (and the one an update brings, in light
+     * blue), then what else the build is. The top right is the devices' switch's, on a microSD with both devices'
+     * cards (view_draw) */
+    int x = 48 + ui_measure(FONT_HEADER, "SD2Cloud") + 12;
     ui_text(FONT_HEADER, 48, 33, 0xEAECEF, "SD2Cloud");
-    if (news[0]) {   /* "v0.1 >> v0.2", the new one in light blue */
-        int nw = ui_measure(FONT_SMALL, news);
-        ui_text_right(FONT_SMALL, LOOK_LINE_X1 - 4, 40, COLOR_ACCENT, news);
-        snprintf(v, sizeof(v), "v%s \xC2\xBB ", APP_VERSION);   /* the font has no arrow: >> (U+00BB) */
-        ui_text_right(FONT_SMALL, LOOK_LINE_X1 - 4 - nw, 40, 0x6A7486, v);
-    } else {
-        snprintf(v, sizeof(v), "v%s", APP_VERSION);
-        ui_text_right(FONT_SMALL, LOOK_LINE_X1 - 4, 40, 0x6A7486, v);
+    snprintf(v, sizeof(v), news[0] ? "v%s \xC2\xBB " : "v%s", APP_VERSION);   /* the font has no arrow: >> (U+00BB) */
+    ui_text(FONT_SMALL, x, 40, 0x6A7486, v);
+    x += ui_measure(FONT_SMALL, v);
+    if (news[0]) {
+        ui_text(FONT_SMALL, x, 40, COLOR_ACCENT, news);
+        x += ui_measure(FONT_SMALL, news);
     }
 /* (README_SHOTS: the debug build that takes the README's screenshots, which show the program as it is) */
-#if defined(BETA_BUILD) || (defined(DEBUG_BUILD) && !defined(README_SHOTS))
-    {   /* before the version, what else the build is: nothing else on the screen tells it from the program */
-        int x = LOOK_LINE_X1 - 4 - ui_measure(FONT_SMALL, v) - (news[0] ? ui_measure(FONT_SMALL, news) : 0) - 10;
 #ifdef BETA_BUILD
-        /* a beta, and which one: its version is still the last one released */
-        ui_text_right(FONT_SMALL, x, 40, COLOR_ACCENT, "beta " APP_COMMIT);
-        x -= ui_measure(FONT_SMALL, "beta " APP_COMMIT) + 10;
+    /* a beta, and which one: its version is still the last one released (nothing else on the screen tells it from the
+     * program) */
+    ui_text(FONT_SMALL, x + 10, 40, COLOR_ACCENT, "beta " APP_COMMIT);
+    x += 10 + ui_measure(FONT_SMALL, "beta " APP_COMMIT);
 #endif
 #if defined(DEBUG_BUILD) && !defined(README_SHOTS)
-        ui_text_right(FONT_SMALL, x, 40, COLOR_WARN, "debug");
+    ui_text(FONT_SMALL, x + 10, 40, COLOR_WARN, "debug");
 #endif
-    }
-#endif
+    (void)x;
     ui_rect(LOOK_LINE_X0, LOOK_TOP, LOOK_LINE_X1 - LOOK_LINE_X0, 1, 0x5C6476, 0x80);
     ui_rect(LOOK_LINE_X0, LOOK_TOP + 1, LOOK_LINE_X1 - LOOK_LINE_X0, 1, 0x5C6476, 0x28);
     ui_rect(LOOK_LINE_X0, LOOK_BOTTOM, LOOK_LINE_X1 - LOOK_LINE_X0, 1, 0x5C6476, 0x80);
@@ -119,7 +117,6 @@ void look_frame(void)
 }
 
 /* the space before the button of item i of a legend (and after the text of the one before it) */
-static int key_width(const char *name) { return ui_measure(FONT_SMALL, name) + 12; }   /* (look_key's) */
 
 static int legend_gap(int n, int apart, int i)
 {
@@ -138,16 +135,17 @@ void look_legend(const legend_t *items, int n, int apart)
     float x = LOOK_LINE_X1 - 8;
     int i, w = 0, font = FONT_TEXT;
     for (i = 0; i < n; i++)
-        w += (i ? legend_gap(n, apart, i) : 0) + (items[i].button == BUTTON_R2 ? key_width("R2") : size) + 6 +
+        w += (i ? legend_gap(n, apart, i) : 0) + (items[i].button == BUTTON_R2 ? ui_measure(FONT_TEXT, "R2") : size) + 6 +
              ui_measure(FONT_TEXT, items[i].text);
     if (x - w < LOOK_LINE_X0 + 4)   /* longer than the line (a language of long words): in the smaller letters */
         font = FONT_SMALL;
     for (i = n - 1; i >= 0; i--) {
         x -= ui_measure(font, items[i].text);
         ui_text(font, x, y + (ui_line_height(FONT_TEXT) - ui_line_height(font)) / 2, 0xE6E8EC, items[i].text);
-        if (items[i].button == BUTTON_R2) {   /* (a shoulder button: its name on a key, as the main screen has it) */
-            x -= key_width("R2") + 6;
-            look_key(x, y + 1 + size / 2.0f, "R2");
+        if (items[i].button == BUTTON_R2) {   /* (a shoulder button: its name, in light blue, as the devices' switch has
+                                                 it at the top) */
+            x -= ui_measure(FONT_TEXT, "R2") + 6;
+            ui_text(FONT_TEXT, x, y, COLOR_ACCENT, "R2");
         } else {
             x -= size + 6;
             ui_button(items[i].button, x, y + 1, size);
@@ -157,33 +155,6 @@ void look_legend(const legend_t *items, int n, int apart)
 }
 
 /* ------------------------------------------------------------ boxes, menus, titles */
-
-/* a box with round corners (r), filled */
-static void round_box(float x, float y, float w, float h, float r, u32 color)
-{
-    static const float c[5] = {1, 0.924f, 0.707f, 0.383f, 0};   /* (a quarter of a circle, in four steps) */
-    int k;
-    ui_rect(x + r, y, w - 2 * r, h, color, 0x80);
-    ui_rect(x, y + r, r, h - 2 * r, color, 0x80);
-    ui_rect(x + w - r, y + r, r, h - 2 * r, color, 0x80);
-    for (k = 0; k < 4; k++) {
-        float a0 = r * c[k], b0 = r * c[4 - k], a1 = r * c[k + 1], b1 = r * c[3 - k];
-        ui_triangle(x + r, y + r, x + r - a0, y + r - b0, x + r - a1, y + r - b1, color, 0x80);
-        ui_triangle(x + w - r, y + r, x + w - r + a0, y + r - b0, x + w - r + a1, y + r - b1, color, 0x80);
-        ui_triangle(x + r, y + h - r, x + r - a0, y + h - r + b0, x + r - a1, y + h - r + b1, color, 0x80);
-        ui_triangle(x + w - r, y + h - r, x + w - r + a0, y + h - r + b0, x + w - r + a1, y + h - r + b1, color, 0x80);
-    }
-}
-
-int look_key(float x, float cy, const char *name)
-{
-    int w = key_width(name), h = 18;
-    float y = cy - h / 2.0f;
-    round_box(x, y, w, h, 5, 0x969AA4);   /* (as START and SELECT: the rim lighter than the rubber) */
-    round_box(x + 1, y + 1, w - 2, h - 2, 4, 0x54575F);
-    ui_text_center(FONT_SMALL, x + w / 2.0f, cy - ui_line_height(FONT_SMALL) / 2.0f, 0xE6E8EC, name);
-    return w;
-}
 
 void look_panel(float x, float y, float w, float h)
 {

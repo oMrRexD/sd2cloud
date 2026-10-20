@@ -194,7 +194,7 @@ SCENARIOS = [
      "script": "XXXO2SXXC"},
     {"name": "device-both-from-other", "what": "a microSD with both devices' cards: a save of the other device's card copied into one of the slot's",
      "cards": CARDS, "files": {"PS2/MemoryCard1/MemoryCard1-1.mc2": "game.mcd"}, "settings": "device = sd2psx\r\n",
-     "script": "2XXXO2DSXXC"},
+     "script": "2XXXOlDSXXC"},
     # (the OPL's VMCs of the microSD, VMC/*.bin, are cards of a group of their own, with the games whose OPL settings
     # name them: one is opened, and one is renamed, the settings of its game with it)
     {"name": "vmc-group", "what": "the OPL's VMCs as a group of cards, with the games that use them",

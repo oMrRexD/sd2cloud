@@ -44,7 +44,7 @@ a PC's compiler. `src/app` is the only place that knows the screens; it calls do
 | `memcard.c` | The Memory Card: a PS2 memory card in the console's other slot, in the Files group, and uploading it whole |
 | `backup.c`, `autosync.c`, `synclist.c` | The sync to Google Drive; the one that runs by itself after a game; the list of a sync's cards (SELECT) |
 | `history.c` | A card's backups on Drive, and restoring one |
-| `active.c` | The card the device is using right now: finding it, switching it, noticing it change; R2 on a microSD with both devices' cards, which lists the other device's (`view_switch`) |
+| `active.c` | The card the device is using right now: finding it, switching it, noticing it change; on a microSD with both devices' cards, the two at the top right, L2 and R2 listing one's or the other's (`view_switch`) |
 | `settings.c`, `account.c` | The settings; the Google account |
 | `vmcplaces.c` | The OPL's VMC folders on other devices than the microSD (the hard disk's exFAT and APA sides, an MX4SIO, a USB drive): found when the cards are looked for, each device's drivers loaded then; named on the screens; added in the settings |
 | `tools.c`, `keyboard.c` | The tools (SELECT): the templates, made by marking saves on the cards and put into cards; the keyboard on the screen their names are typed on |

@@ -147,10 +147,7 @@ static void scene_menu(float t)
     if (menu.g.tab == TAB_FILES) {   /* the devices: what the group is for, where a card's picture would be */
         legend_t l[4] = {{BUTTON_CIRCLE, T(T_MENU_EXIT)}, {BUTTON_CROSS, T(T_OPEN)}, {BUTTON_SELECT, T(T_TOOLS)},
                          {BUTTON_START, T(T_SETTINGS)}};
-        if (view_legend(l, 2))   /* (the other device's cards: see below) */
-            look_legend(l, 3, 1);
-        else
-            look_legend(l, 4, 2);
+        look_legend(l, 4, 2);
         if (tabs_device(&menu.g) < 0) {   /* (the Memory Card) */
             memcard_hint(tabs_memcard_port(&menu.g));
             return;
@@ -161,8 +158,7 @@ static void scene_menu(float t)
     }
     {
         /* inside a folder circle goes back to the folders ("Back" and the other four don't fit the line: the tools
-         * and the settings stay on SELECT and START, unsaid). The cards of another device on the same microSD: R2 to
-         * them, in place of those two (six buttons don't fit either) */
+         * and the settings stay on SELECT and START, unsaid) */
         int inside = menu.g.open >= 0, made = menu.g.n && menu.g.idx[menu.g.cursor] == ROW_NEW, n = 5, apart = 2;
         legend_t l[5] = {{BUTTON_CIRCLE, T(inside ? T_BACK : T_MENU_EXIT)}, {BUTTON_CROSS, T(made ? T_TPL_CREATE : T_OPEN)},
                          {BUTTON_TRIANGLE, T(T_OPTIONS)}, {BUTTON_SELECT, T(T_TOOLS)}, {BUTTON_START, T(T_SETTINGS)}};
@@ -171,8 +167,6 @@ static void scene_menu(float t)
             l[2] = l[3], l[3] = l[4], n = 4;
         else if (inside)
             n = 3, apart = 0;
-        if (view_legend(l, apart ? n - 2 : n))
-            n += apart ? -1 : 1, apart = 1;
         look_legend(l, n, apart);
     }
     if (menu.g.n && menu.g.idx[menu.g.cursor] == ROW_NEW && menu.g.tab == TAB_VMC) {   /* "New VMC" */
@@ -399,7 +393,7 @@ void manual(void)
     ui_unlock();
     for (;;) {
         u32 b, keys = PAD_UP | PAD_DOWN | TAB_KEYS | PAD_CROSS | PAD_CIRCLE | PAD_TRIANGLE | PAD_START | PAD_SELECT |
-                         (device_other() ? PAD_R2 : 0);
+                         (device_other() ? VIEW_KEYS : 0);
         ui_scene(scene_menu);
 #ifdef DEBUG_BUILD
         if (debug_take('G')) {
@@ -418,9 +412,9 @@ void manual(void)
             if (!b)
                 b = wait_nav(keys);
         }
-        if (b & PAD_R2) {   /* the other device's cards, or the slot's again */
-            sound_play(SND_MOVE);
-            view_switch();
+        if (b & VIEW_KEYS) {   /* the other device's cards, or the slot's again */
+            if (!view_key(b))
+                continue;
             cards_resort();
             if (!menu.g.count[menu.g.tab]) {   /* (a group that device has none of: the Boot cards) */
                 int k;

@@ -348,9 +348,6 @@ ONLY_SD2PSX = {"T_INSERT", "T_INSERT_NEEDS_BOOT", "T_INSERT_BOOT_ASK", "T_SWITCH
 # the right edge (x = 596) toward the left and must not pass x = 40
 LEGENDS = [
     (("T_MENU_EXIT", "T_OPEN", "T_OPTIONS", "T_TOOLS", "T_SETTINGS"), 2), (("T_BACK", "T_OPEN", "T_SYNC"), False),
-    # (R2 to the other device's cards, in place of the tools and the settings: named by the device, not a text)
-    (("T_MENU_EXIT", "T_OPEN", "T_OPTIONS", "MemCard PRO2"), 1), (("T_BACK", "T_OPEN", "T_OPTIONS", "MemCard PRO2"), 1),
-    (("T_BACK", "T_OPEN", "T_PASTE", "MemCard PRO2"), 1), (("T_BACK", "T_OPEN", "T_FINISH", "MemCard PRO2"), 1),
     (("T_BACK", "T_DELETE"), False), (("T_BACK", "T_SELECT"), False), (("T_BACK", "T_RESTORE"), False),
     (("T_CANCEL_NO", "T_CANCEL_YES"), False), (("T_LATER", "T_YES"), False),
     (("T_BACK", "T_HELPER_INSTALL"), False), (("T_CANCEL",), False), (("T_BACK", "T_SYNC"), False),

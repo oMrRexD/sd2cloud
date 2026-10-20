@@ -566,29 +566,40 @@ void view_switch(void)
     log_msg("the cards of the %s on screen", dev->name);
 }
 
-/* at the top, after the program's name, when the microSD has both devices' cards: the two devices, as the groups of
- * cards are shown (the one whose cards are listed lit; the one in the slot first), and R2, which goes from one to the
- * other */
-/* A microSD with the cards of both devices: the one whose cards are shown, beside the program's name, quietly; R2
- * goes to the other one, said in the legend as any other button is (view_legend) */
+/* A microSD with the cards of both devices: at the top right, the two devices as the groups of cards are shown (the
+ * one whose cards are listed lit, in a soft light; the other dim), the slot's on the left; L2 and R2, in light blue,
+ * at their ends */
 void view_draw(void)
 {
-    int x, lh = ui_line_height(FONT_SMALL);
+    const device_t *d[2] = {device_here(), device_other()};   /* (always in that order: the switch doesn't move) */
+    int k, w[2], lh = ui_line_height(FONT_SMALL), x;
     float cy = 40 + lh / 2.0f + 1;
-    if (!device_other())
+    if (!d[1])
         return;
-    x = 48 + ui_measure(FONT_HEADER, "SD2Cloud") + 16;
-    ui_rect(x, cy - 9, 1, 18, 0x5C6476, 0x80);   /* (a thin line between the name and the device) */
-    ui_text(FONT_SMALL, x + 17, 40, 0x8E98AA, dev->name);
+    w[0] = ui_measure(FONT_SMALL, d[0]->name);
+    w[1] = ui_measure(FONT_SMALL, d[1]->name);
+    x = LOOK_LINE_X1 - 4 - (ui_measure(FONT_SMALL, "L2") + 12 + w[0] + 16 + w[1] + 12 + ui_measure(FONT_SMALL, "R2"));
+    ui_text(FONT_SMALL, x, 40, COLOR_ACCENT, "L2");
+    x += ui_measure(FONT_SMALL, "L2") + 12;
+    for (k = 0; k < 2; k++) {
+        if (k == viewOther) {
+            ui_light(x + w[k] / 2.0f, cy, w[k] / 2.0f + 22, lh * 0.8f, COLOR_GLOW, 0x30);
+            ui_text(FONT_SMALL, x, 40, COLOR_ITEM_ON, d[k]->name);
+        } else
+            ui_text(FONT_SMALL, x, 40, 0x6F7C94, d[k]->name);
+        x += w[k] + (k ? 12 : 16);
+    }
+    ui_text(FONT_SMALL, x, 40, COLOR_ACCENT, "R2");
 }
 
-/* the legend's R2 to the other device's cards, put at l[n] when there is another device: 1 if it was */
-int view_legend(legend_t *l, int n)
+int view_key(u32 b)
 {
-    if (!device_other())
+    if (!!(b & PAD_R2) == viewOther) {   /* (that side's cards are the ones listed: nothing past the end) */
+        sound_play(SND_BACK);
         return 0;
-    l[n].button = BUTTON_R2;
-    l[n].text = viewOther ? device_here()->name : device_other()->name;
+    }
+    sound_play(SND_MOVE);
+    view_switch();
     return 1;
 }
 
