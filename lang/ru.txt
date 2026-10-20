@@ -1193,7 +1193,7 @@ T_VMC_PLACE_GONE = Папка этого VMC недоступна. Провер�
 # One line. English: Library
 T_TAB_LIBRARY = Библиотека
 # One line. English: Other saves
-T_LIBRARY_OTHER = Другие сохранения
+T_LIBRARY_OTHER = Другие данные
 # One line. English: Saves: %d
 T_LIBRARY_SAVES = Сохранений: %d
 # Up to 2 lines. English: One file per save, by game, with no size limit.
