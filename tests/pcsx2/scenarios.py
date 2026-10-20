@@ -110,6 +110,12 @@ SCENARIOS = [
      "files": {"Files/card.mcd": "game.mcd"}, "script": ">>XXQXXXC"},
     {"name": "card-file-replace", "what": "a card file installed over a card", "cards": CARDS,
      "files": {"Files/card.mcd": "game.mcd"}, "script": ">>XXQDDXXXC"},
+    # (the Files group of "Install to": a device, triangle in a folder of it, the format picked (the card file's own
+    # first) and its name, the one offered)
+    {"name": "card-file-to-file", "what": "a card file installed as a file of the MMCE's top folder, as a .mcd",
+     "cards": CARDS, "files": {"Files/card.mcd": "game.mcd"}, "script": ">>XXQ>>>XTXSXXC"},
+    {"name": "card-file-to-ps2", "what": "a card file installed as a PCSX2 .ps2 file (with its ECC) of the MMCE's top folder",
+     "cards": CARDS, "files": {"Files/card.mcd": "game.mcd"}, "script": ">>XXQ>>>XTDDXSXXC"},
     {"name": "card-file-look", "what": "a card file opened to see its saves, and one of them", "cards": CARDS,
      "files": {"Files/card.mcd": "game.mcd"}, "script": ">>XXXX.OOC"},
     {"name": "card-file-copy", "what": "two saves of a card file marked there, and copied to a card", "cards": CARDS,
@@ -170,7 +176,7 @@ SCENARIOS = [
     {"name": "memcard-paste-list", "what": "a save marked on a card, pasted with START on the Memory Card in the list of "
      "cards", "cards": CARDS, "memcard": "memcard.ps2", "script": "XXXO>>>DDDSXXC"},
     {"name": "settings", "what": "settings changed in their pages (Google Drive: how many backups are kept, their format, the backup by save, the Library on Drive; the language) and About",
-     "cards": CARDS, "script": "SDXDXDXDXDXDXDXXDXDXXODDDXUXDDXOOC"},
+     "cards": CARDS, "script": "SDXDXDXDXDXDXDXXDXDXXODDDDXUXDXOOC"},
     # (the move of the backups on Drive to its second layout, offered at startup as to a user of the first, script "m":
     # agreed to, moved dry, PCSX2 having no Google account; or declined: not asked again, and kept in the settings)
     {"name": "drive-move", "what": "the move to the second layout on Drive, offered at startup and agreed to",
@@ -188,6 +194,9 @@ SCENARIOS = [
     # downloaded into the data folder, and gone from it when the card is left)
     {"name": "cloud-card", "what": "Google Drive in the Files group: a card's backup opened as a card, and a save's page",
      "cards": CARDS, "script": "d>>DDDXDXXXDXX.OOC"},
+    # (square on a card's backup: "Install to" right away, and its Files group: the card as a file of the MMCE)
+    {"name": "cloud-card-install", "what": "Google Drive in the Files group: a card's backup installed as a file of the MMCE",
+     "cards": CARDS, "script": "d>>DDDXDXXXDQ>>>XTXSXXC"},
     {"name": "cloud-delete", "what": "Google Drive in the Files group: a save's file to the trash from its page, and from the list",
      "cards": CARDS, "script": "d>>DDDXDXXXXXDDXXXTXXC"},
     # (a sync with nothing sent, "B": SELECT shows its cards; X on one still to go: resolved; on the next, its sync off)

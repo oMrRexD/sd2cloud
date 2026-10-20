@@ -68,7 +68,7 @@ typedef struct {
     int cursor, top;          /* in the list */
     int keep[TABS][2];        /* each group's cursor and top: switching back lands on the same card */
     const card_t *skip;       /* a card left out (the one a save is copied from) */
-    int files;                /* the Files group is offered too, with the devices */
+    int files;                /* the Files group is offered too, with the devices (2: only them, never the Memory Card) */
     int library;              /* the Library's group: 1 = its games (the main screen), 2 = the Library itself, as a place
                                  saves go to; 0 = none */
     int memcard;              /* the Files group offers the Memory Card (memcard.c), after the devices if they are there:
@@ -204,6 +204,7 @@ extern int fbExit;
 extern int fbPick;
 extern int (*fbHere)(const char *dir);   /* a folder picked: △ hands the one shown to it (1 = done with the folders) */
 extern int fbHereText;
+extern int fbCardOpen;   /* the card file that is open is on its way to the folder picked: no other one opens meanwhile */
 extern char fbPicked[200];
 struct psu_s {
     save_view_t v;
@@ -242,6 +243,14 @@ typedef struct {
 /* a new card, with those saves in it (n = 0: empty): its place picked (a group of the device, or a file of a
  * folder), and its size. 1 = it was made (a card of the device: cards[] has it at its end, cardsUnsorted) */
 int card_create(const save_ref_t *saves, int n);
+/* the formats a card can be a file in: its extension, its name in a list, whether it has the ECC bytes (a .ps2), and
+ * the sizes in MB of the cards the one that opens it takes */
+typedef struct {
+    const char *ext, *name;
+    int ecc, minMb, maxMb;
+} card_format_t;
+#define CARD_FORMATS 4
+extern const card_format_t cardFormats[CARD_FORMATS];
 void card_resize_screen(card_t *c);
 void card_check_screen(card_t *c);
 /* safety.c: a copy of that card's file kept in the data folder (Safety/) before it is deleted, made again of another
@@ -329,6 +338,7 @@ void fit(int font, char *s, size_t size, int maxw);
 /* ------------------------------------------------------------ history.c */
 extern int restoreFile;
 extern int restoreNew;
+extern int restoreWriteText;
 extern u64 lastRestoreDraw;
 extern int lastRestorePhase;
 int restore_progress(int phase, long long done, long long total);

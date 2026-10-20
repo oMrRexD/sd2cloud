@@ -367,6 +367,12 @@ PLACE = {
     "T_CLOUD_DELETE_NOTE": ("small", DIALOG, 2),
     "T_CLOUD_DELETED": ("text", DIALOG, 2),
     "T_CLOUD_DELETE_FAILED": ("text", DIALOG, 2),
+    "T_INSTALL_FILES_HINT": ("small", 212, 5),
+    "T_FORMAT_ORIGINAL": ("text", 320, 1),
+    "T_INSTALL_FILE_ASK": ("text", WIDE, 2),
+    "T_SAVE_YES": ("text", 200, 1),
+    "T_INSTALL_FILE_DONE": ("text", DIALOG, 2),
+    "T_WRITING_FILE": ("text", DIALOG, 1),
     "T_SET_LIBRARY_DRIVE": ("text", 300, 1), "T_LIBRARY_DRIVE_NOTE": ("text", WIDE, 3),
     # the hard disk's two sides, to pick one; with no sd2psx, a card is made as a file (its hint); a split by game done
     # (the box's title); the Memory Card's saves sent by themselves (one; read first; the card that didn't answer, after
@@ -421,7 +427,8 @@ LEGENDS = [
     # Google Drive in the Files group: a folder opened, a file downloaded (and the folder it goes to)
     (("T_BACK", "T_DOWNLOAD"), False), (("T_BACK", "T_OPEN", "T_SAVE_HERE"), False),
     (("T_BACK", "T_OPEN", "T_DELETE"), False), (("T_BACK", "T_DOWNLOAD", "T_DELETE"), False),
-    (("T_BACK", "T_OPEN", "T_DELETE", "T_DOWNLOAD"), False),
+    (("T_BACK", "T_OPEN", "T_DELETE", "T_DOWNLOAD"), False), (("T_BACK", "T_OPEN", "T_DELETE", "T_INSTALL"), False),
+    (("T_BACK", "T_SAVE_YES"), False),
     # a card's saves, with the options of how they are shown
     (("T_BACK", "T_OPEN", "T_OPTIONS", "T_INSTALL"), False), (("T_BACK", "T_TPL_CHANGE"), False),
     # a file of the Files group, with its options; renaming a folder of cards

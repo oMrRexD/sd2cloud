@@ -72,14 +72,15 @@ static int pick_game(char id[12])
 }
 
 /* 0 = circle. Else *to = the card picked, to be replaced, or NULL: a new card of the group *tab (of a game: in
- * gameFolder, "" when the game has to be asked). again = back from a question that was answered with circle: the
- * cards are where they were left (the group, the folder that was open, the cursor) */
+ * gameFolder, "" when the game has to be asked), or the device the cursor is on in the Files group. again = back
+ * from a question that was answered with circle: the cards are where they were left (the group, the folder that was
+ * open, the cursor) */
 static int install_dest(card_t **to, int *tab, char gameFolder[48], int again)
 {
     int i, r = 0;
     ui_lock();
     if (!again) {
-        tabs_init(&dst.g, NULL, 0);
+        tabs_init(&dst.g, NULL, 2);   /* (and the devices: the card as a file of one of their folders) */
         dst.g.add = 1;
         tabs_show(&dst.g, TAB_CARDS);
         for (i = 0; i < MAX_CARDS; i++)
@@ -139,7 +140,137 @@ static int file_read_first(void)
     return 1;
 }
 
-/* 1 = the file is a card of the microSD now */
+/* -------- the card as a file of a folder of a device (the Files group of "Install to"): in a format picked among the
+ * ones its size is one of (a .zip's card: the .zip as it is, too), under a name typed. △ in the folder: here */
+
+static int fileDone;   /* (install_here) 1 = written, -1 = it couldn't be (said) */
+
+static void file_copied(long long done, long long total) { upload_screen(done, total); }
+
+static int file_written(long long done, long long total)
+{
+    upload_screen(done, total);
+    return 0;
+}
+
+/* the card written at path in the format picked (-1 = the .zip, copied). 0 = written (and read back), -2 = given
+ * up, -1 = it couldn't be */
+static int card_to_file(const char *path, int format)
+{
+    char tmp[220];
+    card_t to;
+    int r, ecc = format >= 0 && cardFormats[format].ecc;
+    memset(&to, 0, sizeof(to));
+    snprintf(to.base, sizeof(to.base), "%.55s", strrchr(path, '/') ? strrchr(path, '/') + 1 : path);
+    snprintf(to.id, sizeof(to.id), "file/%.80s", to.base);
+    snprintf(tmp, sizeof(tmp), "%s.tmp", path);   /* (a .ps2: the card goes there first, and from there with its ECC) */
+    snprintf(to.path, sizeof(to.path), "%s", ecc ? tmp : path);
+    to.type = TYPE_NAMED;
+    googleError[0] = 0;
+    card_work(&to, 0, T(T_WRITING_FILE), 1);
+    if (format < 0)
+        r = file_copy_shown(cardFile.path, path, file_copied);
+    else {
+        restoreFile = cardFile.image ? 2 : 3;
+        restoreNew = 1;   /* (a file that wasn't there: it can be given up on, and goes) */
+        restoreWriteText = T_WRITING_FILE;
+        lastRestoreDraw = 0;
+        lastRestorePhase = -1;
+        r = card_file_install(&cardFile, &to, restore_progress);
+        restoreFile = restoreNew = restoreWriteText = 0;
+        if (r == 0 && ecc) {
+            ui_lock();
+            workText = T(T_WRITING_FILE);
+            workFixed = 1;
+            ui_unlock();
+            r = card_write_file(tmp, path, 1, file_written);
+        }
+        if (ecc)
+            unlink(tmp);
+    }
+    card_work_done();
+    if (r != 0)
+        unlink(path);
+    log_msg("install %s as a file: %s: %d", cardFileName, path, r);
+    return r;
+}
+
+/* (fbHere: triangle in the folder shown) 1 = done with the folders */
+static int install_here(const char *dir)
+{
+    const char *names[CARD_FORMATS + 1], *ext = strrchr(cardFileName, '.');
+    char name[33], file[48], path[700], t[300];
+    int format[CARD_FORMATS + 1], n = 0, start = -1, own = 0, k, i, r, mb = (int)(cardFile.size >> 20);
+    for (i = 0; i < CARD_FORMATS; i++)   /* (the formats it can be: the cursor on its own, else the device's) */
+        if (!(cardFile.size & 0xFFFFF) && mb >= cardFormats[i].minMb && mb <= cardFormats[i].maxMb) {
+            if (ext && !strcasecmp(ext, cardFormats[i].ext))
+                start = n;
+            if (i == (dev->sd2psx ? 0 : 1))
+                own = n;
+            names[n] = cardFormats[i].name;
+            format[n++] = i;
+        }
+    if (start < 0)
+        start = own;
+    if (cardFile.zip) {
+        names[n] = T(T_FORMAT_ORIGINAL);
+        format[n++] = -1;
+    }
+    if (!n || (k = choose(T(T_CREATE_FORMAT), names, n, start)) < 0)
+        return 0;
+    snprintf(name, sizeof(name), "%.*s", ext ? (int)(ext - cardFileName) : (int)strlen(cardFileName), cardFileName);
+    for (;;) {   /* (a name a file of the folder has: said, and typed again) */
+        if (!keyboard(T(T_FILE_NAME_TITLE), name, sizeof(name)) || !name[0])
+            return 0;
+        snprintf(file, sizeof(file), "%s%s", name, format[k] < 0 ? ".zip" : cardFormats[format[k]].ext);
+        snprintf(path, sizeof(path), "%s%s", dir, file);
+        if (!file_exists(path))
+            break;
+        message_wait(0, NULL, COLOR_WARN, T(T_RENAME_EXISTS));
+    }
+    snprintf(t, sizeof(t), T(T_INSTALL_FILE_ASK), file);
+    dlg_new(COLOR_TITLE, t);
+    dlg_line(FONT_SMALL, COLOR_DIM, 0, fb.title);
+    dlg_buttons(BUTTON_CIRCLE, T_BACK, BUTTON_CROSS, T_SAVE_YES);
+    next.wide = 1;
+    dlg_show();
+    if (!(wait_button(PAD_CROSS | PAD_CIRCLE, 0) & PAD_CROSS)) {
+        sound_play(SND_BACK);
+        return 0;
+    }
+    sound_play(SND_CONFIRM);
+    r = strlen(path) + 5 < sizeof(((card_t *)0)->path) ? card_to_file(path, format[k]) : -1;
+    if (r == -2)   /* (given up while it was written: nothing is left of it) */
+        return 0;
+    if (r == 0)
+        snprintf(t, sizeof(t), T(T_INSTALL_FILE_DONE), file);
+    dlg_new(r == 0 ? COLOR_OK : COLOR_ERROR, r == 0 ? t : T(T_INSTALL_FAILED));
+    dlg_line(FONT_TEXT, COLOR_TEXT, 0, r == 0 ? fb.title : googleError[0] ? googleError : T(T_ERR_EXPORT));
+    dlg_buttons(BUTTON_CROSS, T_BACK, 0, 0);
+    dlg_show();
+    sound_play(r == 0 ? SND_EXIT : SND_BACK);
+    wait_button(PAD_CROSS | PAD_CIRCLE, 0);
+    fileDone = r == 0 ? 1 : -1;
+    return 1;
+}
+
+/* the folders of the device picked, for the card to go into one of them as a file. 1 = it went (or couldn't: said),
+ * 0 = back to the groups */
+static int install_as_file(int device)
+{
+    int (*was)(const char *) = fbHere, wasText = fbHereText;   /* (picking a folder already: the Drive's download) */
+    fileDone = 0;
+    fbHere = install_here;
+    fbHereText = T_SAVE_HERE;
+    fbCardOpen++;
+    files_screen(device);
+    fbCardOpen--;
+    fbHere = was;
+    fbHereText = wasText;
+    return fileDone != 0;
+}
+
+/* 1 = the file is a card of the microSD now (or of a folder of a device, as a file) */
 int install_card(void)
 {
     char folder[48], base[56], gameFolder[48], id[12], title[64], t[300], active[96];
@@ -150,6 +281,11 @@ int install_card(void)
         if (!install_dest(&to, &tab, gameFolder, again))
             return 0;
         again = 1;
+        if (tab == TAB_FILES) {   /* a device: a folder of it, the card as a file there */
+            if (install_as_file(tabs_device(&dst.g)))
+                return fileDone > 0;
+            continue;
+        }
         title[0] = 0;
         if (to) {
             snprintf(t, sizeof(t), T(T_INSTALL_REPLACE_ASK), to->base);

@@ -418,7 +418,7 @@ void tabs_show(tabs_t *g, int tab)
             g->fold[g->n] = -1;
             g->idx[g->n++] = ROW_LIB(i);
         }
-    if (tab == TAB_FILES && g->files)   /* (one put in or taken out meanwhile: asked again each time) */
+    if (tab == TAB_FILES && g->files == 1)   /* (one put in or taken out meanwhile: asked again each time) */
         g->memcard = memcard_rows(g);
     if (g->files || g->memcard || g->cloud)   /* (and Google Drive, last) */
         g->count[TAB_FILES] = (g->files ? fdev_list(list) : 0) + g->memcard + (g->cloud && cloud_listed());
@@ -467,15 +467,15 @@ int tabs_memcard_port(const tabs_t *g)
     return g->tab == TAB_FILES && g->cursor >= n && g->cursor - n < g->memcard ? g->mcPorts[g->cursor - n] : -1;
 }
 
-/* from scratch, on the first group that has cards; skip = a card to leave out; files = with the Files group (with
- * ui_lock held) */
+/* from scratch, on the first group that has cards; skip = a card to leave out; files = with the Files group (2: of the
+ * devices only) (with ui_lock held) */
 void tabs_init(tabs_t *g, const card_t *skip, int files)
 {
     int k;
     memset(g, 0, sizeof(*g));
     g->skip = skip;
     g->files = files;
-    g->memcard = files ? memcard_rows(g) : 0;
+    g->memcard = files == 1 ? memcard_rows(g) : 0;
     g->open = -1;
     g->moved = -1;
     tabs_show(g, TAB_CARDS);

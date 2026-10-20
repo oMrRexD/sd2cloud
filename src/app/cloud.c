@@ -100,7 +100,8 @@ static void scene_cloud(float t)
         ui_text_right(FONT_SMALL, CL_RIGHT, CL_Y0 + CL_ROWS * CL_ROW + 2, 0x8E98AA, s);
     }
     {   /* X opens a folder, a save's .psu (its page) and a card's backup (its card); another file is downloaded.
-         * Triangle: a file to the trash; square: one that opens, downloaded as it is */
+         * Triangle: a file to the trash; square: a card's backup installed (as from its card: on the microSD, or as a
+         * file of a device), a save's .psu downloaded as it is */
         legend_t l[4] = {{BUTTON_CIRCLE, T(T_BACK)}};
         int n = 1;
         if (cl.n) {
@@ -110,7 +111,7 @@ static void scene_cloud(float t)
             if (!e->folder)
                 l[n].button = BUTTON_TRIANGLE, l[n++].text = T(T_DELETE);
             if (!e->folder && opens)
-                l[n].button = BUTTON_SQUARE, l[n++].text = T(T_DOWNLOAD);
+                l[n].button = BUTTON_SQUARE, l[n++].text = T(is_zip_name(e->name) ? T_INSTALL : T_DOWNLOAD);
         }
         look_legend(l, n, 0);
     }
@@ -406,8 +407,9 @@ static int cloud_save(const drive_node_t *f)
 
 /* X on a card's backup (.zip): downloaded into the data folder, and the card in it shown as a card file of a device is
  * (its saves, with their icons): X on a save opens its page, from where it is copied anywhere; square installs the
- * card on the microSD. Saves of it left marked go on to the list of cards, to be pasted, as from a device's folder */
-static void cloud_card(const drive_node_t *f)
+ * card, on the microSD or as a file of a device. Saves of it left marked go on to the list of cards, to be pasted, as
+ * from a device's folder. install = square on the backup itself: installed without being shown first */
+static void cloud_card(const drive_node_t *f, int install)
 {
     char tmp[300], name[140];
     int r;
@@ -435,7 +437,7 @@ static void cloud_card(const drive_node_t *f)
     }
     log_msg("drive: %s read to be opened: %d (%lld bytes)", f->name, r, dl.done);
     if (r == 0) {
-        card_file_at(tmp, name, 0);
+        card_file_at(tmp, name, install);
         if (card_file_marks()) {   /* (saves of it marked: on to every place they can be pasted) */
             copy_go_on(NULL);
             card_file_let_go();
@@ -530,12 +532,16 @@ void cloud_screen(void)
                 if (cloud_save(e))
                     cl_reload();
             } else if (!e->folder && is_zip_name(e->name))
-                cloud_card(e);
+                cloud_card(e, 0);
             else if (!e->folder)
                 download(e);
-        } else if ((b & PAD_SQUARE) && cl.n && !cl.list[cl.cursor].folder) {   /* a file, downloaded as it is */
+        } else if ((b & PAD_SQUARE) && cl.n && !cl.list[cl.cursor].folder) {   /* a card's backup installed; another
+                                                                                 file, downloaded as it is */
             sound_play(SND_CONFIRM);
-            download(&cl.list[cl.cursor]);
+            if (is_zip_name(cl.list[cl.cursor].name))
+                cloud_card(&cl.list[cl.cursor], 1);
+            else
+                download(&cl.list[cl.cursor]);
         } else if ((b & PAD_TRIANGLE) && cl.n && !cl.list[cl.cursor].folder) {   /* a file, to the trash */
             sound_play(SND_CONFIRM);
             if (cloud_delete(&cl.list[cl.cursor]))

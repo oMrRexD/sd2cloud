@@ -39,6 +39,7 @@ typedef struct {
     unsigned char atlas, ok;   /* ok: 1 = made, 2 = it can't be (no room left): not tried again */
     unsigned char ja;      /* of the Japanese face */
     unsigned char stand;   /* a '?' in its place: no face had it (the Japanese one, read later, may) */
+    unsigned char faint;   /* the bitmap's first columns that are less than half covered (up to 2): the stroke starts after */
 } glyph_t;
 
 typedef struct {
@@ -54,6 +55,8 @@ typedef struct {
 typedef struct {
     FT_Face face, ja;      /* ja: of the Japanese characters (NULL until they are read) */
     int pixels, bold, line, ascent, kerning;
+    int stroke;            /* where a 'C' starts, from the pen: a text whose first letter starts further on is drawn that
+                              much to the left (walk) */
     glyph_t direct[DIRECT];
     glyph_t cyrillic[N_CYRILLIC];
     slot_t *table;              /* the other glyphs: open addressing, a power of two places (NULL until one is needed) */
@@ -209,6 +212,14 @@ static glyph_t *glyph(fnt_t *f, unsigned int code)
     g->left = s->bitmap_left;
     g->top = s->bitmap_top;
     g->advance = s->advance.x + f->bold;
+    for (g->faint = 0; g->faint < 2 && g->faint < g->w; g->faint++) {
+        int most = 0;
+        for (i = 0; i < g->h; i++)
+            if (s->bitmap.buffer[i * s->bitmap.pitch + g->faint] > most)
+                most = s->bitmap.buffer[i * s->bitmap.pitch + g->faint];
+        if (most >= 128)
+            break;
+    }
     if (g->w && g->h) {
         atlas_t *a;
         unsigned char *dst;
@@ -306,6 +317,10 @@ int font_load(const void *ttf, int ttfSize, int pixels, int bold)
     japanese_face(f);
     f->line = (f->face->size->metrics.height + 63) >> 6;
     f->ascent = (f->face->size->metrics.ascender + 63) >> 6;
+    {
+        glyph_t *g = glyph(f, 'C');
+        f->stroke = g ? g->left + g->faint : 0;
+    }
     fonts[nfonts] = f;
     /* the Latin-1 letters right away (the small fonts): drawing later only looks them up */
     if (pixels <= 32)
@@ -339,7 +354,7 @@ static int walk(int id, float x, float y, u64 color, const char *utf8, int draw)
     fnt_t *f;
     GSGLOBAL *gs = ui_gs_global();
     const unsigned char *p = (const unsigned char *)utf8;
-    int pen = 0, base;   /* pen in 1/64 pixel */
+    int pen = 0, base, back = -1;   /* pen in 1/64 pixel */
     unsigned int prev = 0;   /* (the glyph before, of the font's own face: kerning is between two of those) */
     if (id < 0 || id >= nfonts || !utf8)
         return 0;
@@ -358,7 +373,14 @@ static int walk(int id, float x, float y, u64 color, const char *utf8, int draw)
         prev = g->ja ? 0 : g->index;
         if (draw && g->w) {
             atlas_t *a = f->atlases[g->atlas];
-            float gx = (float)((int)x + ((pen + 32) >> 6) + g->left), gy = (float)(base - g->top);
+            float gx, gy = (float)(base - g->top);
+            /* the text's first stroke where a 'C' would start: texts one under the other start in the same column,
+             * an "I" (a stem after a faint column) as a "C" does */
+            if (back < 0) {
+                back = g->left + g->faint - f->stroke;
+                back = back < 0 ? 0 : back > 2 ? 2 : back;
+            }
+            gx = (float)((int)x - back + ((pen + 32) >> 6) + g->left);
             gsKit_TexManager_bind(gs, &a->tex);
             gsKit_prim_sprite_texture(gs, &a->tex, gx, gy, g->x, g->y, gx + g->w, gy + g->h, g->x + g->w, g->y + g->h, 1, color);
         }

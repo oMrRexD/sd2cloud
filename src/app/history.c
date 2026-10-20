@@ -8,6 +8,7 @@
  * which: it is 1 once the file is seen being read) */
 int restoreFile;
 int restoreNew;   /* as a card that wasn't there: it can be given up on to the end (it is deleted then) */
+int restoreWriteText;   /* what the writing is called (0 = written to the MMCE) */
 u64 lastRestoreDraw;
 int lastRestorePhase;
 
@@ -71,7 +72,8 @@ int restore_progress(int phase, long long done, long long total)
     if (done > total)
         done = total;
     ui_lock();
-    workText = T(phase >= RESTORE_WRITE ? T_RESTORE_STEP_WRITE : restoreFile ? T_LOADING : T_RESTORE_STEP_DOWNLOAD);
+    workText = T(phase >= RESTORE_WRITE ? (restoreWriteText ? restoreWriteText : T_RESTORE_STEP_WRITE)
+                                        : restoreFile ? T_LOADING : T_RESTORE_STEP_DOWNLOAD);
     workFixed = !canStop;
     ui_unlock();
     upload_screen(start[restoreFile][phase] + (total ? span[restoreFile][phase] * done / total : 0), 1000);

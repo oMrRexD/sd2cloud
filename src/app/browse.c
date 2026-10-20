@@ -61,6 +61,7 @@ int fbPick;   /* or to choose a program without running it (the one to open afte
  * the folders (a new card was made there) */
 int (*fbHere)(const char *dir);
 int fbHereText;
+int fbCardOpen;
 char fbPicked[200];
 
 static int is_elf(const char *name)
@@ -75,6 +76,8 @@ static int fb_opens(const dir_entry_t *e)
         return FB_ENTER;
     if (is_elf(e->name) && !fbGive.c && !fbCard)
         return FB_ELF;
+    if (fbCardOpen)   /* (a card file on its way to a folder: what else would open has to wait) */
+        return 0;
     if (is_psu(e->name) && !fbGive.c)
         return FB_PSU;
     if (is_card_file(e->name, e->size) && !fbCard)   /* (during a copy too: to mark saves of it, or paste into it) */

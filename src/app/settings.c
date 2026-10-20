@@ -106,11 +106,11 @@ static void build_settings(void)
         set_item(&i, SET_G_DRIVE, T(T_SET_G_DRIVE), T(google_has_access() ? T_ACCOUNT_ON : T_ACCOUNT_OFF));
         set_item(&i, SET_G_AUTO, T(T_IGR_TITLE), T(auto_sync_on() ? T_SYNC_ON : T_SYNC_OFF));
         set_item(&i, SET_G_CARDS, T(T_SET_G_CARDS), standalone ? "" : dev->name);
-        set_item(&i, SET_LANGUAGE, T(T_SET_LANGUAGE), i18n_find(cfg.language) >= 0 ? i18n_name(i18n_find(cfg.language))
-                                                                                         : T(T_AUTO));
         if (updateAvailable)
             snprintf(v, sizeof(v), T(T_UPDATE_AVAILABLE), update_tag());
         set_item(&i, SET_G_UPDATES, T(T_SET_G_UPDATES), updateAvailable ? v : cfg.beta ? "Beta" : T(T_CHANNEL_STABLE));
+        set_item(&i, SET_LANGUAGE, T(T_SET_LANGUAGE), i18n_find(cfg.language) >= 0 ? i18n_name(i18n_find(cfg.language))
+                                                                                         : T(T_AUTO));
 #ifdef BETA_BUILD
         set_item(&i, SET_ABOUT, T(T_SET_ABOUT), "v" APP_VERSION " beta");
 #else

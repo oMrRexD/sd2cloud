@@ -38,6 +38,12 @@ void scene_dest(float t)
         }
         return;
     }
+    if (dst.g.tab == TAB_FILES) {   /* a device (a card file installed): the card goes into a folder of it, as a file */
+        if (tabs_device(&dst.g) >= 0)
+            ui_text_center(FONT_TEXT, CARD_CX, CARD_Y + 30, COLOR_ITEM_ON, T(deviceText[tabs_device(&dst.g)]));
+        ui_paragraph_center(FONT_SMALL, CARD_CX, CARD_Y + 70, LOOK_CARD_W + 32, COLOR_DIM, T(T_INSTALL_FILES_HINT));
+        return;
+    }
     if (!(c = tabs_card(&dst.g))) {
         if (dst.g.tab != TAB_FILES && dst.g.n && dst.g.idx[dst.g.cursor] == ROW_NEW) {   /* "New card": the card to be, and its name when it is known */
             look_card(CARD_X, CARD_Y, "+", NULL);

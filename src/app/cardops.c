@@ -103,14 +103,11 @@ void card_resize_screen(card_t *c)
  * own, or a new one), or is a file of a folder of the microSD or of a USB drive, in the format of whatever is to open
  * it. Its size is picked, the one recommended for its saves first. */
 
-/* the formats a new card can be a file in: the sd2psx's, a MemCard PRO2's, PCSX2's (with the ECC bytes of the card's
- * flash), OPL's (a VMC); each with the sizes the one that opens it takes */
-static const struct {
-    const char *ext, *name;
-    int ecc, minMb, maxMb;
-} formats[] = {{".mcd", ".mcd (sd2psx)", 0, 1, 64}, {".mc2", ".mc2 (MemCard PRO2)", 0, 8, 128},
-               {".ps2", ".ps2 (PCSX2)", 1, 8, 64}, {".bin", ".bin (OPL)", 0, 8, 64}};
-#define FORMATS ((int)(sizeof(formats) / sizeof(formats[0])))
+/* the formats a new card can be a file in (and a card file installed as one): the sd2psx's, a MemCard PRO2's, PCSX2's
+ * (with the ECC bytes of the card's flash), OPL's (a VMC); each with the sizes the one that opens it takes */
+const card_format_t cardFormats[CARD_FORMATS] = {
+    {".mcd", ".mcd (sd2psx)", 0, 1, 64}, {".mc2", ".mc2 (MemCard PRO2)", 0, 8, 128},
+    {".ps2", ".ps2 (PCSX2)", 1, 8, 64}, {".bin", ".bin (OPL)", 0, 8, 64}};
 
 static struct {
     const save_ref_t *saves;   /* what goes into it (n = 0: it is made empty) */
@@ -225,20 +222,20 @@ static int ask_make(int title, const char *name, int mb, const char *where)
  * picked. 1 = it was made, or couldn't be (said): the folders are left */
 static int create_here(const char *dir)
 {
-    const char *names[FORMATS];
+    const char *names[CARD_FORMATS];
     char name[48], file[64], path[700];
     int f, i, mb, ok, failed;
-    for (i = 0; i < FORMATS; i++)
-        names[i] = formats[i].name;
-    if ((f = choose(T(T_CREATE_FORMAT), names, FORMATS, dev->sd2psx ? 0 : 1)) < 0)
+    for (i = 0; i < CARD_FORMATS; i++)
+        names[i] = cardFormats[i].name;
+    if ((f = choose(T(T_CREATE_FORMAT), names, CARD_FORMATS, dev->sd2psx ? 0 : 1)) < 0)
         return 0;
-    if (!(mb = card_size_pick_in(T_SIZE_TITLE, nc.room, 0, 0, formats[f].minMb, formats[f].maxMb)))
+    if (!(mb = card_size_pick_in(T_SIZE_TITLE, nc.room, 0, 0, cardFormats[f].minMb, cardFormats[f].maxMb)))
         return 0;
     snprintf(name, sizeof(name), "MemoryCard");
     for (;;) {   /* (a name a file of the folder has: said, and typed again) */
         if (!keyboard(T(T_FILE_NAME_TITLE), name, 33))
             return 0;
-        snprintf(file, sizeof(file), "%s%s", name, formats[f].ext);
+        snprintf(file, sizeof(file), "%s%s", name, cardFormats[f].ext);
         snprintf(path, sizeof(path), "%s%s", dir, file);
         if (!file_exists(path))
             break;
@@ -246,7 +243,7 @@ static int create_here(const char *dir)
     }
     if (!ask_make(T_CREATE_FILE_ASK, file, mb, fb.title))
         return 0;
-    ok = make_card(path, file, (long long)mb << 20, formats[f].ecc, &failed);
+    ok = make_card(path, file, (long long)mb << 20, cardFormats[f].ecc, &failed);
     made_report(file, ok, failed);
     nc.made = ok >= 0;
     return 1;
