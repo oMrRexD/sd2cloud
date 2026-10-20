@@ -435,8 +435,9 @@ void scroll_to(int cursor, int *top);
 extern const int deviceText[FDEVS];
 /* the devices the Files group lists (FDEV_*), in order; how many */
 int fdev_list(int out[FDEVS]);
-int mx4sio_listed(void);
-void panel_title(const char *text);   /* the right side's title: centered over the card, cut to PANEL_TITLE_W */   /* an MX4SIO is offered: no PS2 memory card in slot 2 (its driver would take the slot) */
+int mx4sio_listed(void);   /* an MX4SIO is offered: no PS2 memory card in slot 2 (its driver would take the slot) */
+void fdev_refresh(void);   /* slot 2 asked again for mx4sio_listed (on the main thread only: it asks the memory card) */
+void panel_title(const char *text);   /* the right side's title: centered over the card, cut to PANEL_TITLE_W */
 /* the OPL's VMC folders on other devices (vmcplaces.c): found when the cards are looked for (cards.c's vmcMore) */
 void vmc_places_init(void);
 const char *vmc_place_name(const char *folder);   /* a group of VMCs' place, as the screens name it: "HD interno" */

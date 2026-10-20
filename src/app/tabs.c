@@ -111,7 +111,18 @@ const int deviceText[FDEVS] = {T_DEV_SD, T_DEV_USB, T_DEV_HDD, T_DEV_MX4SIO};
 
 /* An MX4SIO is only ever in slot 2, where mcman sees nothing: while a PS2 memory card is there instead, the row isn't
  * offered (the MX4SIO's driver, once loaded, keeps the slot from the memory card until the program starts again). With
- * the sd2psx in slot 1 the two get on: tried on a console. Not on PCSX2, whose emulator hangs on that driver */
+ * the sd2psx in slot 1 the two get on: tried on a console. Not on PCSX2, whose emulator hangs on that driver.
+ * What slot 2 has is asked by fdev_refresh, on the main thread, when a list of the devices is made: never while the
+ * screen is drawn (the rows of the Files group are drawn from fdev_list, each frame). Asking it there sent the memory
+ * card a request for each row at each frame, from the drawing thread, beside the main thread's own: the main screen
+ * crawled, and libmc, which takes one request at a time, could hang */
+static int slot2Card;   /* a PS2 memory card was in slot 2 when last asked */
+
+void fdev_refresh(void)
+{
+    slot2Card = strncmp(sdRoot, "host", 4) != 0 && mc_ps2_card(1);
+}
+
 int mx4sio_listed(void)
 {
 #ifdef DEBUG_BUILD
@@ -124,7 +135,7 @@ int mx4sio_listed(void)
     if (forced)
         return 1;
 #endif
-    return strncmp(sdRoot, "host", 4) != 0 && !mc_ps2_card(1);
+    return strncmp(sdRoot, "host", 4) != 0 && !slot2Card;
 }
 
 int storage_text(void)
@@ -435,6 +446,7 @@ void tabs_redo(tabs_t *g)
 int memcard_rows(tabs_t *g)
 {
     int ports[2], n = memcard_ports(ports), i, k = 0;
+    fdev_refresh();   /* (the devices are listed with the memory cards: slot 2 asked once, here) */
     for (i = 0; i < n; i++)
         if (!(g->skip == &slotCard && mcfs_slot_port(slotCard.path) == ports[i]))
             g->mcPorts[k++] = ports[i];
@@ -578,13 +590,13 @@ static u32 tabs_dot(int i)
  * has another group) and the shown group's cards. dots = each card's status light */
 void tabs_draw(const tabs_t *g, int dots)
 {
-    int k, shown = 0, w = 0, x, gap = TAB_GAP, lh = ui_line_height(FONT_SMALL), first = 0, last = TABS - 1;
+    int k, shown = 0, w = 0, x, gap = TAB_GAP, lh = ui_line_height(FONT_SMALL), first = 0, last = TABS - 1, tw[TABS];
     float cy = TAB_Y + lh / 2.0f + 1;
     if (g->tab == TAB_FILES)
         dots = 0;
-    for (k = 0; k < TABS; k++)
-        if (g->count[k])
-            w += ui_measure(FONT_SMALL, T(tabText[k])), shown++;
+    for (k = 0; k < TABS; k++)   /* (each tab measured once: it is drawn at every frame) */
+        if ((tw[k] = g->count[k] ? ui_measure(FONT_SMALL, T(tabText[k])) : 0) != 0)
+            w += tw[k], shown++;
     if (shown > 1 && w + (shown - 1) * gap > TABS_W)   /* (many: closer together, as far as they can be) */
         gap = (TABS_W - w) / (shown - 1) > TAB_GAP_MIN ? (TABS_W - w) / (shown - 1) : TAB_GAP_MIN;
     if (shown > 1 && TABS_X0 + w + (shown - 1) * gap > TABS_END) {
@@ -593,13 +605,11 @@ void tabs_draw(const tabs_t *g, int dots)
         for (first = 0;; first++) {
             int fit = 0, end = -1;
             for (k = first, w = 0; k < TABS; k++) {
-                int tw;
                 if (!g->count[k])
                     continue;
-                tw = ui_measure(FONT_SMALL, T(tabText[k]));
-                if (TABS_X0 + w + (fit ? gap : 0) + tw > TABS_END)
+                if (TABS_X0 + w + (fit ? gap : 0) + tw[k] > TABS_END)
                     break;
-                w += (fit++ ? gap : 0) + tw;
+                w += (fit++ ? gap : 0) + tw[k];
                 end = k;
             }
             if (end >= g->tab || first >= g->tab) {
@@ -617,16 +627,14 @@ void tabs_draw(const tabs_t *g, int dots)
         if (tabs_next(g, -1) >= 0)
             ui_triangle(x - 18, cy, x - 11, cy - 6, x - 11, cy + 6, 0x6E9AE0, 0x70);
         for (k = first; k <= last; k++) {
-            int tw;
             if (!g->count[k])
                 continue;
-            tw = ui_measure(FONT_SMALL, T(tabText[k]));
             if (k == g->tab) {
-                ui_light(x + tw / 2.0f, cy, tw / 2.0f + 26, lh * 0.8f, COLOR_GLOW, 0x30);
+                ui_light(x + tw[k] / 2.0f, cy, tw[k] / 2.0f + 26, lh * 0.8f, COLOR_GLOW, 0x30);
                 ui_text(FONT_SMALL, x, TAB_Y, COLOR_ITEM_ON, T(tabText[k]));
             } else
                 ui_text(FONT_SMALL, x, TAB_Y, 0x6F7C94, T(tabText[k]));
-            x += tw + gap;
+            x += tw[k] + gap;
         }
         if (tabs_next(g, 1) >= 0)
             ui_triangle(x - gap + 18, cy, x - gap + 11, cy + 6, x - gap + 11, cy - 6, 0x6E9AE0, 0x70);

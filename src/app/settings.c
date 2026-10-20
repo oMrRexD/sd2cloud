@@ -523,7 +523,9 @@ static void pick_return(void)
     if ((k = choose(T(T_SET_IGR_RETURN), items, n, start)) < 0)
         return;
     if (!strcmp(values[k], "files")) {   /* the folders: X on an ELF chooses it */
-        int list[FDEVS], nd = fdev_list(list);
+        int list[FDEVS], nd;
+        fdev_refresh();
+        nd = fdev_list(list);
         for (i = 0; i < nd; i++)
             devices[i] = T(deviceText[list[i]]);
         if ((i = choose(T(T_PICK_ELF), devices, nd, 0)) < 0)
@@ -693,7 +695,9 @@ void exit_menu(void)
     if ((k = choose(T(T_EXIT_TO), items, n, start)) < 0)
         return;
     if (!strcmp(values[k], "files")) {
-        int list[FDEVS], nd = fdev_list(list);
+        int list[FDEVS], nd;
+        fdev_refresh();
+        nd = fdev_list(list);
         for (i = 0; i < nd; i++)
             devices[i] = T(deviceText[list[i]]);
         if ((i = choose(T(T_EXIT_FILES), devices, nd, 0)) >= 0) {

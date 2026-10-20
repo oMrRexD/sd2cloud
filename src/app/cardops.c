@@ -333,7 +333,9 @@ int card_create(const save_ref_t *saves, int n)
     static const int fileText[FDEVS] = {T_CREATE_FILE_SD, T_CREATE_FILE_USB, T_CREATE_FILE_HDD, T_CREATE_FILE_MX4SIO};
     static char text[40][100], folderOf[40][48], baseOf[40][56];
     const char *items[40];
-    int kind[40], fileDev[40], devs[FDEVS], nDevs = fdev_list(devs), k = 0, i, j, pick;
+    int kind[40], fileDev[40], devs[FDEVS], nDevs, k = 0, i, j, pick;
+    fdev_refresh();
+    nDevs = fdev_list(devs);
     nc_saves(saves, n);
     /* where it can go: the next numbered card; the next channel of each folder of the user's own that has one free; a
      * new folder; a file. With no sd2psx, only a file: the device's groups mean nothing there */

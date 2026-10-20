@@ -22,6 +22,8 @@ static void cfg_beside(const char *dir, char *out, size_t size)
 static int find_places(vmc_place_t *more, int max)
 {
     int k, n = 0;
+    if (cfg.vmc[VMC_MX4SIO][0])
+        fdev_refresh();
     for (k = 0; k < VMC_KEYS && n < max; k++) {
         const char *v = cfg.vmc[k], *slash;
         char root[64], part[40];
@@ -132,7 +134,9 @@ static int add_folder(void)
 {
     static const int fdevKey[FDEVS] = {-1, VMC_USB, VMC_HDD, VMC_MX4SIO};
     static const char *items[FDEVS];
-    int list[FDEVS], devs[FDEVS], n = 0, i, k, nd = fdev_list(list);
+    int list[FDEVS], devs[FDEVS], n = 0, i, k, nd;
+    fdev_refresh();
+    nd = fdev_list(list);
     for (i = 0; i < nd; i++) {
         k = fdevKey[list[i]];
         if (k >= 0 && (!cfg.vmc[k][0] || (k == VMC_HDD && !cfg.vmc[VMC_APA][0]))) {
