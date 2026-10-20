@@ -177,10 +177,15 @@ SCENARIOS = [
      "cards": CARDS, "script": "mXXC"},
     {"name": "drive-move-later", "what": "the move to the second layout on Drive declined: in Settings > Google Drive",
      "cards": CARDS, "script": "mOSDXC"},
-    # (Google Drive in the Files group, script "d": made-up folders, PCSX2 having no Google account. A save sent by
-    # itself, in its card's Saves, downloaded into the MMCE's root)
+    # (Google Drive in the Files group, script "d": made-up folders, PCSX2 having no Google account; a save's .psu there
+    # is the first save of the first card. Its page: downloaded into the MMCE's root, imported into Card2-1, and to the
+    # trash; and to the trash from the list, with triangle)
     {"name": "cloud-download", "what": "Google Drive in the Files group: its folders opened, a save's file downloaded into the MMCE",
-     "cards": CARDS, "script": "d>>DDDXDXXXXXXTXC"},
+     "cards": CARDS, "script": "d>>DDDXDXXXXXDXXTXOC"},
+    {"name": "cloud-import", "what": "Google Drive in the Files group: a save's page, the save imported into a card",
+     "cards": CARDS, "script": "d>>DDDXDXXXXXXDXXXOC"},
+    {"name": "cloud-delete", "what": "Google Drive in the Files group: a save's file to the trash from its page, and from the list",
+     "cards": CARDS, "script": "d>>DDDXDXXXXXDDXXXTXXC"},
     # (a sync with nothing sent, "B": SELECT shows its cards; X on one still to go: resolved; on the next, its sync off)
     {"name": "sync-list", "what": "the list of a sync's cards: one card marked as resolved, another's sync turned off",
      "cards": CARDS, "script": "BLDXDXDXDDXwC"},

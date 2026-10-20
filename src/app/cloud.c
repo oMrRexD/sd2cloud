@@ -34,6 +34,12 @@ int cloud_listed(void)
     return google_has_access();
 }
 
+static int is_psu_name(const char *name)
+{
+    size_t n = strlen(name);
+    return n > 4 && !strcasecmp(name + n - 4, ".psu");
+}
+
 static void cl_select(void)
 {
     cl.selected[0] = 0;
@@ -87,9 +93,16 @@ static void scene_cloud(float t)
         snprintf(s, sizeof(s), "%d/%d", cl.cursor + 1, cl.n);
         ui_text_right(FONT_SMALL, CL_RIGHT, CL_Y0 + CL_ROWS * CL_ROW + 2, 0x8E98AA, s);
     }
-    {
-        legend_t l[2] = {{BUTTON_CIRCLE, T(T_BACK)}, {BUTTON_CROSS, T(cl.n && !cl.list[cl.cursor].folder ? T_DOWNLOAD : T_OPEN)}};
-        look_legend(l, cl.n ? 2 : 1, 0);
+    {   /* X opens a folder, and a save's .psu (its page); another file is downloaded. Triangle: a file to the trash */
+        legend_t l[3] = {{BUTTON_CIRCLE, T(T_BACK)}};
+        int n = 1;
+        if (cl.n) {
+            const drive_node_t *e = &cl.list[cl.cursor];
+            l[n].button = BUTTON_CROSS, l[n++].text = T(e->folder || is_psu_name(e->name) ? T_OPEN : T_DOWNLOAD);
+            if (!e->folder)
+                l[n].button = BUTTON_TRIANGLE, l[n++].text = T(T_DELETE);
+        }
+        look_legend(l, n, 0);
     }
 }
 
@@ -206,6 +219,7 @@ static struct {
     int fd;
     long long done, total;
     u64 shown;
+    const char *local;   /* downloaded already, to this file (a save's, for its page): copied from it */
 } dl;
 
 static void dl_show(void)
@@ -244,10 +258,14 @@ static int download_here(const char *dir)
         if (!confirm(t, NULL, T_REPLACE))
             return 0;
     }
-    memset(&dl, 0, sizeof(dl));
+    dl.done = 0;
     dl.total = dlFile.size > 0 ? dlFile.size : 0;
     dl_show();
-    if ((dl.fd = open(part, O_WRONLY | O_CREAT | O_TRUNC, 0666)) < 0)
+    unlink(part);
+    if (dl.local) {   /* (a save's .psu, downloaded for its page: copied from there) */
+        r = file_copy(dl.local, part);
+        dl.done = r == 0 ? dl.total : 0;
+    } else if ((dl.fd = open(part, O_WRONLY | O_CREAT | O_TRUNC, 0666)) < 0)
         r = -1;
     else {
 #ifdef DEBUG_BUILD
@@ -301,6 +319,93 @@ static void download(const drive_node_t *f)
     fbHere = NULL;
 }
 
+/* -------- a file to Drive's trash, and a save's page */
+
+/* asked first; to the trash, where Drive keeps it for 30 days. 1 = it went */
+static int cloud_delete(const drive_node_t *f)
+{
+    char t[600];
+    int r;
+    snprintf(t, sizeof(t), T(T_CLOUD_DELETE_ASK), f->name);
+    if (!confirm(t, T(T_CLOUD_DELETE_NOTE), T_DELETE))
+        return 0;
+    message(0, NULL, COLOR_TEXT, T(T_LOADING));
+#ifdef DEBUG_BUILD
+    if (cloudFake)
+        r = 0;
+    else
+#endif
+        r = google_patch(f->id, NULL, "{\"trashed\":true}");
+    log_msg("drive: %s to the trash: %d", f->name, r);
+    if (r == 0)
+        message_wait(COLOR_TITLE, f->name, COLOR_OK, T(T_CLOUD_DELETED));
+    else {
+        snprintf(t, sizeof(t), "%s %s", T(T_CLOUD_DELETE_FAILED), googleError);
+        message_wait(COLOR_TITLE, f->name, COLOR_ERROR, t);
+    }
+    return r == 0;
+}
+
+static int to_buffer(const unsigned char *d, size_t n, void *u) { return buf_append(u, d, n) ? 1 : 0; }
+
+/* X on a save's .psu: downloaded into the data folder, and its page, as a .psu of a device's has (its icon, its name):
+ * into a card, downloaded into a folder of a device, or to the trash. 1 = it went to the trash */
+static int cloud_save(const drive_node_t *f)
+{
+    static const int options[] = {T_IMPORT, T_DOWNLOAD, T_CLOUD_DELETE};
+    char tmp[300], t[400];
+    buffer_t b = {0};
+    int r, k, gone = 0;
+    snprintf(tmp, sizeof(tmp), "%scloud-save.psu", dataDir);
+    message(0, NULL, COLOR_TEXT, T(T_LOADING));
+#ifdef DEBUG_BUILD
+    if (cloudFake) {   /* (made up: the first save of the first card, as Drive would have it) */
+        mcfs_save_t s[1];
+        r = nCards && mcfs_list_saves(cards[0].path, s, 1, NULL) > 0 && mcfs_export_psu(cards[0].path, s[0].folder, &b) == MCFS_OK
+                ? 0 : -1;
+    } else
+#endif
+        r = google_download(f->id, to_buffer, &b);
+    r = r == 0 && file_write(tmp, b.data, b.len) == 0 ? 0 : -1;
+    buf_free(&b);
+    log_msg("drive: %s read for its page: %d", f->name, r);
+    if (r != 0) {
+        snprintf(t, sizeof(t), "%s %s", T(T_CLOUD_DL_FAILED), googleError);
+        message_wait(COLOR_TITLE, f->name, COLOR_ERROR, t);
+        unlink(tmp);
+        return 0;
+    }
+    if (psu_load(tmp)) {
+        save_page(&psu.v, f->name, psu.info.bytes, options, 3);
+        while ((k = save_page_choice()) != 0)
+            if (k == T_IMPORT)
+                psu_import();
+            else if (k == T_DOWNLOAD) {
+                dl.local = tmp;
+                download(f);
+                dl.local = NULL;
+            } else if (k == T_CLOUD_DELETE && cloud_delete(f)) {
+                gone = 1;
+                break;
+            }
+        psu_close();
+    }
+    unlink(tmp);
+    return gone;
+}
+
+/* the folder shown, listed again after a file went: the cursor where it was (on the next one) */
+static void cl_reload(void)
+{
+    int at = cl.cursor;
+    cl_load(NULL);
+    ui_lock();
+    cl.cursor = cl.n ? (at < cl.n ? at : cl.n - 1) : 0;
+    cl_scroll();
+    cl_select();
+    ui_unlock();
+}
+
 void cloud_screen(void)
 {
     char t[400], up[128];
@@ -332,7 +437,7 @@ void cloud_screen(void)
     for (;;) {
         u32 b;
         ui_scene(scene_cloud);
-        b = wait_nav(PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT | PAD_CROSS | PAD_CIRCLE);
+        b = wait_nav(PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT | PAD_CROSS | PAD_CIRCLE | PAD_TRIANGLE);
         if (b & (PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT)) {   /* left and right: a screenful at a time */
             int k = cl.cursor;
             if (!cl.n)
@@ -367,8 +472,15 @@ void cloud_screen(void)
                 snprintf(cl.name[cl.depth], sizeof(cl.name[0]), "%s", e->name);
                 cl.depth++;
                 cl_load(NULL);
+            } else if (!e->folder && is_psu_name(e->name)) {
+                if (cloud_save(e))
+                    cl_reload();
             } else if (!e->folder)
                 download(e);
+        } else if ((b & PAD_TRIANGLE) && cl.n && !cl.list[cl.cursor].folder) {   /* a file, to the trash */
+            sound_play(SND_CONFIRM);
+            if (cloud_delete(&cl.list[cl.cursor]))
+                cl_reload();
         }
     }
     ui_scene(scene_frame);   /* (off the screen before the list goes) */

@@ -101,7 +101,7 @@ LONG_TEMPLATE = "My Network Settings 2026"   # a template's name, as long as it 
 def fill(s, id_):
     """%d, %lld and %s with the worst case"""
     if "%s" in s and id_ in ("T_CONFIRM_COPY", "T_CONFIRM_MOVE", "T_DELETE_ASK", "T_CONFIRM_CLOUD", "T_CONFIRM_IMPORT",
-                             "T_CONFIRM_EXPORT", "T_TPL_REMOVE_ASK"):
+                             "T_CONFIRM_EXPORT", "T_TPL_REMOVE_ASK", "T_CLOUD_DELETE_ASK"):
         s = s.replace("%s", LONG_SAVE, 1).replace("%s", LONG_CARD)
     if "%s" in s and id_ in ("T_TPL_CREATE_ASK", "T_TPL_CREATED", "T_TPL_DELETE_ASK", "T_TPL_ADD_ASK",
                              "T_TPL_MAIN_NOW", "T_TPL_GAMES_ASK", "T_TPL_UPDATE_ASK", "T_TPL_PICK_ASK"):
@@ -355,13 +355,18 @@ PLACE = {
     "T_DRIVE_MOVE_DONE": ("text", DIALOG, 2),
     "T_CLOUD_HINT": ("small", 212, 5),
     "T_CLOUD_EMPTY": ("text", DIALOG, 2),
-    "T_DOWNLOAD": ("text", 200, 1),
+    "T_DOWNLOAD": ("browser", 200, 1),
     "T_SAVE_HERE": ("text", 200, 1),
     "T_CLOUD_SAVE_TO": ("text", 300, 1),
     "T_CLOUD_DOWNLOADING": ("text", DIALOG, 1),
     "T_CLOUD_SAVED": ("text", DIALOG, 3),
     "T_CLOUD_DL_FAILED": ("text", DIALOG, 2),
     "T_CLOUD_EXISTS": ("text", DIALOG, 3),
+    "T_CLOUD_DELETE": ("browser", 304, 1),
+    "T_CLOUD_DELETE_ASK": ("text", DIALOG, 3),
+    "T_CLOUD_DELETE_NOTE": ("small", DIALOG, 2),
+    "T_CLOUD_DELETED": ("text", DIALOG, 2),
+    "T_CLOUD_DELETE_FAILED": ("text", DIALOG, 2),
     "T_SET_LIBRARY_DRIVE": ("text", 300, 1), "T_LIBRARY_DRIVE_NOTE": ("text", WIDE, 3),
     # the hard disk's two sides, to pick one; with no sd2psx, a card is made as a file (its hint); a split by game done
     # (the box's title); the Memory Card's saves sent by themselves (one; read first; the card that didn't answer, after
@@ -415,6 +420,7 @@ LEGENDS = [
     (("T_LATER", "T_DRIVE_ORGANIZE"), False), (("T_BACK", "T_DRIVE_ORGANIZE"), False),
     # Google Drive in the Files group: a folder opened, a file downloaded (and the folder it goes to)
     (("T_BACK", "T_DOWNLOAD"), False), (("T_BACK", "T_OPEN", "T_SAVE_HERE"), False),
+    (("T_BACK", "T_OPEN", "T_DELETE"), False), (("T_BACK", "T_DOWNLOAD", "T_DELETE"), False),
     # a card's saves, with the options of how they are shown
     (("T_BACK", "T_OPEN", "T_OPTIONS", "T_INSTALL"), False), (("T_BACK", "T_TPL_CHANGE"), False),
     # a file of the Files group, with its options; renaming a folder of cards

@@ -313,10 +313,17 @@ struct psu_s psu;
 
 static int psu_open(const char *file)
 {
+    char path[sizeof(psu.path)];
+    snprintf(path, sizeof(path), "%s%s", fb.dir, file);
+    return psu_load(path);
+}
+
+int psu_load(const char *path)
+{
     buffer_t iconsys = {0}, ico = {0};
     icon_t *ic;
     int r;
-    snprintf(psu.path, sizeof(psu.path), "%s%s", fb.dir, file);
+    snprintf(psu.path, sizeof(psu.path), "%s", path);
     message(0, NULL, COLOR_TEXT, T(T_LOADING));
     r = mcfs_psu_info(psu.path, &psu.info, &iconsys, &ico);
     log_msg("files: %s: %d (%s, %lld bytes in %d files)", psu.path, r, psu.info.folder, psu.info.bytes, psu.info.files);
@@ -348,7 +355,7 @@ void psu_close(void)
 }
 
 /* that save into a card, which is picked next; asked before it is written */
-static void psu_import(void)
+void psu_import(void)
 {
     char name[160], t[300], game[12];
     card_t *to;

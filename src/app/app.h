@@ -211,6 +211,10 @@ struct psu_s {
     char path[660];
 };
 extern struct psu_s psu;
+/* the save a .psu holds (one of a device's folders, or one downloaded from Drive), as psu has it: 1 = it is one (said
+ * when it isn't). psu_import puts it into a card picked next; psu_close lets go of it */
+int psu_load(const char *path);
+void psu_import(void);
 void psu_close(void);
 void files_screen(int dev);
 
