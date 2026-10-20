@@ -322,8 +322,9 @@ int card_free(const card_t *c, const card_t *other)
 {
     char t[400];
     int channel = 0, active, r;
-    if (mcfs_slot_port(c->path) >= 0 || card_file_card(c) || viewOther || c->type == TYPE_VMC)
-        return 0;   /* (the Memory Card in the other slot, a card file, the other device's card, a VMC: not in the slot) */
+    if (mcfs_slot_port(c->path) >= 0 || card_file_card(c) || viewOther || c->type == TYPE_VMC || library_path(c->path))
+        return 0;   /* (the Memory Card in the other slot, a card file, the other device's card, a VMC, the Library: not
+                       in the slot) */
     active = active_card(&channel);
     r = card_in_use(c, active, channel);
     if (r == 0)

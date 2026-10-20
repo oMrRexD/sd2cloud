@@ -1133,8 +1133,8 @@ void cards_check(void (*progress)(int i, int n, const card_t *c))
 void cards_recheck(card_t *c)
 {
     int migrated = 0;
-    if (mcfs_slot_port(c->path) >= 0)
-        return;   /* (the Memory Card in the other slot: not one of the device's cards, it has no backups) */
+    if (mcfs_slot_port(c->path) >= 0 || library_path(c->path))
+        return;   /* (the Memory Card in the other slot, the Library: not one of the device's cards, no backups) */
     check_one(c, &migrated);
     if (migrated)
         state_write();

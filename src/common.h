@@ -20,6 +20,7 @@
 #include "state.h"
 #include "cards.h"
 #include "mcfs.h"
+#include "library.h"
 #include "stream.h"
 #include "google.h"
 #include "update.h"

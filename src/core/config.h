@@ -10,6 +10,7 @@
 #define TYPE_BOOT   4
 #define TYPE_NAMED  8
 #define TYPE_VMC    16   /* an OPL VMC of the microSD (cards.c) */
+#define TYPE_LIBRARY 32  /* the Library's saves (library.c): never one of the cards, nor synced as one */
 #define MAX_RULES   64
 #define SORT_NEWEST 0
 #define SORT_OLDEST 1
@@ -58,6 +59,8 @@ typedef struct {
     int beta;                    /* [update] channel = beta: updates come from the "beta" pre-release, rebuilt at every
                                     change, instead of the latest release */
     char vmc[VMC_KEYS][120];     /* [vmc] hdd, apa, mx4sio, usb, other ("" = none) */
+    int library_drive;           /* [library] drive = yes: a sync sends the Library's new saves to Drive too, each by
+                                    itself (the backup by save's way) */
 } config_t;
 extern config_t cfg;
 extern int configExists;

@@ -97,8 +97,9 @@ static void scene_browser(float t)
         ui_text_shadow(FONT_TEXT, 100, 60, COLOR_OK, s);
     } else if (brw.note[0])
         ui_text_shadow(FONT_TEXT, 100, 60, 0xE6E6E6, brw.note);
-    else if (brw.card == &allGames) {   /* no card's free space to tell: how many saves there are, all together */
-        snprintf(s, sizeof(s), T(T_SAVES_COUNT), brw.n);
+    else if (brw.card == &allGames || library_path(brw.card->path)) {   /* no card's free space to tell: how many saves
+                                                                          there are */
+        snprintf(s, sizeof(s), T(library_path(brw.card->path) ? T_LIBRARY_SAVES : T_SAVES_COUNT), brw.n);
         ui_text_shadow(FONT_TEXT, 100, 60, 0xE6E6E6, s);
     } else if (brw.freeBytes >= 0) {
         snprintf(s, sizeof(s), T(T_FREE_KB), (int)(brw.freeBytes / 1024));
@@ -698,6 +699,10 @@ static int browser_options(const card_t *c)
     int r = 0;
     ui_lock();
     opt.n = opt.cursor = 0;
+    if (library_path(c->path)) {   /* (the Library: its saves are only shown in another order) */
+        opt.id[opt.n++] = OPT_SORT;
+        goto made;
+    }
     if (c != &allGames && c != &fileCard && !viewOther)   /* (the device's cards are synced; the Memory Card is sent whole) */
         opt.id[opt.n++] = OPT_SYNC;
     if (c == &slotCard)   /* (and put back whole, from one of the backups that sent) */
@@ -708,6 +713,7 @@ static int browser_options(const card_t *c)
         opt.id[opt.n++] = OPT_EXPORT;
     } else   /* (a card of many games: the Memory Card, a card file, one of the device's) */
         opt.id[opt.n++] = OPT_BY_GAME;
+made:
     opt.sort = cfg.sort;
     opt.repeated = cfg.show_repeated;
     ui_unlock();

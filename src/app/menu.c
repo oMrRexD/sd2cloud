@@ -144,6 +144,17 @@ static void scene_menu(float t)
     ui_alpha(look_fade(t));
     view_draw();
     tabs_draw(&menu.g, 1);
+    if (menu.g.tab == TAB_LIBRARY) {   /* a game of the Library: its newest save on a game's card, how many it has */
+        legend_t l[4] = {{BUTTON_CIRCLE, T(T_MENU_EXIT)}, {BUTTON_CROSS, T(T_OPEN)}, {BUTTON_SELECT, T(T_TOOLS)},
+                         {BUTTON_START, T(T_SETTINGS)}};
+        int k = ROW_LIB(0) - menu.g.idx[menu.g.cursor];
+        look_legend(l, 4, 2);
+        if (!menu.g.n)
+            return;
+        panel_title(library_row_name(k));
+        library_picture(k, menu.iconCard == menu.g.idx[menu.g.cursor] ? menu.icon : NULL, ui_clock());
+        return;
+    }
     if (menu.g.tab == TAB_FILES) {   /* the devices: what the group is for, where a card's picture would be */
         legend_t l[4] = {{BUTTON_CIRCLE, T(T_MENU_EXIT)}, {BUTTON_CROSS, T(T_OPEN)}, {BUTTON_SELECT, T(T_TOOLS)},
                          {BUTTON_START, T(T_SETTINGS)}};
@@ -227,6 +238,15 @@ static void menu_icon(void)
 {
     icon_t *ic = NULL;
     card_t *c = tabs_card(&menu.g);
+    if (menu.g.tab == TAB_LIBRARY && menu.g.n && menu.iconCard != menu.g.idx[menu.g.cursor]) {   /* (a game's newest save) */
+        ic = library_icon(ROW_LIB(0) - menu.g.idx[menu.g.cursor]);
+        ui_lock();
+        icon_free(menu.icon);
+        menu.icon = ic;
+        menu.iconCard = menu.g.idx[menu.g.cursor];
+        ui_unlock();
+        return;
+    }
     if (!c || menu.iconCard == menu.g.idx[menu.g.cursor])
         return;
     if (c->type == TYPE_GAMEID)
@@ -381,6 +401,7 @@ void manual(void)
         ;
     ui_lock();
     tabs_init(&menu.g, NULL, 1);
+    menu.g.library = 1;
     menu.g.all = 1;
     menu.g.create = 1;   /* (the Cards group starts with "New card") */
     tabs_show(&menu.g, menu.g.tab);
@@ -446,6 +467,18 @@ void manual(void)
         } else if ((b & PAD_CROSS) && menu.g.tab == TAB_GAMES && menu.g.n && menu.g.idx[menu.g.cursor] < 0) {
             sound_play(SND_CONFIRM);
             card_screen(&allGames);   /* "All saves" */
+        } else if ((b & PAD_CROSS) && menu.g.tab == TAB_LIBRARY && menu.g.n) {   /* a game's saves in the Library */
+            int k;
+            sound_play(SND_CONFIRM);
+            library_open(ROW_LIB(0) - menu.g.idx[menu.g.cursor]);
+            ui_lock();   /* (saves moved out or in: its games as they are now; none left, the group goes) */
+            icon_free(menu.icon);
+            menu.icon = NULL;
+            menu.iconCard = -1;
+            tabs_show(&menu.g, TAB_LIBRARY);
+            for (k = 0; k < TABS && !menu.g.count[menu.g.tab]; k++)
+                tabs_show(&menu.g, k);
+            ui_unlock();
         } else if ((b & PAD_CROSS) && menu.g.tab == TAB_FILES) {
             sound_play(SND_CONFIRM);
             if (tabs_device(&menu.g) < 0) {

@@ -124,7 +124,7 @@ static int save_move(card_t *c, save_view_t *v)
     for (again = 0;; again = 1) {   /* (circle on the question: back to the cards, where they were) */
         if (!(to = choose_dest(c, T_MOVE_TO, bytes, v->s.folder, again)))
             return 0;
-        snprintf(t, sizeof(t), T(T_CONFIRM_MOVE), name, to->base);
+        snprintf(t, sizeof(t), T(library_path(to->path) ? T_LIB_CONFIRM_MOVE : T_CONFIRM_MOVE), name, to->base);
         made = to == &destNew;
         if (made && !dest_new_size(mcfs_save_room(bytes, files)))
             continue;   /* (circle on the sizes: back to the cards) */
@@ -154,7 +154,7 @@ static int save_move(card_t *c, save_view_t *v)
         templates_new_card(to, 1);
     if (r == MCFS_ERR_CANCELLED)
         return 0;   /* given up, and said so already: back to the save's page */
-    op_result(r, T_DONE_MOVE, to);
+    op_result(r, library_path(to->path) ? T_LIB_DONE_MOVE : T_DONE_MOVE, to);
     return r == MCFS_OK;
 }
 
@@ -166,7 +166,7 @@ static int save_delete(card_t *c, save_view_t *v)
     save_name(v, name, sizeof(name));
     snprintf(t, sizeof(t), T(T_DELETE_ASK), name);
     dlg_new(COLOR_WARN, t);
-    snprintf(t, sizeof(t), T(T_DELETE_TEXT), c->base);
+    snprintf(t, sizeof(t), T(T_DELETE_TEXT), library_path(c->path) ? T(T_TAB_LIBRARY) : c->base);
     dlg_line(FONT_TEXT, COLOR_TEXT, 0, t);
     dlg_buttons(BUTTON_CIRCLE, T_BACK, BUTTON_CROSS, T_DELETE);
     dlg_show();
@@ -319,6 +319,8 @@ int save_screen(card_t *c, int i)
     mcfs_save_info(c->path, v->s.folder, &bytes, &files);
     if (c == &fileCard)
         save_page(v, c->base, bytes, saveOptions, 1);   /* a card file is only read: a save can be copied out of it */
+    else if (library_path(c->path))
+        save_page(v, T(T_TAB_LIBRARY), bytes, saveOptions, 3);   /* (the Library: no backups, nothing started from it) */
     else if (viewOther)
         save_page(v, c->base, bytes, saveOptions, 3);   /* (the other device's card: not in the slot, not synced) */
     else if (mcfs_save_app(c->path, &v->s, boot, sizeof(boot)))

@@ -26,8 +26,8 @@ EE_BIN_PACKED = $(DIST)/SD2CLOUD.ELF
 endif
 # (one name each, whatever the folder: the objects all go to the same place)
 SOURCES = main format dialog leave work synclist account backup tabs memcard history active saves save dest install browse menu settings autosync \
-          keyboard tools marks cardops migrate safety savesync vmcplaces \
-          boot log input net mmce drives launch debug helper ui font image look sound icon i18n files json config state cards mcfs stream google update restore templates \
+          keyboard tools marks cardops migrate safety savesync vmcplaces libview \
+          boot log input net mmce drives launch debug helper ui font image look sound icon i18n files json config state cards mcfs library stream google update restore templates \
           lang
 # where the sources are: the screens and what they do (app), the rules with no screen and no PS2 hardware (core),
 # the PS2 itself (platform) and the drawing (ui). See docs/ARCHITECTURE.md

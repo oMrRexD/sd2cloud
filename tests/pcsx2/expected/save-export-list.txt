@@ -13,6 +13,7 @@ Card1/Card1-1: 2 saves, 8270848 bytes free
 [script] O
 [script] >
 [script] >
+[script] >
 [script] X
 files: host:: 4 entries
   0: MemoryCards/ (0 bytes)

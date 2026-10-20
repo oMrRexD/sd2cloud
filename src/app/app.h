@@ -52,7 +52,7 @@ typedef struct {
 #define CARD_Y     100
 #define CARD_CX    (CARD_X + LOOK_CARD_W / 2)
 
-enum { TAB_CARDS, TAB_GAMES, TAB_BOOT, TAB_VMC, TAB_FILES, TABS };
+enum { TAB_CARDS, TAB_GAMES, TAB_BOOT, TAB_VMC, TAB_LIBRARY, TAB_FILES, TABS };
 #define TAB_KEYS   (PAD_LEFT | PAD_RIGHT | PAD_L1 | PAD_R1)
 
 /* the devices of the Files group: the sd2psx's own microSD and a USB drive */
@@ -69,6 +69,8 @@ typedef struct {
     int keep[TABS][2];        /* each group's cursor and top: switching back lands on the same card */
     const card_t *skip;       /* a card left out (the one a save is copied from) */
     int files;                /* the Files group is offered too, with the devices */
+    int library;              /* the Library's group: 1 = its games (the main screen), 2 = the Library itself, as a place
+                                 saves go to; 0 = none */
     int memcard;              /* the Files group offers the Memory Card (memcard.c), after the devices if they are there:
                                  how many (with no sd2psx, one per slot), and the slots (mcPorts) */
     int mcPorts[2];
@@ -90,6 +92,8 @@ typedef struct {
 /* the rows of a list that are neither a card nor a folder (their idx) */
 #define ROW_ALL (-1)              /* "All saves" */
 #define ROW_NEW (-2)              /* "New card" */
+#define ROW_LIB(k) (-100 - (k))   /* the Library's group: its k-th game (the main screen), or the Library (k = 0, a list
+                                     a save is copied or moved to) */
 typedef struct {
     mcfs_save_t s;
     card_t *card;          /* the card it is on */
@@ -447,6 +451,23 @@ const char *vmc_place_name(const char *folder);   /* a group of VMCs' place, as 
 const vmc_place_t *vmc_place_pick(void);          /* where a new VMC goes: asked when there is more than one place */
 int vmc_places_count(void);                       /* how many folders are read: the microSD's and the ones added */
 void vmc_places_screen(void);                     /* Settings > "OPL VMC folders" */
+/* the Library on the screens (libview.c): found in the data folder (library_start, when the program starts and when the
+ * microSD is read again); libRoot is where a save is copied or moved to it; its k-th game's name, opened as a card's
+ * saves, its newest save's icon, drawn as a game card; the Library drawn as the place a list offers (words: with
+ * what it is under its card) */
+extern card_t libRoot;
+void library_start(void);
+card_t *library_root(void);
+const char *library_row_name(int k);
+void library_open(int k);
+icon_t *library_icon(int k);
+void library_picture(int k, icon_t *ic, float t);
+void library_place(int words);
+/* the saves the Library is offered for, where they would go: the one of that folder (dest.c), or the marked ones
+ * (marks.c); the row's text for them */
+void library_dest(const char *folder);
+void library_dest_marked(void);
+const char *library_dest_name(void);
 int tabs_memcard_port(const tabs_t *g);
 int memcard_rows(tabs_t *g);   /* (tabs.c) the Memory Cards a list offers: how many, their slots in g->mcPorts */   /* the slot of the Memory Card the cursor is on (-1 = not on one) */
 int storage_text(void);   /* with no sd2psx: the name of the drive the program works from (T_DEV_USB...) */

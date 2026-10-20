@@ -30,6 +30,7 @@ static int slot_copy(const char *from, const char *folder, const char *to, mcfs_
 static int slot_delete(int port, const char *folder);
 static int slot_export(int port, const char *folder, buffer_t *out);
 static int slot_import(const char *psu, int port);
+static int ext_port(const char *path);
 
 #define MAGIC         "Sony PS2 Memory Card Format "
 #define MAX_CLUSTER   2048     /* bytes */
@@ -469,8 +470,8 @@ int mcfs_list_saves(const char *path, mcfs_save_t *list, int max, long long *fre
 {
     list_ctx_t x = {list, 0, max};
     int rootdir, r = -1;
-    if (mcfs_slot_port(path) >= 0)
-        return slot_list(mcfs_slot_port(path), list, max, freeBytes);
+    if (ext_port(path) >= 0)
+        return slot_list(ext_port(path), list, max, freeBytes);
     rootdir = mc_open(&mc, path);
     if (rootdir < 0)
         return -1;
@@ -632,8 +633,8 @@ int mcfs_save_app(const char *path, const mcfs_save_t *s, char *boot, size_t siz
     char name[64] = "";
     find_name_t f = {name, boot, size};
     boot[0] = 0;
-    if (mcfs_slot_port(path) >= 0)
-        return slot_app(mcfs_slot_port(path), s, boot, size);
+    if (ext_port(path) >= 0)
+        return slot_app(ext_port(path), s, boot, size);
     if (mc_open(&mc, path) < 0)
         return 0;
     if (read_file(&mc, s, "title.cfg", &cfg) == 0 && cfg.len < 16 * 1024) {
@@ -704,8 +705,8 @@ int mcfs_save_signatures(const char *path, const mcfs_save_t *saves, int n, unsi
 int mcfs_save_icon(const char *path, const mcfs_save_t *s, buffer_t *iconsys, buffer_t *ico)
 {
     int r;
-    if (mcfs_slot_port(path) >= 0)
-        return slot_icon(mcfs_slot_port(path), s, iconsys, ico);
+    if (ext_port(path) >= 0)
+        return slot_icon(ext_port(path), s, iconsys, ico);
     if (mc_open(&mc, path) < 0)
         return -1;
     r = read_icon(&mc, s, iconsys, ico);
@@ -722,8 +723,21 @@ int mcfs_newest_save_icon(const char *path, int (*rank)(const char *folder), cha
     static mcfs_save_t list[MCFS_MAX_SAVES];
     static unsigned char ranks[MCFS_MAX_SAVES];
     list_ctx_t x = {list, 0, MCFS_MAX_SAVES};
-    int rootdir = mc_open(&mc, path), r = -1, i, top;
-    if (rootdir < 0)
+    int rootdir, r = -1, i, top, port = ext_port(path);
+    if (port >= 0) {   /* (the Library, or a memory card in a slot: its saves listed, the newest first) */
+        int n = slot_list(port, list, MCFS_MAX_SAVES, NULL);
+        for (i = 0, top = 0; i < n; i++)
+            if ((ranks[i] = rank ? rank(list[i].folder) : 0) > top)
+                top = ranks[i];
+        for (; top >= 0 && r != 0; top--)
+            for (i = 0; i < n && r != 0; i++)
+                if (ranks[i] == top && slot_icon(port, &list[i], iconsys, ico) == 0) {
+                    snprintf(folder, 33, "%s", list[i].folder);
+                    r = 0;
+                }
+        return r;
+    }
+    if ((rootdir = mc_open(&mc, path)) < 0)
         return -1;
     /* the newest save that has an icon (a folder without icon.sys, like some games' extra data, is skipped), of the
      * highest rank there is */
@@ -1074,8 +1088,8 @@ int mcfs_save_info(const char *path, const char *folder, long long *bytes, int *
 {
     int r, i;
     *bytes = 0, *files = 0;
-    if (mcfs_slot_port(path) >= 0)
-        return slot_info(mcfs_slot_port(path), folder, bytes, files);
+    if (ext_port(path) >= 0)
+        return slot_info(ext_port(path), folder, bytes, files);
     if (mc_open(&mc, path) < 0)
         return MCFS_ERR_IO;
     r = read_entries(&mc, folder, &srcSave);   /* the sizes are in the entries: the files themselves aren't read */
@@ -1205,7 +1219,7 @@ int mcfs_copy_save(const char *from, const char *folder, const char *to, mcfs_st
 {
     u64 start = now_ms();
     int r, i;
-    if (mcfs_slot_port(from) >= 0 || mcfs_slot_port(to) >= 0)   /* (to or from a memory card in a slot) */
+    if (ext_port(from) >= 0 || ext_port(to) >= 0)   /* (to or from a memory card in a slot, or the Library) */
         return slot_copy(from, folder, to, progress);
     /* the save, from its card */
     if (mc_open(&mc, from) < 0)
@@ -1340,7 +1354,7 @@ int mcfs_check(const char *path, mcfs_check_t *r)
     int rootdir;
     unsigned int n;
     memset(r, 0, sizeof(*r));
-    if (mcfs_slot_port(path) >= 0 || (rootdir = mc_open(&mc, path)) < 0)
+    if (ext_port(path) >= 0 || (rootdir = mc_open(&mc, path)) < 0)
         return -1;
     memset(&k, 0, sizeof(k));
     k.r = r;
@@ -1396,8 +1410,8 @@ int mcfs_delete_save(const char *path, const char *folder)
     u64 start = now_ms();
     int r = MCFS_ERR_IO, i;
     srcSave.n = 0;
-    if (mcfs_slot_port(path) >= 0)
-        return slot_delete(mcfs_slot_port(path), folder);
+    if (ext_port(path) >= 0)
+        return slot_delete(ext_port(path), folder);
     if (mc_open_mode(&mc, path, O_RDWR) < 0)
         return MCFS_ERR_IO;
     ioReads = ioWrites = 0;
@@ -1456,8 +1470,8 @@ int mcfs_export_psu(const char *path, const char *folder, buffer_t *out)
 {
     int r;
     buf_free(out);
-    if (mcfs_slot_port(path) >= 0)
-        return slot_export(mcfs_slot_port(path), folder, out);
+    if (ext_port(path) >= 0)
+        return slot_export(ext_port(path), folder, out);
     if (mc_open(&mc, path) < 0)
         return MCFS_ERR_IO;
     r = read_save(&mc, folder, &srcSave);
@@ -1722,6 +1736,21 @@ int mcfs_psu_info(const char *psu, mcfs_psu_t *info, buffer_t *iconsys, buffer_t
     return r;
 }
 
+int mcfs_psu_bytes(const char *psu, buffer_t *out)
+{
+    int r = MCFS_OK;
+    buf_free(out);
+    if (!strcmp(psu, MCFS_PSU_MEMORY))
+        return psuMem && !buf_append(out, psuMem, psuMemLen) ? MCFS_OK : MCFS_ERR_IO;
+    if (psu[0] && psu[strlen(psu) - 1] == '/') {   /* (a save copied as a folder: made into a .psu) */
+        if ((r = read_psu(psu, &srcSave)) == MCFS_OK)
+            r = psu_of(&srcSave, out);
+        save_free(&srcSave);
+        return r;
+    }
+    return file_read(psu, out) == 0 ? MCFS_OK : MCFS_ERR_IO;
+}
+
 int mcfs_psu_files(const char *psu, mcfs_psu_cb cb, void *u)
 {
     int r = read_psu(psu, &srcSave), i;
@@ -1738,8 +1767,8 @@ int mcfs_import_psu(const char *psu, const char *to, mcfs_step_cb progress)
 {
     u64 start = now_ms();
     int r;
-    if (mcfs_slot_port(to) >= 0)
-        return slot_import(psu, mcfs_slot_port(to));
+    if (ext_port(to) >= 0)
+        return slot_import(psu, ext_port(to));
     ioReads = ioWrites = 0;
     onStep = progress;
     stepStop = 0;
@@ -1954,10 +1983,14 @@ int mcfs_new_card(const char *path, long long size, void (*progress)(long long d
    modes and dates), to go into a card's file the way a save of another card does. What goes into it goes as a .psu,
    which mcman writes file by file. */
 
-static const mcfs_slot_t *slotOps;
+static const mcfs_slot_t *slotOps, *libOps;
 static unsigned char slotRoot[MAX_ROOT][ENT], slotDir[MAX_ENTRIES][ENT];
+static char libScope[16];   /* (what followed "lib:" in the path the Library was asked by) */
+#define LIB_PORT 2
 
 void mcfs_slot(const mcfs_slot_t *ops) { slotOps = ops; }
+void mcfs_library(const mcfs_slot_t *ops) { libOps = ops; }
+const char *mcfs_library_scope(void) { return libScope; }
 
 int mcfs_slot_port(const char *path)
 {
@@ -1965,10 +1998,23 @@ int mcfs_slot_port(const char *path)
                ? path[2] - '0' : -1;
 }
 
+/* a slot's port (0, 1), LIB_PORT for the Library (its scope kept), or -1 for a card's file */
+static int ext_port(const char *path)
+{
+    if (library_path(path)) {
+        snprintf(libScope, sizeof(libScope), "%s", path + sizeof(LIBRARY_PATH) - 1);
+        return LIB_PORT;
+    }
+    return mcfs_slot_port(path);
+}
+
+/* the calls of that port's storage (NULL = none is there) */
+static const mcfs_slot_t *ops_of(int port) { return port == LIB_PORT ? libOps : slotOps; }
+
 static int slot_list(int port, mcfs_save_t *list, int max, long long *freeBytes)
 {
     int n, i, k = 0;
-    if (!slotOps || (n = slotOps->dir(port, NULL, slotRoot, MAX_ROOT)) < 0)
+    if (!ops_of(port) || (n = ops_of(port)->dir(port, NULL, slotRoot, MAX_ROOT)) < 0)
         return -1;
     for (i = 0; i < n && k < max; i++) {
         const unsigned char *e = slotRoot[i];
@@ -1982,7 +2028,7 @@ static int slot_list(int port, mcfs_save_t *list, int max, long long *freeBytes)
     if (list)
         qsort(list, k, sizeof(list[0]), newer_first);
     if (freeBytes)
-        *freeBytes = slotOps->free_bytes(port);
+        *freeBytes = ops_of(port)->free_bytes(port);
     return k;
 }
 
@@ -1991,13 +2037,13 @@ static int slot_icon(int port, const mcfs_save_t *s, buffer_t *iconsys, buffer_t
     char icoName[65];
     buf_free(iconsys);
     buf_free(ico);
-    if (!slotOps || slotOps->read(port, s->folder, "icon.sys", iconsys) != 0 || iconsys->len < 964 ||
+    if (!ops_of(port) || ops_of(port)->read(port, s->folder, "icon.sys", iconsys) != 0 || iconsys->len < 964 ||
         memcmp(iconsys->data, "PS2D", 4) != 0) {
         buf_free(iconsys);
         return -1;
     }
     snprintf(icoName, sizeof(icoName), "%.64s", (const char *)iconsys->data + 260);
-    if (slotOps->read(port, s->folder, icoName, ico) != 0 || !ico->len) {
+    if (ops_of(port)->read(port, s->folder, icoName, ico) != 0 || !ico->len) {
         buf_free(iconsys);
         buf_free(ico);
         return -1;
@@ -2009,7 +2055,7 @@ static int slot_icon(int port, const mcfs_save_t *s, buffer_t *iconsys, buffer_t
 static int slot_files(int port, const char *folder)
 {
     int n, i, k = 0;
-    if (!slotOps || (n = slotOps->dir(port, folder, slotDir, MAX_ENTRIES)) < 0)
+    if (!ops_of(port) || (n = ops_of(port)->dir(port, folder, slotDir, MAX_ENTRIES)) < 0)
         return -1;
     for (i = 0; i < n; i++)
         if (is_live(slotDir[i]) && !(le16(slotDir[i]) & DF_DIRECTORY))
@@ -2023,7 +2069,7 @@ static int slot_app(int port, const mcfs_save_t *s, char *boot, size_t size)
     char name[64] = "";
     int n, i;
     boot[0] = 0;
-    if (slotOps && slotOps->read(port, s->folder, "title.cfg", &cfg) == 0 && cfg.len < 16 * 1024)
+    if (port != LIB_PORT && slotOps && slotOps->read(port, s->folder, "title.cfg", &cfg) == 0 && cfg.len < 16 * 1024)
         cfg_boot(&cfg, name);
     buf_free(&cfg);
     if (name[0] && (n = slot_files(port, s->folder)) > 0)
@@ -2049,7 +2095,7 @@ static int slot_read(int port, const char *folder, save_raw_t *s)
     long long total = 0;
     int n, i, k;
     s->n = 0;
-    if (!slotOps || (n = slotOps->dir(port, NULL, slotRoot, MAX_ROOT)) < 0)
+    if (!ops_of(port) || (n = ops_of(port)->dir(port, NULL, slotRoot, MAX_ROOT)) < 0)
         return MCFS_ERR_IO;
     for (i = 0; i < n && (!is_live(slotRoot[i]) || strncmp((const char *)slotRoot[i] + 64, folder, 32)); i++)
         ;
@@ -2075,7 +2121,7 @@ static int slot_read(int port, const char *folder, save_raw_t *s)
         memcpy(s->ent[k], slotDir[i], ENT);
         buf_free(&s->data[k]);
         snprintf(name, sizeof(name), "%.32s", (const char *)slotDir[i] + 64);
-        if (len && (slotOps->read(port, folder, name, &s->data[k]) != 0 || s->data[k].len != len)) {
+        if (len && (ops_of(port)->read(port, folder, name, &s->data[k]) != 0 || s->data[k].len != len)) {
             save_free(s);
             s->n = 0;
             return MCFS_ERR_IO;
@@ -2090,19 +2136,40 @@ static int slot_read(int port, const char *folder, save_raw_t *s)
     return MCFS_OK;
 }
 
-/* a save from a memory card in a slot into a card's file (written as any copy is: read back and compared), or from a
- * card's file (or a card held in memory) into the memory card, as a .psu */
+/* a save from a memory card in a slot (or the Library) into a card's file (written as any copy is: read back and
+ * compared), or from a card's file (or a card held in memory) into the memory card (or the Library), as a .psu; or from
+ * one of those two into the other, as a .psu */
 static int slot_copy(const char *from, const char *folder, const char *to, mcfs_step_cb progress)
 {
-    int fromPort = mcfs_slot_port(from), toPort = mcfs_slot_port(to), r, i;
+    int fromPort = ext_port(from), toPort = ext_port(to), r, i;
     buffer_t psu = {0};
     u64 start = now_ms();
-    if (fromPort >= 0 && toPort >= 0)
-        return MCFS_ERR_IO;   /* (there is one memory card besides the device's: never both ends) */
+    char scope[sizeof(libScope)];
+    if (fromPort >= 0 && toPort >= 0 && (fromPort == LIB_PORT) == (toPort == LIB_PORT))
+        return MCFS_ERR_IO;   /* (there is one memory card besides the device's, and one Library) */
+    ext_port(fromPort == LIB_PORT ? from : to);   /* (the Library's end: its scope, for its calls) */
+    snprintf(scope, sizeof(scope), "%s", libScope);
     onStep = progress;
     stepStop = 0;
     step_phase(MCFS_STEP_READ, 0);
-    if (fromPort >= 0) {
+    if (fromPort >= 0 && toPort >= 0) {   /* the memory card and the Library: the save read from one, put into the other */
+        r = slot_read(fromPort, folder, &srcSave);
+        if (r == MCFS_OK)
+            r = psu_of(&srcSave, &psu);
+        save_free(&srcSave);
+        if (r == MCFS_OK) {
+            onStep = NULL;
+            if (progress)
+                progress(MCFS_STEP_CHECK, 0, (long long)psu.len);
+            mcfs_psu_memory(psu.data, psu.len);
+            snprintf(libScope, sizeof(libScope), "%s", scope);
+            r = ops_of(toPort) ? ops_of(toPort)->put(toPort, MCFS_PSU_MEMORY) : MCFS_ERR_IO;
+            mcfs_psu_memory(NULL, 0);
+            if (progress)
+                progress(MCFS_STEP_CHECK, (long long)psu.len, (long long)psu.len);
+        }
+        buf_free(&psu);
+    } else if (fromPort >= 0) {
         r = slot_read(fromPort, folder, &srcSave);
         for (i = 2; r == MCFS_OK && i < srcSave.n; i++)
             if (le16(srcSave.ent[i]) & DF_DIRECTORY)
@@ -2129,7 +2196,7 @@ static int slot_copy(const char *from, const char *folder, const char *to, mcfs_
             if (progress)
                 progress(MCFS_STEP_CHECK, 0, (long long)psu.len);
             mcfs_psu_memory(psu.data, psu.len);
-            r = slotOps ? slotOps->put(toPort, MCFS_PSU_MEMORY) : MCFS_ERR_IO;
+            r = ops_of(toPort) ? ops_of(toPort)->put(toPort, MCFS_PSU_MEMORY) : MCFS_ERR_IO;
             mcfs_psu_memory(NULL, 0);
             if (progress)
                 progress(MCFS_STEP_CHECK, (long long)psu.len, (long long)psu.len);
@@ -2145,8 +2212,8 @@ static int slot_copy(const char *from, const char *folder, const char *to, mcfs_
 
 static int slot_delete(int port, const char *folder)
 {
-    int r = slotOps ? slotOps->remove(port, folder) : MCFS_ERR_IO;
-    log_msg("mcfs: %s deleted from mc%d: %d", folder, port, r);
+    int r = ops_of(port) ? ops_of(port)->remove(port, folder) : MCFS_ERR_IO;
+    log_msg("mcfs: %s deleted from %s: %d", folder, port == LIB_PORT ? "the Library" : port ? "mc1" : "mc0", r);
     return r;
 }
 
@@ -2165,7 +2232,7 @@ static int slot_import(const char *psu, int port)
 {
     int r;
     onStep = NULL;
-    r = slotOps ? slotOps->put(port, psu) : MCFS_ERR_IO;
-    log_msg("mcfs: import of %s into mc%d: %d", psu, port, r);
+    r = ops_of(port) ? ops_of(port)->put(port, psu) : MCFS_ERR_IO;
+    log_msg("mcfs: import of %s into %s: %d", psu, port == LIB_PORT ? "the Library" : port ? "mc1" : "mc0", r);
     return r;
 }

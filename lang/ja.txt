@@ -1191,3 +1191,31 @@ T_VMC_WHERE = 新しいVMCの場所
 T_DELETE_VMC_TEXT = VMCとそのすべてのセーブデータが完全に削除されます。この操作は取り消せません。
 # Up to 3 lines. English: This VMC's folder is not available. Check Settings > OPL VMC folders.
 T_VMC_PLACE_GONE = このVMCのフォルダーが見つかりません。設定 > OPLのVMCフォルダー を確認してください。
+# One line. English: Library
+T_TAB_LIBRARY = ライブラリ
+# One line. English: Other saves
+T_LIBRARY_OTHER = その他のセーブデータ
+# One line. English: Saves: %d
+T_LIBRARY_SAVES = セーブデータ: %d
+# Up to 2 lines. English: One file per save, by game, with no size limit.
+T_LIBRARY_HINT = ゲーム別に1件ずつ保存。容量の制限なし。
+# Up to 3 lines. English: Move "%s" to the Library?
+T_LIB_CONFIRM_MOVE = 「%s」をライブラリに移動しますか？
+# Up to 3 lines. English: Moved to the Library.
+T_LIB_DONE_MOVE = ライブラリに移動しました。
+# Up to 3 lines. English: Copy "%s" to the Library?
+T_LIB_CONFIRM_COPY = 「%s」をライブラリにコピーしますか？
+# Up to 3 lines. English: Copy %d saves to the Library?
+T_LIB_CONFIRM_COPY_N = %d 個のセーブデータをライブラリにコピーしますか？
+# Up to 3 lines. English: Copied to the Library.
+T_LIB_DONE_COPY = ライブラリにコピーしました。
+# Up to 3 lines. English: Import "%s" to the Library?
+T_LIB_CONFIRM_IMPORT = 「%s」をライブラリにインポートしますか？
+# Up to 3 lines. English: Imported to the Library.
+T_LIB_DONE_IMPORT = ライブラリにインポートしました。
+# One line. English: Library on Drive
+T_SET_LIBRARY_DRIVE = ライブラリをドライブへ
+# Up to 3 lines. English: Each sync also sends the Library's new saves to Google Drive, one by one.
+T_LIBRARY_DRIVE_NOTE = 同期のたびに、ライブラリの新しいセーブデータも1件ずつ Google ドライブに送信します。
+# One line. English: Several games (%d)
+T_LIBRARY_GAMES = 複数のゲーム (%d)

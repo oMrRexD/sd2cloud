@@ -170,22 +170,24 @@ int sync_stop(void) { return backupCancelled || backupSkip; }
  * that changed since they were last sent, each by itself to its Saves folder on Drive */
 static void memcard_turn(int k)
 {
-    card_t *c = syncCards[k].c;
+    card_t *c = syncCards[k].c, *of = library_path(c->path) ? c : &slotCard;   /* (the Library's own, or the slot's) */
     char folderId[80];
     int r;
     sync_set(k, SY_SENDING);
     googleError[0] = 0;
-    memcard_pick(mcfs_slot_port(c->path));
-    if (!memcard_there()) {   /* (taken out since the sync started) */
-        sync_set(k, SY_SKIPPED);
-        return;
+    if (of == &slotCard) {
+        memcard_pick(mcfs_slot_port(c->path));
+        if (!memcard_there()) {   /* (taken out since the sync started) */
+            sync_set(k, SY_SKIPPED);
+            return;
+        }
     }
-    load_card_icon(&slotCard);
+    load_card_icon(of);
     upload_screen(0, 1);
-    r = stop_asked() || (!DRY && card_folder(&slotCard, folderId, sizeof(folderId)) != 0) ? -1 : 0;
-    log_msg("%s: its folder on Drive %s", slotCard.id, r == 0 ? "found" : "not found");
+    r = stop_asked() || (!DRY && card_folder(of, folderId, sizeof(folderId)) != 0) ? -1 : 0;
+    log_msg("%s: its folder on Drive %s", of->id, r == 0 ? "found" : "not found");
     if (r == 0)
-        r = saves_backup(&slotCard, folderId);
+        r = saves_backup(of, folderId);
     if (backupCancelled) {
         sync_set(k, SY_WAITING);
         return;
@@ -251,7 +253,8 @@ void run_backup(int mode, int rotate)
             left_out(c, syncCards[k].state, 1);
             continue;
         }
-        if (mcfs_slot_port(c->path) >= 0) {   /* a Memory Card: its saves, each by itself */
+        if (mcfs_slot_port(c->path) >= 0 || library_path(c->path)) {   /* a Memory Card, the Library: its saves, each by
+                                                                         itself */
             memcard_turn(k);
             continue;
         }

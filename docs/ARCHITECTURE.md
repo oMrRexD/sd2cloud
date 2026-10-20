@@ -46,6 +46,7 @@ a PC's compiler. `src/app` is the only place that knows the screens; it calls do
 | `history.c` | A card's backups on Drive, and restoring one |
 | `active.c` | The card the device is using right now: finding it, switching it, noticing it change; on a microSD with both devices' cards, the two at the top right, L2 and R2 listing one's or the other's (`view_switch`) |
 | `settings.c`, `account.c` | The settings; the Google account |
+| `libview.c` | The Library on the screens: its games in a group of the main screen, each one's saves opened as a card's are, and the Library as a place saves are moved, copied or imported to |
 | `vmcplaces.c` | The OPL's VMC folders on other devices than the microSD (the hard disk's exFAT and APA sides, an MX4SIO, a USB drive): found when the cards are looked for, each device's drivers loaded then; named on the screens; added in the settings |
 | `tools.c`, `keyboard.c` | The tools (SELECT): the templates, made by marking saves on the cards and put into cards; the keyboard on the screen their names are typed on |
 | `leave.c` | Which program is opened when SD2Cloud closes |
@@ -58,6 +59,7 @@ a PC's compiler. `src/app` is the only place that knows the screens; it calls do
 | File | What it is |
 |---|---|
 | `cards.c` | Finds the card files on the microSD and tells their kind; the OPL's VMCs (`VMC/*.bin`, and those of the folders added in the settings, each place a group of its own) as cards, and the games whose OPL settings (the `CFG/*.cfg` beside each VMC folder) use them |
+| `library.c` | The Library: saves kept off the cards, each a `.psu` in the data folder (`Library/<game ID>/`), listed in `Library/library.ini` with each save's signature; to `mcfs.c` it is a card with no end to its room, reached through the calls a Memory Card in a slot is (`lib:` paths) |
 | `mcfs.c` | The memory card's file system, read and written inside a card's file: saves, icons, the fingerprint |
 | `stream.c` | A card read and turned into a `.zip`, piece by piece, without ever holding it whole |
 | `google.c` | Google Drive: the sign-in with a code, folders, the resumable upload, downloads |

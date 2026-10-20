@@ -24,6 +24,10 @@ void scene_dest(float t)
         look_legend(l, 2, 0);
     }
     look_title(CARD_CX, 82, dst.title, 1);
+    if (dst.g.tab == TAB_LIBRARY) {   /* the Library: what it is (no end to its room) */
+        library_place(1);
+        return;
+    }
     if (dst.g.tab == TAB_FILES && tabs_device(&dst.g) < 0) {   /* the Memory Card: its free space, as a card's */
         look_card(CARD_X, CARD_Y, NULL, T(T_MEMCARD));
         if ((f = dst.memFree) >= 0) {
@@ -118,8 +122,10 @@ card_t *choose_dest(const card_t *from, int title, long long need, const char *s
     if (again)
         goto shown;
     tabs_init(&dst.g, from, 0);
-    if (!dst.g.memcard && (dst.g.memcard = memcard_rows(&dst.g)) != 0)   /* (moved or installed into it too) */
-        tabs_show(&dst.g, dst.g.tab);
+    dst.g.library = from && library_path(from->path) ? 0 : 2;   /* (the Library: not from itself) */
+    library_dest(save);
+    dst.g.memcard = memcard_rows(&dst.g);   /* (moved or installed into it too) */
+    tabs_show(&dst.g, dst.g.tab);
     dst.memFree = -2;
     dst.memPort = -1;
     if (save && save_game_id(save, id)) {
@@ -161,6 +167,11 @@ shown:
             }
             ui_scene(scene_dest);   /* back from a question: the cards again */
             continue;
+        }
+        if ((b & PAD_CROSS) && dst.g.tab == TAB_LIBRARY) {   /* the Library */
+            sound_play(SND_CONFIRM);
+            c = library_root();
+            break;
         }
         if ((b & PAD_CROSS) && dst.g.tab == TAB_FILES && tabs_device(&dst.g) < 0) {   /* the Memory Card */
             if (dst.memFree == -2 || dst.memPort != tabs_memcard_port(&dst.g))

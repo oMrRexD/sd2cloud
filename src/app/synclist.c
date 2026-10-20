@@ -53,6 +53,11 @@ void sync_list_start(int mode)
         syncCards[nSync].taken = 0;
         syncCards[nSync++].state = SY_WAITING;
     }
+    if (mode != 3 && cfg.library_drive && library_count() && nSync < MAX_CARDS) {   /* (the Library: its new saves) */
+        syncCards[nSync].c = library_root();
+        syncCards[nSync].taken = 0;
+        syncCards[nSync++].state = SY_WAITING;
+    }
     syncListed = mode != 3 && nSync > 1;   /* (a card synced by itself has its own screen only) */
     syncView = 0;
     sy.cursor = sy.top = 0;
@@ -101,7 +106,8 @@ static int options(void)
 {
     sync_card_t *e = &syncCards[sy.cursor];
     const char *items[3] = {T(T_SKIP), T(T_MARK_RESOLVED), T(T_SYNC_DISABLE)};
-    int k, n = mcfs_slot_port(e->c->path) >= 0 ? 1 : 3;   /* (a Memory Card's saves: only skipped) */
+    int k, n = mcfs_slot_port(e->c->path) >= 0 || library_path(e->c->path) ? 1 : 3;   /* (a Memory Card's saves, the
+                                                                                         Library's: only skipped) */
 #ifdef DEBUG_BUILD
     int live = scriptLive;
 #endif

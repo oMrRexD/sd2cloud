@@ -18,6 +18,7 @@ slot/mc1: 1 saves, 7931904 bytes free
 [script] S
 [script] <
 [script] <
+[script] <
 [script] S
 [script] X
 mcfs: copy of BASLUS-99999TESTS from mc1: to host:MemoryCards/PS2/Card1/Card1-1.mcd: 0 in N ms

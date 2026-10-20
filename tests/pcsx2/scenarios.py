@@ -40,6 +40,9 @@ VMC_OTHER = {"HDD/VMC/Disk_0.bin": "empty.mcd", "HDD/CFG/SLUS_209.46.cfg": b"$Co
 # what the app remembers of the empty card: never sent, marked as resolved as it is (its fingerprint, of no saves)
 RESOLVED = (b"[Card2/Card2-1]\r\nfingerprint = \r\nfingerprint_version = 0\r\nsha256 = \r\nwhen = \r\n"
             b"resolved = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\r\n")
+# a Library with one save (fixtures/alpha-other.psu), listed as before its saves had signatures
+LIBRARY_INI = (b"[BASLUS-21065ALPHA]\r\nhead = 2784000004000000000504030201ea070000000000000000000504030201ea07"
+               b"0000000000000000000000000000000000000000000000000000000000000000\r\n")
 # the sd2psx's own settings, as its firmware writes them on the microSD
 SD2PSX_SETTINGS = (b"[General]\nMode=PS2\nFlippedScreen=OFF\n[PS1]\nAutoboot=ON\nGameID=ON\nEnableControllerCombo=ON\n"
                    b"MaxCardIdx=0\n[PS2]\nAutoboot=OFF\nGameID=ON\nCardSize=8\nVariant=RETAIL\nMaxCardIdx=0\n")
@@ -62,7 +65,7 @@ SCENARIOS = [
     {"name": "save-paste-inside", "what": "a save marked on a card, pasted with another card's saves open", "cards": CARDS,
      "script": "XXXODXSXXC"},
     {"name": "save-export-many", "what": "two saves marked on a card, exported together as .psu files", "cards": CARDS,
-     "script": "XXX>XS>>XSXXC"},
+     "script": "XXX>XS>>>XSXXC"},
     {"name": "save-move", "what": "a save moved to another card", "cards": CARDS, "script": "XXDXXXXC"},
     {"name": "save-delete", "what": "a save deleted", "cards": CARDS, "script": "XXDDXXXC"},
     # (after "New card", its size: the cursor starts on the one recommended for what goes into it, and X takes it)
@@ -95,7 +98,7 @@ SCENARIOS = [
      "script": ">>XXXQXXXXC"},
     {"name": "psu-folder-not-save", "what": "square on a folder of something else that has an icon.sys: refused, no card touched",
      "cards": CARDS, "files": {"Files/DVD/icon.sys": b"PS2D", "Files/DVD/Game/a.iso": b"x"}, "script": ">>XXQXC"},
-    {"name": "psu-export", "what": "a save exported as a .psu file", "cards": CARDS, "script": "XXXS>>XSXXC"},
+    {"name": "psu-export", "what": "a save exported as a .psu file", "cards": CARDS, "script": "XXXS>>>XSXXC"},
     {"name": "card-to-zip", "what": "a whole card copied to a folder, in a .zip", "cards": CARDS, "script": "TDDDXXTXXXC"},
     {"name": "card-file-new", "what": "a card file installed as a new card", "cards": CARDS,
      "files": {"Files/card.mcd": "game.mcd"}, "script": ">>XXQXXXC"},
@@ -114,7 +117,7 @@ SCENARIOS = [
      "an empty card", "cards": CARDS, "files": {"Files/card.mcd": "game.mcd"}, "script": ">>XXXXXOOODSXXC"},
     # (a card's save marked, its copy picked into the MMCE: X opens a card file there, START pastes into it)
     {"name": "card-file-paste-in", "what": "a save of a card copied into a card file of the MMCE, opened with X during the "
-     "copy", "cards": CARDS, "files": {"Files/card.mcd": "empty.mcd"}, "script": "XXXS>>XXXSXXC"},
+     "copy", "cards": CARDS, "files": {"Files/card.mcd": "empty.mcd"}, "script": "XXXS>>>XXXSXXC"},
     # (a save of one card file marked, another card file opened: no question; START there pastes it into that one)
     {"name": "card-file-two", "what": "a save of a card file marked, a second card file of the folder opened, the save "
      "pasted into it", "cards": CARDS, "files": {"Files/a.mcd": "game.mcd", "Files/b.mcd": "empty.mcd"},
@@ -126,15 +129,28 @@ SCENARIOS = [
     {"name": "memcard-open", "what": "the Memory Card in the Files group, opened: its saves", "cards": CARDS,
      "memcard": "memcard.ps2", "script": ">>DDDXC"},
     {"name": "memcard-copy-out", "what": "a save of the Memory Card copied to a card", "cards": CARDS,
-     "memcard": "memcard.ps2", "script": ">>DDDXXXS<<SXXC"},
+     "memcard": "memcard.ps2", "script": ">>DDDXXXS<<<SXXC"},
     {"name": "memcard-copy-in", "what": "a save of a card copied to the Memory Card, picked in the Files group",
-     "cards": CARDS, "memcard": "memcard.ps2", "script": "XXXS>>DDDSXXC"},
+     "cards": CARDS, "memcard": "memcard.ps2", "script": "XXXS>>>DDDSXXC"},
+    # the Library (libview.c, library.c): a save moved into it from a card (Move, its group in the list of cards), its
+    # game's group on the main screen, the save moved from it to another card; one of the Memory Card's moved into it
+    {"name": "library-move-in", "what": "a card's save moved into the Library, kept there as a .psu with its list",
+     "cards": CARDS, "script": "XXDX>>XXXO>>C"},
+    {"name": "library-move-out", "what": "a save of the Library moved to another card: the Library empty again",
+     "cards": CARDS, "script": "XXDX>>XXXO>>XXDXDXXXC"},
+    {"name": "library-memcard", "what": "a save of the Memory Card moved into the Library",
+     "cards": CARDS, "memcard": "memcard.ps2", "script": ">>DDDXXDX>>XXXC"},
+    # (the Library on Drive: after the cards, its saves one by one, each by its signature; one kept in a list from
+    # before signatures has its own taken once, from its file, and kept in the list)
+    {"name": "library-drive", "what": "the Library on Drive: a sync of every card sends its saves after the cards'",
+     "cards": CARDS, "settings": "[library]\r\ndrive = yes\r\n", "files": {"SD2Cloud/Library/library.ini": LIBRARY_INI,
+     "SD2Cloud/Library/SLUS-21065/BASLUS-21065ALPHA.psu": "alpha-other.psu"}, "script": "BwC"},
     {"name": "memcard-move-out", "what": "a save of the Memory Card moved to a card", "cards": CARDS,
      "memcard": "memcard.ps2", "script": ">>DDDXXDXXXXC"},
     {"name": "memcard-delete", "what": "a save of the Memory Card deleted", "cards": CARDS, "memcard": "memcard.ps2",
      "script": ">>DDDXXDDXXXC"},
     {"name": "memcard-psu-in", "what": "a .psu file imported into the Memory Card", "cards": CARDS,
-     "memcard": "memcard.ps2", "files": {"Files/save.psu": "save.psu"}, "script": ">>XXXX>>XXXC"},
+     "memcard": "memcard.ps2", "files": {"Files/save.psu": "save.psu"}, "script": ">>XXXX>>>XXXC"},
     # (its options, "Upload to Drive": read into a card file, sent as a dry sync sends, "B": nothing goes)
     # (the Memory Card put back from a backup: "Y" makes the backup the data folder's restore-test.mcd, the "game"
     # card, two saves of SLUS-21065; they go into the Memory Card, its other saves stay)
@@ -144,11 +160,11 @@ SCENARIOS = [
     {"name": "memcard-upload", "what": "the whole Memory Card uploaded to Drive (dry: PCSX2 has no Google account)",
      "cards": CARDS, "memcard": "memcard.ps2", "script": ">>DDDXTXXBwC"},
     {"name": "memcard-paste-back", "what": "a paste on the Memory Card given up at its question: back on the Memory Card, "
-     "pasted there", "cards": CARDS, "memcard": "memcard.ps2", "script": "XXXO>>DDDSOSXXC"},
+     "pasted there", "cards": CARDS, "memcard": "memcard.ps2", "script": "XXXO>>>DDDSOSXXC"},
     {"name": "memcard-paste-list", "what": "a save marked on a card, pasted with START on the Memory Card in the list of "
-     "cards", "cards": CARDS, "memcard": "memcard.ps2", "script": "XXXO>>DDDSXXC"},
-    {"name": "settings", "what": "settings changed (how many backups are kept, their format, the language) and About",
-     "cards": CARDS, "script": "SDDDDDDDXDXDXDXXDXDXUUUXUXDDDDDDDXOOC"},
+     "cards", "cards": CARDS, "memcard": "memcard.ps2", "script": "XXXO>>>DDDSXXC"},
+    {"name": "settings", "what": "settings changed (how many backups are kept, the backup by save, the Library on Drive, their format, the language) and About",
+     "cards": CARDS, "script": "SDDDDDDDXDXDXDXXDXDXXDXDXUUUUXUXDDDDDDDDXOOC"},
     # (a sync with nothing sent, "B": SELECT shows its cards; X on one still to go: resolved; on the next, its sync off)
     {"name": "sync-list", "what": "the list of a sync's cards: one card marked as resolved, another's sync turned off",
      "cards": CARDS, "script": "BLDXDXDXDDXwC"},
@@ -180,7 +196,7 @@ SCENARIOS = [
      "files": {".sd2psx/Game2Folder.ini": b"[PS2]\nSLUS-21065=MCCG-10045\nSLUS-21267=MCCG-10045\n"},
      "script": ">DXTDDDDXXXC"},
     {"name": "save-export-list", "what": "a save marked on a card, exported from the Files group of the list of cards",
-     "cards": CARDS, "script": "XXXO>>XSXXC"},
+     "cards": CARDS, "script": "XXXO>>>XSXXC"},
     # (a microSD that was in both devices has MemoryCards/PS2 and the MemCard PRO2's own PS2: which device it is in is
     # asked once. Told it is the MemCard PRO2, its card is the one listed; told in the settings it is the sd2psx, the three)
     {"name": "device-both", "what": "a microSD with both devices' cards: which device it is in is asked, and changed in the settings",

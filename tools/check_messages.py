@@ -330,6 +330,12 @@ PLACE = {
     "T_VMC_FOLDER_REMOVE_ASK": ("text", WIDE, 2), "T_VMC_FOLDER_REMOVE_TEXT": ("small", WIDE, 2),
     "T_VMC_PLACE_APA": ("text", 236, 1), "T_VMC_PLACE_OTHER": ("text", 236, 1), "T_VMC_WHERE": ("text", 320, 1),
     "T_DELETE_VMC_TEXT": ("text", WIDE, 3),
+    # the Library: its tab; the group of the saves of no game (a row, the title over its card, the label on it); how
+    # many saves a game has in it (under its card); what it is, as a place a save goes to (under its card)
+    "T_TAB_LIBRARY": ("small", 90, 1), "T_LIBRARY_OTHER": ("small", 150, 1), "T_LIBRARY_SAVES": ("text", 200, 1),
+    "T_LIBRARY_HINT": ("small", 236, 2),
+    "T_LIBRARY_GAMES": ("text", 236, 1),
+    "T_SET_LIBRARY_DRIVE": ("text", 300, 1), "T_LIBRARY_DRIVE_NOTE": ("text", WIDE, 3),
     # the hard disk's two sides, to pick one; with no sd2psx, a card is made as a file (its hint); a split by game done
     # (the box's title); the Memory Card's saves sent by themselves (one; read first; the card that didn't answer, after
     # a card's name in the results); a card that had nothing new, in the sync's list

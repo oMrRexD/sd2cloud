@@ -126,7 +126,14 @@ typedef struct {
     int (*remove)(int port, const char *folder);                                   /* a save out of it: MCFS_OK or MCFS_ERR_* */
 } mcfs_slot_t;
 void mcfs_slot(const mcfs_slot_t *ops);
-int mcfs_slot_port(const char *path);   /* 0 or 1 for "mc0:" and "mc1:"; -1 = a card's file */
+int mcfs_slot_port(const char *path);   /* 0 or 1 for "mc0:" and "mc1:"; -1 = a card's file (or the Library) */
+/* The Library (library.c) goes through the same calls, given with mcfs_library (NULL = there is none): its paths start
+ * with "lib:" and are never a slot's. What follows "lib:" in the path a call was given (a game's ID, or "" for all of
+ * it) is mcfs_library_scope's while the Library is asked. A save is copied between a Memory Card and the Library too */
+void mcfs_library(const mcfs_slot_t *ops);
+const char *mcfs_library_scope(void);
+/* the bytes of a .psu: a file's, MCFS_PSU_MEMORY's, or a save copied as a folder's made into one. MCFS_OK or MCFS_ERR_* */
+int mcfs_psu_bytes(const char *psu, buffer_t *out);
 /* a .psu held in memory: MCFS_PSU_MEMORY is taken as its path by the functions that read a .psu (until the next call) */
 #define MCFS_PSU_MEMORY "psu:"
 void mcfs_psu_memory(const unsigned char *d, size_t len);

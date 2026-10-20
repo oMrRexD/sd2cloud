@@ -91,7 +91,7 @@ void scroll_to(int cursor, int *top)
  * The main screen has one more group, which isn't of cards: the devices whose files can be browsed (a .psu to import
  * into a card, a folder to export a save to) */
 
-static const int tabText[TABS] = {T_TAB_CARDS, T_TAB_GAMES, T_TAB_BOOT, T_TAB_VMC, T_TAB_FILES};
+static const int tabText[TABS] = {T_TAB_CARDS, T_TAB_GAMES, T_TAB_BOOT, T_TAB_VMC, T_TAB_LIBRARY, T_TAB_FILES};
 #define TAB_Y      78     /* the tabs: over the list, on the line of the title on the right */
 #define TAB_GAP    22
 #define TABS_W     300    /* the most the tabs take, between their arrows */
@@ -410,6 +410,14 @@ void tabs_show(tabs_t *g, int tab)
             g->idx[g->n++] = ROW_NEW;
         }
     }
+    /* the Library: its games (shown when it has saves), or itself as a place saves go to (always, while there is one) */
+    if (g->library && library_on())
+        g->count[TAB_LIBRARY] = g->library == 1 ? library_games() : 1;
+    if (tab == TAB_LIBRARY)
+        for (i = 0; i < g->count[TAB_LIBRARY]; i++) {
+            g->fold[g->n] = -1;
+            g->idx[g->n++] = ROW_LIB(i);
+        }
     if (tab == TAB_FILES && g->files)   /* (one put in or taken out meanwhile: asked again each time) */
         g->memcard = memcard_rows(g);
     if (g->files || g->memcard)
@@ -496,7 +504,7 @@ int tabs_device(const tabs_t *g)
 /* the selected card, or the first card of the selected folder (NULL = the group has none, or it's the Files group) */
 card_t *tabs_card(const tabs_t *g)
 {
-    return g->n && g->tab != TAB_FILES && g->idx[g->cursor] >= 0 ? &cards[g->idx[g->cursor]] : NULL;
+    return g->n && g->tab != TAB_FILES && g->tab != TAB_LIBRARY && g->idx[g->cursor] >= 0 ? &cards[g->idx[g->cursor]] : NULL;
 }
 
 /* puts the cursor on a card of the group shown: in the Games group, on its folder */
@@ -575,6 +583,8 @@ static const char *tabs_text(int i, char *buf)
         if (rowsOf->tab == TAB_FILES)
             return T(T_MEMCARD);
     }
+    if (rowsOf->tab == TAB_LIBRARY)
+        return rowsOf->library == 1 ? library_row_name(ROW_LIB(0) - rowsOf->idx[i]) : library_dest_name();
     if (rowsOf->idx[i] < 0)
         return T(rowsOf->idx[i] != ROW_NEW ? T_ALL_SAVES : rowsOf->tab == TAB_VMC ? T_NEW_VMC : T_NEW_CARD);
     return row_folder(rowsOf, i) ? rowsOf->label[rowsOf->fold[i]] : cards[rowsOf->idx[i]].base;
@@ -592,7 +602,7 @@ void tabs_draw(const tabs_t *g, int dots)
 {
     int k, shown = 0, w = 0, x, gap = TAB_GAP, lh = ui_line_height(FONT_SMALL), first = 0, last = TABS - 1, tw[TABS];
     float cy = TAB_Y + lh / 2.0f + 1;
-    if (g->tab == TAB_FILES)
+    if (g->tab == TAB_FILES || g->tab == TAB_LIBRARY)
         dots = 0;
     for (k = 0; k < TABS; k++)   /* (each tab measured once: it is drawn at every frame) */
         if ((tw[k] = g->count[k] ? ui_measure(FONT_SMALL, T(tabText[k])) : 0) != 0)
@@ -643,7 +653,8 @@ void tabs_draw(const tabs_t *g, int dots)
     {
         /* a folder just opened or closed: the list comes in from the side it went to, fading in. The Games group's
          * folders and the VMCs' places are all the list has: wider, without the cards' lights */
-        int folders = (g->tab == TAB_GAMES || (g->tab == TAB_VMC && folder_tab(TAB_VMC))) && g->open < 0, sliding = 0, i;
+        int folders = (g->tab == TAB_GAMES || (g->tab == TAB_VMC && folder_tab(TAB_VMC)) || g->tab == TAB_LIBRARY) &&
+                      g->open < 0, sliding = 0, i;
         float p = (ui_clock() - g->moved) / 0.22f;
         if (folder_tab(g->tab) && g->moved >= 0 && p < 1) {
             sliding = 1;
@@ -656,6 +667,11 @@ void tabs_draw(const tabs_t *g, int dots)
         for (k = g->top; g->tab != TAB_FILES && k < g->n && k < g->top + ROWS; k++) {
             float x = LIST_X + rowsDx, y = ROW_Y0 + (k - g->top) * ROW_H + ui_line_height(FONT_TEXT) / 2.0f + 1;
             int here = g->idx[k] >= 0 && g->idx[k] == activeCard;
+            if (g->tab == TAB_LIBRARY) {   /* a game of the Library: an arrow, as a folder has (its saves open) */
+                if (g->library == 1)
+                    ui_triangle(x + 5, y - 6, x + 5, y + 6, x + 14, y, 0x6E9AE0, 0x80);
+                continue;
+            }
             if (g->idx[k] == ROW_NEW) {   /* "New card": a plus where a folder has its picture (among cards, their light) */
                 float px = !folders && dots ? x + 22 : x + 4;
                 ui_rect(px, y - 1, 12, 2, k == rowsLit ? COLOR_OK : COLOR_ACCENT, 0x70);

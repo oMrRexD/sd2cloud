@@ -10,7 +10,7 @@ static void helper_install_now(int doneTitle);
 
 
 enum { SET_SYNC_ALL, SET_AUTO_SYNC, SET_HELPER, SET_IGR_RETURN, SET_DEVICE, SET_CARD_SIZE, SET_VMC_FOLDERS, SET_LANGUAGE,
-       SET_KEEP, SET_SAVE_BACKUP, SET_FORMAT, SET_UPDATES, SET_CHANNEL, SET_ACCOUNT, SET_ABOUT, SET_MAX };
+       SET_KEEP, SET_SAVE_BACKUP, SET_LIBRARY_DRIVE, SET_FORMAT, SET_UPDATES, SET_CHANNEL, SET_ACCOUNT, SET_ABOUT, SET_MAX };
 #define SET_X      80     /* the labels; the values end at SET_RIGHT */
 #define SET_RIGHT  560
 #define SET_Y0     124
@@ -69,6 +69,8 @@ static void build_settings(void)
     snprintf(v, sizeof(v), "%d", cfg.keep);
     set_item(&i, SET_KEEP, T(T_SET_KEEP), cfg.keep ? v : T(T_KEEP_ALL));
     set_item(&i, SET_SAVE_BACKUP, T(T_SET_SAVE_BACKUP), T(cfg.save_backup ? T_SAVE_BACKUP_ON : T_SAVE_BACKUP_OFF));
+    if (library_on())   /* (with no room for a Library, nothing to send of one) */
+        set_item(&i, SET_LIBRARY_DRIVE, T(T_SET_LIBRARY_DRIVE), T(cfg.library_drive ? T_SAVE_BACKUP_ON : T_SAVE_BACKUP_OFF));
     set_item(&i, SET_FORMAT, T(T_SET_FORMAT), format_name(cfg.ps2));
     if (updateAvailable)
         snprintf(v, sizeof(v), T(T_UPDATE_AVAILABLE), update_tag());
@@ -478,6 +480,22 @@ static void pick_save_backup(void)
     log_msg("backup by save: %s", k ? "on" : "off");
 }
 
+/* the Library's saves on Drive too, on or off: what it does is said when it is turned on */
+static void pick_library_drive(void)
+{
+    static const char *items[2];
+    int k;
+    items[0] = T(T_SAVE_BACKUP_OFF);
+    items[1] = T(T_SAVE_BACKUP_ON);
+    if ((k = choose(T(T_SET_LIBRARY_DRIVE), items, 2, cfg.library_drive)) < 0 || k == cfg.library_drive)
+        return;
+    if (k && !confirm(T(T_SET_LIBRARY_DRIVE), T(T_LIBRARY_DRIVE_NOTE), T_CONTINUE))
+        return;
+    cfg.library_drive = k;
+    config_set("library", "drive", k ? "yes" : "no");
+    log_msg("the Library on Drive: %s", k ? "on" : "off");
+}
+
 static void pick_channel(void)
 {
     static const char *items[2];
@@ -766,6 +784,9 @@ void settings_screen(void)
             break;
         case SET_SAVE_BACKUP:
             pick_save_backup();
+            break;
+        case SET_LIBRARY_DRIVE:
+            pick_library_drive();
             break;
         case SET_LANGUAGE:
             pick_language();

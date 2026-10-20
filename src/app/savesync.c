@@ -26,6 +26,11 @@ static void save_tag(const card_t *c, const char *folder, char *out, size_t size
 static int signatures(const card_t *c, int n)
 {
     int i;
+    if (library_path(c->path)) {   /* (the Library: kept since each save went into it, nothing read) */
+        for (i = 0; i < n; i++)
+            svSig[i] = library_signature(sv[i].folder);
+        return 0;
+    }
     if (mcfs_slot_port(c->path) < 0)
         return mcfs_save_signatures(c->path, sv, n, svSig);
     for (i = 0; i < n; i++) {   /* (the slot's card is read through mcman, a save at a time: its bar, and a cancel heard) */
@@ -63,6 +68,10 @@ static int saves_folder(const card_t *c, const char *folderId, char *savesId, si
     const char *cache;
     snprintf(key, sizeof(key), "%s/%s/Saves", cfg.drive_folder, c->folder);
     savesId[0] = 0;
+    if (library_path(c->path)) {   /* (the Library's saves: in its own folder, "Library", which has nothing else) */
+        snprintf(savesId, size, "%s", folderId);
+        return 0;
+    }
     if ((cache = state_folder(key)) != NULL)
         snprintf(savesId, size, "%s", cache);
     if (google_folder("Saves", folderId, savesId, size) != 0)

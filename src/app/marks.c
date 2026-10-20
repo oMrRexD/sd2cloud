@@ -111,19 +111,23 @@ static void scene_mark(float t)
         /* only what the row does: "New card" has nothing to open (X pastes there too), and START pastes only where
          * the saves can go ("All saves" isn't a card, and the card they are all on has them) */
         legend_t l[4] = {{BUTTON_CIRCLE, T(T_BACK)}};
-        int n = 1, row = mk.g.n ? mk.g.idx[mk.g.cursor] : ROW_ALL;
-        if (mk.g.n && row != ROW_NEW)
+        int n = 1, row = mk.g.n ? mk.g.idx[mk.g.cursor] : ROW_ALL, lib = mk.g.tab == TAB_LIBRARY;
+        if (mk.g.n && row != ROW_NEW && !lib)   /* (the Library, as "New card": X pastes into it too) */
             l[n].button = BUTTON_CROSS, l[n++].text = T(T_OPEN);
         if (!marks.copy)
             l[n].button = BUTTON_START, l[n++].text = T(T_FINISH);
-        else if (mk.g.tab == TAB_FILES ? tabs_device(&mk.g) >= 0 || paste_here(&slotCard)
-                 : row == ROW_NEW || (row >= 0 && (tabs_on_folders(&mk.g) || paste_here(&cards[row]))))
+        else if (lib || (mk.g.tab == TAB_FILES ? tabs_device(&mk.g) >= 0 || paste_here(&slotCard)
+                 : row == ROW_NEW || (row >= 0 && (tabs_on_folders(&mk.g) || paste_here(&cards[row])))))
             l[n].button = BUTTON_START, l[n++].text = T(T_PASTE);
         look_legend(l, n, 0);
     }
     look_title(CARD_CX, 82, mk.title, 1);
     snprintf(s, sizeof(s), T(T_MARKED_N), marks.n);
     ui_text_center(FONT_TEXT, CARD_CX, CARD_Y + LOOK_CARD_H + 2, marks.n ? COLOR_OK : COLOR_DIM, s);
+    if (mk.g.tab == TAB_LIBRARY) {   /* the Library: the game the saves go under (the count where its words would be) */
+        library_place(0);
+        return;
+    }
     if (mk.g.tab == TAB_FILES) {   /* a device: the marked saves can go to a folder of it; the Memory Card, into it */
         if (tabs_device(&mk.g) < 0)
             look_card(CARD_X, CARD_Y, NULL, standalone ? "" : T(T_MEMCARD));
@@ -183,6 +187,15 @@ static int mark_game(void)
     return 1;
 }
 
+/* the Library for the saves marked, again as they are marked: offered to a copy's when one of them isn't in it, and
+ * the game they would go under there */
+static void mark_library(void)
+{
+    mk.g.library = marks.copy && paste_here(library_root()) ? 2 : 0;
+    mk.g.count[TAB_LIBRARY] = mk.g.library ? 1 : 0;
+    library_dest_marked();
+}
+
 /* START (or X) on "New card". In the Games group: the copy goes into a new card of their game, made once it is agreed
  * to (1 = picked). In the Cards group: a card made for them, wherever its place is picked, with them in it (2 = made,
  * and the copy is over) */
@@ -237,11 +250,13 @@ static int mark_cards(const card_t *at, int again)
     if (again) {
         if (mark_game() || cardsUnsorted)   /* (a card made, and the rows with it) */
             tabs_redo(&mk.g);
+        mark_library();
         goto shown;
     }
     tabs_init(&mk.g, NULL, marks.copy);
     mk.g.all = 1;
-    mk.g.create = marks.copy;   /* (a copy's saves can go into a card made for them) */
+    mk.g.create = marks.copy;   /* (a copy's saves can go into a card made for them, and into the Library) */
+    mark_library();
     mark_game();
     tabs_show(&mk.g, mk.g.tab);
     if (at == &allGames)
@@ -280,6 +295,7 @@ shown:
             tabs_init(&mk.g, NULL, marks.copy);
             mk.g.all = 1;
             mk.g.create = marks.copy;
+            mark_library();
             mark_game();
             tabs_show(&mk.g, mk.g.tab);
             if (mk.g.count[tab])   /* (the group it was on, when that device has it) */
@@ -294,6 +310,12 @@ shown:
             sound_play(SND_BACK);
             if (!marks.n || confirm(T(T_MARK_DROP), NULL, T_MARK_DROP_YES))
                 r = 0;
+        } else if (mk.g.tab == TAB_LIBRARY) {   /* into the Library: START or X */
+            sound_play(marks.n ? SND_CONFIRM : SND_BACK);
+            if (marks.n && (b & (PAD_START | PAD_CROSS))) {
+                marks.into = library_root();
+                r = 1;
+            }
         } else if (mk.g.tab == TAB_FILES && tabs_device(&mk.g) < 0 && (b & PAD_START)) {   /* into the Memory Card */
             sound_play(marks.n ? SND_CONFIRM : SND_BACK);
             memcard_pick(tabs_memcard_port(&mk.g));
@@ -308,6 +330,7 @@ shown:
             if (marks.done)
                 r = 1;
             ui_lock();
+            mark_library();
             tabs_show(&mk.g, TAB_FILES);
             ui_unlock();
         } else if (mk.g.tab == TAB_FILES) {
@@ -348,6 +371,7 @@ shown:
                 ui_lock();   /* (saves marked or unmarked there: their game may be another one now) */
                 if (mark_game())
                     tabs_redo(&mk.g);
+                mark_library();
                 ui_unlock();
             }
         }
@@ -498,6 +522,12 @@ int paste_here(const card_t *c)
 {
     if (!c || !marks.n)
         return 0;
+    int i, n = 0;
+    if (library_path(c->path)) {   /* (the Library: any marked save of a card, which isn't in it already) */
+        for (i = 0; i < marks.n; i++)
+            n += !library_path(marks.save[i].card->path);
+        return n > 0;
+    }
     if (!(c >= cards && c < cards + nCards) && c != &slotCard && !(c == &fileCard && card_file_writable()))
         return 0;
     return marks_of(c) < marks.n;
@@ -551,9 +581,9 @@ int copy_marked(card_t *into)
     if (total == 1) {
         char name[100];
         save_name(mark_view(one), name, sizeof(name));
-        snprintf(t, sizeof(t), T(T_CONFIRM_COPY), name, to->base);
+        snprintf(t, sizeof(t), T(library_path(to->path) ? T_LIB_CONFIRM_COPY : T_CONFIRM_COPY), name, to->base);
     } else
-        snprintf(t, sizeof(t), T(T_CONFIRM_COPY_N), total, to->base);
+        snprintf(t, sizeof(t), T(library_path(to->path) ? T_LIB_CONFIRM_COPY_N : T_CONFIRM_COPY_N), total, to->base);
     if (!confirm(t, to == &destNew ? dest_new_note() : NULL, T_COPY) || !(to = dest_real(to)) || card_free(to, from)) {
         card_back();
         mark_show_done();
@@ -586,7 +616,7 @@ int copy_marked(card_t *into)
     if (r == MCFS_ERR_CANCELLED && !n)
         return 0;   /* back to the marked saves, as they were */
     if (total == 1 || !n)
-        op_result(n ? MCFS_OK : last, T_DONE_COPY, to);
+        op_result(n ? MCFS_OK : last, library_path(to->path) ? T_LIB_DONE_COPY : T_DONE_COPY, to);
     else
         marks_report(n, total - n);
     return 1;

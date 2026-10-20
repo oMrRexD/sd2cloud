@@ -1190,3 +1190,31 @@ T_VMC_WHERE = Ubicación del VMC nuevo
 T_DELETE_VMC_TEXT = El VMC y todas sus partidas se eliminarán de forma permanente. Esta acción no se puede deshacer.
 # Up to 3 lines. English: This VMC's folder is not available. Check Settings > OPL VMC folders.
 T_VMC_PLACE_GONE = La carpeta de este VMC no está disponible. Revise Ajustes > Carpetas de VMC del OPL.
+# One line. English: Library
+T_TAB_LIBRARY = Biblioteca
+# One line. English: Other saves
+T_LIBRARY_OTHER = Otras partidas
+# One line. English: Saves: %d
+T_LIBRARY_SAVES = Partidas: %d
+# Up to 2 lines. English: One file per save, by game, with no size limit.
+T_LIBRARY_HINT = Un archivo por partida, por juego, sin límite.
+# Up to 3 lines. English: Move "%s" to the Library?
+T_LIB_CONFIRM_MOVE = ¿Desea mover "%s" a la Biblioteca?
+# Up to 3 lines. English: Moved to the Library.
+T_LIB_DONE_MOVE = Se movió a la Biblioteca.
+# Up to 3 lines. English: Copy "%s" to the Library?
+T_LIB_CONFIRM_COPY = ¿Desea copiar "%s" a la Biblioteca?
+# Up to 3 lines. English: Copy %d saves to the Library?
+T_LIB_CONFIRM_COPY_N = ¿Desea copiar %d partidas a la Biblioteca?
+# Up to 3 lines. English: Copied to the Library.
+T_LIB_DONE_COPY = Se copió a la Biblioteca.
+# Up to 3 lines. English: Import "%s" to the Library?
+T_LIB_CONFIRM_IMPORT = ¿Desea importar "%s" a la Biblioteca?
+# Up to 3 lines. English: Imported to the Library.
+T_LIB_DONE_IMPORT = Se importó a la Biblioteca.
+# One line. English: Library on Drive
+T_SET_LIBRARY_DRIVE = Biblioteca en Drive
+# Up to 3 lines. English: Each sync also sends the Library's new saves to Google Drive, one by one.
+T_LIBRARY_DRIVE_NOTE = Cada sincronización también envía a Google Drive las partidas nuevas de la Biblioteca, una a una.
+# One line. English: Several games (%d)
+T_LIBRARY_GAMES = Varios juegos (%d)

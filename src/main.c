@@ -101,6 +101,7 @@ int main(int argc, char *argv[])
     cubeIcon = icon_make_cube();
     ui_unlock();
     state_read();
+    library_start();
     google_set_poll(watch_cancel);
     vmc_places_init();
     if (igrMode)
@@ -110,6 +111,7 @@ int main(int argc, char *argv[])
         token_read();
         google_forget();
         state_read();
+        library_start();
         ui_lock();   /* (the screen is drawn meanwhile: what language reads, it reads locked) */
         i18n_select(cfg.language);
         i18n_device(dev->name);   /* (it may be another device, or the user said it is) */

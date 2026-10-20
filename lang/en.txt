@@ -1193,3 +1193,31 @@ T_VMC_WHERE = New VMC location
 T_DELETE_VMC_TEXT = The VMC and all of its saves will be permanently removed. This action cannot be undone.
 # Up to 3 lines.
 T_VMC_PLACE_GONE = This VMC's folder is not available. Check Settings > OPL VMC folders.
+# One line.
+T_TAB_LIBRARY = Library
+# One line.
+T_LIBRARY_OTHER = Other saves
+# One line.
+T_LIBRARY_SAVES = Saves: %d
+# Up to 2 lines.
+T_LIBRARY_HINT = One file per save, by game, with no size limit.
+# Up to 3 lines.
+T_LIB_CONFIRM_MOVE = Move "%s" to the Library?
+# Up to 3 lines.
+T_LIB_DONE_MOVE = Moved to the Library.
+# Up to 3 lines.
+T_LIB_CONFIRM_COPY = Copy "%s" to the Library?
+# Up to 3 lines.
+T_LIB_CONFIRM_COPY_N = Copy %d saves to the Library?
+# Up to 3 lines.
+T_LIB_DONE_COPY = Copied to the Library.
+# Up to 3 lines.
+T_LIB_CONFIRM_IMPORT = Import "%s" to the Library?
+# Up to 3 lines.
+T_LIB_DONE_IMPORT = Imported to the Library.
+# One line.
+T_SET_LIBRARY_DRIVE = Library on Drive
+# Up to 3 lines.
+T_LIBRARY_DRIVE_NOTE = Each sync also sends the Library's new saves to Google Drive, one by one.
+# One line.
+T_LIBRARY_GAMES = Several games (%d)

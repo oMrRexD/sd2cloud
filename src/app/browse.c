@@ -359,7 +359,7 @@ static void psu_import(void)
     for (again = 0;; again = 1) {   /* (circle on the question: back to the cards, where they were) */
         if (!(to = choose_dest(NULL, T_IMPORT_TO, psu.info.bytes, psu.info.folder, again)))
             return;
-        snprintf(t, sizeof(t), T(T_CONFIRM_IMPORT), name, to->base);
+        snprintf(t, sizeof(t), T(library_path(to->path) ? T_LIB_CONFIRM_IMPORT : T_CONFIRM_IMPORT), name, to->base);
         made = to == &destNew;
         if (made && !dest_new_size(mcfs_save_room(psu.info.bytes, psu.info.files)))
             continue;   /* (circle on the sizes: back to the cards) */
@@ -377,7 +377,7 @@ static void psu_import(void)
     if (made && r == MCFS_OK)   /* (a new game card: its templates too) */
         templates_new_card(to, 1);
     if (r != MCFS_ERR_CANCELLED)
-        op_result(r, T_DONE_IMPORT, to);
+        op_result(r, library_path(to->path) ? T_LIB_DONE_IMPORT : T_DONE_IMPORT, to);
 }
 
 /* X on a .psu file: the page of the save it holds, from where it can be imported into a card. install = square on
