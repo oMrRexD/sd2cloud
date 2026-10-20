@@ -786,16 +786,16 @@ T_MARK_SAME_TEXT = Una tarjeta no puede contener dos partidas con la misma carpe
 T_MARK_SAME_SELECTED = Seleccionada: %s (%s)
 # One line. English: This one: %s (%s)
 T_MARK_SAME_THIS = Esta: %s (%s)
-# One line. English: Split saves by game
-T_MIGRATE = Separar partidas por juego
-# One line. English: Split by game
-T_MIGRATE_TITLE = Separar por juego
+# One line. English: Convert to Game ID
+T_MIGRATE = Convertir a Game ID
+# One line. English: Convert to Game ID
+T_MIGRATE_TITLE = Convertir a Game ID
 # One line. English: Skipped
 T_MIGRATE_OFF = Omitido
 # One line. English: New card (%d MB)
 T_MIGRATE_NEW = Tarjeta nueva (%d MB)
-# Up to 3 lines. English: This card has no saves to split.
-T_MIGRATE_NONE = Esta tarjeta no tiene partidas para separar.
+# Up to 3 lines. English: This card has no saves to convert.
+T_MIGRATE_NONE = Esta tarjeta no tiene partidas para convertir.
 # One line. English: Selected: %d saves (%d games) · No game ID: %d
 T_MIGRATE_SUMMARY = Seleccionadas: %d (%d juegos) · Sin ID de juego: %d
 # Button. English: Size
@@ -826,8 +826,8 @@ T_MIGRATE_DELETE_ASK = ¿Desea eliminar de %s las partidas copiadas?
 T_MIGRATE_DELETE_TEXT = Partidas a eliminar: %d. Las partidas sin ID de juego y las no copiadas se conservarán.
 # Button. English: Keep
 T_MIGRATE_KEEP = Conservar
-# One line. English: Split by game complete
-T_MIGRATE_DONE = Separación por juego completada
+# One line. English: Conversion to Game ID complete
+T_MIGRATE_DONE = Conversión a Game ID completada
 # Button. English: Remove copied saves
 T_MIGRATE_REMOVE = Quitar partidas copiadas
 # One line. English: Not connected

@@ -787,16 +787,16 @@ T_MARK_SAME_TEXT = 1 枚のカードに同じフォルダーのセーブデー�
 T_MARK_SAME_SELECTED = 選択済み: %s（%s）
 # One line. English: This one: %s (%s)
 T_MARK_SAME_THIS = このデータ: %s（%s）
-# One line. English: Split saves by game
-T_MIGRATE = セーブデータをゲームごとに分ける
-# One line. English: Split by game
-T_MIGRATE_TITLE = ゲームごとに分ける
+# One line. English: Convert to Game ID
+T_MIGRATE = Game ID形式に変換
+# One line. English: Convert to Game ID
+T_MIGRATE_TITLE = Game ID形式に変換
 # One line. English: Skipped
 T_MIGRATE_OFF = スキップ
 # One line. English: New card (%d MB)
 T_MIGRATE_NEW = 新しいカード（%d MB）
-# Up to 3 lines. English: This card has no saves to split.
-T_MIGRATE_NONE = このカードには分けられるセーブデータがありません。
+# Up to 3 lines. English: This card has no saves to convert.
+T_MIGRATE_NONE = このカードには変換できるセーブデータがありません。
 # One line. English: Selected: %d saves (%d games) · No game ID: %d
 T_MIGRATE_SUMMARY = 選択中: %d 件（%d ゲーム）· ゲーム ID なし: %d
 # Button. English: Size
@@ -827,8 +827,8 @@ T_MIGRATE_DELETE_ASK = コピーしたセーブデータを %s から削除し�
 T_MIGRATE_DELETE_TEXT = 削除するセーブデータ: %d。ゲーム ID のないセーブデータと、コピーされなかったセーブデータは残ります。
 # Button. English: Keep
 T_MIGRATE_KEEP = 残す
-# One line. English: Split by game complete
-T_MIGRATE_DONE = ゲームごとの分割が完了しました
+# One line. English: Conversion to Game ID complete
+T_MIGRATE_DONE = Game ID形式への変換が完了しました
 # Button. English: Remove copied saves
 T_MIGRATE_REMOVE = コピー済みを削除
 # One line. English: Not connected

@@ -790,15 +790,15 @@ T_MARK_SAME_SELECTED = Selected: %s (%s)
 # One line.
 T_MARK_SAME_THIS = This one: %s (%s)
 # One line.
-T_MIGRATE = Split saves by game
+T_MIGRATE = Convert to Game ID
 # One line.
-T_MIGRATE_TITLE = Split by game
+T_MIGRATE_TITLE = Convert to Game ID
 # One line.
 T_MIGRATE_OFF = Skipped
 # One line.
 T_MIGRATE_NEW = New card (%d MB)
 # Up to 3 lines.
-T_MIGRATE_NONE = This card has no saves to split.
+T_MIGRATE_NONE = This card has no saves to convert.
 # One line.
 T_MIGRATE_SUMMARY = Selected: %d saves (%d games) · No game ID: %d
 # Button.
@@ -830,7 +830,7 @@ T_MIGRATE_DELETE_TEXT = Saves to remove: %d. Saves without a game ID and saves n
 # Button.
 T_MIGRATE_KEEP = Keep
 # One line.
-T_MIGRATE_DONE = Split by game complete
+T_MIGRATE_DONE = Conversion to Game ID complete
 # Button.
 T_MIGRATE_REMOVE = Remove copied saves
 # One line.

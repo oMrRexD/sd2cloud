@@ -786,16 +786,16 @@ T_MARK_SAME_TEXT = Карта не может содержать два сохр
 T_MARK_SAME_SELECTED = Отмечено: %s (%s)
 # One line. English: This one: %s (%s)
 T_MARK_SAME_THIS = Это: %s (%s)
-# One line. English: Split saves by game
-T_MIGRATE = Разделить сохранения по играм
-# One line. English: Split by game
-T_MIGRATE_TITLE = Разделение по играм
+# One line. English: Convert to Game ID
+T_MIGRATE = Преобразовать в Game ID
+# One line. English: Convert to Game ID
+T_MIGRATE_TITLE = Преобразование в Game ID
 # One line. English: Skipped
 T_MIGRATE_OFF = Пропущено
 # One line. English: New card (%d MB)
 T_MIGRATE_NEW = Новая карта (%d МБ)
-# Up to 3 lines. English: This card has no saves to split.
-T_MIGRATE_NONE = На этой карте нет сохранений для разделения.
+# Up to 3 lines. English: This card has no saves to convert.
+T_MIGRATE_NONE = На этой карте нет сохранений для преобразования.
 # One line. English: Selected: %d saves (%d games) · No game ID: %d
 T_MIGRATE_SUMMARY = Отмечено сохранений: %d (игр: %d) · Без ID игры: %d
 # Button. English: Size
@@ -826,8 +826,8 @@ T_MIGRATE_DELETE_ASK = Удалить скопированные сохране�
 T_MIGRATE_DELETE_TEXT = Сохранений к удалению: %d. Сохранения без ID игры и нескопированные останутся на карте.
 # Button. English: Keep
 T_MIGRATE_KEEP = Оставить
-# One line. English: Split by game complete
-T_MIGRATE_DONE = Разделение по играм завершено
+# One line. English: Conversion to Game ID complete
+T_MIGRATE_DONE = Преобразование в Game ID завершено
 # Button. English: Remove copied saves
 T_MIGRATE_REMOVE = Удалить скопированные
 # One line. English: Not connected
