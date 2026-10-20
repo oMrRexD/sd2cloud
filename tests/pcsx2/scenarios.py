@@ -184,6 +184,10 @@ SCENARIOS = [
      "cards": CARDS, "script": "d>>DDDXDXXXXXDXXTXOC"},
     {"name": "cloud-import", "what": "Google Drive in the Files group: a save's page, the save imported into a card",
      "cards": CARDS, "script": "d>>DDDXDXXXXXXDXXXOC"},
+    # (a card's backup opens as a card file of a device does: the first card's file, in place of a made-up .zip;
+    # downloaded into the data folder, and gone from it when the card is left)
+    {"name": "cloud-card", "what": "Google Drive in the Files group: a card's backup opened as a card, and a save's page",
+     "cards": CARDS, "script": "d>>DDDXDXXXDXX.OOC"},
     {"name": "cloud-delete", "what": "Google Drive in the Files group: a save's file to the trash from its page, and from the list",
      "cards": CARDS, "script": "d>>DDDXDXXXXXDDXXXTXXC"},
     # (a sync with nothing sent, "B": SELECT shows its cards; X on one still to go: resolved; on the next, its sync off)

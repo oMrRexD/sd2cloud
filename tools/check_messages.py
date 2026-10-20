@@ -421,6 +421,7 @@ LEGENDS = [
     # Google Drive in the Files group: a folder opened, a file downloaded (and the folder it goes to)
     (("T_BACK", "T_DOWNLOAD"), False), (("T_BACK", "T_OPEN", "T_SAVE_HERE"), False),
     (("T_BACK", "T_OPEN", "T_DELETE"), False), (("T_BACK", "T_DOWNLOAD", "T_DELETE"), False),
+    (("T_BACK", "T_OPEN", "T_DELETE", "T_DOWNLOAD"), False),
     # a card's saves, with the options of how they are shown
     (("T_BACK", "T_OPEN", "T_OPTIONS", "T_INSTALL"), False), (("T_BACK", "T_TPL_CHANGE"), False),
     # a file of the Files group, with its options; renaming a folder of cards

@@ -365,9 +365,14 @@ static void card_file_shown(const char *file, int install);
 void card_file_screen(const char *file, int install)
 {
     char path[660];
+    snprintf(path, sizeof(path), "%s%s", fb.dir, file);
+    card_file_at(path, file, install);
+}
+
+void card_file_at(const char *path, const char *file, int install)
+{
     size_t n = strlen(file);
     int r;
-    snprintf(path, sizeof(path), "%s%s", fb.dir, file);
     if (held && !marks.n)   /* (kept for marks there are no more) */
         card_file_let_go();
     if (card_file_held()) {

@@ -338,6 +338,7 @@ void history_screen(card_t *c, icon_t *icon);
 extern char fileGameFolder[48];
 int install_card(void);
 void card_file_screen(const char *file, int install);   /* install: 0 = its saves shown, 1 = installed, 2 = pasted into */
+void card_file_at(const char *path, const char *file, int install);   /* the same, by its whole path (file: its name) */
 int card_file_held(void);       /* a card file's saves are marked, back in its folder (it is kept open for them) */
 int card_file_writable(void);   /* saves can be pasted into the card file that is open (fileCard) */
 int card_file_marks(void);      /* saves of card files are marked (the one open, and the ones kept by their paths) */

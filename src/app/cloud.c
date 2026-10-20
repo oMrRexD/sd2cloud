@@ -40,6 +40,12 @@ static int is_psu_name(const char *name)
     return n > 4 && !strcasecmp(name + n - 4, ".psu");
 }
 
+static int is_zip_name(const char *name)
+{
+    size_t n = strlen(name);
+    return n > 4 && !strcasecmp(name + n - 4, ".zip");
+}
+
 static void cl_select(void)
 {
     cl.selected[0] = 0;
@@ -93,14 +99,18 @@ static void scene_cloud(float t)
         snprintf(s, sizeof(s), "%d/%d", cl.cursor + 1, cl.n);
         ui_text_right(FONT_SMALL, CL_RIGHT, CL_Y0 + CL_ROWS * CL_ROW + 2, 0x8E98AA, s);
     }
-    {   /* X opens a folder, and a save's .psu (its page); another file is downloaded. Triangle: a file to the trash */
-        legend_t l[3] = {{BUTTON_CIRCLE, T(T_BACK)}};
+    {   /* X opens a folder, a save's .psu (its page) and a card's backup (its card); another file is downloaded.
+         * Triangle: a file to the trash; square: one that opens, downloaded as it is */
+        legend_t l[4] = {{BUTTON_CIRCLE, T(T_BACK)}};
         int n = 1;
         if (cl.n) {
             const drive_node_t *e = &cl.list[cl.cursor];
-            l[n].button = BUTTON_CROSS, l[n++].text = T(e->folder || is_psu_name(e->name) ? T_OPEN : T_DOWNLOAD);
+            int opens = e->folder || is_psu_name(e->name) || is_zip_name(e->name);
+            l[n].button = BUTTON_CROSS, l[n++].text = T(opens ? T_OPEN : T_DOWNLOAD);
             if (!e->folder)
                 l[n].button = BUTTON_TRIANGLE, l[n++].text = T(T_DELETE);
+            if (!e->folder && opens)
+                l[n].button = BUTTON_SQUARE, l[n++].text = T(T_DOWNLOAD);
         }
         look_legend(l, n, 0);
     }
@@ -394,6 +404,50 @@ static int cloud_save(const drive_node_t *f)
     return gone;
 }
 
+/* X on a card's backup (.zip): downloaded into the data folder, and the card in it shown as a card file of a device is
+ * (its saves, with their icons): X on a save opens its page, from where it is copied anywhere; square installs the
+ * card on the microSD. Saves of it left marked go on to the list of cards, to be pasted, as from a device's folder */
+static void cloud_card(const drive_node_t *f)
+{
+    char tmp[300], name[140];
+    int r;
+    snprintf(tmp, sizeof(tmp), "%scloud-card.zip", dataDir);
+    snprintf(name, sizeof(name), "%s", f->name);
+    dlFile = *f;
+    dl.done = 0;
+    dl.total = f->size > 0 ? f->size : 0;
+    dl_show();
+    unlink(tmp);
+#ifdef DEBUG_BUILD
+    if (cloudFake) {   /* (made up: the first card's file, as it is, in place of its backup) */
+        snprintf(tmp, sizeof(tmp), "%scloud-card.mcd", dataDir);
+        snprintf(name + strlen(name) - 4, 5, ".mcd");
+        unlink(tmp);
+        r = nCards ? file_copy(cards[0].path, tmp) : -1;
+    } else
+#endif
+    if ((dl.fd = open(tmp, O_WRONLY | O_CREAT | O_TRUNC, 0666)) < 0)
+        r = -1;
+    else {
+        r = google_download(f->id, dl_sink, NULL);
+        if (close(dl.fd) < 0 && r == 0)
+            r = -1;
+    }
+    log_msg("drive: %s read to be opened: %d (%lld bytes)", f->name, r, dl.done);
+    if (r == 0) {
+        card_file_at(tmp, name, 0);
+        if (card_file_marks()) {   /* (saves of it marked: on to every place they can be pasted) */
+            copy_go_on(NULL);
+            card_file_let_go();
+        }
+    } else {
+        char t[400];
+        snprintf(t, sizeof(t), "%s %s", T(T_CLOUD_DL_FAILED), googleError);
+        message_wait(COLOR_TITLE, f->name, COLOR_ERROR, t);
+    }
+    unlink(tmp);
+}
+
 /* the folder shown, listed again after a file went: the cursor where it was (on the next one) */
 static void cl_reload(void)
 {
@@ -437,7 +491,7 @@ void cloud_screen(void)
     for (;;) {
         u32 b;
         ui_scene(scene_cloud);
-        b = wait_nav(PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT | PAD_CROSS | PAD_CIRCLE | PAD_TRIANGLE);
+        b = wait_nav(PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT | PAD_CROSS | PAD_CIRCLE | PAD_TRIANGLE | PAD_SQUARE);
         if (b & (PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT)) {   /* left and right: a screenful at a time */
             int k = cl.cursor;
             if (!cl.n)
@@ -475,8 +529,13 @@ void cloud_screen(void)
             } else if (!e->folder && is_psu_name(e->name)) {
                 if (cloud_save(e))
                     cl_reload();
-            } else if (!e->folder)
+            } else if (!e->folder && is_zip_name(e->name))
+                cloud_card(e);
+            else if (!e->folder)
                 download(e);
+        } else if ((b & PAD_SQUARE) && cl.n && !cl.list[cl.cursor].folder) {   /* a file, downloaded as it is */
+            sound_play(SND_CONFIRM);
+            download(&cl.list[cl.cursor]);
         } else if ((b & PAD_TRIANGLE) && cl.n && !cl.list[cl.cursor].folder) {   /* a file, to the trash */
             sound_play(SND_CONFIRM);
             if (cloud_delete(&cl.list[cl.cursor]))
