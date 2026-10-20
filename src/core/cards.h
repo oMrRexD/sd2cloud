@@ -86,12 +86,15 @@ extern int nVmcPlaces;   /* the places whose VMC folder is there (the VMCs' grou
  * max in more, with their key, folder, dir and cfg. Returns how many */
 extern int (*vmcMore)(vmc_place_t *more, int max);
 const vmc_place_t *vmc_place(const char *folder);   /* a group's place (NULL = none is) */
-/* the OPL's settings of its games, in each place (CFG/<game>.cfg): which VMC each one uses ($VMC_0, $VMC_1). Read
- * once, the first time they are asked for (it takes a moment) */
+/* the OPL's settings of its games, in each place (CFG/<game>.cfg): which VMC each one uses ($VMC_0, $VMC_1). They
+ * take seconds on an sd2psx's microSD (a file each), so they are read a few at a time while the screens wait for a
+ * button: vmc_links_step reads for ms milliseconds at most, and returns 1 once all are read (vmc_links_read reads
+ * them all at once). Read once, until the cards are looked for again */
+int vmc_links_step(int ms);
 void vmc_links_read(void);
 /* a VMC just made (<place's dir>/<name>.bin) joins cards[], at its end: no other card moves. Returns it, or NULL */
 card_t *vmc_append(const char *folder, const char *name);
-/* how many games use that VMC (-1 = their settings weren't read yet); their IDs (SLUS-21065) in ids, up to max */
+/* how many games use that VMC (-1 = their settings aren't all read yet); their IDs (SLUS-21065) in ids, up to max */
 int vmc_games(const card_t *c, char (*ids)[12], int max);
 /* a VMC called name now: its file, and the settings of the games that use it. 0 = done; -1 = not (it is as it was):
  * -2 = a VMC of that name is there */

@@ -231,8 +231,6 @@ static void menu_icon(void)
         return;
     if (c->type == TYPE_GAMEID)
         ic = newest_icon(c);
-    else if (c->type == TYPE_VMC)
-        vmc_links_read();   /* (the OPL's games that use the VMCs, for their big card: read once) */
     ui_lock();
     icon_free(menu.icon);
     menu.icon = ic;
@@ -407,7 +405,12 @@ void manual(void)
         b = wait_nav_ms(keys, 250);
         if (!b) {
             menu_icon();
-            while (cards_unread() && !(b = wait_nav_ms(keys, 3000)))
+            /* the OPL's settings, for the games that use each VMC (under its name): read a little at a time while
+             * nothing is pressed, whichever group is shown, so that they are there when the VMCs' is opened (all at
+             * once, they held the screen for seconds on an sd2psx) */
+            while (nVmcPlaces && !vmc_links_step(20) && !(b = wait_nav_ms(keys, 10)))
+                ;
+            while (!b && cards_unread() && !(b = wait_nav_ms(keys, 3000)))
                 card_reread();
             if (!b)
                 b = wait_nav(keys);

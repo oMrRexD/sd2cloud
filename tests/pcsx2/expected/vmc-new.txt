@@ -8,9 +8,9 @@ SLUS-21065/SLUS-21065-1: 2 folders, fingerprint 64fbc81ffd3ff7a8, new
 OPL-VMC/Extra_0: 0 folders, fingerprint e3b0c44298fc1c14, new
 OPL-VMC/SLUS-21065_0: 2 folders, fingerprint 64fbc81ffd3ff7a8, new
 5 card(s) seen for the first time: fingerprint kept as the reference (0)
-[script] >
-[script] >
 the OPL's games' settings: 1 use a VMC
+[script] >
+[script] >
 [script] D
 [script] D
 [script] X
