@@ -75,5 +75,6 @@ void suite_card_file(void);
 void suite_templates(void);
 void suite_slot(void);
 void suite_library(void);
+void suite_drivemap(void);
 
 #endif

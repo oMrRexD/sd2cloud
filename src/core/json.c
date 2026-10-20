@@ -146,6 +146,24 @@ int js_find(const char *txt, size_t n, const char *key, json_t *v)
     }
 }
 
+void js_escape(const char *s, char *out, size_t size)
+{
+    size_t n = 0;
+    while (*s) {
+        unsigned char c = *s;
+        size_t len = c >= 0xF0 ? 4 : c >= 0xE0 ? 3 : c >= 0xC0 ? 2 : 1, i;
+        if (n + len + 2 >= size)
+            break;
+        if (c == '"' || c == '\\')
+            out[n++] = '\\';
+        for (i = 0; i < len && s[i]; i++)
+            if ((unsigned char)s[i] >= 0x20)
+                out[n++] = s[i];
+        s += i;
+    }
+    out[n] = 0;
+}
+
 int js_get_string(const char *txt, size_t n, const char *key, char *out, size_t size)
 {
     json_t v;

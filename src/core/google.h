@@ -8,6 +8,7 @@
 #include "files.h"
 #include "cards.h"
 #include "stream.h"
+#include "drivemap.h"
 
 int google_init(void);
 int google_has_access(void);                /* there is a refresh token */
@@ -18,6 +19,19 @@ int google_refresh(void);                   /* 0 ok, -2 = must sign in again, -1
  * of the message that says why it failed */
 int google_login(void (*show)(const char *url, const char *code, int seconds_left), int (*cancel)(void));
 int google_folder(const char *name, const char *parent, char *id, size_t idsize);   /* finds or creates */
+/* the folder of the second layout tagged with that key (drivemap.h), found by its tag wherever it is (an id cached in
+ * id, still there, is taken as it is); not found, made in parent with that name and the tag, when name is given.
+ * 0 = found or made; 1 = not found (nor made); -1 = Drive couldn't be asked */
+int google_folder_key(const char *key, const char *name, const char *parent, char *id, size_t idsize);
+/* a file or folder changed: query = what goes in the URL ("addParents=..&removeParents=.."; NULL = nothing), json =
+ * its new name or properties (NULL = nothing). 0 = done */
+int google_patch(const char *id, const char *query, const char *json);
+/* everything in those folders (in the trash: no), as drivemap's nodes: how many (-1 = Drive couldn't be asked) */
+int google_nodes(const char *const *parents, int nParents, drive_node_t *out, int max);
+/* n calls (up to DRIVE_BATCH) in one request: each one's method, path and JSON (drive_batch_body); each one's HTTP
+ * status in status[] and the id in its answer in id[]. Returns how many were answered (-1 = the request failed) */
+int google_batch(int n, const char *const *method, const char *const *path, const char *const *json, int *status,
+                 char (*id)[48]);
 typedef struct {
     char id[80];
     char name[128];

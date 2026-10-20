@@ -86,6 +86,10 @@ static void on_config(const char *s, const char *k, const char *v, void *u)
         else if (!strcasecmp(k, "channel")) cfg.beta = !strcasecmp(v, "beta");
     } else if (!strcasecmp(s, "library")) {
         if (!strcasecmp(k, "drive")) cfg.library_drive = !strcasecmp(v, "yes");
+    } else if (!strcasecmp(s, "drive")) {
+        if (!strcasecmp(k, "layout")) cfg.drive_layout = atoi(v) == 1 ? 1 : atoi(v) == 2 ? 2 : 0;
+        else if (!strcasecmp(k, "asked")) cfg.drive_asked = !strcasecmp(v, "yes");
+        else if (!strcasecmp(k, "moving")) cfg.drive_moving = !strcasecmp(v, "yes");
     } else if (!strcasecmp(s, "vmc")) {
         int i;
         for (i = 0; i < VMC_KEYS; i++)
@@ -99,7 +103,7 @@ void config_read(void)
     char path[260];
     memset(&cfg, 0, sizeof(cfg));
     COPY(cfg.language, "auto");
-    COPY(cfg.drive_folder, "PS2 Memory Card Backups");
+    COPY(cfg.drive_folder, DRIVE_FOLDER_OLD);   /* (the second layout's main folder is found by its tag: drive.c) */
     /* by default: CardN, the game cards (Game ID spreads the saves) and the named ones (the user's). The BootCards are
      * left out: the factory microSD comes with 8 exploit cards (FMCB, PS2BBL...), which would take time for nothing;
      * whoever wants them adds "boot" */

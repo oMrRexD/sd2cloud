@@ -21,6 +21,7 @@
 #include "cards.h"
 #include "mcfs.h"
 #include "library.h"
+#include "drivemap.h"
 #include "stream.h"
 #include "google.h"
 #include "update.h"

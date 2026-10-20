@@ -4,22 +4,36 @@
 
 static void helper_install_now(int doneTitle);
 
-/* -------- settings (START): syncing every card, the automatic sync on or off, the IGR helper, where to go after IGR,
- * the language, how many backups to keep, the update check, the Google account, about. Each change goes to
- * sd2cloud.ini at once */
+/* -------- settings (START): syncing every card, the language and About, and the rest in groups, each a page of its
+ * own: Google Drive (the account, how many backups are kept and in which format, the backup by save, the Library on
+ * Drive), the automatic sync (on or off, the SAS package, where to go after IGR), the cards (the device, the size of
+ * new cards, the OPL's VMC folders) and the updates (the check, the channel). Each change goes to sd2cloud.ini at
+ * once */
 
 
 enum { SET_SYNC_ALL, SET_AUTO_SYNC, SET_HELPER, SET_IGR_RETURN, SET_DEVICE, SET_CARD_SIZE, SET_VMC_FOLDERS, SET_LANGUAGE,
-       SET_KEEP, SET_SAVE_BACKUP, SET_LIBRARY_DRIVE, SET_FORMAT, SET_UPDATES, SET_CHANNEL, SET_ACCOUNT, SET_ABOUT, SET_MAX };
+       SET_KEEP, SET_SAVE_BACKUP, SET_LIBRARY_DRIVE, SET_FORMAT, SET_UPDATES, SET_CHANNEL, SET_ACCOUNT, SET_ABOUT,
+       SET_DRIVE_LAYOUT,
+       /* the groups: a row of the first page, each opening its own */
+       SET_G_DRIVE, SET_G_AUTO, SET_G_CARDS, SET_G_UPDATES, SET_MAX };
 #define SET_X      80     /* the labels; the values end at SET_RIGHT */
 #define SET_RIGHT  560
 #define SET_Y0     124
 #define SET_ROW    22
 #define SET_ROWS   10     /* the rows on the screen: past them the list scrolls, with arrows */
 static struct {
+    int page;             /* 0 = the first; else the group (SET_G_*) whose page it is */
     int n, cursor, top, item[SET_MAX];
     char label[SET_MAX][96], value[SET_MAX][64];
 } st;
+
+static int is_group(int id) { return id >= SET_G_DRIVE; }
+
+static int group_title(int id)
+{
+    return id == SET_G_DRIVE ? T_SET_G_DRIVE : id == SET_G_AUTO ? T_IGR_TITLE : id == SET_G_CARDS ? T_SET_G_CARDS
+                                                                                               : T_SET_G_UPDATES;
+}
 
 /* the cursor's row on the screen */
 static void set_scroll(void)
@@ -46,42 +60,64 @@ static void build_settings(void)
     long long bytes;
     count_cards(&included, &changed, &bytes);
     ui_lock();
-    if (changed > 1)
-        snprintf(v, sizeof(v), T(T_PENDING_N), changed);
-    set_item(&i, SET_SYNC_ALL, T(T_SET_SYNC_ALL), changed > 1 ? v : T(changed ? T_PENDING_ONE : T_NONE_PENDING));
-    set_item(&i, SET_AUTO_SYNC, T(T_IGR_TITLE), T(auto_sync_on() ? T_SYNC_ON : T_SYNC_OFF));
-    set_item(&i, SET_HELPER, T(T_HELPER_TITLE), T(helperState == HELPER_SAME ? T_HELPER_INSTALLED
-                                                : helperState == HELPER_DIFFERENT ? T_HELPER_OUTDATED
-                                                : helperState == HELPER_NOT_INSTALLED ? T_HELPER_NOT_INSTALLED : T_HELPER_NA));
-    target_name(cfg.igr_return, v, sizeof(v));
-    set_item(&i, SET_IGR_RETURN, T(T_SET_IGR_RETURN), v);
-    if (deviceBoth)   /* (a microSD with the cards of both devices: which one it is in is the user's to say) */
-        set_item(&i, SET_DEVICE, T(T_SET_DEVICE), dev->name);
-    if (dev->sd2psx && !standalone) {   /* (the size the sd2psx makes a game's first card of: its own setting, on its
-                                          microSD; with none in a slot, nothing to set) */
-        snprintf(v, sizeof(v), T(T_SIZE_MB), device_card_mb() ? device_card_mb() : 8);
-        set_item(&i, SET_CARD_SIZE, T(T_SET_CARD_SIZE), v);
-    }
-    snprintf(v, sizeof(v), "%d", vmc_places_count());
-    set_item(&i, SET_VMC_FOLDERS, T(T_SET_VMC_FOLDERS), v);
-    set_item(&i, SET_LANGUAGE, T(T_SET_LANGUAGE), i18n_find(cfg.language) >= 0 ? i18n_name(i18n_find(cfg.language))
-                                                                                     : T(T_AUTO));
-    snprintf(v, sizeof(v), "%d", cfg.keep);
-    set_item(&i, SET_KEEP, T(T_SET_KEEP), cfg.keep ? v : T(T_KEEP_ALL));
-    set_item(&i, SET_SAVE_BACKUP, T(T_SET_SAVE_BACKUP), T(cfg.save_backup ? T_SAVE_BACKUP_ON : T_SAVE_BACKUP_OFF));
-    if (library_on())   /* (with no room for a Library, nothing to send of one) */
-        set_item(&i, SET_LIBRARY_DRIVE, T(T_SET_LIBRARY_DRIVE), T(cfg.library_drive ? T_SAVE_BACKUP_ON : T_SAVE_BACKUP_OFF));
-    set_item(&i, SET_FORMAT, T(T_SET_FORMAT), format_name(cfg.ps2));
-    if (updateAvailable)
-        snprintf(v, sizeof(v), T(T_UPDATE_AVAILABLE), update_tag());
-    set_item(&i, SET_UPDATES, T(T_SET_UPDATES), updateAvailable ? v : "");
-    set_item(&i, SET_CHANNEL, T(T_SET_CHANNEL), cfg.beta ? "Beta" : T(T_CHANNEL_STABLE));
-    set_item(&i, SET_ACCOUNT, T(T_SET_ACCOUNT), T(google_has_access() ? T_ACCOUNT_ON : T_ACCOUNT_OFF));
+    switch (st.page) {
+    case SET_G_DRIVE:
+        set_item(&i, SET_ACCOUNT, T(T_SET_ACCOUNT), T(google_has_access() ? T_ACCOUNT_ON : T_ACCOUNT_OFF));
+        snprintf(v, sizeof(v), "%d", cfg.keep);
+        set_item(&i, SET_KEEP, T(T_SET_KEEP), cfg.keep ? v : T(T_KEEP_ALL));
+        set_item(&i, SET_FORMAT, T(T_SET_FORMAT), format_name(cfg.ps2));
+        set_item(&i, SET_SAVE_BACKUP, T(T_SET_SAVE_BACKUP), T(cfg.save_backup ? T_SAVE_BACKUP_ON : T_SAVE_BACKUP_OFF));
+        if (library_on())   /* (with no room for a Library, nothing to send of one) */
+            set_item(&i, SET_LIBRARY_DRIVE, T(T_SET_LIBRARY_DRIVE),
+                     T(cfg.library_drive ? T_SAVE_BACKUP_ON : T_SAVE_BACKUP_OFF));
+        if (drive_layout() != 2)   /* (the backups in the first layout: the move to the second, until it is done) */
+            set_item(&i, SET_DRIVE_LAYOUT, T(T_SET_DRIVE_LAYOUT), T(T_DRIVE_LAYOUT_OLD));
+        break;
+    case SET_G_AUTO:
+        set_item(&i, SET_AUTO_SYNC, T(T_IGR_TITLE), T(auto_sync_on() ? T_SYNC_ON : T_SYNC_OFF));
+        set_item(&i, SET_HELPER, T(T_HELPER_TITLE), T(helperState == HELPER_SAME ? T_HELPER_INSTALLED
+                                                    : helperState == HELPER_DIFFERENT ? T_HELPER_OUTDATED
+                                                    : helperState == HELPER_NOT_INSTALLED ? T_HELPER_NOT_INSTALLED
+                                                    : T_HELPER_NA));
+        target_name(cfg.igr_return, v, sizeof(v));
+        set_item(&i, SET_IGR_RETURN, T(T_SET_IGR_RETURN), v);
+        break;
+    case SET_G_CARDS:
+        if (deviceBoth)   /* (a microSD with the cards of both devices: which one it is in is the user's to say) */
+            set_item(&i, SET_DEVICE, T(T_SET_DEVICE), dev->name);
+        if (dev->sd2psx && !standalone) {   /* (the size the sd2psx makes a game's first card of: its own setting, on its
+                                              microSD; with none in a slot, nothing to set) */
+            snprintf(v, sizeof(v), T(T_SIZE_MB), device_card_mb() ? device_card_mb() : 8);
+            set_item(&i, SET_CARD_SIZE, T(T_SET_CARD_SIZE), v);
+        }
+        snprintf(v, sizeof(v), "%d", vmc_places_count());
+        set_item(&i, SET_VMC_FOLDERS, T(T_SET_VMC_FOLDERS), v);
+        break;
+    case SET_G_UPDATES:
+        if (updateAvailable)
+            snprintf(v, sizeof(v), T(T_UPDATE_AVAILABLE), update_tag());
+        set_item(&i, SET_UPDATES, T(T_SET_UPDATES), updateAvailable ? v : "");
+        set_item(&i, SET_CHANNEL, T(T_SET_CHANNEL), cfg.beta ? "Beta" : T(T_CHANNEL_STABLE));
+        break;
+    default:   /* the first page: each group with what most matters of it */
+        if (changed > 1)
+            snprintf(v, sizeof(v), T(T_PENDING_N), changed);
+        set_item(&i, SET_SYNC_ALL, T(T_SET_SYNC_ALL), changed > 1 ? v : T(changed ? T_PENDING_ONE : T_NONE_PENDING));
+        set_item(&i, SET_G_DRIVE, T(T_SET_G_DRIVE), T(google_has_access() ? T_ACCOUNT_ON : T_ACCOUNT_OFF));
+        set_item(&i, SET_G_AUTO, T(T_IGR_TITLE), T(auto_sync_on() ? T_SYNC_ON : T_SYNC_OFF));
+        set_item(&i, SET_G_CARDS, T(T_SET_G_CARDS), standalone ? "" : dev->name);
+        set_item(&i, SET_LANGUAGE, T(T_SET_LANGUAGE), i18n_find(cfg.language) >= 0 ? i18n_name(i18n_find(cfg.language))
+                                                                                         : T(T_AUTO));
+        if (updateAvailable)
+            snprintf(v, sizeof(v), T(T_UPDATE_AVAILABLE), update_tag());
+        set_item(&i, SET_G_UPDATES, T(T_SET_G_UPDATES), updateAvailable ? v : cfg.beta ? "Beta" : T(T_CHANNEL_STABLE));
 #ifdef BETA_BUILD
-    set_item(&i, SET_ABOUT, T(T_SET_ABOUT), "v" APP_VERSION " beta");
+        set_item(&i, SET_ABOUT, T(T_SET_ABOUT), "v" APP_VERSION " beta");
 #else
-    set_item(&i, SET_ABOUT, T(T_SET_ABOUT), "v" APP_VERSION);
+        set_item(&i, SET_ABOUT, T(T_SET_ABOUT), "v" APP_VERSION);
 #endif
+        break;
+    }
     st.n = i;
     if (st.cursor >= i)
         st.cursor = st.top = 0;
@@ -95,16 +131,19 @@ static void scene_settings(float t)
     look_space();
     look_frame();
     ui_alpha(look_fade(t));
-    look_title(W / 2.0f, 88, T(T_SETTINGS), 1);
+    look_title(W / 2.0f, 88, T(st.page ? group_title(st.page) : T_SETTINGS), 1);
     for (i = st.top; i < st.n && i < st.top + SET_ROWS; i++) {
         float y = SET_Y0 + (i - st.top) * SET_ROW;
-        if (i == st.cursor) {
-            look_glow_text(FONT_TEXT, SET_X, y, COLOR_ITEM, COLOR_ITEM_ON, st.label[i]);
-            ui_text_right(FONT_TEXT, SET_RIGHT, y, 0xD8E4F4, st.value[i]);
-        } else {
-            ui_text(FONT_TEXT, SET_X, y, COLOR_ITEM, st.label[i]);
-            ui_text_right(FONT_TEXT, SET_RIGHT, y, COLOR_DIM, st.value[i]);
+        int on = i == st.cursor, right = SET_RIGHT;
+        if (is_group(st.item[i])) {   /* a group: "›" at the end, its value before it */
+            ui_text_right(FONT_TEXT, SET_RIGHT, y, on ? 0xD8E4F4 : COLOR_DIM, "\xE2\x80\xBA");
+            right -= 18;
         }
+        if (on)
+            look_glow_text(FONT_TEXT, SET_X, y, COLOR_ITEM, COLOR_ITEM_ON, st.label[i]);
+        else
+            ui_text(FONT_TEXT, SET_X, y, COLOR_ITEM, st.label[i]);
+        ui_text_right(FONT_TEXT, right, y, on ? 0xD8E4F4 : COLOR_DIM, st.value[i]);
     }
     if (st.top > 0)
         look_arrow(W / 2.0f, SET_Y0 - 12, 0, 0x6E9AE0);
@@ -742,11 +781,25 @@ void settings_screen(void)
         helperStale = 0;
         helperState = helper_status();
     }
+    st.page = st.cursor = st.top = 0;
     build_settings();
     ui_scene(scene_settings);
     for (;;) {
         u32 b = wait_nav(PAD_UP | PAD_DOWN | PAD_CROSS | PAD_CIRCLE | PAD_START);
-        if (b & (PAD_CIRCLE | PAD_START)) {
+        if ((b & PAD_CIRCLE) && st.page) {   /* a group's page: back to the first, on the group */
+            int k, was = st.page;
+            sound_play(SND_BACK);
+            st.page = 0;
+            build_settings();
+            ui_lock();
+            for (k = 0; k < st.n; k++)
+                if (st.item[k] == was)
+                    st.cursor = k;
+            set_scroll();
+            ui_unlock();
+            continue;
+        }
+        if (b & (PAD_CIRCLE | PAD_START)) {   /* (START leaves from any page, as it came in) */
             sound_play(SND_BACK);
             return;
         }
@@ -760,6 +813,13 @@ void settings_screen(void)
         }
         sound_play(SND_CONFIRM);
         switch (st.item[st.cursor]) {
+        case SET_G_DRIVE:
+        case SET_G_AUTO:
+        case SET_G_CARDS:
+        case SET_G_UPDATES:   /* the group's own page */
+            st.page = st.item[st.cursor];
+            st.cursor = st.top = 0;
+            break;
         case SET_SYNC_ALL:
             sync_all();
             break;
@@ -787,6 +847,9 @@ void settings_screen(void)
             break;
         case SET_LIBRARY_DRIVE:
             pick_library_drive();
+            break;
+        case SET_DRIVE_LAYOUT:
+            drive_offer_settings();
             break;
         case SET_LANGUAGE:
             pick_language();

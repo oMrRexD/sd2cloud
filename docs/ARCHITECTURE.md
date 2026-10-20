@@ -45,7 +45,9 @@ a PC's compiler. `src/app` is the only place that knows the screens; it calls do
 | `backup.c`, `autosync.c`, `synclist.c` | The sync to Google Drive; the one that runs by itself after a game; the list of a sync's cards (SELECT) |
 | `history.c` | A card's backups on Drive, and restoring one |
 | `active.c` | The card the device is using right now: finding it, switching it, noticing it change; on a microSD with both devices' cards, the two at the top right, L2 and R2 listing one's or the other's (`view_switch`) |
-| `settings.c`, `account.c` | The settings; the Google account |
+| `settings.c`, `account.c` | The settings, in pages (Google Drive, the automatic sync, the cards, the updates); the Google account |
+| `drive.c` | The backups on Drive in the layout in use: each card's folder (and its Saves) in the second layout, found by its tag or made; the move from the first layout, offered once at startup and kept in the settings until it is done |
+| `cloud.c` | Google Drive in the Files group: the backups' main folder browsed as a device's, a file downloaded into a folder of a device |
 | `libview.c` | The Library on the screens: its games in a group of the main screen, each one's saves opened as a card's are, and the Library as a place saves are moved, copied or imported to |
 | `vmcplaces.c` | The OPL's VMC folders on other devices than the microSD (the hard disk's exFAT and APA sides, an MX4SIO, a USB drive): found when the cards are looked for, each device's drivers loaded then; named on the screens; added in the settings |
 | `tools.c`, `keyboard.c` | The tools (SELECT): the templates, made by marking saves on the cards and put into cards; the keyboard on the screen their names are typed on |
@@ -62,7 +64,8 @@ a PC's compiler. `src/app` is the only place that knows the screens; it calls do
 | `library.c` | The Library: saves kept off the cards, each a `.psu` in the data folder (`Library/<game ID>/`), listed in `Library/library.ini` with each save's signature; to `mcfs.c` it is a card with no end to its room, reached through the calls a Memory Card in a slot is (`lib:` paths) |
 | `mcfs.c` | The memory card's file system, read and written inside a card's file: saves, icons, the fingerprint |
 | `stream.c` | A card read and turned into a `.zip`, piece by piece, without ever holding it whole |
-| `google.c` | Google Drive: the sign-in with a code, folders, the resumable upload, downloads |
+| `google.c` | Google Drive: the sign-in with a code, folders (by name, or by the second layout's tag), the resumable upload, downloads, a folder's listing, batches of calls |
+| `drivemap.c` | The second layout on Drive, with no network: each folder's key and its parent's, where a file of the first layout goes, a batch's request and its answer |
 | `restore.c` | A card written back from a backup, or installed from a file |
 | `templates.c` | The templates: sets of saves kept on the microSD as `.psu` files, and put into cards |
 | `config.c`, `state.c` | The settings (`sd2cloud.ini`); what is remembered between runs (`state.ini`, `token.dat`) |

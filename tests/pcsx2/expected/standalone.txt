@@ -1,6 +1,7 @@
 # log
 SD2Cloud <version> -- program in host:APPS/SD2Cloud/ (host:SD2CLOUD-DEBUG.ELF), data in host:SD2Cloud/, manual
 settings: [app] app_path = host:SD2CLOUD-DEBUG.ELF (0)
+settings: [drive] layout = 2 (0)
 1 card(s) on the microSD
 OPL-VMC/generic_0: 2 folders, fingerprint 64fbc81ffd3ff7a8, new
 1 card(s) seen for the first time: fingerprint kept as the reference (0)
@@ -9,7 +10,7 @@ the OPL's games' settings: 0 use a VMC
 (end: capture)
 
 # files
-17df2e2a16cbab4cb8357fe9a735f1765b89ed8fcaf21c00a1634ed98fb36c3e  SD2Cloud/sd2cloud.ini
+9272b61510164169e9ebbb38efa709c8a15fd23349ca3a27a557feebecfdc410  SD2Cloud/sd2cloud.ini
 2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881  SD2Cloud/standalone.txt
 0a4ec482e9e2e767d6cbfa9562a94f3e03c278a77b532584aa2be766da4d7984  SD2Cloud/state-debug.ini
 e67be4206c58f05d290d04e24ef9bd240e0a329b479dd8d202f12d40f464d347  VMC/generic_0.bin

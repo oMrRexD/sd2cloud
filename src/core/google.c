@@ -248,10 +248,10 @@ static void reason(const response_t *r, char *out, size_t size)
 
 /* API request with the access token; retries on network failures and on 429/5xx, and once with a new access token when
  * Google says this one expired (it lasts an hour: syncing many cards can take longer). Returns the HTTP status
- * (0 = network) */
-static long api(const char *method, const char *url, const char *body, response_t *r)
+ * (0 = network). The body is JSON, or of the type given (api_typed) */
+static long api_typed(const char *method, const char *url, const char *body, const char *type, response_t *r)
 {
-    char auth[2100];
+    char auth[2100], ct[160];
     int attempt, max = igrMode ? 2 : 3, renewed = 0;
     CURLcode c = CURLE_OK;
     for (attempt = 1; attempt <= max; attempt++) {
@@ -259,8 +259,10 @@ static long api(const char *method, const char *url, const char *body, response_
         snprintf(auth, sizeof(auth), "Authorization: Bearer %s", accessToken);
         hdr = curl_slist_append(hdr, auth);
         hdr = curl_slist_append(hdr, "Expect:");
-        if (body)
-            hdr = curl_slist_append(hdr, "Content-Type: application/json; charset=UTF-8");
+        if (body) {
+            snprintf(ct, sizeof(ct), "Content-Type: %s", type);
+            hdr = curl_slist_append(hdr, ct);
+        }
         c = request(method, url, hdr, body, body ? strlen(body) : 0, r);
         curl_slist_free_all(hdr);
         if (userStop)
@@ -279,6 +281,11 @@ static long api(const char *method, const char *url, const char *body, response_
     if (c != CURLE_OK)
         fail("%s", curl_text(c));
     return c == CURLE_OK ? r->http : 0;
+}
+
+static long api(const char *method, const char *url, const char *body, response_t *r)
+{
+    return api_typed(method, url, body, "application/json; charset=UTF-8", r);
 }
 
 /* ------------------------------------------------------------ access (OAuth) */
@@ -550,6 +557,220 @@ int google_folder(const char *name, const char *parent, char *id, size_t idsize)
     log_msg("created the \"%s\" folder on Drive", name);
     buf_free(&r.body);
     return 0;
+}
+
+#define FOLDER_MIME "application/vnd.google-apps.folder"
+
+/* is that folder (an id cached) still there, not in the trash? 1 = yes; 0 = no; -1 = Drive couldn't be asked */
+static int folder_alive(const char *id)
+{
+    response_t r = {0};
+    char url[300];
+    json_t v;
+    long h;
+    int ok;
+    snprintf(url, sizeof(url), URL_DRIVE "/%s?fields=id,trashed", id);
+    h = api("GET", url, NULL, &r);
+    ok = h == 200 && r.body.data && !(js_find((char *)r.body.data, r.body.len, "trashed", &v) == 0 && v.p < v.end && *v.p == 't');
+    buf_free(&r.body);
+    return ok ? 1 : h == 0 ? -1 : 0;
+}
+
+int google_folder_key(const char *key, const char *name, const char *parent, char *id, size_t idsize)
+{
+    response_t r = {0};
+    char q[400], kq[DRIVE_KEY + 40], url[1200], m[200], nj[300], kj[DRIVE_KEY + 40], body[900];
+    char *e;
+    long h;
+    int alive;
+    if (id[0] && (alive = folder_alive(id)) != 0)
+        return alive > 0 ? 0 : -1;
+    id[0] = 0;
+    quote(key, kq, sizeof(kq));
+    snprintf(q, sizeof(q), "appProperties has { key='folder' and value='%s' } and mimeType='" FOLDER_MIME "' and trashed=false", kq);
+    e = url_escape(q);
+    snprintf(url, sizeof(url), URL_DRIVE "?q=%s&fields=files(id)&spaces=drive&pageSize=10", e);
+    curl_free(e);
+    h = api("GET", url, NULL, &r);
+    if (h != 200) {
+        reason(&r, m, sizeof(m));
+        if (h)
+            fail("Drive %ld: %s", h, m);
+        buf_free(&r.body);
+        return -1;
+    }
+    if (first_id(&r, id, idsize) == 0 && id[0]) {
+        buf_free(&r.body);
+        return 0;
+    }
+    if (!name) {
+        buf_free(&r.body);
+        return 1;
+    }
+    json_escape(name, nj, sizeof(nj));
+    json_escape(key, kj, sizeof(kj));
+    snprintf(body, sizeof(body), "{\"name\":\"%s\",\"mimeType\":\"" FOLDER_MIME "\",\"parents\":[\"%s\"],"
+             "\"appProperties\":{\"sd2cloud\":\"1\",\"folder\":\"%s\"}}", nj, parent, kj);
+    h = api("POST", URL_DRIVE "?fields=id", body, &r);
+    if (h != 200 || !r.body.data || js_get_string((char *)r.body.data, r.body.len, "id", id, idsize)) {
+        reason(&r, m, sizeof(m));
+        if (h)
+            fail("Drive %ld: %s", h, m);
+        buf_free(&r.body);
+        return -1;
+    }
+    log_msg("created the \"%s\" folder on Drive (%s)", name, key);
+    buf_free(&r.body);
+    return 0;
+}
+
+int google_patch(const char *id, const char *query, const char *json)
+{
+    response_t r = {0};
+    char url[600], m[200];
+    long h;
+    snprintf(url, sizeof(url), URL_DRIVE "/%s?%s%sfields=id", id, query ? query : "", query && query[0] ? "&" : "");
+    h = api("PATCH", url, json ? json : "{}", &r);
+    if (h != 200) {
+        reason(&r, m, sizeof(m));
+        if (h)
+            fail("Drive %ld: %s", h, m);
+    }
+    buf_free(&r.body);
+    return h == 200 ? 0 : -1;
+}
+
+/* -------- what is in some folders, all of it (the move to the second layout, and Drive in the Files group) */
+
+typedef struct {
+    drive_node_t *out;
+    int max, n;
+} nodes_t;
+
+/* the device a backup is of, from its description: "<card> (<device>, <its file>) - SD2Cloud <version>" */
+static void description_device(const char *d, char *out, size_t size)
+{
+    const char *end = NULL, *p, *open;
+    for (p = d; (p = strstr(p, ") - ")) != NULL; p++)
+        end = p;
+    out[0] = 0;
+    if (!end)
+        return;
+    for (open = end; open > d && *open != '('; open--)
+        ;
+    if (*open == '(' && (p = memchr(open, ',', end - open)) != NULL)
+        snprintf(out, size, "%.*s", (int)(p - open - 1), open + 1);
+}
+
+static void on_node(const char *obj, size_t n, void *u)
+{
+    nodes_t *c = u;
+    drive_node_t *f;
+    const char *props;
+    size_t np;
+    char mime[80], desc[400];
+    json_t v;
+    if (c->n >= c->max)
+        return;
+    f = &c->out[c->n];
+    memset(f, 0, sizeof(*f));
+    if (js_get_string(obj, n, "id", f->id, sizeof(f->id)))
+        return;
+    js_get_string(obj, n, "name", f->name, sizeof(f->name));
+    f->folder = js_get_string(obj, n, "mimeType", mime, sizeof(mime)) == 0 && !strcmp(mime, FOLDER_MIME);
+    if (js_find(obj, n, "parents", &v) == 0 && v.p < v.end && *v.p == '[') {   /* (the first: a file has only one) */
+        v.p++;
+        while (v.p < v.end && isspace((unsigned char)*v.p))
+            v.p++;
+        js_string(&v, f->parent, sizeof(f->parent));
+    }
+    if (js_get_object(obj, n, "appProperties", &props, &np) == 0) {
+        js_get_string(props, np, "folder", f->key, sizeof(f->key));
+        js_get_string(props, np, "card", f->card, sizeof(f->card));
+    }
+    if (js_get_number(obj, n, "size", &f->size) != 0)
+        f->size = -1;
+    if (js_get_string(obj, n, "description", desc, sizeof(desc)) == 0)
+        description_device(desc, f->device, sizeof(f->device));
+    c->n++;
+}
+
+int google_nodes(const char *const *parents, int nParents, drive_node_t *out, int max)
+{
+    nodes_t c = {out, max, 0};
+    int i, k, ok = 0;
+    for (i = 0; i < nParents && c.n < max; i += 25) {   /* (25 folders a query: a URL of a few KB) */
+        buffer_t q = {0}, url = {0};
+        char token[400] = "", m[200], *e;
+        response_t r = {0};
+        long h;
+        buf_append(&q, "(", 1);
+        for (k = i; k < nParents && k < i + 25; k++) {
+            char one[120];
+            snprintf(one, sizeof(one), "%s'%s' in parents", k > i ? " or " : "", parents[k]);
+            buf_append(&q, one, strlen(one));
+        }
+        buf_append(&q, ") and trashed=false", 20);   /* (with its 0) */
+        e = url_escape((char *)q.data);
+        buf_free(&q);
+        do {   /* each page of 1000 */
+            char head[300];
+            buf_free(&url);
+            snprintf(head, sizeof(head), URL_DRIVE "?pageSize=1000&spaces=drive&fields=nextPageToken,files(id,name,"
+                     "mimeType,parents,size,description,appProperties)%s%s&q=", token[0] ? "&pageToken=" : "", token);
+            buf_append(&url, head, strlen(head));
+            buf_append(&url, e, strlen(e) + 1);
+            h = api("GET", (char *)url.data, NULL, &r);
+            if (h != 200 || !r.body.data || js_each((char *)r.body.data, r.body.len, "files", on_node, &c)) {
+                reason(&r, m, sizeof(m));
+                if (h)
+                    fail("Drive %ld: %s", h, m);
+                buf_free(&r.body);
+                ok = -1;
+                break;
+            }
+            if (js_get_string((char *)r.body.data, r.body.len, "nextPageToken", token, sizeof(token)) != 0)
+                token[0] = 0;
+            buf_free(&r.body);
+        } while (token[0] && c.n < max);
+        buf_free(&url);
+        curl_free(e);
+        if (ok)
+            return -1;
+    }
+    return c.n;
+}
+
+/* -------- a batch: many calls in one request */
+
+#define URL_BATCH "https://www.googleapis.com/batch/drive/v3"
+#define BOUNDARY  "sd2cloud_batch"
+
+int google_batch(int n, const char *const *method, const char *const *path, const char *const *json, int *status,
+                 char (*id)[48])
+{
+    response_t r = {0};
+    size_t size = 1024 + (size_t)n * 1400;
+    char *body = malloc(size), m[200];
+    long h;
+    int got;
+    if (!body || !drive_batch_body(body, size, BOUNDARY, n, method, path, json)) {
+        free(body);
+        fail("batch: no memory");
+        return -1;
+    }
+    h = api_typed("POST", URL_BATCH, body, "multipart/mixed; boundary=" BOUNDARY, &r);
+    free(body);
+    if (h != 200 || !r.body.data) {
+        reason(&r, m, sizeof(m));
+        if (h)
+            fail("Drive %ld: %s", h, m);
+        buf_free(&r.body);
+        return -1;
+    }
+    got = drive_batch_read((char *)r.body.data, r.body.len, n, status, id);
+    buf_free(&r.body);
+    return got;
 }
 
 /* ------------------------------------------------------------ list and delete */

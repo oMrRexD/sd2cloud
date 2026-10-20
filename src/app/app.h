@@ -74,6 +74,7 @@ typedef struct {
     int memcard;              /* the Files group offers the Memory Card (memcard.c), after the devices if they are there:
                                  how many (with no sd2psx, one per slot), and the slots (mcPorts) */
     int mcPorts[2];
+    int cloud;                /* the Files group's last row is Google Drive, with an account (the main screen) */
     int games[MAX_CARDS], nGames;         /* the game cards, by game and then as they come in cards[] */
     int first[MAX_CARDS + 1], folders;    /* where each folder starts in games[] (first[folders] = nGames) */
     char label[MAX_CARDS][64];            /* each folder's name, cut to fit the list */
@@ -143,6 +144,29 @@ void reload_all(void) __attribute__((noreturn));
 
 /* ------------------------------------------------------------ autosync.c */
 void igr(void);
+
+/* ------------------------------------------------------------ cloud.c */
+/* Google Drive in the Files group: offered (there is an account), and its folders browsed, a file downloaded */
+int cloud_listed(void);
+void cloud_screen(void);
+int tabs_on_cloud(const tabs_t *g);   /* the cursor is on its row */
+#ifdef DEBUG_BUILD
+extern int cloudFake;
+#endif
+
+/* ------------------------------------------------------------ drive.c */
+/* the layout the backups are kept in on Drive (core/drivemap.h): 1 or 2. Decided at startup (drive_layout_decide):
+ * whoever has no backups of the first layout uses the second at once; whoever has is offered the move, once
+ * (drive_offer_startup), and keeps it in the settings until it is done (drive_offer_settings) */
+int drive_layout(void);
+void drive_layout_decide(void);
+void drive_offer_startup(void);
+void drive_offer_declined(void);
+void drive_offer_settings(void);
+/* in the second layout: the folder a card's backups go into (saves = 1: its saves'; save = the save's folder, for
+ * the Library's, which go into their game's). 0 = its id in id */
+int drive_folder_of(const card_t *c, int saves, const char *save, char *id, size_t size);
+void drive_session_start(void);   /* a sync starts: the folders are looked at again */
 
 /* ------------------------------------------------------------ backup.c */
 int on_progress(long long done, long long total);

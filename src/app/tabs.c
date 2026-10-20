@@ -420,8 +420,8 @@ void tabs_show(tabs_t *g, int tab)
         }
     if (tab == TAB_FILES && g->files)   /* (one put in or taken out meanwhile: asked again each time) */
         g->memcard = memcard_rows(g);
-    if (g->files || g->memcard)
-        g->count[TAB_FILES] = (g->files ? fdev_list(list) : 0) + g->memcard;
+    if (g->files || g->memcard || g->cloud)   /* (and Google Drive, last) */
+        g->count[TAB_FILES] = (g->files ? fdev_list(list) : 0) + g->memcard + (g->cloud && cloud_listed());
     if (tab == TAB_FILES)
         g->n = g->count[TAB_FILES];
     g->tab = tab;
@@ -494,7 +494,13 @@ static int tabs_next(const tabs_t *g, int dir)
     return -1;
 }
 
-/* in the Files group: the device the cursor is on (FDEV_*), or -1 on the Memory Card */
+int tabs_on_cloud(const tabs_t *g)
+{
+    int list[FDEVS], n = g->files ? fdev_list(list) : 0;
+    return g->tab == TAB_FILES && g->cloud && g->cursor == n + g->memcard;
+}
+
+/* in the Files group: the device the cursor is on (FDEV_*), or -1 on the Memory Card (or Google Drive) */
 int tabs_device(const tabs_t *g)
 {
     int list[FDEVS], n = fdev_list(list);
@@ -580,6 +586,8 @@ static const char *tabs_text(int i, char *buf)
             snprintf(buf, 64, T(T_MEMCARD_SLOT), rowsOf->mcPorts[i - n] + 1);
             return buf;
         }
+        if (rowsOf->tab == TAB_FILES && i - n >= rowsOf->memcard)
+            return T(T_SET_G_DRIVE);
         if (rowsOf->tab == TAB_FILES)
             return T(T_MEMCARD);
     }

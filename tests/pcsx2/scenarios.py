@@ -169,8 +169,18 @@ SCENARIOS = [
      "pasted there", "cards": CARDS, "memcard": "memcard.ps2", "script": "XXXO>>>DDDSOSXXC"},
     {"name": "memcard-paste-list", "what": "a save marked on a card, pasted with START on the Memory Card in the list of "
      "cards", "cards": CARDS, "memcard": "memcard.ps2", "script": "XXXO>>>DDDSXXC"},
-    {"name": "settings", "what": "settings changed (how many backups are kept, the backup by save, the Library on Drive, their format, the language) and About",
-     "cards": CARDS, "script": "SDDDDDDDXDXDXDXXDXDXXDXDXUUUUXUXDDDDDDDDXOOC"},
+    {"name": "settings", "what": "settings changed in their pages (Google Drive: how many backups are kept, their format, the backup by save, the Library on Drive; the language) and About",
+     "cards": CARDS, "script": "SDXDXDXDXDXDXDXXDXDXXODDDXUXDDXOOC"},
+    # (the move of the backups on Drive to its second layout, offered at startup as to a user of the first, script "m":
+    # agreed to, moved dry, PCSX2 having no Google account; or declined: not asked again, and kept in the settings)
+    {"name": "drive-move", "what": "the move to the second layout on Drive, offered at startup and agreed to",
+     "cards": CARDS, "script": "mXXC"},
+    {"name": "drive-move-later", "what": "the move to the second layout on Drive declined: in Settings > Google Drive",
+     "cards": CARDS, "script": "mOSDXC"},
+    # (Google Drive in the Files group, script "d": made-up folders, PCSX2 having no Google account. A save sent by
+    # itself, in its card's Saves, downloaded into the MMCE's root)
+    {"name": "cloud-download", "what": "Google Drive in the Files group: its folders opened, a save's file downloaded into the MMCE",
+     "cards": CARDS, "script": "d>>DDDXDXXXXXXTXC"},
     # (a sync with nothing sent, "B": SELECT shows its cards; X on one still to go: resolved; on the next, its sync off)
     {"name": "sync-list", "what": "the list of a sync's cards: one card marked as resolved, another's sync turned off",
      "cards": CARDS, "script": "BLDXDXDXDDXwC"},
@@ -190,7 +200,7 @@ SCENARIOS = [
     {"name": "standalone-memcard", "what": "no sd2psx: the Memory Card of slot 2 opened from its row in Files",
      "files": {"SD2Cloud/standalone.txt": b"x"}, "memcard": "memcard.ps2", "script": ">DDDXC"},
     {"name": "standalone-sas", "what": "no sd2psx, the program on a drive the IGR can't start it from: the SAS package's screen says so",
-     "files": {"SD2Cloud/standalone.txt": b"x"}, "script": "SDDXC"},
+     "files": {"SD2Cloud/standalone.txt": b"x"}, "script": "SDDXDXC"},
     {"name": "sync-resolved", "what": "a card marked as resolved is left out of the automatic sync, until it is sent",
      "cards": CARDS, "files": {"SD2Cloud/state-debug.ini": RESOLVED}, "script": "BwC"},
     {"name": "card-sync-toggle", "what": "a card's sync turned off in its options, and on again", "cards": CARDS,
@@ -206,7 +216,7 @@ SCENARIOS = [
     # (a microSD that was in both devices has MemoryCards/PS2 and the MemCard PRO2's own PS2: which device it is in is
     # asked once. Told it is the MemCard PRO2, its card is the one listed; told in the settings it is the sd2psx, the three)
     {"name": "device-both", "what": "a microSD with both devices' cards: which device it is in is asked, and changed in the settings",
-     "cards": CARDS, "files": {"PS2/MemoryCard1/MemoryCard1-1.mc2": "game.mcd"}, "script": "DXXSDDDDXUXC"},
+     "cards": CARDS, "files": {"PS2/MemoryCard1/MemoryCard1-1.mc2": "game.mcd"}, "script": "DXXSDDDXXUXC"},
     # (on that microSD, with the sd2psx in the slot, R2 lists the MemCard PRO2's cards, and back: a save of the sd2psx's
     # first card copied into the MemCard PRO2's, from the list of cards; and one of the MemCard PRO2's card, marked
     # with its cards on the screen, pasted into the sd2psx's second card after R2 in that list. Nothing of them goes
@@ -307,9 +317,9 @@ SCENARIOS = [
     # (R2 on the summary: their removal from the card is asked, and X answers it)
     {"name": "split-there-delete", "what": "a card's saves split by game, on the game's card already: deleted from it after",
      "cards": CARDS, "script": "TDDDDDDXSX2XXC"},
-    # Settings (START), the fifth row: the size the sd2psx makes a game's first card of, written to its settings.ini
+    # Settings (START) > Cards: the size the sd2psx makes a game's first card of, written to its settings.ini
     {"name": "settings-card-size", "what": "the size of the sd2psx's new cards set to 32 MB in its settings.ini",
-     "cards": CARDS, "files": {".sd2psx/settings.ini": SD2PSX_SETTINGS}, "script": "SDDDDXDDXXC"},
+     "cards": CARDS, "files": {".sd2psx/settings.ini": SD2PSX_SETTINGS}, "script": "SDDDXXDDXXC"},
     {"name": "saves-by-name", "what": "a card's saves the oldest first, by name, and the newest first again: each time the options are closed", "cards": CARDS, "script": "XTDXOTDXOTDXOC"},
     {"name": "igr-no-account", "what": "started as after IGR with no Google account: it leaves at once", "cards": CARDS,
      "script": "I"},

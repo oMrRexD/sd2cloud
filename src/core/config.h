@@ -61,7 +61,13 @@ typedef struct {
     char vmc[VMC_KEYS][120];     /* [vmc] hdd, apa, mx4sio, usb, other ("" = none) */
     int library_drive;           /* [library] drive = yes: a sync sends the Library's new saves to Drive too, each by
                                     itself (the backup by save's way) */
+    int drive_layout;            /* [drive] layout: how the backups are kept on Drive (drivemap.h): 1 = the first layout,
+                                    2 = the second; 0 = not said (app/drive.c tells which, and writes it) */
+    int drive_asked;             /* [drive] asked = yes: the move to the second layout was offered once already */
+    int drive_moving;            /* [drive] moving = yes: that move was agreed to, and isn't over (it goes on at startup) */
 } config_t;
+#define DRIVE_FOLDER_OLD "PS2 Memory Card Backups"   /* the main folder's name in the first layout, by default */
+#define DRIVE_FOLDER_NEW "SD2Cloud"                  /* in the second */
 extern config_t cfg;
 extern int configExists;
 void config_read(void);                     /* no file = the defaults */

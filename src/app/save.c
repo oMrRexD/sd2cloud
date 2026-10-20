@@ -242,21 +242,27 @@ static void save_to_cloud(card_t *c, save_view_t *v)
     upload_screen(0, 1);
     backupCancelled = cancelLatched = 0;
     rootId[0] = 0;
+    drive_session_start();
     r = -1;
-    if (mcfs_export_psu(c->path, v->s.folder, &psu) == MCFS_OK && card_folder(c, folderId, sizeof(folderId)) == 0) {
+    if (drive_layout() == 2 && mcfs_export_psu(c->path, v->s.folder, &psu) == MCFS_OK)   /* (its card's own Saves) */
+        r = drive_folder_of(c, 1, v->s.folder, savesId, sizeof(savesId)) == 0 ? 1 : -1;
+    else if (drive_layout() == 1 && mcfs_export_psu(c->path, v->s.folder, &psu) == MCFS_OK &&
+             card_folder(c, folderId, sizeof(folderId)) == 0) {
         snprintf(key, sizeof(key), "%s/%s/Saves", cfg.drive_folder, c->folder);
         if ((cache = state_folder(key)) != NULL)
             snprintf(savesId, sizeof(savesId), "%s", cache);
-        if (google_folder("Saves", folderId, savesId, sizeof(savesId)) == 0) {
+        r = google_folder("Saves", folderId, savesId, sizeof(savesId)) == 0 ? 1 : -1;
+        if (r == 1)
             state_set_folder(key, savesId);
-            local_time(&when);
-            snprintf(name, sizeof(name), "%s %04d-%02d-%02d %02dh%02d.psu", v->s.folder, when.year, when.month, when.day, when.hour,
-                     when.minute);
-            snprintf(desc, sizeof(desc), "%s%s%s (%s) - " APP_NAME " " APP_VERSION, v->line1, v->line2[0] ? " " : "", v->line2, c->base);
-            snprintf(tag, sizeof(tag), "save:%.80s/%s", mcfs_slot_port(c->path) >= 0 ? memcard_id() : c->id, v->s.folder);
-            r = google_upload_buffer(savesId, name, desc, psu.data, psu.len, on_progress, id, sizeof(id), tag);
-            state_write();
-        }
+    }
+    if (r == 1) {   /* (its Saves folder found or made) */
+        local_time(&when);
+        snprintf(name, sizeof(name), "%s %04d-%02d-%02d %02dh%02d.psu", v->s.folder, when.year, when.month, when.day, when.hour,
+                 when.minute);
+        snprintf(desc, sizeof(desc), "%s%s%s (%s) - " APP_NAME " " APP_VERSION, v->line1, v->line2[0] ? " " : "", v->line2, c->base);
+        snprintf(tag, sizeof(tag), "save:%.80s/%s", mcfs_slot_port(c->path) >= 0 ? memcard_id() : c->id, v->s.folder);
+        r = google_upload_buffer(savesId, name, desc, psu.data, psu.len, on_progress, id, sizeof(id), tag);
+        state_write();
     }
     log_msg("save %s of %s to Drive (%u bytes): %d %s", v->s.folder, c->id, (unsigned)psu.len, r, googleError);
     buf_free(&psu);

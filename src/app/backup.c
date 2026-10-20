@@ -89,11 +89,14 @@ static void delete_old(const card_t *c, const char *folder, const char *newId)
     }
 }
 
-/* the main Drive folder and the card's folder in it, from the cache or found (created if missing). 0 = ok */
+/* the folder of a card's backups: in the first layout, its group's in the main folder, from the cache or found
+ * (created if missing); in the second, its own (drive.c). 0 = ok */
 int card_folder(const card_t *c, char *folderId, size_t size)
 {
     char key[200];
     const char *cache;
+    if (drive_layout() == 2)   /* (each card in a folder of its own, its group's in its device's: drive.c) */
+        return drive_folder_of(c, 0, NULL, folderId, size);
     if (!rootId[0]) {
         cache = state_folder(cfg.drive_folder);
         snprintf(rootId, sizeof(rootId), "%s", cache ? cache : "");
@@ -230,8 +233,9 @@ void run_backup(int mode, int rotate)
         failed++;
         return;
     }
-    /* the main folder is checked once per run (it may have been deleted on Drive) */
+    /* the main folder is checked once per run (it may have been deleted on Drive), and so are the second layout's */
     rootId[0] = 0;
+    drive_session_start();
 
     sync_list_start(mode);
     totalN = nSync;

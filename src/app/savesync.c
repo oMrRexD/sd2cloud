@@ -61,11 +61,14 @@ static int signatures(const card_t *c, int n)
     return 0;
 }
 
-/* the card's Saves folder on Drive (folderId = the card's folder), found or made */
-static int saves_folder(const card_t *c, const char *folderId, char *savesId, size_t size)
+/* the card's Saves folder on Drive (folderId = the card's folder, in the first layout), found or made. save = the
+ * save's folder: the Library's go into their game's (the second layout) */
+static int saves_folder(const card_t *c, const char *save, const char *folderId, char *savesId, size_t size)
 {
     char key[200];
     const char *cache;
+    if (drive_layout() == 2)
+        return drive_folder_of(c, 1, save, savesId, size);
     snprintf(key, sizeof(key), "%s/%s/Saves", cfg.drive_folder, c->folder);
     savesId[0] = 0;
     if (library_path(c->path)) {   /* (the Library's saves: in its own folder, "Library", which has nothing else) */
@@ -152,7 +155,8 @@ int saves_backup(card_t *c, const char *folderId)
         save_tag(c, sv[i].folder, tag, sizeof(tag));
         r = 0;
         if (!DRY) {
-            if (!savesId[0] && saves_folder(c, folderId, savesId, sizeof(savesId)) != 0)
+            /* (once for the card; the Library's, for each save's game) */
+            if ((!savesId[0] || library_path(c->path)) && saves_folder(c, sv[i].folder, folderId, savesId, sizeof(savesId)) != 0)
                 return -1;
             local_time(&when);
             snprintf(name, sizeof(name), "%s %04d-%02d-%02d %02dh%02dm%02d.psu", sv[i].folder, when.year, when.month, when.day,
@@ -207,7 +211,7 @@ void save_versions_screen(card_t *c, save_view_t *v)
     }
     message(0, NULL, COLOR_TEXT, T(T_HIST_LOADING));
     save_tag(c, v->s.folder, tag, sizeof(tag));
-    n = card_folder(c, folderId, sizeof(folderId)) == 0 && saves_folder(c, folderId, savesId, sizeof(savesId)) == 0
+    n = card_folder(c, folderId, sizeof(folderId)) == 0 && saves_folder(c, v->s.folder, folderId, savesId, sizeof(savesId)) == 0
             ? google_list(savesId, tag, list, 200) : -1;
     if (n < 0) {
         snprintf(t, sizeof(t), "%s %s", T(T_ERR_INTERNET), googleError);

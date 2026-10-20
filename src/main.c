@@ -102,6 +102,7 @@ int main(int argc, char *argv[])
     ui_unlock();
     state_read();
     library_start();
+    drive_layout_decide();   /* (which layout the backups are kept in on Drive: before the automatic sync too) */
     google_set_poll(watch_cancel);
     vmc_places_init();
     if (igrMode)
@@ -112,6 +113,7 @@ int main(int argc, char *argv[])
         google_forget();
         state_read();
         library_start();
+        drive_layout_decide();
         ui_lock();   /* (the screen is drawn meanwhile: what language reads, it reads locked) */
         i18n_select(cfg.language);
         i18n_device(dev->name);   /* (it may be another device, or the user said it is) */

@@ -159,6 +159,11 @@ static void scene_menu(float t)
         legend_t l[4] = {{BUTTON_CIRCLE, T(T_MENU_EXIT)}, {BUTTON_CROSS, T(T_OPEN)}, {BUTTON_SELECT, T(T_TOOLS)},
                          {BUTTON_START, T(T_SETTINGS)}};
         look_legend(l, 4, 2);
+        if (tabs_on_cloud(&menu.g)) {   /* (Google Drive: what it has there) */
+            panel_title(T(T_SET_G_DRIVE));
+            ui_paragraph_center(FONT_SMALL, CARD_CX, CARD_Y + 70, LOOK_CARD_W + 32, COLOR_DIM, T(T_CLOUD_HINT));
+            return;
+        }
         if (tabs_device(&menu.g) < 0) {   /* (the Memory Card) */
             memcard_hint(tabs_memcard_port(&menu.g));
             return;
@@ -391,9 +396,12 @@ void manual(void)
 #ifdef DEBUG_BUILD
     if (debug_take('A'))   /* the questions after the first sign-in, without signing in */
         offer_auto_sync();
+    if (debug_take('d'))   /* Google Drive in the Files group, with made-up folders (PCSX2 has no Google account) */
+        cloudFake = 1;
 #endif
     if (google_has_access() && state_empty())
         first_run();
+    drive_offer_startup();   /* (backups kept in the first layout on Drive: the move to the second, offered once) */
     remember_unseen();
     templates_startup();   /* a game card that lacks the main template (the card of a new game): said now */
     /* the cursor starts on the first card that needs a backup, in its group */
@@ -402,6 +410,7 @@ void manual(void)
     ui_lock();
     tabs_init(&menu.g, NULL, 1);
     menu.g.library = 1;
+    menu.g.cloud = 1;
     menu.g.all = 1;
     menu.g.create = 1;   /* (the Cards group starts with "New card") */
     tabs_show(&menu.g, menu.g.tab);
@@ -481,7 +490,9 @@ void manual(void)
             ui_unlock();
         } else if ((b & PAD_CROSS) && menu.g.tab == TAB_FILES) {
             sound_play(SND_CONFIRM);
-            if (tabs_device(&menu.g) < 0) {
+            if (tabs_on_cloud(&menu.g))
+                cloud_screen();
+            else if (tabs_device(&menu.g) < 0) {
                 memcard_pick(tabs_memcard_port(&menu.g));
                 memcard_screen();
             }

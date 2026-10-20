@@ -15,5 +15,8 @@ int js_get_string(const char *txt, size_t n, const char *key, char *out, size_t 
 int js_get_number(const char *txt, size_t n, const char *key, long long *out);
 int js_get_object(const char *txt, size_t n, const char *key, const char **start, size_t *len);   /* nested object */
 int js_each(const char *txt, size_t n, const char *key, void (*cb)(const char *obj, size_t n, void *u), void *u);
+/* text for inside a JSON string: quotes and backslashes escaped, control characters dropped; what doesn't fit is
+ * left out a whole character at a time (half of a kanji's UTF-8 would make the JSON invalid) */
+void js_escape(const char *s, char *out, size_t size);
 
 #endif
