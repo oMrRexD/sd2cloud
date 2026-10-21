@@ -291,17 +291,11 @@ static int helper_screen(void)
         helper_on_card(T_HELPER_TITLE);
         return 0;
     }
-    if (standalone && !appOnCard) {   /* no sd2psx, the program on a drive: OPL's IGR runs the helper next to it, from a
-                                         USB drive only (it reads the memory card and USB drives alone) */
-        char path[260];
-        const char *rest = strchr(appDir, ':');
+    if (standalone && !appOnCard && !helper_present()) {   /* no sd2psx, and the program where the package can't carry
+                                                              the drivers of (it is installed as anywhere else when it
+                                                              can: helper_point) */
         dlg_new(COLOR_TITLE, T(T_HELPER_TITLE));
-        if (device_of(appPath) == DEV_USB && rest) {
-            snprintf(path, sizeof(path), "mass:%sSD2CLOUD-IGR.ELF", rest + 1);
-            dlg_line(FONT_TEXT, COLOR_TEXT, 6, T(T_HELPER_ALONE_USB));
-            dlg_line(FONT_TEXT, COLOR_ACCENT, 0, path);
-        } else
-            dlg_line(FONT_TEXT, COLOR_TEXT, 0, T(T_HELPER_ALONE_NONE));
+        dlg_line(FONT_TEXT, COLOR_TEXT, 0, T(T_HELPER_ALONE_NONE));
         next.wide = 1;
         dlg_buttons(BUTTON_CIRCLE, T_BACK, 0, 0);
         dlg_show();
@@ -336,8 +330,9 @@ static int helper_screen(void)
     dlg_line(FONT_TEXT, COLOR_TEXT, 10, T(T_HELPER_ABOUT));
     dlg_line(FONT_TEXT, COLOR_TEXT, 2, T(T_HELPER_WHERE));
     dlg_line(FONT_TEXT, COLOR_ACCENT, 4, place);
-    dlg_line(FONT_TEXT, COLOR_TEXT, 10, helper_space_text());
-    dlg_line(FONT_SMALL, COLOR_DIM, 0, T(T_HELPER_AUTOBOOT));
+    dlg_line(FONT_TEXT, COLOR_TEXT, standalone ? 0 : 10, helper_space_text());
+    if (!standalone)   /* (the sd2psx's Autoboot: with none, nothing of it) */
+        dlg_line(FONT_SMALL, COLOR_DIM, 0, T(T_HELPER_AUTOBOOT));
     dlg_buttons(BUTTON_CIRCLE, T_BACK, BUTTON_CROSS, T_HELPER_INSTALL);
     next.wide = 1;
     dlg_show();
@@ -886,11 +881,11 @@ void offer_auto_sync(void)
         helper_on_card(T_IGR_TITLE);
         return;
     }
-    if (helperState == HELPER_SAME || helperState == HELPER_NO_FILE)
+    if (helperState == HELPER_SAME || helperState == HELPER_NO_FILE || !helper_present())
         return;
     dlg_new(COLOR_TITLE, T(T_IGR_TITLE));
     dlg_line(FONT_TEXT, COLOR_TEXT, 10, T(T_AUTO_ASK));
-    dlg_line(FONT_SMALL, COLOR_DIM, 4, T(T_AUTO_WHERE));
+    dlg_line(FONT_SMALL, COLOR_DIM, 4, T(standalone ? T_AUTO_WHERE_ALONE : T_AUTO_WHERE));
     dlg_line(FONT_SMALL, COLOR_DIM, 0, helper_space_text());
     dlg_buttons(BUTTON_CIRCLE, T_LATER, BUTTON_CROSS, T_AUTO_ON);
     next.wide = 1;

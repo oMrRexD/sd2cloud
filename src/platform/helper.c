@@ -6,7 +6,7 @@
  * The helper only loads the mmceman and runs SD2Cloud from the microSD with -igr.
  *
  * The helper finds SD2Cloud by the path SD2Cloud keeps in its own settings (sd2cloud.ini, "app_path"), so the
- * program itself never goes to the memory card.
+ * program itself never goes to the memory card. With no sd2psx, by what the folder itself says (helper_point).
  *
  * It writes through mcman (the same path games use to save), only after the user confirms, and reads it back.
  */
@@ -209,6 +209,7 @@ extern unsigned int size_card_igr_elf, size_card_open_elf, size_card_icon_sys, s
 #define LEGACY      LEGACY_DIR "/SD2CLOUD-IGR.ELF"
 
 int helperLegacy;
+static int alonePort = -1;   /* with no sd2psx: the memory card in use, the first slot that has one (mc_slot) */
 
 const char *helper_path(void) { return CARD_HELPER; }
 const char *helper_place(void) { return CARD_DIR; }
@@ -289,6 +290,7 @@ int helper_status(void)
 {
     int same, old;
     helperLegacy = 0;
+    alonePort = -1;   /* (with no sd2psx, the slots asked again: a card may have been put in or taken out) */
     if (appOnCard)   /* the helper OPL runs is the one next to the program: there, it is the right one */
         return card_app_helper() ? HELPER_SAME : HELPER_NO_FILE;
     if (memcard_ready(mc_slot()) != 0)
@@ -344,17 +346,63 @@ int helperNeedKb, helperFreeKb;
 /* a file in 1 KB clusters, and a few more for its folder and the entries in it */
 static int need_kb(size_t len) { return (int)((len + 1023) / 1024) + 4; }
 
-/* what installing takes: the whole folder */
+/* -------- With no sd2psx, the program on a USB drive, an MX4SIO or the hard disk: the helper and the shortcut can't
+ * read that device by themselves. The folder says where the program is (APP.TXT: its path, as appPath has it) and
+ * carries that device's drivers (<module>.irx), which they read from the card and load (igr.c, look_carried) */
+#define CARD_WHERE CARD_DIR "/APP.TXT"
+
+static int point_drivers(const char *name[4], const unsigned char *data[4], unsigned int size[4])
+{
+    return standalone && !appOnCard ? drivers_of(device_of(appPath), name, data, size) : 0;
+}
+
+/* what installing takes: the whole folder (and, with no sd2psx, where the program is and its device's drivers) */
 static int install_kb(void)
 {
     folder_file_t f[FOLDER_FILES];
     buffer_t title = {0};
-    int i, kb = 6;
+    const char *name[4];
+    const unsigned char *data[4];
+    unsigned int size[4];
+    int i, kb = 6, n = point_drivers(name, data, size);
     folder_list(f, &title);
     for (i = 0; i < FOLDER_FILES; i++)
         kb += (int)((f[i].len + 1023) / 1024);
+    for (i = 0; i < n; i++)
+        kb += (int)((size[i] + 1023) / 1024);
     buf_free(&title);
-    return kb;
+    return kb + (n ? 1 : 0);
+}
+
+/* the folder on the memory card in use, told where the program is, with its device's drivers: what isn't so already
+ * is written. Only a folder that is there (installed by SD2Cloud, or imported by hand from the .psu) */
+void helper_point(void)
+{
+    const char *name[4];
+    const unsigned char *data[4];
+    unsigned int size[4];
+    char path[60], where[sizeof(appPath) + 4];
+    int n = point_drivers(name, data, size), i, r = 0, wrote = 0, port;
+    if (!n)
+        return;
+    port = mc_slot();
+    if (memcard_ready(port) != 0 || (mc_size(CARD_HELPER) < 0 && mc_size(CARD_OPEN) < 0))
+        return;
+    snprintf(where, sizeof(where), "%s\r\n", appPath);
+    if (mc_same(CARD_WHERE, (const unsigned char *)where, (int)strlen(where)) != 1) {
+        r = mc_write_file(port, CARD_WHERE, (const unsigned char *)where, (int)strlen(where));
+        wrote++;
+    }
+    for (i = 0; i < n && r == 0; i++) {
+        snprintf(path, sizeof(path), CARD_DIR "/%s.irx", name[i]);
+        if (mc_size(path) != (int)size[i]) {   /* (the same size: this build's, the drivers change with the SDK only) */
+            r = mc_write_file(port, path, data[i], (int)size[i]);
+            wrote++;
+        }
+    }
+    if (wrote || r)
+        log_msg("helper: the folder in slot %d told where the program is (%s), with %d driver(s): %d file(s) written, %d",
+                port + 1, appPath, n, wrote, r);
 }
 
 /* the memory card's free space plus what the folder has now, which gives its room back when it is written again, in
@@ -383,7 +431,15 @@ int helper_space(void)
 
 /* ------------------------------------------------------------ a save, into the card in a slot */
 
-int mc_slot(void) { return strncmp(sdRoot, "mmce", 4) ? 0 : sdRoot[4] - '0'; }
+int mc_slot(void)
+{
+    if (standalone && !appOnCard) {
+        if (alonePort < 0)
+            alonePort = mc_card_in(0) < 0 && mc_card_in(1) >= 0 ? 1 : 0;
+        return alonePort;
+    }
+    return strncmp(sdRoot, "mmce", 4) ? 0 : sdRoot[4] - '0';
+}
 
 int mc_has_folder(int port, const char *folder)
 {
@@ -613,6 +669,8 @@ int helper_install(void)
     buf_free(&title);
     folder_date();
     log_msg("helper: %s", r == 0 ? "installed and verified" : cardDropped ? "FAILED: the device dropped the card" : "FAILED");
+    if (r == 0)   /* (with no sd2psx: where the program is, and its device's drivers) */
+        helper_point();
     return r == 0 ? 0 : cardDropped ? -4 : r;
 }
 
@@ -640,8 +698,12 @@ int helper_present(void)
 {
     if (appOnCard)
         return card_app_helper();
-    if (standalone)   /* (no sd2psx, and the program on another device: the helper wouldn't find it) */
-        return 0;
+    if (standalone) {   /* (no sd2psx: the program on a device the folder can carry the drivers of, or none it can find) */
+        const char *name[4];
+        const unsigned char *data[4];
+        unsigned int size[4];
+        return point_drivers(name, data, size) > 0;
+    }
     /* the helper only starts SD2Cloud from the microSD: with this copy started from another device and none there,
      * installing it would do nothing */
     return 1;

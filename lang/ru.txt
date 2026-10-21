@@ -370,10 +370,6 @@ T_RET_OSD = Браузер PS2
 T_EXIT_BROWSER = Вернуться в браузер
 # One line. English: Run an ELF...
 T_EXIT_FILES = Запустить ELF...
-# Up to 3 lines. English: sd2psx disconnected
-T_DEVICE_GONE = sd2psx отключён
-# Up to 3 lines. English: Reconnect the sd2psx to continue.
-T_DEVICE_GONE_TEXT = Подключите sd2psx снова, чтобы продолжить.
 # Button. English: Run
 T_RUN = Запустить
 # One line. English: Start application
@@ -796,7 +792,7 @@ T_MIGRATE_OFF = Пропущено
 T_MIGRATE_NEW = Новая карта (%d МБ)
 # Up to 3 lines. English: This card has no saves to convert.
 T_MIGRATE_NONE = На этой карте нет сохранений для преобразования.
-# One line. English: Selected: %d saves (%d games) · No game ID: %d
+# One line. English: Selected saves: %d · Games: %d · No game ID: %d
 T_MIGRATE_SUMMARY = Отмечено сохранений: %d (игр: %d) · Без ID игры: %d
 # Button. English: Size
 T_MIGRATE_SIZE = Размер
@@ -934,8 +930,6 @@ T_SAVE_VERSION_FAILED = Не удалось восстановить верси�
 T_MEMCARD_SLOT = Карта памяти %d
 # Up to 5 lines. English: Move saves between the Memory Cards and the other cards, and back them up to Google Drive.
 T_MEMCARD_HINT_ALONE = Переносите сохранения между картами памяти и другими картами и делайте копии в Google Drive.
-# Up to 4 lines. English: Without an sd2psx, the automatic sync works through OPL's IGR with the helper in SD2Cloud's folder on this USB drive. In OPL's settings, set the IGR path to:
-T_HELPER_ALONE_USB = Без sd2psx автосинхронизация работает через IGR в OPL с помощником из папки SD2Cloud на этом USB-накопителе. В настройках OPL укажите путь IGR:
 # Up to 5 lines. English: Without an sd2psx, OPL's IGR only starts programs from a memory card or a USB drive. For the automatic sync, install SD2Cloud on a memory card (SAS package) or use it from a USB drive.
 T_HELPER_ALONE_NONE = Без sd2psx IGR в OPL запускает программы только с карты памяти или USB-накопителя. Для автосинхронизации установите SD2Cloud на карту памяти (пакет SAS) или запускайте его с USB-накопителя.
 # Up to 3 lines. English: Choose an ELF...
@@ -1218,41 +1212,83 @@ T_SET_LIBRARY_DRIVE = Библиотека на Диске
 T_LIBRARY_DRIVE_NOTE = Каждая синхронизация также отправляет новые сохранения Библиотеки в Google Диск, по одному.
 # One line. English: Several games (%d)
 T_LIBRARY_GAMES = Несколько игр (%d)
+# One line. English: Google Drive
 T_SET_G_DRIVE = Google Drive
+# One line. English: Cards
 T_SET_G_CARDS = Карты
+# One line. English: Updates
 T_SET_G_UPDATES = Обновления
+# One line. English: Saves
 T_DRIVE_SAVES = Сохранения
+# One line. English: Drive organization
 T_SET_DRIVE_LAYOUT = Структура на Drive
+# One line. English: Previous
 T_DRIVE_LAYOUT_OLD = Прежняя
+# One line. English: New organization on Google Drive
 T_DRIVE_NEW_TITLE = Новая структура на Google Drive
+# Up to 5 lines. English: Backups are now kept in folders by device, game and card, each card with its own saves. The ones already on Drive are moved without being uploaded again; with many backups, it can take a few minutes.
 T_DRIVE_NEW_TEXT = Резервные копии хранятся в папках по устройствам, играм и картам, у каждой карты свои сохранения. Имеющиеся копии переносятся без повторной загрузки; если их много, это может занять несколько минут.
+# Up to 2 lines. English: To do it later: Settings > Google Drive > Drive organization.
 T_DRIVE_NEW_LATER = Чтобы сделать это позже: Настройки > Google Drive > Структура на Drive.
+# Up to 2 lines. English: If it stops halfway, it carries on the next time SD2Cloud starts.
 T_DRIVE_NEW_NOTE = Если процесс прервётся, он продолжится при следующем запуске SD2Cloud.
+# Button. English: Organize
 T_DRIVE_ORGANIZE = Упорядочить
+# One line. English: Reading Google Drive...
 T_DRIVE_MOVE_READING = Чтение Google Drive...
+# One line. English: Creating folders: %d of %d
 T_DRIVE_MOVE_FOLDERS = Создание папок: %d из %d
+# One line. English: Moving files: %d of %d
 T_DRIVE_MOVE_FILES = Перемещение файлов: %d из %d
+# Up to 2 lines. English: Removing the old folders: %d of %d
 T_DRIVE_MOVE_TIDY = Удаление старых папок: %d из %d
+# Up to 2 lines. English: %d files couldn't be moved.
 T_DRIVE_MOVE_LEFT = Не удалось переместить файлов: %d.
+# Up to 3 lines. English: The organization didn't finish. It carries on the next time SD2Cloud starts.
 T_DRIVE_MOVE_FAILED = Упорядочивание не завершено. Оно продолжится при следующем запуске SD2Cloud.
+# Up to 2 lines. English: Done: the backups are in the new organization.
 T_DRIVE_MOVE_DONE = Готово: резервные копии перенесены в новую структуру.
+# Up to 5 lines. English: The backups and saves SD2Cloud sent to Drive. Browse its folders and download what you need.
 T_CLOUD_HINT = Копии и сохранения, отправленные SD2Cloud на Drive. Открывайте папки и скачивайте нужное.
+# Up to 2 lines. English: There are no backups on Google Drive yet.
 T_CLOUD_EMPTY = На Google Drive пока нет резервных копий.
+# Button. English: Download
 T_DOWNLOAD = Скачать
+# Button. English: Save here
 T_SAVE_HERE = Сохранить сюда
+# One line. English: Save to
 T_CLOUD_SAVE_TO = Сохранить в
+# One line. English: Downloading: %s of %s
 T_CLOUD_DOWNLOADING = Загрузка: %s из %s
+# Up to 3 lines. English: Saved in %s
 T_CLOUD_SAVED = Сохранено в %s
+# Up to 2 lines. English: The file couldn't be downloaded.
 T_CLOUD_DL_FAILED = Не удалось скачать файл.
+# Up to 3 lines. English: This folder already has a file named "%s". Replace it?
 T_CLOUD_EXISTS = В этой папке уже есть файл «%s». Заменить его?
+# One line. English: Delete from Drive
 T_CLOUD_DELETE = Удалить с Drive
+# Up to 3 lines. English: Delete "%s" from Google Drive?
 T_CLOUD_DELETE_ASK = Удалить «%s» с Google Drive?
+# Up to 2 lines. English: It goes to Drive's trash, where it can be restored for 30 days.
 T_CLOUD_DELETE_NOTE = Он попадёт в корзину Drive, откуда его можно восстановить в течение 30 дней.
+# Up to 2 lines. English: Deleted from Google Drive.
 T_CLOUD_DELETED = Удалено с Google Drive.
+# Up to 2 lines. English: The file couldn't be deleted.
 T_CLOUD_DELETE_FAILED = Не удалось удалить файл.
+# Up to 5 lines. English: The card is saved as a file in a folder of this device, in the format you choose.
 T_INSTALL_FILES_HINT = Карта сохраняется в папку этого устройства в виде файла выбранного формата.
+# One line. English: .zip (the original file)
 T_FORMAT_ORIGINAL = .zip (исходный файл)
+# Up to 2 lines. English: Save the card as %s?
 T_INSTALL_FILE_ASK = Сохранить карту как %s?
+# Button. English: Save
 T_SAVE_YES = Сохранить
+# Up to 2 lines. English: Card saved: %s
 T_INSTALL_FILE_DONE = Карта сохранена: %s
+# One line. English: Writing the file...
 T_WRITING_FILE = Запись файла...
+# Up to 2 lines. English: Sync the memory card now? (%s, approx. %d min)
+T_FIRST_QUESTION_ONE = Синхронизировать карту памяти сейчас? (%s, около %d мин)
+# Up to 2 lines. English: The SAS package will be installed on the memory card in use, with what it needs to open SD2Cloud from where it is.
+T_AUTO_WHERE_ALONE = Пакет SAS будет установлен на используемую карту памяти вместе с драйверами устройства с SD2Cloud.

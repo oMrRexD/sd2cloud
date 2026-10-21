@@ -328,6 +328,8 @@ void manual(void)
 #endif
     helperState = helper_status();
     helper_follow();
+    if (helperState == HELPER_SAME || helperState == HELPER_DIFFERENT)   /* (no sd2psx: where the program is, for it) */
+        helper_point();
     find_active();
 #ifdef DEBUG_BUILD
     {   /* checks the in-use detection on PCSX2: the root signature of the card in slot 1 against each .mcd's */
@@ -396,6 +398,8 @@ void manual(void)
 #ifdef DEBUG_BUILD
     if (debug_take('A'))   /* the questions after the first sign-in, without signing in */
         offer_auto_sync();
+    if (debug_take('r'))   /* the first sync's question, without an account (X on it fails at the sign-in) */
+        first_run();
     if (debug_take('d'))   /* Google Drive in the Files group, with made-up folders (PCSX2 has no Google account) */
         cloudFake = 1;
 #endif
@@ -412,7 +416,7 @@ void manual(void)
     menu.g.library = 1;
     menu.g.cloud = 1;
     menu.g.all = 1;
-    menu.g.create = 1;   /* (the Cards group starts with "New card") */
+    menu.g.create = 1;   /* (the Cards group starts with "New card": with no sd2psx, no Cards group, nor the row) */
     tabs_show(&menu.g, menu.g.tab);
     if (i < nCards) {
         tabs_show(&menu.g, tab_of(&cards[i]));
@@ -424,9 +428,10 @@ void manual(void)
                          (device_other() ? VIEW_KEYS : 0);
         ui_scene(scene_menu);
 #ifdef DEBUG_BUILD
-        if (debug_take('G')) {
-            debugGone = now_ms() + 3000;
-            device_lost();
+        if (debug_take('G') || (debugUnplugged && debug_take('p'))) {   /* (the sd2psx taken out, and put back: PCSX2
+                                                                           has none, the watch is skipped) */
+            debugUnplugged = !debugUnplugged;
+            device_changed();
         }
 #endif
         if (cardsUnsorted)   /* a card made for a save: into its place, now that nothing holds on to the others */

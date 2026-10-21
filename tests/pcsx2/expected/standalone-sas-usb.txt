@@ -1,0 +1,24 @@
+# log
+SD2Cloud <version> -- program in host:APPS/SD2Cloud/ (usb:/APPS/SD2Cloud/SD2CLOUD.ELF), data in host:SD2Cloud/, manual
+settings: [drive] layout = 2 (0)
+0 card(s) on the microSD
+[script] S
+0 programs in APPS
+[script] D
+[script] D
+[script] X
+[script] D
+[script] X
+[script] X
+[script] X
+[script] X
+[script] D
+[script] X
+[script] X
+[script] X
+(end: capture)
+
+# files
+80b1aff825eee02c92e72092bc8923e4c41713312f409b67cbbd8f27d384bc4f  SD2Cloud/sd2cloud.ini
+2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881  SD2Cloud/standalone.txt
+9e29c35c8782dc7dc78575e9890b936bb1fb91b8754b506dfa27bdc3135a48dc  SD2Cloud/started-from.txt

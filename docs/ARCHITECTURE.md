@@ -85,9 +85,11 @@ the device, and reads the settings. Then one of two things happens:
 
 With no sd2psx in either slot (`standalone`), the program works from the drive it was started from: `standalone_root()`
 loads that drive's drivers (`platform/drives.c`) and makes its root what the microSD's would be (on a memory card,
-the SAS package's folder holds the data). No card is ever the one in a slot; the Memory Cards of both slots are in the
-Files group (`memcard_pick`), and the texts that say MMCE name the drive (`i18n_storage`). The debug build tries it on
-PCSX2 with `SD2Cloud/standalone.txt`.
+the SAS package's folder holds the data). A device's folders on that drive are no cards (`cards_scan`), and there is no
+Cards group; the Memory Cards of both slots are in the Files group (`memcard_pick`), their saves sent each by itself
+(the backup by save is on unless the settings say no), and the texts that say MMCE name the drive (`i18n_storage`).
+The SAS package on the memory card is told where the program is, with that drive's drivers (`helper_point()`, read by
+the helper and the shortcut in `igr/igr.c`). The debug build tries it on PCSX2 with `SD2Cloud/standalone.txt`.
 
 ## What a backup does
 
@@ -111,7 +113,8 @@ without drawing anything itself: it updates a few variables and calls a progress
 
 The main thread waits for the controller in `wait_button()` and `wait_nav()` (`platform/input.c`). While it waits,
 `idleHook` runs: that is how `device_watch()` (`app/active.c`) notices the card changed on the device itself, or the
-device taken out.
+device taken out or put back: then `device_changed()` looks at the slots again (`system_redetect()`) and everything is
+read again from `reloadPoint` in `main.c`, as when the program starts.
 
 Every text on screen has its id in `ui/messages.def` and its text in each file of `lang/` (one per language,
 `en.txt` the original). The Makefile builds all of them into the program and lists them in `langs.c`; `ui/i18n.c`

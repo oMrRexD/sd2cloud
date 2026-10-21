@@ -219,6 +219,21 @@ SCENARIOS = [
      "files": {"SD2Cloud/standalone.txt": b"x"}, "memcard": "memcard.ps2", "script": ">DDDXC"},
     {"name": "standalone-sas", "what": "no sd2psx, the program on a drive the IGR can't start it from: the SAS package's screen says so",
      "files": {"SD2Cloud/standalone.txt": b"x"}, "script": "SDDXDXC"},
+    # (a device's folders on the drive, a copy of an sd2psx's microSD: no cards in use, only files; no Cards group)
+    {"name": "standalone-device-folders", "what": "no sd2psx, the drive with an sd2psx's folders: no cards listed, the Files group first",
+     "files": {"SD2Cloud/standalone.txt": b"x", "MemoryCards/PS2/Card1/Card1-1.mcd": "game.mcd"}, "memcard": "memcard.ps2",
+     "script": "C"},
+    # (the backup by save, on by itself with no sd2psx: the first sync counts the Memory Cards in the slots)
+    {"name": "standalone-first-run", "what": "no sd2psx: the first sync offers the Memory Cards' saves",
+     "files": {"SD2Cloud/standalone.txt": b"x"}, "memcard": "memcard.ps2", "script": "rOC"},
+    # (on a USB drive, as far as the program is told: the SAS package carries where it is and that device's drivers.
+    # Then uninstalled, as the emulator's memory card in slot 1 was)
+    {"name": "standalone-sas-usb", "what": "no sd2psx, the program on a USB drive: the SAS package installed with where it is and the drive's drivers",
+     "files": {"SD2Cloud/standalone.txt": b"x", "SD2Cloud/started-from.txt": b"usb:/APPS/SD2Cloud/SD2CLOUD.ELF"},
+     "script": "SDDXDXXXXDXXXC"},
+    # (the sd2psx taken out while the program is open, "G", and put back, "p": the screens follow, with no question)
+    {"name": "device-unplugged", "what": "the sd2psx taken out and put back with the program open: no cards, then the cards again",
+     "cards": CARDS, "memcard": "memcard.ps2", "script": "GpC"},
     {"name": "sync-resolved", "what": "a card marked as resolved is left out of the automatic sync, until it is sent",
      "cards": CARDS, "files": {"SD2Cloud/state-debug.ini": RESOLVED}, "script": "BwC"},
     {"name": "card-sync-toggle", "what": "a card's sync turned off in its options, and on again", "cards": CARDS,

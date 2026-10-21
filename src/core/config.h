@@ -39,7 +39,8 @@ typedef struct {
     char igr_return[200];
     char igr_name[64];           /* [igr] name: what to call the program in igr_return on screen ("" = by its path) */
     int save_backup;             /* [cards] saves = yes: each save that changed is sent by itself too, with its versions
-                                    (and the Memory Card's, by the automatic sync) */
+                                    (and the Memory Card's, by the automatic sync). Not said: yes with no device in the
+                                    slots (the Memory Card's saves are what there is to sync), no with one */
     int no_auto_sync;            /* [igr] auto_sync = no: IGR goes straight to igr_return, without syncing */
     char igr_auto[200];          /* [app] igr_auto: what "auto" in igr_return led to, for the IGR helper */
     int igr_settle, igr_summary; /* seconds */

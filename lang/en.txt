@@ -373,10 +373,6 @@ T_RET_OSD = PS2 Browser
 T_EXIT_BROWSER = Return to Browser
 # One line.
 T_EXIT_FILES = Run an ELF...
-# Up to 3 lines.
-T_DEVICE_GONE = sd2psx disconnected
-# Up to 3 lines.
-T_DEVICE_GONE_TEXT = Reconnect the sd2psx to continue.
 # Button.
 T_RUN = Run
 # One line.
@@ -800,7 +796,7 @@ T_MIGRATE_NEW = New card (%d MB)
 # Up to 3 lines.
 T_MIGRATE_NONE = This card has no saves to convert.
 # One line.
-T_MIGRATE_SUMMARY = Selected: %d saves (%d games) · No game ID: %d
+T_MIGRATE_SUMMARY = Selected saves: %d · Games: %d · No game ID: %d
 # Button.
 T_MIGRATE_SIZE = Size
 # Button.
@@ -937,8 +933,6 @@ T_SAVE_VERSION_FAILED = Unable to restore the version.
 T_MEMCARD_SLOT = Memory Card %d
 # Up to 5 lines.
 T_MEMCARD_HINT_ALONE = Move saves between the Memory Cards and the other cards, and back them up to Google Drive.
-# Up to 4 lines.
-T_HELPER_ALONE_USB = Without an sd2psx, the automatic sync works through OPL's IGR with the helper in SD2Cloud's folder on this USB drive. In OPL's settings, set the IGR path to:
 # Up to 5 lines.
 T_HELPER_ALONE_NONE = Without an sd2psx, OPL's IGR only starts programs from a memory card or a USB drive. For the automatic sync, install SD2Cloud on a memory card (SAS package) or use it from a USB drive.
 # Up to 3 lines.
@@ -1221,41 +1215,83 @@ T_SET_LIBRARY_DRIVE = Library on Drive
 T_LIBRARY_DRIVE_NOTE = Each sync also sends the Library's new saves to Google Drive, one by one.
 # One line.
 T_LIBRARY_GAMES = Several games (%d)
+# One line.
 T_SET_G_DRIVE = Google Drive
+# One line.
 T_SET_G_CARDS = Cards
+# One line.
 T_SET_G_UPDATES = Updates
+# One line.
 T_DRIVE_SAVES = Saves
+# One line.
 T_SET_DRIVE_LAYOUT = Drive organization
+# One line.
 T_DRIVE_LAYOUT_OLD = Previous
+# One line.
 T_DRIVE_NEW_TITLE = New organization on Google Drive
+# Up to 5 lines.
 T_DRIVE_NEW_TEXT = Backups are now kept in folders by device, game and card, each card with its own saves. The ones already on Drive are moved without being uploaded again; with many backups, it can take a few minutes.
+# Up to 2 lines.
 T_DRIVE_NEW_LATER = To do it later: Settings > Google Drive > Drive organization.
+# Up to 2 lines.
 T_DRIVE_NEW_NOTE = If it stops halfway, it carries on the next time SD2Cloud starts.
+# Button.
 T_DRIVE_ORGANIZE = Organize
+# One line.
 T_DRIVE_MOVE_READING = Reading Google Drive...
+# One line.
 T_DRIVE_MOVE_FOLDERS = Creating folders: %d of %d
+# One line.
 T_DRIVE_MOVE_FILES = Moving files: %d of %d
+# Up to 2 lines.
 T_DRIVE_MOVE_TIDY = Removing the old folders: %d of %d
+# Up to 2 lines.
 T_DRIVE_MOVE_LEFT = %d files couldn't be moved.
+# Up to 3 lines.
 T_DRIVE_MOVE_FAILED = The organization didn't finish. It carries on the next time SD2Cloud starts.
+# Up to 2 lines.
 T_DRIVE_MOVE_DONE = Done: the backups are in the new organization.
+# Up to 5 lines.
 T_CLOUD_HINT = The backups and saves SD2Cloud sent to Drive. Browse its folders and download what you need.
+# Up to 2 lines.
 T_CLOUD_EMPTY = There are no backups on Google Drive yet.
+# Button.
 T_DOWNLOAD = Download
+# Button.
 T_SAVE_HERE = Save here
+# One line.
 T_CLOUD_SAVE_TO = Save to
+# One line.
 T_CLOUD_DOWNLOADING = Downloading: %s of %s
+# Up to 3 lines.
 T_CLOUD_SAVED = Saved in %s
+# Up to 2 lines.
 T_CLOUD_DL_FAILED = The file couldn't be downloaded.
+# Up to 3 lines.
 T_CLOUD_EXISTS = This folder already has a file named "%s". Replace it?
+# One line.
 T_CLOUD_DELETE = Delete from Drive
+# Up to 3 lines.
 T_CLOUD_DELETE_ASK = Delete "%s" from Google Drive?
+# Up to 2 lines.
 T_CLOUD_DELETE_NOTE = It goes to Drive's trash, where it can be restored for 30 days.
+# Up to 2 lines.
 T_CLOUD_DELETED = Deleted from Google Drive.
+# Up to 2 lines.
 T_CLOUD_DELETE_FAILED = The file couldn't be deleted.
+# Up to 5 lines.
 T_INSTALL_FILES_HINT = The card is saved as a file in a folder of this device, in the format you choose.
+# One line.
 T_FORMAT_ORIGINAL = .zip (the original file)
+# Up to 2 lines.
 T_INSTALL_FILE_ASK = Save the card as %s?
+# Button.
 T_SAVE_YES = Save
+# Up to 2 lines.
 T_INSTALL_FILE_DONE = Card saved: %s
+# One line.
 T_WRITING_FILE = Writing the file...
+# Up to 2 lines.
+T_FIRST_QUESTION_ONE = Sync the memory card now? (%s, approx. %d min)
+# Up to 2 lines.
+T_AUTO_WHERE_ALONE = The SAS package will be installed on the memory card in use, with what it needs to open SD2Cloud from where it is.

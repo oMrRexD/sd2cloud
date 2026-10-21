@@ -128,9 +128,7 @@ void card_back(void);
 void insert_failed(const card_t *c);
 void insert_option(const card_t *c);
 extern jmp_buf reloadPoint;
-#ifdef DEBUG_BUILD
-extern u64 debugGone;
-#endif
+extern int reloadData;                  /* what reloadPoint reads again: 1 = the data too (0 = the devices only) */
 void device_watch(void);
 extern int viewOther;                    /* the cards listed are the other device's (a microSD with both devices') */
 void view_switch(void);                  /* the other device's cards listed, or the slot's again */
@@ -139,7 +137,8 @@ void view_draw(void);                    /* at the top right: the two devices, L
  * either end). 1 = the other side's cards are listed now */
 int view_key(u32 b);
 #define VIEW_KEYS (PAD_L2 | PAD_R2)
-void device_lost(void) __attribute__((noreturn));
+/* the sd2psx taken out or put back: everything read again as when the program starts (system_redetect) */
+void device_changed(void) __attribute__((noreturn));
 void reload_all(void) __attribute__((noreturn));
 
 /* ------------------------------------------------------------ autosync.c */

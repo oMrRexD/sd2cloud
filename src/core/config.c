@@ -115,10 +115,13 @@ void config_read(void)
     COPY(cfg.app_path, "mmce?:/APPS/SD2Cloud/SD2CLOUD.ELF");   /* where the IGR helper looks without being told */
     COPY(cfg.manual_return, "auto");
     COPY(cfg.repo, "oMrRexD/sd2cloud");
+    cfg.save_backup = -1;
     snprintf(path, sizeof(path), "%ssd2cloud.ini", dataDir);
     configExists = ini_read(path, on_config, NULL) == 0;
     if (!configExists)
         log_msg("no %s: using the defaults", path);
+    if (cfg.save_backup < 0)
+        cfg.save_backup = standalone;
 #ifdef DEBUG_BUILD
     /* the debug build uses another Drive folder and keeps only 3, to exercise the rotation without touching real backups */
     snprintf(cfg.drive_folder + strlen(cfg.drive_folder), sizeof(cfg.drive_folder) - strlen(cfg.drive_folder), " (debug)");

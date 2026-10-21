@@ -839,11 +839,11 @@ int cards_scan(void)
         ini_read(path, on_game2folder, NULL);
 
     snprintf(base, sizeof(base), "%s%s", sdRoot, dev->cards);
-    nFolders = list_dir(base);
-    if (nFolders < 0 && !standalone)
+    /* With no device in the slots, none: an sd2psx's folders on the drive the program is on (a copy of a microSD) are
+     * no cards in use, only files (the Files group opens them). Its VMCs, if it has them */
+    nFolders = standalone ? 0 : list_dir(base);
+    if (nFolders < 0)
         return -1;
-    if (nFolders < 0)   /* (no device's cards on that drive: its VMCs, if it has them) */
-        nFolders = 0;
     memcpy(folders, names, sizeof(names[0]) * nFolders);
 
     for (i = 0; i < nFolders && nCards < MAX_CARDS; i++) {

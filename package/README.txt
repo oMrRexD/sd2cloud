@@ -69,10 +69,11 @@ INSTALLATION
    there. Its settings and its data stay on the MMCE.
    On the memory card, the SAS package: when automatic sync is turned on, SD2Cloud puts its SAS (Save
    Application System) package on the memory card in use: the APP_SD2CLOUD folder, with what OPL runs on IGR
-   and a shortcut that opens SD2Cloud from the MMCE, with its own 3D icon for the PS2 browser (about
-   240 KB). The program itself stays on the MMCE. This .zip also has the package as
-   Extras/APP_SD2CLOUD.psu, to import into another card by hand (SD2Cloud's own Files tab does that); with
-   no SD2Cloud on the MMCE, the shortcut only says so.
+   and a shortcut that opens SD2Cloud wherever it is, with its own 3D icon for the PS2 browser (about
+   240 KB; without an sd2psx, also the drivers of the device SD2Cloud is on, about 90 KB more). The program
+   itself stays where it is. This .zip also has the package as Extras/APP_SD2CLOUD.psu, to import into
+   another card by hand (SD2Cloud's own Files tab does that): open SD2Cloud once from where it is, and the
+   shortcut finds it.
 3. Without a connected Google account, SD2Cloud asks whether to connect one now. Choosing "Not now" opens the
    main screen directly; "Don't ask again" (TRIANGLE) does the same and stops the question for good
    (ask_connect = no in sd2cloud.ini). The account can be connected later in Settings > Google Drive. To
@@ -91,10 +92,12 @@ Extract the .zip to a USB drive (FAT32 or exFAT), an MX4SIO card or the internal
 APPS/SD2Cloud/SD2CLOUD.ELF from there. SD2Cloud keeps its settings and its data on that device. Its cards are
 the OPL's VMCs of that device (the VMC folder), and the Files tab has the regular Memory Cards of both slots
 ("Memory Card 1" and "Memory Card 2"), besides the devices: their saves are copied, moved, deleted, uploaded to
-Drive and restored as any card's. The microSD of an sd2psx or of a MemCard PRO2 in a USB card reader shows
-its cards too. "New card" makes a card file on a device. For the automatic sync, the IGR of OPL can only
-start a program from a memory card or a USB drive: Settings > Automatic sync > "SAS package" says which path
-to use.
+Drive and restored as any card's. What SD2Cloud syncs are the Memory Cards, save by save (Backup by save is on by
+default without an sd2psx), and the first sync offers them. An sd2psx's or a MemCard PRO2's folders on that
+device are just files there: open them in the Files tab. For the automatic sync, install the SAS package
+(Settings > Automatic sync > "SAS package"): it goes to the Memory Card with the drivers of the device SD2Cloud
+is on, and OPL's IGR opens SD2Cloud through it. The sd2psx can be taken out and put back with SD2Cloud open:
+the screens follow.
 
 MAIN SCREEN
 The memory cards are listed on the left with a status indicator (green = synced; yellow = not synced or
@@ -235,6 +238,9 @@ at the bottom of the screen are the ones that do something with the selected ent
   created when the game has none. The game is told by the file's name (SLUS-21065-1.mcd, or SLUS_210.65_0.bin
   as OPL names them) or by the saved data inside. X on an existing card replaces it with the file's card,
   after you confirm. The file is read whole before anything is written, and the card is read back afterwards.
+  The Files tab of that same screen writes the card as a file on another device: pick the device, go to the
+  folder, press TRIANGLE ("Save here") and choose the format (the sd2psx's .mcd, the MemCard PRO2's .mc2,
+  PCSX2's .ps2 with its ECC, OPL's .bin, or the .zip as it is, when the card came in one) and the file's name.
 - The Memory Card: a regular PS2 memory card in the console's other slot (both slots, without an sd2psx) is a
   row of the Files tab. X shows its items, which are copied, moved, deleted and uploaded to Drive as a card's
   are, and items go into it from the cards or from .psu files. TRIANGLE, on its items, has "Upload to Drive"
@@ -243,10 +249,11 @@ at the bottom of the screen are the ones that do something with the selected ent
 - Google Drive: with a Google account, the last row. It opens the main folder of the backups on Drive, browsed
   as a device's folders are (SD2Cloud only sees what it made there). X on a save's .psu opens its page, with
   "Import to card", "Download" and "Delete from Drive". X on a card's backup (.zip) opens the card in it, as a
-  memory card file is opened: its saves, copied out of it from their pages, and SQUARE installs the card on the
-  microSD. SQUARE, on a file of the list, downloads it as it is, into a folder of a device (pick the device, go
-  to the folder and press TRIANGLE, "Save here"); TRIANGLE deletes it. A file deleted goes to Drive's trash,
-  where it can be restored for 30 days.
+  memory card file is opened: its saves, copied out of it from their pages, and SQUARE installs the card, on the
+  microSD or as a file on a device. SQUARE, on a card's backup in the list, goes straight to that installing; on
+  another file, it downloads it as it is, into a folder of a device (pick the device, go to the folder and press
+  TRIANGLE, "Save here"). TRIANGLE deletes it. A file deleted goes to Drive's trash, where it can be restored
+  for 30 days.
 Changing the card the sd2psx is using, by importing into it or by replacing it, works as any other change
 to it: SD2Cloud asks, switches the sd2psx to another card and back.
 Names with accented letters may be shown abbreviated, or not open at all (a limit of the FAT driver of the
@@ -311,16 +318,17 @@ it, O goes back, START leaves the settings from any page):
     MMCE), the programs in the APPS folder and the PS2 browser.
 - Cards: Device (on a microSD with the cards of both devices), New card size (see CARDS) and OPL VMC folders
   (see OPL VMCS).
-- Language.
 - Updates: Check for updates (looks for a new version right away and, if there is one, offers to update) and
   Update channel: Stable (the released versions) or Beta (see UPDATING).
+- Language.
 - About SD2Cloud: version, credits and licenses.
 Changes are saved to sd2cloud.ini, which can also be edited on a PC.
 
 BACKUP BY SAVE
-Settings > Google Drive > "Backup by save" (Off by default): after each card is sent, each of its saves that
-changed is also sent by itself, as a .psu, to the card's Saves folder on Drive, and as many versions of each are
-kept as the card's backups. The automatic sync also covers the Memory Card in the other slot, save by save.
+Settings > Google Drive > "Backup by save" (Off by default with an sd2psx; On without one, when the Memory Cards
+are what there is to sync): after each card is sent, each of its saves that changed is also sent by itself, as a
+.psu, to the card's Saves folder on Drive, and as many versions of each are kept as the card's backups. The sync
+also covers the Memory Card in the other slot (without an sd2psx, the ones in both slots), save by save.
 "Versions on Drive", on a save's page, lists the versions of that save: X on one puts it back in the save's
 place (the save as it is now is kept until the version is in).
 
@@ -350,9 +358,10 @@ AUTOMATIC SYNC AFTER A GAME (IGR)
    game, OPL switches back to the BootCard, where the package is installed.
 From then on, exiting a game with IGR starts SD2Cloud: it uploads the changed cards, shows "Upload complete"
 and returns to OPL. In this mode, cancelling the upload also returns to OPL.
-SD2Cloud can be kept in any folder of the MMCE: every time it is opened, it records where it is
-in sd2cloud.ini ("app_path"), and the package starts it from there. A folder of APPS that was renamed or
-moved is found by the package as well, even before SD2Cloud is opened from it.
+SD2Cloud can be kept in any folder, on the MMCE or on another device: every time it is opened, it records where
+it is (in sd2cloud.ini on the MMCE, "app_path"; without an sd2psx, in the package itself, with the drivers of that
+device), and the package starts it from there. A folder of APPS on the MMCE that was renamed or moved is found by
+the package as well, even before SD2Cloud is opened from it.
 To uninstall the package, select "SAS package" again and choose "Uninstall"; then change "IGR Path" in OPL.
 To pause the sync and keep everything installed, set "Automatic sync" to Off in Settings: IGR then goes
 straight to the program opened after it, without starting SD2Cloud. The same happens while no Google account

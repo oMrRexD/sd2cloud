@@ -38,6 +38,9 @@ extern int helperMcError;                   /* and the first error mcman gave me
  * fills helperNeedKb and helperFreeKb (-1 = unknown) */
 int helper_space(void);
 int helper_uninstall(void);                 /* removes it from that card: 0 = removed (or it wasn't there) */
+/* with no sd2psx, the program on a USB drive, an MX4SIO or the hard disk: the folder on the memory card in use, when
+ * it is there, told where the program is, with that device's drivers (what isn't so already is written) */
+void helper_point(void);
 extern int helperNeedKb, helperFreeKb;
 /* the program on a memory card (appOnCard) */
 int card_app_helper(void);                  /* 1 = the IGR helper is in the program's folder, where OPL can run it */

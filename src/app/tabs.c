@@ -382,7 +382,8 @@ void tabs_show(tabs_t *g, int tab)
     memset(g->count, 0, sizeof(g->count));
     g->n = 0;
     g->lit = -1;
-    if (g->add || g->create) {   /* a group that has no card yet is offered too: one can be added to it */
+    if ((g->add || g->create) && !standalone) {   /* a group that has no card yet is offered too: one can be added to
+                                                     it (with no sd2psx, none: the device's groups mean nothing there) */
         g->count[TAB_CARDS] = 1;
         if (g->add)
             g->count[TAB_GAMES] = 1, g->count[TAB_BOOT] = dev->sd2psx;

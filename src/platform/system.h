@@ -57,6 +57,9 @@ enum { DEV_SD, DEV_MC, DEV_USB, DEV_MX4SIO, DEV_ATA, DEV_HDD };
 int device_of(const char *path);
 #include "files.h"
 void drivers_store(const char *path);       /* that device's drivers, on the microSD for the IGR helper */
+/* the modules a device's drivers are (DEV_USB to DEV_HDD, the ones open_device loads for it): how many (0 = a device
+ * that needs none of them), with their names, contents and sizes */
+int drivers_of(int dev, const char *name[4], const unsigned char *data[4], unsigned int size[4]);
 void run_elf_update(const char *path, const buffer_t *app, const buffer_t *igr) __attribute__((noreturn));
 /* the card the sd2psx is emulating right now: its number (0 = BootCard, a game card or a named folder) and channel.
  * -1 = couldn't ask; -2 = not on an MMCE device (testing on PCSX2) */
@@ -66,6 +69,14 @@ int mmce_ping(void);                      /* does the device answer? < 0 = no (t
 extern int devicePings;                     /* it answered when it was looked for: one that never does can't be watched */
 /* the device is back after being taken out: which one it is and the settings on its microSD, read again */
 void system_reload(void);
+void find_device(void);   /* which device is in the slot (dev), as when the program starts */
+/* The slots looked at again while the program is open (an sd2psx taken out or put in): where the microSD and the data
+ * are, as when it starts (with no sd2psx, the drive the program is on). 1 = that place can be read; 0 = it can't (the
+ * program's own microSD was taken out) */
+int system_redetect(void);
+#ifdef DEBUG_BUILD
+extern int debugUnplugged;   /* (script "G"; "p" puts it back) the sd2psx taken out, as far as the slots are looked at */
+#endif
 /* Tell the sd2psx to emulate another card, as its own buttons do: it writes what it holds of the current one to the
  * microSD, closes it and opens the other, a moment later. Each one only asks (0 = the sd2psx took the request):
  * whether the card changed has to be seen in the slot afterwards. A numbered card (its first channel), or with boot

@@ -128,6 +128,8 @@ void state_set_folder(const char *name, const char *id)
 int state_empty(void)
 {
     int i;
+    if (nSaveStates)   /* (a save sent by itself: a Memory Card's, with no sd2psx) */
+        return 0;
     for (i = 0; i < nStates; i++)
         if (states[i].sha[0])
             return 0;

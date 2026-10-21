@@ -17,6 +17,9 @@ char sdRoot[16];
 char dataDir[32];
 int igrMode;
 int standalone;
+#ifdef DEBUG_BUILD
+int debugUnplugged;
+#endif
 
 /* ------------------------------------------------------------ start and leave */
 
@@ -52,9 +55,10 @@ static void find_sd(const char *a0)
 {
     const char *options[2] = {"mmce0:/", "mmce1:/"};
     int i;
-    if (strncmp(a0, "host:", 5) == 0)
+    if (strncmp(a0, "host:", 5) == 0) {
         strcpy(sdRoot, "host:");   /* testing on PCSX2: the root of host: stands in for the microSD */
-    else {
+        standalone = 0;
+    } else {
         if (!strncmp(a0, "mmce1:", 6))
             options[0] = "mmce1:/", options[1] = "mmce0:/";
         for (i = 0; i < 2 && !has_dir(options[i], "SD2Cloud"); i++)
@@ -70,10 +74,11 @@ static void find_sd(const char *a0)
         standalone = i == 2 && !has_dir(options[0], "") && !has_dir(options[1], "");
     }
 #ifdef DEBUG_BUILD
-    {   /* PCSX2: standalone.txt in the data folder makes host: the root of a device that isn't an sd2psx */
+    {   /* PCSX2: standalone.txt in the data folder makes host: the root of a device that isn't an sd2psx (and script
+         * "G", while it lasts: the sd2psx taken out) */
         char c[64];
         snprintf(c, sizeof(c), "%sSD2Cloud/standalone.txt", sdRoot);
-        if (!strncmp(sdRoot, "host:", 5) && file_exists(c))
+        if (!strncmp(sdRoot, "host:", 5) && (file_exists(c) || debugUnplugged))
             standalone = 1;
     }
 #endif
@@ -250,6 +255,16 @@ void system_init(int argc, char *argv[])
 #ifdef DEBUG_BUILD
     rescue_init();
 #endif
+}
+
+int system_redetect(void)
+{
+    find_sd(appPath);
+    if (standalone && strncmp(appPath, "host:", 5) != 0)   /* (the drive the program is on: its drivers, if need be) */
+        standalone_root();
+    log_msg("the slots looked at again: %s; the data in %s%s", standalone ? "no sd2psx" : "an sd2psx", dataDir,
+            has_dir(sdRoot, "") ? "" : ", which isn't there (the program's own microSD, taken out)");
+    return has_dir(sdRoot, "");
 }
 
 /* Resets the IOP before handing over: the controller and the network write to EE memory by DMA and, if they stayed

@@ -1,0 +1,11 @@
+# log
+SD2Cloud <version> -- program in host:APPS/SD2Cloud/ (host:SD2CLOUD-DEBUG.ELF), data in host:SD2Cloud/, manual
+settings: [app] app_path = host:SD2CLOUD-DEBUG.ELF (0)
+settings: [drive] layout = 2 (0)
+0 card(s) on the microSD
+(end: capture)
+
+# files
+e67be4206c58f05d290d04e24ef9bd240e0a329b479dd8d202f12d40f464d347  MemoryCards/PS2/Card1/Card1-1.mcd
+9272b61510164169e9ebbb38efa709c8a15fd23349ca3a27a557feebecfdc410  SD2Cloud/sd2cloud.ini
+2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881  SD2Cloud/standalone.txt

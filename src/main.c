@@ -107,13 +107,18 @@ int main(int argc, char *argv[])
     vmc_places_init();
     if (igrMode)
         igr();
-    if (setjmp(reloadPoint)) {   /* the device was taken out and is back (device_watch): maybe with another microSD */
-        system_reload();
-        token_read();
-        google_forget();
-        state_read();
-        library_start();
-        drive_layout_decide();
+    if (setjmp(reloadPoint)) {   /* the sd2psx taken out or put back (device_watch): maybe with another microSD; or the
+                                    user said which device it is */
+        if (reloadData) {
+            system_reload();
+            token_read();
+            google_forget();
+            state_read();
+            library_start();
+            drive_layout_decide();
+        } else   /* (the program's own microSD taken out: what was read of it stays, until it is back) */
+            find_device();
+        reloadData = 1;
         ui_lock();   /* (the screen is drawn meanwhile: what language reads, it reads locked) */
         i18n_select(cfg.language);
         i18n_device(dev->name);   /* (it may be another device, or the user said it is) */

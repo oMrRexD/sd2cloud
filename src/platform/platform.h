@@ -131,6 +131,5 @@ extern buffer_t logRam;
 extern int logSema;
 
 /* ------------------------------------------------------------ mmce.c */
-void find_device(void);
 
 #endif

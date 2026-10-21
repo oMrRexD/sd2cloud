@@ -418,19 +418,31 @@ void remember_unseen(void)
     }
 }
 
-/* first run: offers to sync every card; on "later", nothing is sent (remember_unseen keeps the references) */
+/* first run: offers to sync every card, and with the backup by save the Memory Cards in the slots (their saves, each
+ * by itself: with no sd2psx, all there is); on "later", nothing is sent (remember_unseen keeps the references) */
 void first_run(void)
 {
     char t[300], size[24];
-    int included, changed, minutes;
-    long long bytes;
+    int included, changed, minutes, ports[2], n, i;
+    long long bytes, left;
     count_cards(&included, &changed, &bytes);
+    for (n = cfg.save_backup ? memcard_ports(ports) : 0, i = 0; i < n; i++) {
+        memcard_pick(ports[i]);
+        if (memcard_there()) {   /* (what its saves take: of the 8 MB a Memory Card has, what isn't free) */
+            included++;
+            if (mcfs_list_saves(slotCard.path, NULL, 0, &left) >= 0 && left >= 0 && left < MCFS_CARD_8MB)
+                bytes += MCFS_CARD_8MB - left;
+        }
+    }
     if (!included)
         return;
     format_size(bytes, size, sizeof(size));
     minutes = (int)((bytes / (1024 * 1024)) * 2 / 60) + 1;   /* ~2 s per MB on the console (read + compress + upload) */
     dlg_new(COLOR_TITLE, T(T_FIRST_TITLE));
-    snprintf(t, sizeof(t), T(T_FIRST_QUESTION), included, size, minutes);
+    if (included == 1)
+        snprintf(t, sizeof(t), T(T_FIRST_QUESTION_ONE), size, minutes);
+    else
+        snprintf(t, sizeof(t), T(T_FIRST_QUESTION), included, size, minutes);
     dlg_line(FONT_TEXT, COLOR_TEXT, 8, t);
     dlg_line(FONT_SMALL, COLOR_DIM, 0, T(T_FIRST_AFTER));
     dlg_buttons(BUTTON_CIRCLE, T_LATER, BUTTON_CROSS, T_YES);

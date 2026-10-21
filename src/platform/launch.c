@@ -170,8 +170,7 @@ void run_elf(const char *path)
    leaves them (SD2Cloud/drivers/, one file per module, under the module's name): the ones open_device loads for
    that device, which the helper loads in the same order. */
 
-/* Written when the settings don't say they are there, of this build, for that device ([app] app_drivers) */
-void drivers_store(const char *path)
+int drivers_of(int dev, const char *name[4], const unsigned char *data[4], unsigned int size[4])
 {
     static const struct {
         const char *name;
@@ -184,22 +183,40 @@ void drivers_store(const char *path)
                {"ps2hdd", ps2hdd_irx, &size_ps2hdd_irx},       {"ps2fs", ps2fs_irx, &size_ps2fs_irx}};
     static const char *const needs[] = {"", "", " usbd bdm bdmfs_fatfs usbmass_bd ", " bdm bdmfs_fatfs mx4sio_bd ",
                                         " ps2dev9 bdm bdmfs_fatfs ata_bd ", " ps2dev9 ps2atad ps2hdd ps2fs "};
-    char mark[sizeof(cfg.app_drivers)], c[260], name[32];
-    int dev = device_of(path), r = 0;
+    char w[32];
     unsigned int i;
+    int n = 0;
     if (dev < DEV_USB || dev > DEV_HDD)
+        return 0;
+    for (i = 0; i < sizeof(all) / sizeof(all[0]) && n < 4; i++) {
+        snprintf(w, sizeof(w), " %s ", all[i].name);
+        if (strstr(needs[dev], w)) {
+            name[n] = all[i].name;
+            data[n] = all[i].irx;
+            size[n++] = *all[i].size;
+        }
+    }
+    return n;
+}
+
+/* Written when the settings don't say they are there, of this build, for that device ([app] app_drivers) */
+void drivers_store(const char *path)
+{
+    const char *name[4];
+    const unsigned char *data[4];
+    unsigned int size[4];
+    char mark[sizeof(cfg.app_drivers)], c[260];
+    int dev = device_of(path), n = drivers_of(dev, name, data, size), i, r = 0;
+    if (!n)
         return;
     snprintf(mark, sizeof(mark), "%d %s %s", dev, APP_VERSION, APP_COMMIT);
     if (!strcmp(mark, cfg.app_drivers))
         return;
     snprintf(c, sizeof(c), "%sdrivers/", dataDir);
     ensure_dir(c);
-    for (i = 0; i < sizeof(all) / sizeof(all[0]) && r == 0; i++) {
-        snprintf(name, sizeof(name), " %s ", all[i].name);
-        if (!strstr(needs[dev], name))
-            continue;
-        snprintf(c, sizeof(c), "%sdrivers/%s.irx", dataDir, all[i].name);
-        r = file_replace(c, all[i].irx, *all[i].size);
+    for (i = 0; i < n && r == 0; i++) {
+        snprintf(c, sizeof(c), "%sdrivers/%s.irx", dataDir, name[i]);
+        r = file_replace(c, data[i], size[i]);
     }
     log_msg("the drivers of %s, on the microSD for the IGR helper: %d", path, r);
     if (r != 0)

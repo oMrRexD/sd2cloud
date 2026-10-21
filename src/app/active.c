@@ -405,25 +405,16 @@ void insert_option(const card_t *c)
     insert_failed(c);
 }
 
-/* -------- the device taken out of the console while SD2Cloud is open (to change its microSD, say). While a screen
- * waits for the controller the device is asked, every couple of seconds, whether it is there. When it stops answering
- * that is said on screen until it answers again; then everything that came from its microSD is read again from the
- * start, as it may be another microSD: the settings, the account, the history and the cards. */
+/* -------- the device taken out of the console while SD2Cloud is open (to change its microSD, say), or put back.
+ * While a screen waits for the controller the device is asked, every couple of seconds, whether it is there (with
+ * none, whether one that was there is back). When that changes, everything is read again as when SD2Cloud starts,
+ * from where the data is now: with no sd2psx, the drive the program is on, and the Memory Cards in the slots; with
+ * one, its microSD (maybe another one): the settings, the account, the history and the cards. The program's own
+ * microSD taken out leaves no other place to read them from: what was read stays, until it is back */
 
 jmp_buf reloadPoint;   /* in main(), right before the main screen is set up */
-
-#ifdef DEBUG_BUILD
-u64 debugGone;   /* script letter G: the device "doesn't answer" until then (PCSX2 has none to take out) */
-#endif
-
-static int device_answers(void)
-{
-#ifdef DEBUG_BUILD
-    if (debugGone)
-        return now_ms() >= debugGone;
-#endif
-    return mmce_ping() >= 0;
-}
+int reloadData = 1;    /* what reloadPoint reads again: 1 = the data too; 0 = only the devices (the data's microSD gone) */
+static int hadDevice;  /* an sd2psx answered since the program started: with none now, it is looked for again */
 
 /* The card in the device may be changed with the device's own buttons while SD2Cloud is open. Each time the device
  * is asked whether it is there, it is also asked which card it is on (what the sd2psx tells: a number and a
@@ -462,10 +453,18 @@ static void active_watch(void)
 void device_watch(void)
 {
     int i;
-    /* (a device that never answered the ping, as a MemCard PRO2 may not, would look taken out all the time) */
-    if (watchOff || viewOther || !devicePings || !dev->sd2psx || strncmp(sdRoot, "mmce", 4) != 0 || now_ms() < watchNext)
+    if (watchOff || viewOther || now_ms() < watchNext)
         return;
     watchNext = now_ms() + 2000;
+    if (standalone) {   /* none: one that was there, put back (its driver is still loaded) */
+        if (hadDevice && mmce_ping() >= 0)
+            device_changed();
+        return;
+    }
+    /* (a device that never answered the ping, as a MemCard PRO2 may not, would look taken out all the time) */
+    if (!devicePings || !dev->sd2psx || strncmp(sdRoot, "mmce", 4) != 0)
+        return;
+    hadDevice = 1;   /* (it answered when it was looked for) */
     for (i = 0; i < 3; i++) {   /* three times in a row: it may only be busy (changing cards) */
         static int said;
         int r = mmce_ping();
@@ -477,38 +476,24 @@ void device_watch(void)
         }
         sleep_ms(500);
     }
-    device_lost();
+    device_changed();
 }
 
-void device_lost(void)
+void device_changed(void)
 {
     DIR *d = NULL;
-    int i;
+    int i, back = standalone;
     watchOff++;
-    log_msg("%s: it doesn't answer (taken out?)", dev->name);
-    sound_play(SND_BACK);
-    dlg_new(COLOR_WARN, T(T_DEVICE_GONE));
-    dlg_line(FONT_TEXT, COLOR_TEXT, 0, T(T_DEVICE_GONE_TEXT));
-    dlg_buttons(BUTTON_CIRCLE, T_EXIT_BROWSER, 0, 0);
-    dlg_show();
-    while (!device_answers()) {
-        if (pad_buttons() & PAD_CIRCLE)   /* without the microSD the PS2 browser is the only place left to go */
-            leave("osd");
-#ifdef DEBUG_BUILD
-        debug_capture_if('g');
-#endif
-        sleep_ms(400);
-    }
-#ifdef DEBUG_BUILD
-    debugGone = 0;
-#endif
-    log_msg("%s: it answers again", dev->name);
+    log_msg("%s", back ? "an sd2psx answers: it was put back" : "the sd2psx doesn't answer: taken out?");
     message(0, NULL, COLOR_TEXT, T(T_LOADING));
-    for (i = 0; i < 60 && !(d = opendir(sdRoot)); i++)   /* its microSD takes a moment */
-        sleep_ms(500);
-    if (d)
-        closedir(d);
-    log_msg("the microSD %s after %d ms", d ? "answers" : "still doesn't answer", i * 500);
+    if (back && strncmp(sdRoot, "host:", 5) != 0) {   /* one put back: its microSD takes a moment */
+        for (i = 0; i < 60 && !(d = opendir("mmce0:/")) && !(d = opendir("mmce1:/")); i++)
+            sleep_ms(500);
+        if (d)
+            closedir(d);
+        log_msg("its microSD %s after %d ms", d ? "answers" : "still doesn't answer", i * 500);
+    }
+    reloadData = system_redetect();
     reload_all();
 }
 

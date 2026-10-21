@@ -46,8 +46,8 @@ PicoMemcard+/Zero; la PS2 la llama MMCE) y de la MemCard PRO2, y con Memory Card
 - **Copia por partida**: si quieres, envía también cada partida que cambió por separado, con sus versiones; la página
   de la partida muestra sus **Versiones en Drive** y restaura cualquiera.
 - Guarda las copias organizadas por dispositivo, juego y tarjeta, cada tarjeta con su propia carpeta de partidas, y
-  las recorre desde la pestaña **Archivos**: la página de una partida, la copia de una tarjeta abierta como tarjeta,
-  cualquier archivo descargado o eliminado.
+  las recorre desde la pestaña **Archivos**: la página de una partida, la copia de una tarjeta abierta como tarjeta o
+  instalada, cualquier archivo descargado o eliminado.
 - Se conecta una sola vez con un código o un código QR. SD2Cloud solo puede acceder a los archivos que él mismo crea en
   tu Drive.
 
@@ -72,7 +72,8 @@ PicoMemcard+/Zero; la PS2 la llama MMCE) y de la MemCard PRO2, y con Memory Card
 - La pestaña **Archivos** recorre el MMCE, una memoria USB, el disco duro interno (exFAT, FAT32 y APA, incluidos los
   discos preparados por el instalador de PSBBN con los dos) y un MX4SIO: importa y exporta archivos `.psu` y partidas en
   formato de carpeta, abre archivos de tarjeta de memoria (`.mcd`, `.mc2`, `.ps2`, el `.bin` de OPL o un `.zip`) y los
-  instala como tarjetas, y copia una tarjeta entera a una carpeta como `.zip`.
+  instala como tarjetas o como archivo de tarjeta en cualquier dispositivo, en el formato que elijas, y copia una
+  tarjeta entera a una carpeta como `.zip`.
 - Administra las **Memory Cards** comunes de las ranuras de la consola: sus partidas, la tarjeta entera subida a Drive
   y restaurada desde allí.
 - En una microSD con las tarjetas de un sd2psx y de una MemCard PRO2, **L2 y R2** cambian entre las tarjetas de uno y
@@ -84,7 +85,9 @@ PicoMemcard+/Zero; la PS2 la llama MMCE) y de la MemCard PRO2, y con Memory Card
 
 **Además**
 - Funciona **sin sd2psx**: abierto desde una memoria USB, un MX4SIO o el disco duro interno, SD2Cloud guarda sus datos
-  allí y administra las Memory Cards de las dos ranuras, los VMC del OPL y los archivos de tarjeta.
+  allí y administra las Memory Cards de las dos ranuras (con copia de cada partida), los VMC del OPL y los archivos
+  de tarjeta.
+- El sd2psx se puede quitar y volver a poner con SD2Cloud abierto: las pantallas lo siguen.
 - Pide confirmación antes de cualquier cosa que suba, escriba o elimine datos.
 - Ajustes en la consola (START), en páginas, guardados en `sd2cloud.ini`, que también se puede editar en un PC.
 - Vuelve a OPL en el MMCE, una tarjeta de memoria, USB, MX4SIO o el disco duro interno (exFAT o APA), cargando solo
@@ -131,7 +134,10 @@ PicoMemcard+/Zero; la PS2 la llama MMCE) y de la MemCard PRO2, y con Memory Card
 5. Después SD2Cloud ofrece activar la sincronización automática y sincronizar todas tus tarjetas.
 
 **Sin sd2psx**, extrae el zip en una memoria USB (FAT32 o exFAT), un MX4SIO o el disco duro interno, y abre
-`APPS/SD2Cloud/SD2CLOUD.ELF` desde allí: SD2Cloud guarda sus ajustes y sus datos en ese dispositivo.
+`APPS/SD2Cloud/SD2CLOUD.ELF` desde allí: SD2Cloud guarda sus ajustes y sus datos en ese dispositivo. Lo que sincroniza
+son las Memory Cards de las ranuras, partida por partida (la copia por partida viene activada), y la primera
+sincronización ya las ofrece. Las carpetas de un sd2psx en ese dispositivo son solo archivos allí: ábrelas desde la
+pestaña **Archivos**.
 
 Con un sd2psx, SD2Cloud también puede estar en una memoria USB, una tarjeta MX4SIO o el disco duro interno (exFAT o
 APA): pon allí la carpeta `APPS/SD2Cloud` y abre SD2Cloud desde allí una vez. Registra dónde está, guarda en el MMCE
@@ -140,10 +146,11 @@ allí. Sus ajustes y sus datos se quedan en el MMCE.
 
 **En la tarjeta de memoria: el paquete SAS.** Al activar la sincronización automática, SD2Cloud pone su paquete SAS
 (Save Application System) en la tarjeta de memoria en uso: la carpeta `APP_SD2CLOUD`, con lo que OPL ejecuta en el IGR
-y un acceso directo que abre SD2Cloud desde el MMCE, con su propio icono 3D para el navegador de la PS2 (unos 240 KB).
-El programa en sí se queda en el MMCE. El zip también trae el paquete como `Extras/APP_SD2CLOUD.psu`, para importarlo a
-mano a otra tarjeta (la propia pestaña **Archivos** de SD2Cloud lo hace); sin SD2Cloud en el MMCE, el acceso directo
-solo lo avisa.
+y un acceso directo que abre SD2Cloud desde donde esté, con su propio icono 3D para el navegador de la PS2 (unos
+240 KB; sin sd2psx, también los controladores del dispositivo donde está SD2Cloud, unos 90 KB más). El programa en sí
+se queda donde está. El zip también trae el paquete como `Extras/APP_SD2CLOUD.psu`, para importarlo a mano a otra
+tarjeta (la propia pestaña **Archivos** de SD2Cloud lo hace): abre SD2Cloud una vez desde donde esté, y el acceso
+directo lo encuentra.
 
 **¿Vienes de una versión anterior a la 2.0?** A las copias en Drive se les ofrece una vez, al abrir, la nueva
 organización (por dispositivo, juego y tarjeta): los archivos se mueven a ella sin volver a subirse. "Ahora no"
@@ -159,10 +166,10 @@ El [README.txt](package/README.txt) incluido en la release explica cada pantalla
 | Dentro de una tarjeta | X: abrir una partida · TRIÁNGULO: opciones (sincronizar esta tarjeta; las partidas por nombre o por fecha; convertir a Game ID; en Todas las partidas, repetidas ocultas o visibles y exportar todas a una tarjeta; en la Memory Card, subirla a Drive o restaurar una copia) · O: volver |
 | La página de una partida | Copiar · Mover · Eliminar · Subir a Drive · Versiones en Drive |
 | Después de Copiar | La partida queda seleccionada, y otras también pueden quedarlo: X selecciona o deselecciona una partida · O: salir de la tarjeta a la lista de tarjetas, para seleccionar partidas de otras tarjetas también · TRIÁNGULO: cancelar · START: pegarlas todas en la tarjeta abierta, o en la que está bajo el cursor en la lista. En la pestaña Juegos de la lista, la carpeta de su juego aparece primero, resaltada, con "Nueva tarjeta" dentro. La pestaña Biblioteca las guarda fuera de las tarjetas. En la pestaña Archivos, X abre las carpetas de un dispositivo: START las pega ahí como archivos `.psu`, o dentro del archivo de tarjeta de memoria bajo el cursor. START en la Memory Card las pega en ella |
-| Pestaña Archivos | X: abrir el dispositivo, una carpeta, un archivo `.psu` o un archivo de tarjeta de memoria · CUADRADO: instalar el `.psu` o la carpeta de partida seleccionados en una tarjeta, o el archivo de tarjeta seleccionado en el MMCE · Izquierda/Derecha: una página arriba o abajo · O: volver |
-| Pestaña Archivos > Google Drive | X: abrir una carpeta, el `.psu` de una partida (su página: importar a tarjeta, descargar, eliminar de Drive) o la copia de una tarjeta (la tarjeta) · CUADRADO: descargar el archivo · TRIÁNGULO: eliminarlo (va a la papelera de Drive) · O: volver |
+| Pestaña Archivos | X: abrir el dispositivo, una carpeta, un archivo `.psu` o un archivo de tarjeta de memoria · CUADRADO: instalar el `.psu` o la carpeta de partida seleccionados en una tarjeta, o el archivo de tarjeta seleccionado como tarjeta del MMCE o como archivo en un dispositivo (su pestaña Archivos) · Izquierda/Derecha: una página arriba o abajo · O: volver |
+| Pestaña Archivos > Google Drive | X: abrir una carpeta, el `.psu` de una partida (su página: importar a tarjeta, descargar, eliminar de Drive) o la copia de una tarjeta (la tarjeta) · CUADRADO: instalar la copia de una tarjeta (como desde la tarjeta), descargar cualquier otro archivo · TRIÁNGULO: eliminarlo (va a la papelera de Drive) · O: volver |
 | Utilidades (SELECT) | Plantillas (X: una plantilla nueva o una existente; TRIÁNGULO: fijar como principal, agregar partidas, aplicar plantilla, juegos vinculados, cambiar nombre, eliminar) · Copias de seguridad (X: restaurar una, o eliminarla) |
-| Ajustes (START) | Sincronizar todas las tarjetas · Google Drive (cuenta, copias conservadas, formato, copia por partida, Biblioteca en Drive) · Sincronización automática (activada o desactivada, paquete SAS, salida del IGR) · Tarjetas (dispositivo, tamaño de tarjetas nuevas, carpetas de VMC del OPL) · Idioma · Actualizaciones · Acerca de |
+| Ajustes (START) | Sincronizar todas las tarjetas · Google Drive (cuenta, copias conservadas, formato, copia por partida, Biblioteca en Drive) · Sincronización automática (activada o desactivada, paquete SAS, salida del IGR) · Tarjetas (dispositivo, tamaño de tarjetas nuevas, carpetas de VMC del OPL) · Actualizaciones · Idioma · Acerca de |
 | Durante una sincronización | O: cancelar · CUADRADO: omitir la tarjeta que se está subiendo · SELECT: la lista de las tarjetas de la sincronización, con lo que pasó con cada una, y de vuelta. En ella, CUADRADO omite una tarjeta (otra vez: deshace) y X ofrece omitirla, marcarla como resuelta (la sincronización automática la deja en paz hasta que vuelva a cambiar) o desactivar su sincronización |
 
 ## Sincronización automática después de un juego (IGR)
@@ -178,9 +185,10 @@ El [README.txt](package/README.txt) incluido en la release explica cada pantalla
    juego, OPL vuelve a la BootCard, donde está instalado el paquete.
 
 Desde entonces, salir de un juego con IGR inicia SD2Cloud, que sube las tarjetas que cambiaron y vuelve a OPL. La misma
-opción reinstala o desinstala el paquete. SD2Cloud puede estar en cualquier carpeta del MMCE: cuando no está en
-`APPS/SD2Cloud`, registra dónde está en `sd2cloud.ini`, y el paquete lo inicia desde allí (también encuentra una
-carpeta de `APPS` a la que se le cambió el nombre).
+opción reinstala o desinstala el paquete. SD2Cloud puede estar en cualquier carpeta, en el MMCE o en otro dispositivo:
+registra dónde está cada vez que se abre (en `sd2cloud.ini` del MMCE; sin sd2psx, en el propio paquete, con los
+controladores de ese dispositivo), y el paquete lo inicia desde allí (también encuentra una carpeta de `APPS` a la que
+se le cambió el nombre).
 
 Para pausar la sincronización y dejar todo instalado, pon **Sincronización automática** en Desactivada en los Ajustes:
 el IGR va entonces directo al programa que se abre después, sin iniciar SD2Cloud. Lo mismo ocurre mientras no haya una

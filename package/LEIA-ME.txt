@@ -72,10 +72,11 @@ INSTALAÇÃO
    lá mesmo. As configurações e os dados dele continuam no MMCE.
    No cartão de memória, o pacote SAS: quando a sincronização automática é ativada, o SD2Cloud coloca o pacote
    SAS (Save Application System) dele no cartão de memória em uso: a pasta APP_SD2CLOUD, com o que o OPL abre
-   pelo IGR e um atalho que abre o SD2Cloud do MMCE, com ícone 3D próprio no navegador do PS2 (cerca de
-   240 KB). O programa em si continua no MMCE. Este .zip também traz o pacote como Extras/APP_SD2CLOUD.psu,
-   para importar em outro cartão manualmente (a aba Arquivos do próprio SD2Cloud faz isso); sem o SD2Cloud no
-   MMCE, o atalho só avisa.
+   pelo IGR e um atalho que abre o SD2Cloud de onde ele estiver, com ícone 3D próprio no navegador do PS2
+   (cerca de 240 KB; sem sd2psx, também os drivers do dispositivo onde o SD2Cloud está, cerca de 90 KB a
+   mais). O programa em si continua onde está. Este .zip também traz o pacote como Extras/APP_SD2CLOUD.psu,
+   para importar em outro cartão manualmente (a aba Arquivos do próprio SD2Cloud faz isso): abra o SD2Cloud
+   uma vez de onde ele estiver, e o atalho passa a encontrá-lo.
 3. Sem uma conta do Google conectada, o SD2Cloud pergunta se você quer conectar uma agora. "Agora não" abre a
    tela principal direto; "Não perguntar mais" (TRIÂNGULO) faz o mesmo, e a pergunta não volta
    (ask_connect = no no sd2cloud.ini). A conta pode ser conectada depois em Ajustes > Google Drive. Para
@@ -94,10 +95,12 @@ Extraia o .zip em um pendrive (FAT32 ou exFAT), em um cartão MX4SIO ou no HD in
 APPS/SD2Cloud/SD2CLOUD.ELF de lá. O SD2Cloud guarda as configurações e os dados nesse dispositivo. Os cartões
 dele são os VMCs do OPL desse dispositivo (a pasta VMC), e a aba Arquivos tem os Memory Cards comuns dos dois
 slots ("Memory Card 1" e "Memory Card 2"), além dos dispositivos: os saves deles são copiados, movidos,
-excluídos, enviados ao Drive e restaurados como os de qualquer cartão. O microSD de um sd2psx ou de um MemCard
-PRO2 em um leitor de cartão USB também mostra os cartões. "Novo cartão" cria um arquivo de cartão em um
-dispositivo. Para a sincronização automática, o IGR do OPL só abre programas de um cartão de memória ou de um
-pendrive: Ajustes > Sincronização automática > "Pacote SAS" mostra o caminho a usar.
+excluídos, enviados ao Drive e restaurados como os de qualquer cartão. O que o SD2Cloud sincroniza são os
+Memory Cards, save por save (o Backup por save vem ativado sem sd2psx), e a primeira sincronização já os
+oferece. Pastas de um sd2psx ou de um MemCard PRO2 nesse dispositivo são só arquivos ali: abra-as pela aba
+Arquivos. Para a sincronização automática, instale o pacote SAS (Ajustes > Sincronização automática >
+"Pacote SAS"): ele vai para o Memory Card com os drivers do dispositivo onde o SD2Cloud está, e o IGR do OPL
+abre o SD2Cloud por ele. O sd2psx pode ser retirado e recolocado com o SD2Cloud aberto: as telas acompanham.
 
 TELA PRINCIPAL
 Os cartões de memória ficam listados à esquerda com um indicador de status (verde = sincronizado; amarelo = não
@@ -245,7 +248,10 @@ a entrada selecionada.
   jogo, que é criada quando o jogo ainda não tem. O jogo é identificado pelo nome do arquivo (SLUS-21065-1.mcd,
   ou SLUS_210.65_0.bin como o OPL os chama) ou pelos dados salvos dentro dele. X sobre um cartão existente o
   substitui pelo cartão do arquivo, depois de você confirmar. O arquivo é lido inteiro antes de qualquer
-  gravação, e o cartão é lido de volta depois.
+  gravação, e o cartão é lido de volta depois. A aba Arquivos dessa mesma tela grava o cartão como arquivo em
+  outro dispositivo: escolha o dispositivo, vá até a pasta, aperte TRIÂNGULO ("Salvar aqui") e escolha o formato
+  (.mcd do sd2psx, .mc2 do MemCard PRO2, .ps2 do PCSX2 com ECC, .bin do OPL, ou o .zip como está, quando o
+  cartão veio de um) e o nome do arquivo.
 - O Memory Card: um cartão de memória comum de PS2 no outro slot do console (nos dois slots, sem sd2psx) é uma
   linha da aba Arquivos. X mostra os itens dele, que são copiados, movidos, excluídos e enviados ao Drive como
   os de um cartão, e itens vão para ele a partir dos cartões ou de arquivos .psu. TRIÂNGULO, nos itens dele,
@@ -256,10 +262,11 @@ a entrada selecionada.
   navegada como as pastas de um dispositivo (o SD2Cloud só vê o que ele mesmo criou lá). X sobre o .psu de um
   save abre a página dele, com "Importar para cartão", "Baixar" e "Excluir do Drive". X sobre o backup de um
   cartão (.zip) abre o cartão que ele contém, como um arquivo de cartão de memória: os saves dele, copiados a
-  partir das páginas deles, e QUADRADO instala o cartão no microSD. QUADRADO, sobre um arquivo da lista, o
-  baixa como está para uma pasta de um dispositivo (escolha o dispositivo, vá até a pasta e aperte TRIÂNGULO,
-  "Salvar aqui"); TRIÂNGULO o exclui. Um arquivo excluído vai para a lixeira do Drive, de onde pode ser
-  restaurado por 30 dias.
+  partir das páginas deles, e QUADRADO instala o cartão, no microSD ou como arquivo em um dispositivo.
+  QUADRADO, sobre o backup de um cartão na lista, vai direto para essa instalação; sobre outro arquivo, o baixa
+  como está para uma pasta de um dispositivo (escolha o dispositivo, vá até a pasta e aperte TRIÂNGULO, "Salvar
+  aqui"). TRIÂNGULO o exclui. Um arquivo excluído vai para a lixeira do Drive, de onde pode ser restaurado por
+  30 dias.
 Alterar o cartão que o sd2psx está usando, importando para ele ou substituindo-o, funciona como qualquer outra
 alteração nele: o SD2Cloud pergunta, troca o sd2psx para outro cartão e volta.
 Nomes com letras acentuadas podem aparecer abreviados, ou nem abrir (um limite do driver FAT do SDK do PS2):
@@ -329,17 +336,18 @@ A primeira página tem Sincronizar todos os cartões, o idioma e Sobre, e quatro
     no MMCE), os programas da pasta APPS e o navegador do PS2.
 - Cartões: Dispositivo (em um microSD com os cartões dos dois dispositivos), Tamanho dos cartões novos (veja
   CARTÕES) e Pastas de VMC do OPL (veja VMCS DO OPL).
-- Idioma.
 - Atualizações: Verificar atualizações (procura uma versão nova na hora e, se houver, oferece a atualização) e
   Canal de atualização: Estável (as versões lançadas) ou Beta (veja ATUALIZAÇÃO).
+- Idioma.
 - Sobre o SD2Cloud: versão, créditos e licenças.
 As alterações são salvas no sd2cloud.ini, que também pode ser editado no PC.
 
 BACKUP POR SAVE
-Ajustes > Google Drive > "Backup por save" (desativado por padrão): depois de enviar cada cartão, cada save
-alterado dele também é enviado sozinho, como .psu, para a pasta Saves do cartão no Drive, e de cada um ficam
-tantas versões quanto os backups do cartão. A sincronização automática também inclui o Memory Card do outro
-slot, save por save. "Versões no Drive", na página de um save, lista as versões desse save: X sobre uma a coloca
+Ajustes > Google Drive > "Backup por save" (desativado por padrão com sd2psx; ativado sem ele, quando os Memory
+Cards são o que há para sincronizar): depois de enviar cada cartão, cada save alterado dele também é enviado
+sozinho, como .psu, para a pasta Saves do cartão no Drive, e de cada um ficam tantas versões quanto os backups
+do cartão. A sincronização também inclui o Memory Card do outro slot (sem sd2psx, os dos dois slots), save por
+save. "Versões no Drive", na página de um save, lista as versões desse save: X sobre uma a coloca
 no lugar do save (o save como está agora é guardado até a versão entrar).
 
 GOOGLE DRIVE
@@ -369,9 +377,10 @@ SINCRONIZAÇÃO AUTOMÁTICA APÓS UM JOGO (IGR)
    jogo, o OPL volta para o BootCard, onde o pacote está instalado.
 A partir daí, sair de um jogo pelo IGR abre o SD2Cloud: ele envia os cartões alterados, mostra "Envio
 concluído" e volta para o OPL. Nesse modo, cancelar o envio também volta para o OPL.
-O SD2Cloud pode ficar em qualquer pasta do MMCE: sempre que é aberto, ele registra onde está no sd2cloud.ini
-("app_path"), e o pacote o abre de lá. Uma pasta de APPS renomeada ou movida também é encontrada pelo pacote,
-mesmo antes de o SD2Cloud ser aberto dela.
+O SD2Cloud pode ficar em qualquer pasta, no MMCE ou em outro dispositivo: sempre que é aberto, ele registra onde
+está (no sd2cloud.ini do MMCE, "app_path"; sem sd2psx, no próprio pacote, com os drivers desse dispositivo), e o
+pacote o abre de lá. Uma pasta de APPS renomeada ou movida no MMCE também é encontrada pelo pacote, mesmo antes de
+o SD2Cloud ser aberto dela.
 Para desinstalar o pacote, escolha "Pacote SAS" de novo e depois "Desinstalar"; em seguida, mude a opção
 "Definir saída do IGR" no OPL.
 Para pausar a sincronização e manter tudo instalado, deixe "Sincronização automática" Desativada nos Ajustes: o

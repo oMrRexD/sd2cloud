@@ -83,6 +83,10 @@ static int install_dest(card_t **to, int *tab, char gameFolder[48], int again)
         tabs_init(&dst.g, NULL, 2);   /* (and the devices: the card as a file of one of their folders) */
         dst.g.add = 1;
         tabs_show(&dst.g, TAB_CARDS);
+        for (i = 0; i < TABS && !dst.g.count[i]; i++)   /* (with no sd2psx, no Cards group: the first there is) */
+            ;
+        if (i != TAB_CARDS)
+            tabs_show(&dst.g, i < TABS ? i : TAB_FILES);
         for (i = 0; i < MAX_CARDS; i++)
             dst.freeBytes[i] = -2;
     }

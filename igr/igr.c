@@ -24,6 +24,9 @@
  * (mc?:/APP_SD2CLOUD), with this file next to it: "Exit to" points at this file there, and with no SD2Cloud on the
  * microSD the one next to it is started.
  *
+ * With no sd2psx at all, SD2Cloud on a USB drive, an MX4SIO or the hard disk: the save folder this file is in says
+ * where it is and carries that device's drivers, which SD2Cloud writes there when it is opened (look_carried).
+ *
  * With no sync to do (the automatic sync turned off in SD2Cloud's settings, or no Google account connected), SD2Cloud
  * isn't started at all: what comes after IGR is started from here (see skip_sync).
  *
@@ -283,10 +286,84 @@ static int on_sd(char *path, const char *root)
  * there by SD2Cloud under their own names, and are loaded in the order SD2Cloud itself loads them */
 static unsigned char module[400 * 1024] __attribute__((aligned(64)));   /* (as the IOP's loader takes one: by DMA) */
 
+/* -------- With no sd2psx, SD2Cloud on a USB drive, an MX4SIO or the hard disk: the save folder this file is in (the
+ * SAS package) says where (APP.TXT, which SD2Cloud writes there) and carries that device's drivers (<module>.irx,
+ * the ones SD2Cloud loads for it). They are read while whatever started this file can still read the memory card:
+ * after the IOP reset nothing here can */
+static char carriedWhere[256];
+static struct {
+    char name[16];
+    int at, len;
+} carried[4];
+static int nCarried;
+static unsigned char carriedData[192 * 1024] __attribute__((aligned(64)));
+
+static int has_prefix(const char *s, const char *prefix) { return !strncasecmp(s, prefix, strlen(prefix)); }
+
+/* the modules a device's drivers are, as run_elsewhere loads them (NULL = no device it knows) */
+static const char *const *modules_of(const char *where)
+{
+    static const char *const usb[] = {"usbd", "bdm", "bdmfs_fatfs", "usbmass_bd", NULL};
+    static const char *const mx[] = {"bdm", "bdmfs_fatfs", "mx4sio_bd", NULL};
+    static const char *const ata[] = {"ps2dev9", "bdm", "bdmfs_fatfs", "ata_bd", NULL};
+    static const char *const hdd[] = {"ps2dev9", "ps2atad", "ps2hdd", "ps2fs", NULL};
+    return has_prefix(where, "mass") || has_prefix(where, "usb") ? usb : has_prefix(where, "mx4sio") ? mx
+           : has_prefix(where, "ata") ? ata : has_prefix(where, "hdd") ? hdd : NULL;
+}
+
+static void look_carried(const char *self)
+{
+    static char file[300];
+    const char *name = strrchr(self, '/'), *const *mods;
+    size_t dir;
+    int fd, n, k, got, at = 0;
+    if (strncmp(self, "mc", 2) != 0 || !name || (dir = name - self + 1) + 20 > sizeof(file))
+        return;
+    memcpy(file, self, dir);
+    strcpy(file + dir, "APP.TXT");
+    if ((fd = open(file, O_RDONLY)) < 0)
+        return;
+    n = read(fd, carriedWhere, sizeof(carriedWhere) - 1);
+    close(fd);
+    carriedWhere[n > 0 ? n : 0] = 0;
+    carriedWhere[strcspn(carriedWhere, "\r\n")] = 0;
+    note("the folder says SD2Cloud is at", carriedWhere, n);
+    if (!(mods = modules_of(carriedWhere))) {
+        carriedWhere[0] = 0;
+        return;
+    }
+    for (k = 0; mods[k]; k++) {
+        strcpy(file + dir, mods[k]);
+        strcat(file + dir, ".irx");
+        if ((fd = open(file, O_RDONLY)) < 0) {   /* (a driver missing: the device can't be read) */
+            note("open", file, fd);
+            carriedWhere[0] = 0;
+            return;
+        }
+        for (n = 0; at + n < (int)sizeof(carriedData) && (got = read(fd, carriedData + at + n, sizeof(carriedData) - at - n)) > 0;)
+            n += got;
+        close(fd);
+        strcpy(carried[nCarried].name, mods[k]);
+        carried[nCarried].at = at;
+        carried[nCarried++].len = n;
+        at = (at + n + 63) & ~63;   /* (each where the IOP's loader takes it from: by DMA) */
+    }
+}
+
+/* root = the microSD the module is read from (SD2Cloud/drivers/); NULL = the ones the save folder carries */
 static int load_driver(const char *root, const char *name, int argLen, const char *args)
 {
     char file[64];
-    int fd, n = 0, got, ret = 0, id;
+    int fd, n = 0, got, ret = 0, id, k;
+    if (!root) {
+        for (k = 0; k < nCarried && strcmp(carried[k].name, name) != 0; k++)
+            ;
+        if (k == nCarried)
+            return -1;
+        id = SifExecModuleBuffer(carriedData + carried[k].at, carried[k].len, argLen, args, &ret);
+        note("module (carried)", name, id < 0 ? id : ret);
+        return id < 0 || ret == 1 ? -1 : 0;
+    }
     strcpy(file, root);
     strcat(file, "SD2Cloud/drivers/");
     strcat(file, name);
@@ -302,8 +379,6 @@ static int load_driver(const char *root, const char *name, int argLen, const cha
     note("module", file, id < 0 ? id : ret);
     return id < 0 || ret == 1 ? -1 : 0;
 }
-
-static int has_prefix(const char *s, const char *prefix) { return !strncasecmp(s, prefix, strlen(prefix)); }
 
 /* waits for a file to be there (a USB drive, an MX4SIO and the hard disk take a moment); 1 = it is */
 static int wait_for(const char *path, int tenths)
@@ -417,13 +492,15 @@ static void not_found(const char *where)
         return;
     }
     scr_printf("\n\n\n   SD2Cloud\n\n"
-               "   SD2CLOUD.ELF was not found on the MMCE (the sd2psx microSD).\n"
-               "   Copy the APPS folder of SD2Cloud's .zip to the MMCE:\n"
-               "   the program goes in APPS/SD2Cloud.\n"
+               "   SD2CLOUD.ELF was not found.\n"
+               "   Open it once from wherever it is (the MMCE, a USB drive,\n"
+               "   an MX4SIO or the hard disk, in any folder): it tells\n"
+               "   this shortcut where it is.\n"
                "   github.com/oMrRexD/sd2cloud\n\n"
-               "   SD2CLOUD.ELF nao encontrado no MMCE (o microSD do sd2psx).\n"
-               "   Copie a pasta APPS do .zip do SD2Cloud para o MMCE:\n"
-               "   o programa fica em APPS/SD2Cloud.\n");
+               "   SD2CLOUD.ELF nao encontrado.\n"
+               "   Abra-o uma vez de onde ele estiver (MMCE, pendrive,\n"
+               "   MX4SIO ou HD interno, em qualquer pasta): ele informa\n"
+               "   a este atalho onde esta.\n");
     sleep(12);
 }
 #else
@@ -485,6 +562,7 @@ int main(int argc, char *argv[])
 #ifndef OPEN
     look_beside(argc > 0 && argv[0] ? argv[0] : "");
 #endif
+    look_carried(argc > 0 && argv[0] ? argv[0] : "");
     run_next_to(argc > 0 && argv[0] ? argv[0] : "");
     while (!SifIopReset("", 0))
         ;
@@ -527,14 +605,20 @@ int main(int argc, char *argv[])
         if (beside[0])   /* it is on the memory card, then: no use waiting for the microSD to have it */
             break;
 #endif
+        if (carriedWhere[0])   /* (or where the save folder says) */
+            break;
         usleep(300 * 1000);
+    }
+#ifndef OPEN
+    if (beside[0])
+        run_beside();
+#endif
+    if (carriedWhere[0]) {   /* no microSD has it: where the save folder says, with the drivers it carries */
+        strcpy(where, carriedWhere);
+        run_elsewhere(NULL, carriedWhere);
     }
 #ifdef OPEN
     not_found(where);
-#else
-    (void)where;
-    if (beside[0])
-        run_beside();
 #endif
     /* not found (or it didn't run): the OSD, as OPL would do without an "Exit to" */
     ExecOSD(0, NULL);

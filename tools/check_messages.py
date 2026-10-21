@@ -206,7 +206,7 @@ PLACE = {
     # the Files group: the devices in the list, what the group is for on the right, a folder that has nothing to show
     "T_DEV_SD": ("text", 172, 1), "T_DEV_USB": ("text", 172, 1), "T_DEV_HDD": ("text", 172, 1), "T_DEV_MX4SIO": ("text", 172, 1), "T_FILES_HINT": ("small", 212, 5),
     # the Memory Card: a row of the Files group (and a card's name in the questions), and what it is for on the right
-    "T_MEMCARD": ("text", 140, 1), "T_MEMCARD_HINT": ("small", 212, 5), "T_MEMCARD_HINT_ALONE": ("small", 212, 5), "T_HELPER_ALONE_USB": ("text", WIDE, 4),
+    "T_MEMCARD": ("text", 140, 1), "T_MEMCARD_HINT": ("small", 212, 5), "T_MEMCARD_HINT_ALONE": ("small", 212, 5),
     "T_HELPER_ALONE_NONE": ("text", WIDE, 5),   # (140: also on the picture of a card)
     "T_MEMCARD_READING": ("text", DIALOG, 1), "T_MEMCARD_READ_FAILED": ("text", DIALOG, 3),
     "T_CARD_FILE_READ_ONLY": ("text", DIALOG, 4),
@@ -373,6 +373,8 @@ PLACE = {
     "T_SAVE_YES": ("text", 200, 1),
     "T_INSTALL_FILE_DONE": ("text", DIALOG, 2),
     "T_WRITING_FILE": ("text", DIALOG, 1),
+    "T_FIRST_QUESTION_ONE": ("text", DIALOG, 2),
+    "T_AUTO_WHERE_ALONE": ("small", WIDE, 2),
     "T_SET_LIBRARY_DRIVE": ("text", 300, 1), "T_LIBRARY_DRIVE_NOTE": ("text", WIDE, 3),
     # the hard disk's two sides, to pick one; with no sd2psx, a card is made as a file (its hint); a split by game done
     # (the box's title); the Memory Card's saves sent by themselves (one; read first; the card that didn't answer, after

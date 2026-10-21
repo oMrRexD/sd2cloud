@@ -100,11 +100,10 @@ void find_device(void)
     int r, product, sd2 = has_dir(sdRoot, "MemoryCards/PS2"), pro = has_dir(sdRoot, "PS2");
     dev = &devSd2psx;
     deviceBoth = 0;
-    if (standalone) {   /* no device in the slots: the cards of a microSD in a card reader, by its folders */
-        dev = !sd2 && pro ? &devMcp2 : &devSd2psx;
+    if (standalone) {   /* no device in the slots: a device's folders on the drive are no cards in use (cards_scan) */
         devHere = dev;
         cardTold = devicePings = 0;
-        log_msg("device: none in the slots; %s has %s", sdRoot, sd2 ? "an sd2psx's cards" : pro ? "a MemCard PRO2's cards" : "no device's cards");
+        log_msg("device: none in the slots%s", sd2 || pro ? " (the drive has a device's folders: left as files)" : "");
         return;
     }
     r = mmce_devctl(MMCE_CMD_PING, NULL, 0);
