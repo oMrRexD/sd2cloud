@@ -118,6 +118,10 @@ jobs:
           gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --verify-tag \
             --title "SD2Cloud ${GITHUB_REF_NAME#v}" --notes-file dist/RELEASE-NOTES.md \
             dist/SD2Cloud-v*.zip dist/SD2CLOUD.ELF dist/SD2CLOUD-IGR.ELF dist/SHA256SUMS.txt
+          # (the runner's gh, since Ubuntu 26, can leave a release made with its files as a draft, which nobody sees and
+          # SD2Cloud's updater can't find: published, and the job fails if it still isn't)
+          gh release edit "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --draft=false
+          [ "$(gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft)" = "false" ]
 
   # The beta channel: what was just built from main, as a pre-release under the fixed tag "beta", made again at every
   # push (the release before it is deleted with its tag, and the new one is created on this commit). SD2Cloud looks at
@@ -169,3 +173,6 @@ jobs:
           gh release create beta --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease --latest=false \
             --title "SD2Cloud beta ($short)" --notes-file beta-notes.md \
             dist/SD2Cloud-beta.zip dist/SD2CLOUD.ELF dist/SD2CLOUD-IGR.ELF dist/SD2CLOUD-DEBUG.ELF dist/SHA256SUMS.txt
+          # (left as a draft by the runner's gh, the beta channel would have nothing to offer: published, and checked)
+          gh release edit beta --repo "$GITHUB_REPOSITORY" --draft=false --prerelease --latest=false
+          [ "$(gh release view beta --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft)" = "false" ]
