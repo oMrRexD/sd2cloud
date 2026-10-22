@@ -24,6 +24,18 @@ int memcard_ports(int ports[2])
 
 void memcard_pick(int port) { picked = port; }
 
+int save_can_go(const char *folder, const card_t *from)
+{
+    char game[12];
+    int ports[2], n, i;
+    if (nCards || library_on() || (!standalone && save_game_id(folder, game)))
+        return 1;
+    for (n = memcard_ports(ports), i = 0; i < n; i++)   /* (a Memory Card: not the one the save is on) */
+        if (!(from == &slotCard && mcfs_slot_port(slotCard.path) == ports[i]))
+            return 1;
+    return 0;
+}
+
 /* Is there one (a formatted PS2 memory card in the other slot; with no sd2psx, in the slot picked or in either)? 1 =
  * yes, and slotCard is it. Asked each time it may be offered: a card is put in and taken out while the program is
  * open */

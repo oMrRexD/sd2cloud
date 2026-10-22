@@ -231,6 +231,9 @@ const char *memcard_id(void);
  * ports in ports. memcard_pick: which of them memcard_there takes (slotCard) */
 int memcard_ports(int ports[2]);
 void memcard_pick(int port);
+/* Is there anywhere a save can go: a card of the device, the Library, a Memory Card in a slot (not the one it is on)
+ * or, with an sd2psx, a new card of its game? from = the card the save is on (NULL = a file). 1 = yes */
+int save_can_go(const char *folder, const card_t *from);
 void memcard_history(void);         /* its backups on Drive, to put one back */
 int memcard_restore(card_t *c, const drive_file_t *f);   /* that backup's saves into it, asked first. 1 = done */               /* the whole card, as a backup of its own on Drive */
 

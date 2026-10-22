@@ -1,0 +1,15 @@
+# log
+SD2Cloud <version> -- program in host:APPS/SD2Cloud/ (host:SD2CLOUD-DEBUG.ELF), data in host:SD2Cloud/, manual
+settings: [app] app_path = host:SD2CLOUD-DEBUG.ELF (0)
+0 card(s) on the microSD
+the console's clock goes on
+slot/mc1: 1 of the 1 saves list what they did when they were last sent: not read
+slot/mc1: 1 saves, read in N ms; 0 changed since they were last sent
+returning to: osd
+(end: OSD)
+
+# files
+2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881  MemoryCards/PS2/Card1/notes.txt
+d0ef2251f65c7847e3246c1c6a199fbf6bf382212327ae98a3482a525f3c8cde  SD2Cloud/sd2cloud.ini
+c24d21300d9f8d8ab0e56e6670b96956531fdcc19cd5c2c44c5dea8953de42d3  SD2Cloud/state-debug.ini
+1772af4675a992f94fc6527e0d3bb946246e417f5fb7d4d819e6502ed4e6b7ba  SD2Cloud/token.dat

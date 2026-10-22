@@ -518,8 +518,7 @@ void marks_report(int copied, int failed)
  * on from there. 0 = there is nowhere to copy it to (said) */
 int copy_start(const save_view_t *v)
 {
-    char game[12];
-    if (!nCards && !save_game_id(v->s.folder, game)) {   /* a save of a card file, with no card on the microSD */
+    if (!save_can_go(v->s.folder, v->card)) {   /* a save of a card file, with no card on the microSD */
         message_wait(0, NULL, COLOR_WARN, T(T_NO_CARDS_SD));
         return 0;
     }

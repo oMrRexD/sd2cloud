@@ -30,6 +30,13 @@ def psu_folder(psu, folder):
     return files
 
 
+def psu_named(psu, folder):
+    """a .psu of fixtures/ whose save's folder has another name (bytes, for "files")"""
+    d = bytearray((pathlib.Path(__file__).parent / "fixtures" / psu).read_bytes())
+    d[64:96] = folder.encode().ljust(32, b"\0")
+    return bytes(d)
+
+
 # the cards most scenarios start from: two numbered cards and a game's card
 CARDS = {"Card1/Card1-1": "game", "Card2/Card2-1": "empty", "SLUS-21065/SLUS-21065-1": "game"}
 # an OPL VMC on the microSD, and the settings of the game that uses it
@@ -220,6 +227,11 @@ SCENARIOS = [
     {"name": "standalone", "what": "no sd2psx: the drive's VMCs as cards, the Memory Cards of both slots in Files",
      "files": {"SD2Cloud/standalone.txt": b"x", "VMC/generic_0.bin": "game.mcd"}, "memcard": "memcard.ps2",
      "script": ">C"},
+    # (a save whose folder tells no game, as a network configuration's, with no card on the microSD, as with no sd2psx:
+    # the Memory Card is where it goes)
+    {"name": "psu-memcard-no-cards", "what": "no card on the microSD: a .psu of a save with no game ID imported into the Memory Card",
+     "files": {"Files/net.psu": psu_named("save.psu", "BWNETCNF"), "MemoryCards/PS2/Card1/notes.txt": b"x"},
+     "memcard": "memcard.ps2", "script": "XXXX>XXC"},
     {"name": "standalone-memcard", "what": "no sd2psx: the Memory Card of slot 2 opened from its row in Files",
      "files": {"SD2Cloud/standalone.txt": b"x"}, "memcard": "memcard.ps2", "script": ">DDDXC"},
     {"name": "standalone-sas", "what": "no sd2psx, the program on a drive the IGR can't start it from: the SAS package's screen says so",
@@ -361,6 +373,12 @@ SCENARIOS = [
     {"name": "saves-by-name", "what": "a card's saves the oldest first, by name, and the newest first again: each time the options are closed", "cards": CARDS, "script": "XTDXOTDXOTDXOC"},
     {"name": "igr-no-account", "what": "started as after IGR with no Google account: it leaves at once", "cards": CARDS,
      "script": "I"},
+    # (an account, and the Memory Card's save as it was sent: its saves are looked at, and with none to send the network
+    # isn't even started)
+    {"name": "igr-nothing-new", "what": "after IGR with nothing new on the Memory Card: nothing is asked of the network",
+     "files": {"MemoryCards/PS2/Card1/notes.txt": b"x", "SD2Cloud/token.dat": b"refresh_token = test\r\n",
+               "SD2Cloud/state-debug.ini": b"[slot/memcard]\r\nsave:BASLUS-99999TESTS = 4d2170dfd47ab2de 325d930c1bf81199\r\n"},
+     "memcard": "memcard.ps2", "settings": "[cards]\r\nsaves = yes\r\n", "script": "I"},
     # the tools (SELECT) and the templates. The keyboard starts on A: DD>> is W. Triangle has a template's options, on
     # the list (LXDT) or with the template open (LXDXT)
     {"name": "template-create", "what": "a template made of two saves marked on a card, under the name it is offered; "

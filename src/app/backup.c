@@ -89,12 +89,46 @@ static void delete_old(const card_t *c, const char *folder, const char *newId)
     }
 }
 
+/* The access to Google of the sync under way, asked for the first time a card's folder on Drive is needed: a sync with
+ * nothing to send (at IGR, a Memory Card whose saves are as they were) doesn't wait for the network at all. 1 = it has
+ * it (or no sync is under way), 0 = not yet, -1 = it couldn't be had (said in googleError) */
+static int online = 1;
+
+static int go_online(void)
+{
+    char t[sizeof(googleError)];
+    int r;
+    if (online)
+        return online > 0 ? 0 : -1;
+    googleError[0] = 0;
+#ifdef DEBUG_BUILD
+    r = debugDry ? 0 : ensure_google(!igrMode);   /* (a dry sync: nothing goes, nothing is asked) */
+#else
+    r = ensure_google(!igrMode);
+#endif
+    if (r != 0) {
+        online = -1;
+        if (r < 0)   /* backed out of the sign-in: the same as cancelling */
+            backupCancelled = 1;
+        snprintf(t, sizeof(t), "%s %s", r > 0 ? T(r) : "", googleError);
+        snprintf(googleError, sizeof(googleError), "%s", t);
+        return -1;
+    }
+    /* the main folder is checked once per run (it may have been deleted on Drive), and so are the second layout's */
+    rootId[0] = 0;
+    drive_session_start();
+    online = 1;
+    return 0;
+}
+
 /* the folder of a card's backups: in the first layout, its group's in the main folder, from the cache or found
  * (created if missing); in the second, its own (drive.c). 0 = ok */
 int card_folder(const card_t *c, char *folderId, size_t size)
 {
     char key[200];
     const char *cache;
+    if (go_online() != 0)
+        return -1;
     if (drive_layout() == 2)   /* (each card in a folder of its own, its group's in its device's: drive.c) */
         return drive_folder_of(c, 0, NULL, folderId, size);
     if (!rootId[0]) {
@@ -221,19 +255,17 @@ void run_backup(int mode, int rotate)
     nResults = sent = failed = 0;
     backupCancelled = cancelLatched = 0;
     googleError[0] = 0;
-    r = DRY ? 0 : ensure_google(!igrMode);
-    if (r < 0) {   /* backed out of the sign-in: the same as cancelling */
-        backupCancelled = 1;
-        return;
+    online = 0;   /* (asked for once something has to go: go_online) */
+    if (!DRY && !google_has_access()) {   /* no account yet: the sign-in first, before the screen of the sync */
+        if (go_online() != 0) {
+            if (!backupCancelled) {
+                add_result(COLOR_ERROR, "%s", googleError);
+                failed++;
+            }
+            online = 1;
+            return;
+        }
     }
-    if (r != 0) {
-        add_result(COLOR_ERROR, "%s %s", T(r), googleError);
-        failed++;
-        return;
-    }
-    /* the main folder is checked once per run (it may have been deleted on Drive), and so are the second layout's */
-    rootId[0] = 0;
-    drive_session_start();
 
     sync_list_start(mode);
     totalN = nSync;
@@ -244,7 +276,7 @@ void run_backup(int mode, int rotate)
     scriptLive = debugDry;
 #endif
     google_set_stop(stop_asked);
-    for (k = 0; k < nSync && !backupCancelled; k++) {
+    for (k = 0; k < nSync && !backupCancelled && online >= 0; k++) {   /* (no access to Google: the rest waits too) */
         card_t *c = syncCards[k].c;
         card_state_t *e;
         stream_t s;
@@ -344,6 +376,7 @@ void run_backup(int mode, int rotate)
     sync_list_end();
     skipOffered = 0;
     backupSkip = 0;
+    online = 1;
     state_write();
 }
 

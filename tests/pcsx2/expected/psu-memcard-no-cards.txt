@@ -1,0 +1,29 @@
+# log
+SD2Cloud <version> -- program in host:APPS/SD2Cloud/ (host:SD2CLOUD-DEBUG.ELF), data in host:SD2Cloud/, manual
+settings: [app] app_path = host:SD2CLOUD-DEBUG.ELF (0)
+settings: [drive] layout = 2 (0)
+0 card(s) on the microSD
+[script] X
+files: host:: 5 entries
+  0: Files/ (0 bytes)
+  1: MemoryCards/ (0 bytes)
+  2: SD2Cloud/ (0 bytes)
+[script] X
+files: host:Files/: 1 entries
+  0: net.psu (15360 bytes)
+[script] X
+files: host:Files/net.psu: 0 (BWNETCNF, 10300 bytes in 3 files)
+[script] X
+[script] >
+[script] X
+[script] X
+slot: folder /BWNETCNF made (0)
+slot: /BWNETCNF put into the card in slot 2, 3 file(s)
+mcfs: import of host:Files/net.psu into mc1: 0
+import host:Files/net.psu into slot/mc1: 0
+(end: capture)
+
+# files
+1f6d0ebcf15d8145797dd8539bebeb2221350120c6d4874f21b6df8a23a1a645  Files/net.psu
+2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881  MemoryCards/PS2/Card1/notes.txt
+9272b61510164169e9ebbb38efa709c8a15fd23349ca3a27a557feebecfdc410  SD2Cloud/sd2cloud.ini

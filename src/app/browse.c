@@ -360,10 +360,10 @@ void psu_close(void)
 /* that save into a card, which is picked next; asked before it is written */
 void psu_import(void)
 {
-    char name[160], t[300], game[12];
+    char name[160], t[300];
     card_t *to;
     int r, made, again;
-    if (!nCards && !save_game_id(psu.info.folder, game)) {
+    if (!save_can_go(psu.info.folder, NULL)) {
         message_wait(0, NULL, COLOR_WARN, T(T_NO_CARDS_SD));
         return;
     }
