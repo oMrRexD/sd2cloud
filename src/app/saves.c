@@ -157,6 +157,15 @@ static void scene_browser(float t)
 
 void browser_scene(void) { ui_scene(scene_browser); }
 
+/* the buttons the screen of saves waits for: one of them pressed while an icon is read gives the reading up, to be
+ * answered at once (the icon is read again later) */
+static u32 iconKeys;
+static int icon_break(void)
+{
+    /* (an arrow held, the cursor going on through the saves: they are read once it stops) */
+    return nav_pressed(iconKeys) || (pad_buttons() & (PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT));
+}
+
 /* reads the icon of the first save on screen that wasn't read yet; 0 = there was none */
 static int load_next_icon(void)
 {
@@ -170,7 +179,16 @@ static int load_next_icon(void)
     {
         buffer_t iconsys = {0}, ico = {0};
         icon_t *ic = NULL;
-        if ((brwIcon ? brwIcon(&brw.saves[i], &iconsys, &ico) : mcfs_save_icon(brw.saves[i].card->path, &brw.saves[i].s, &iconsys, &ico)) == 0)
+        int r;
+        mcfs_set_break(icon_break);
+        r = brwIcon ? brwIcon(&brw.saves[i], &iconsys, &ico) : mcfs_save_icon(brw.saves[i].card->path, &brw.saves[i].s, &iconsys, &ico);
+        mcfs_set_break(NULL);
+        if (r != 0 && mcfs_broken()) {   /* (a button: not read yet, as it was) */
+            buf_free(&iconsys);
+            buf_free(&ico);
+            return 1;
+        }
+        if (r == 0)
             ic = icon_load(&iconsys, &ico);
         buf_free(&iconsys);
         buf_free(&ico);
@@ -615,6 +633,7 @@ u32 browser_wait(u32 buttons)
     for (;;) {
         int pending = 1, n = brw.n, k = brw.cursor;
         u32 b, keys = PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT | buttons;
+        iconKeys = keys;
         while (pending && !(b = wait_nav_ms(keys, 0)))
             pending = load_next_icon();
         if (!pending)
@@ -711,7 +730,8 @@ static int browser_options(const card_t *c)
     if (c == &allGames) {
         opt.id[opt.n++] = OPT_REPEATED;
         opt.id[opt.n++] = OPT_EXPORT;
-    } else   /* (a card of many games: the Memory Card, a card file, one of the device's) */
+    } else if (!standalone)   /* (a card of many games: the Memory Card, a card file, one of the device's. Its games'
+                                 cards are an sd2psx's: with none, nothing would show them) */
         opt.id[opt.n++] = OPT_BY_GAME;
 made:
     opt.sort = cfg.sort;

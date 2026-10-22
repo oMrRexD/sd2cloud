@@ -21,9 +21,11 @@ typedef struct {
 card_state_t *state_card(const char *id, int create);
 void state_forget(const char *id);                       /* a card that is no more: what was known of it goes */
 /* each save of a card sent by itself (the backup by save): its signature when it was last sent, as 16 hex digits
- * (mcfs_save_signatures'). NULL = never sent. Kept in the card's own section, as "save:<folder> = <signature>" */
+ * (mcfs_save_signatures'). NULL = never sent. Kept in the card's own section, as "save:<folder> = <signature>", and
+ * a Memory Card's with what its folder listed then (mcfs_save_stamp's, 16 hex digits more: "<signature> <stamp>") */
 const char *state_save(const char *card, const char *folder);
-void state_set_save(const char *card, const char *folder, const char *sig);
+const char *state_save_stamp(const char *card, const char *folder);   /* "" = none kept */
+void state_set_save(const char *card, const char *folder, const char *sig, const char *stamp);   /* stamp NULL = none */
 void state_rename(const char *from, const char *to);     /* a card that is called another thing now keeps it */
 const char *state_folder(const char *name);              /* Drive folder id (cache) */
 void state_set_folder(const char *name, const char *id);

@@ -532,6 +532,30 @@ static int step(size_t n)
 
 /* the length bytes of a file, following its FAT chain from cluster c. The clusters it has in a row are read together,
  * straight into the buffer (from a card's own file; a .ps2's ECC bytes, or a card in memory, go cluster by cluster) */
+static int (*readBreak)(void);
+static int broken;
+
+void mcfs_set_break(int (*brk)(void))
+{
+    readBreak = brk;
+    if (brk)   /* (taken away, what happened to the reading is still told) */
+        broken = 0;
+}
+
+int mcfs_break_now(void)
+{
+    if (readBreak && !broken && readBreak())
+        broken = 1;
+    return broken;
+}
+
+int mcfs_broken(void)
+{
+    int b = broken;
+    broken = 0;
+    return b;
+}
+
 static int read_chain(mc_t *m, unsigned int c, unsigned int length, buffer_t *out)
 {
     unsigned int left, steps = 0;
@@ -541,6 +565,8 @@ static int read_chain(mc_t *m, unsigned int c, unsigned int length, buffer_t *ou
         out->cap = length + 1;
     for (left = length; left;) {
         unsigned int run = 1, k, e;
+        if (mcfs_break_now())   /* (an icon read while the user may press a button: given up for it) */
+            return -1;
         while (run * m->csz < left && run < RUN / m->csz) {   /* how many in a row, from this one */
             e = fat(m, c + run - 1);
             if (e == FAT_END || !(e & FAT_ALLOC))
@@ -2087,6 +2113,29 @@ static int slot_info(int port, const char *folder, long long *bytes, int *files)
     for (i = 0; i < n; i++)
         *bytes += le32(slotDir[i] + 4), (*files)++;
     return MCFS_OK;
+}
+
+int mcfs_save_stamp(const char *path, const mcfs_save_t *save, unsigned long long *stamp)
+{
+    unsigned long long h = 1469598103934665603ULL;   /* (FNV-1a, 64 bits) */
+    unsigned char when[8];
+    int port = mcfs_slot_port(path), n, i, k;
+    if (port < 0 || (n = slot_files(port, save->folder)) < 0)
+        return -1;
+    for (k = 0; k < 8; k++)   /* the folder's own date, and each file's name, size and date */
+        when[k] = (unsigned char)(save->when >> (8 * k));
+    for (k = 0; k < 8; k++)
+        h = (h ^ when[k]) * 1099511628211ULL;
+    for (i = 0; i < n; i++) {
+        for (k = 64; k < 96; k++)
+            h = (h ^ slotDir[i][k]) * 1099511628211ULL;
+        for (k = 4; k < 8; k++)
+            h = (h ^ slotDir[i][k]) * 1099511628211ULL;
+        for (k = 24; k < 32; k++)
+            h = (h ^ slotDir[i][k]) * 1099511628211ULL;
+    }
+    *stamp = h ? h : 1;
+    return 0;
 }
 
 /* the save whole into s: its entry in the root, ".", ".." and its files, read; their bytes told to the progress */

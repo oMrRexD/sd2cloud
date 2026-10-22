@@ -258,8 +258,8 @@ void card_check_screen(card_t *c);
 int safety_copy(const card_t *c);
 void safety_screen(void);
 /* savesync.c, the backup by save: the saves of that card that changed since they were last sent, each sent by itself
- * as a .psu to the card's Saves folder on Drive (folderId = the card's folder), the newest of each kept. How many were
- * sent; -1 = they couldn't be */
+ * as a .psu to the card's Saves folder on Drive (folderId = the card's folder; NULL = found once a save has to go), the
+ * newest of each kept. How many were sent; -1 = they couldn't be */
 int saves_backup(card_t *c, const char *folderId);
 void save_versions_screen(card_t *c, save_view_t *v);   /* "Versions on Drive": one of them put back in its place */
 int sync_stop(void);            /* (backup.c) the sync was cancelled, or the card on its way skipped: 1 */   /* Tools > "Safety copies": each one put back as its card, or deleted */
@@ -508,6 +508,7 @@ void library_place(int words);
 void library_dest(const char *folder);
 void library_dest_marked(void);
 const char *library_dest_name(void);
+int library_dest_fresh(void);   /* that game has no folder in the Library yet (its row has a plus, its card "New folder") */
 int tabs_memcard_port(const tabs_t *g);
 int memcard_rows(tabs_t *g);   /* (tabs.c) the Memory Cards a list offers: how many, their slots in g->mcPorts */   /* the slot of the Memory Card the cursor is on (-1 = not on one) */
 int storage_text(void);   /* with no sd2psx: the name of the drive the program works from (T_DEV_USB...) */
@@ -560,6 +561,7 @@ void card_work_done(void);
 #ifdef DEBUG_BUILD
 void debug_preview(int k);
 void debug_preview_shown(void);
+void debug_font_try(void);   /* (script "q") a few rows four times, the "I" of one moved by a pixel each time */
 extern int debugDry;
 extern int scriptLive;            /* (platform: the script holds the buttons, while the dry sync only looks at them) */
 #endif
@@ -568,7 +570,7 @@ extern volatile long long shownDone, shownTotal;   /* how far it went */
 
 /* ------------------------------------------------------------ synclist.c */
 /* the cards of the sync under way, in its order, and what became of each */
-enum { SY_WAITING, SY_SENDING, SY_SENT, SY_FAILED, SY_SKIPPED, SY_RESOLVED, SY_OFF, SY_UNCHANGED };
+enum { SY_WAITING, SY_SENDING, SY_SENT, SY_FAILED, SY_SKIPPED, SY_RESOLVED, SY_OFF, SY_UNCHANGED, SY_CHECKING };
 typedef struct {
     card_t *c;
     int state;   /* SY_*: SKIPPED, RESOLVED and OFF asked from the list (or square) */
@@ -581,6 +583,11 @@ void sync_list_end(void);
 void sync_set(int k, int state);
 int sync_list_poll(void);
 void scene_sync(float t);
+/* a card's saves sent each by itself (the backup by save), in a sync of every card: on its turn the list is its saves,
+ * each with what became of it (SY_WAITING, CHECKING, SENDING, SENT, FAILED, UNCHANGED) */
+void sync_saves_start(const card_t *c, const mcfs_save_t *saves, int n);
+void sync_saves_set(int i, int state);
+void sync_saves_end(void);
 
 void save_into(const card_t *to, const save_view_t *v, int text);
 int save_progress(int phase, long long done, long long total);

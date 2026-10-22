@@ -37,6 +37,9 @@ int pad_circle_confirms(void);
 u32 wait_button(u32 mask, int seconds);     /* 0 = timed out; seconds = 0 waits forever */
 u32 wait_nav(u32 mask);                     /* for lists: like wait_button, but the arrows repeat while held */
 u32 wait_nav_ms(u32 mask, int ms);          /* the same, giving up after ms (0 = no press) */
+/* while something is read between two waits of those: was one of those buttons pressed meanwhile? 1 = yes, and the
+ * next wait returns it as pressed (even let go of by then) */
+int nav_pressed(u32 mask);
 u32 wait_nav_repeat(u32 mask, u32 repeat);  /* wait_nav, the buttons of repeat repeating too (square erasing, held) */
 extern void (*idleHook)(void);              /* called over and over while one of those waits (NULL = nothing to call) */
 typedef struct {
@@ -46,6 +49,10 @@ void local_time(datetime_t *t);
 /* a memory card's time (the PS2 writes it in the console clock's Japan time) in the console's time zone */
 void card_time_local(int year, int month, int day, int hour, int minute, int second, datetime_t *t);
 void card_time_now(unsigned char t[8]);   /* the console's clock as a card keeps a time (reserved, sec... year) */
+/* Does the console's clock go on? One that stands still dates whatever is written the same: a save a game wrote again
+ * can't be told by its dates then. Read at the start (clock_mark) and again once, more than a second later */
+void clock_mark(void);
+int clock_goes(void);
 void log_raw(const char *d, size_t n);
 void log_msg(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
 /* a sync started by IGR failed: what the log said of that run goes to <data>sync-error.txt (the last failure only) */
@@ -76,6 +83,7 @@ void find_device(void);   /* which device is in the slot (dev), as when the prog
 int system_redetect(void);
 #ifdef DEBUG_BUILD
 extern int debugUnplugged;   /* (script "G"; "p" puts it back) the sd2psx taken out, as far as the slots are looked at */
+const char *debug_home(void);   /* where the script, the rescue and the log are: the data folder, or the program's own */
 #endif
 /* Tell the sd2psx to emulate another card, as its own buttons do: it writes what it holds of the current one to the
  * microSD, closes it and opens the other, a moment later. Each one only asks (0 = the sd2psx took the request):

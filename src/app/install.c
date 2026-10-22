@@ -163,9 +163,10 @@ static int card_to_file(const char *path, int format)
 {
     char tmp[220];
     card_t to;
+    const char *name = strrchr(path, '/') ? strrchr(path, '/') + 1 : strrchr(path, ':') ? strrchr(path, ':') + 1 : path;
     int r, ecc = format >= 0 && cardFormats[format].ecc;
     memset(&to, 0, sizeof(to));
-    snprintf(to.base, sizeof(to.base), "%.55s", strrchr(path, '/') ? strrchr(path, '/') + 1 : path);
+    snprintf(to.base, sizeof(to.base), "%.55s", name);   /* (the file's name: not its device's, in its root) */
     snprintf(to.id, sizeof(to.id), "file/%.80s", to.base);
     snprintf(tmp, sizeof(tmp), "%s.tmp", path);   /* (a .ps2: the card goes there first, and from there with its ECC) */
     snprintf(to.path, sizeof(to.path), "%s", ecc ? tmp : path);

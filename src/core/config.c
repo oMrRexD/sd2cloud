@@ -180,6 +180,7 @@ int config_set(const char *section, const char *key, const char *value)
     char path[260];
     int r;
     snprintf(path, sizeof(path), "%ssd2cloud.ini", dataDir);
+    file_recover(path);   /* (one that a write that failed left as .new: not written again from nothing) */
     if (!file_exists(path))
         config_write_template();
     r = file_exists(path) ? ini_set(path, section, key, value) : -1;
@@ -196,6 +197,7 @@ int ini_set(const char *path, const char *section, const char *key, const char *
     int inSection = 0, seen = 0, done = 0, r;
     /* a file that isn't there yet starts empty; one that is there and can't be read is left alone, never written
      * again from nothing (a folder's .ini has its channels' names) */
+    file_recover(path);
     if (file_read(path, &in) != 0 && file_exists(path)) {
         buf_free(&in);
         return -1;

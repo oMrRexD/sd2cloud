@@ -1295,3 +1295,13 @@ T_WRITING_FILE = Writing the file...
 T_FIRST_QUESTION_ONE = Sync the memory card now? (%s, approx. %d min)
 # Up to 2 lines.
 T_AUTO_WHERE_ALONE = The SAS package will be installed on the memory card in use, with what it needs to open SD2Cloud from where it is.
+# Button.
+T_MIGRATE_ALL_OFF = Select none
+# Button.
+T_MIGRATE_ALL_ON = Select all
+# Button.
+T_MIGRATE_MARK = Select
+# One line.
+T_LIBRARY_NEW_FOLDER = New folder
+# One line.
+T_SY_CHECKING = Checking...

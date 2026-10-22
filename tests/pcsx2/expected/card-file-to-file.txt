@@ -33,7 +33,7 @@ files: host:: 5 entries
 [script] S
 [script] X
 install: host:Files/card.mcd as host:card.mcd
-install: file/host:card.mcd written and verified (8388608 bytes, sha e67be4206c58f05d)
+install: file/card.mcd written and verified (8388608 bytes, sha e67be4206c58f05d)
 install: from memory, N s reading the file, N s writing the card, N s reading it back
 install card.mcd as a file: host:card.mcd: 0
 [script] X

@@ -24,6 +24,7 @@ static struct {
     short card;        /* its card's place in states[] */
     char folder[33];
     char sig[17];
+    char stamp[17];
 } saveStates[MAX_SAVE_STATES];
 static int nSaveStates;
 static struct {
@@ -67,32 +68,45 @@ void state_forget(const char *id)
         }
 }
 
-const char *state_save(const char *card, const char *folder)
+static int save_state(const char *card, const char *folder)
 {
     card_state_t *e = state_card(card, 0);
     int i, c = e ? (int)(e - states) : -1;
     for (i = 0; i < nSaveStates && c >= 0; i++)
         if (saveStates[i].card == c && !strcmp(saveStates[i].folder, folder))
-            return saveStates[i].sig;
-    return NULL;
+            return i;
+    return -1;
 }
 
-void state_set_save(const char *card, const char *folder, const char *sig)
+const char *state_save(const char *card, const char *folder)
+{
+    int i = save_state(card, folder);
+    return i >= 0 ? saveStates[i].sig : NULL;
+}
+
+const char *state_save_stamp(const char *card, const char *folder)
+{
+    int i = save_state(card, folder);
+    return i >= 0 ? saveStates[i].stamp : "";
+}
+
+void state_set_save(const char *card, const char *folder, const char *sig, const char *stamp)
 {
     card_state_t *e = state_card(card, 1);
     int i, c = e ? (int)(e - states) : -1;
     if (c < 0)
         return;
-    for (i = 0; i < nSaveStates; i++)
-        if (saveStates[i].card == c && !strcmp(saveStates[i].folder, folder)) {
-            COPY(saveStates[i].sig, sig);
+    for (i = 0; i < nSaveStates && !(saveStates[i].card == c && !strcmp(saveStates[i].folder, folder)); i++)
+        ;
+    if (i == nSaveStates) {
+        if (nSaveStates == MAX_SAVE_STATES)
             return;
-        }
-    if (nSaveStates < MAX_SAVE_STATES) {
         saveStates[nSaveStates].card = (short)c;
         COPY(saveStates[nSaveStates].folder, folder);
-        COPY(saveStates[nSaveStates++].sig, sig);
+        nSaveStates++;
     }
+    snprintf(saveStates[i].sig, sizeof(saveStates[i].sig), "%.16s", sig);   /* (from the file: "<signature> <stamp>") */
+    COPY(saveStates[i].stamp, stamp ? stamp : "");
 }
 
 void state_rename(const char *from, const char *to)
@@ -152,7 +166,7 @@ static void on_state(const char *s, const char *k, const char *v, void *u)
         else if (!strcasecmp(k, "sha256")) COPY(e->sha, v);
         else if (!strcasecmp(k, "when")) COPY(e->when, v);
         else if (!strcasecmp(k, "resolved")) COPY(e->resolved, v);
-        else if (!strncasecmp(k, "save:", 5)) state_set_save(s, k + 5, v);
+        else if (!strncasecmp(k, "save:", 5)) state_set_save(s, k + 5, v, strlen(v) == 33 && v[16] == ' ' ? v + 17 : NULL);
     }
 }
 
@@ -187,7 +201,8 @@ int state_write(void)
         }
         for (j = 0; j < nSaveStates; j++)
             if (saveStates[j].card == i) {
-                snprintf(t, sizeof(t), "save:%s = %s\r\n", saveStates[j].folder, saveStates[j].sig);
+                snprintf(t, sizeof(t), "save:%s = %s%s%s\r\n", saveStates[j].folder, saveStates[j].sig,
+                         saveStates[j].stamp[0] ? " " : "", saveStates[j].stamp);
                 buf_append(&b, t, strlen(t));
             }
     }

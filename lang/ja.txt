@@ -1293,3 +1293,13 @@ T_WRITING_FILE = ファイルを書き込んでいます...
 T_FIRST_QUESTION_ONE = メモリーカードを今すぐ同期しますか？（%s、約 %d 分）
 # Up to 2 lines. English: The SAS package will be installed on the memory card in use, with what it needs to open SD2Cloud from where it is.
 T_AUTO_WHERE_ALONE = SAS パッケージは使用中のメモリーカードに、SD2Cloud をその場所から開くのに必要なものと一緒にインストールされます。
+# Button. English: Select none
+T_MIGRATE_ALL_OFF = すべて解除
+# Button. English: Select all
+T_MIGRATE_ALL_ON = すべて選択
+# Button. English: Select
+T_MIGRATE_MARK = 選択
+# One line. English: New folder
+T_LIBRARY_NEW_FOLDER = 新しいフォルダー
+# One line. English: Checking...
+T_SY_CHECKING = 確認中...

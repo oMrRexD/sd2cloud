@@ -173,10 +173,11 @@ CARDS
   after it is verified; if anything fails, the current card stays as it was.
 - Convert to Game ID: the card's saves (also the Memory Card's or a card file's) are listed by game, each with
   the card it goes to: the game's card, or "New card" with its size (TRIANGLE changes it). X leaves a game out;
-  START copies them all, on one screen with the total time left. A save the game's card already has in another
-  version is asked about once (keep the card's, replace it, or keep the newest). New cards get the game's
-  templates. At the end, R2 removes the copied saves from the source card, after asking; by default it stays as
-  it was.
+  SQUARE unselects them all, to pick a few (with none selected, it selects them all again); START copies them
+  all, on one screen with the total time left. A save the game's card already has in another version is asked
+  about once (keep the card's, replace it, or keep the newest). New cards get the game's templates. At the end,
+  R2 removes the copied saves from the source card, after asking; by default it stays as it was. Only with an
+  sd2psx or a MemCard PRO2: game cards are theirs.
 - Check card: looks through the card's file system (its chains of clusters, its entries) and says what is
   wrong, if anything. Nothing is written.
 - Delete card: asks first. The card the device is using is let go of first (the device moves to another one).

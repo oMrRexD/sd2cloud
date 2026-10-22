@@ -1292,3 +1292,13 @@ T_WRITING_FILE = Запис файлу...
 T_FIRST_QUESTION_ONE = Синхронізувати картку пам’яті зараз? (%s, близько %d хв)
 # Up to 2 lines. English: The SAS package will be installed on the memory card in use, with what it needs to open SD2Cloud from where it is.
 T_AUTO_WHERE_ALONE = Пакет SAS буде встановлено на поточну картку пам’яті разом із драйверами пристрою з SD2Cloud.
+# Button. English: Select none
+T_MIGRATE_ALL_OFF = Зняти всі
+# Button. English: Select all
+T_MIGRATE_ALL_ON = Позначити всі
+# Button. English: Select
+T_MIGRATE_MARK = Позначити
+# One line. English: New folder
+T_LIBRARY_NEW_FOLDER = Нова папка
+# One line. English: Checking...
+T_SY_CHECKING = Перевірка...

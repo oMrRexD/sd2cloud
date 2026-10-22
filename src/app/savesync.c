@@ -11,6 +11,7 @@
 
 static mcfs_save_t sv[MCFS_MAX_SAVES];
 static unsigned long long svSig[MCFS_MAX_SAVES];
+static char svStamp[MCFS_MAX_SAVES][17];   /* a Memory Card's: what each folder lists (mcfs_save_stamp), in hex; "" = none */
 
 /* whose saves they are, for the state and on Drive: the Memory Card is one, whichever slot it is in */
 static const char *owner_of(const card_t *c) { return mcfs_slot_port(c->path) >= 0 ? memcard_id() : c->id; }
@@ -21,25 +22,59 @@ static void save_tag(const card_t *c, const char *folder, char *out, size_t size
     snprintf(out, size, "save:%.80s/%s", owner_of(c), folder);
 }
 
+/* does save i go: it was read (or listed what it did), and its signature isn't the one it had when it was last sent?
+ * (one that couldn't be read stays as it was) */
+static int goes(const card_t *c, int i)
+{
+    char hex[17];
+    const char *was;
+    snprintf(hex, sizeof(hex), "%016llx", svSig[i]);
+    return svSig[i] && ((was = state_save(owner_of(c), sv[i].folder)) == NULL || strcmp(was, hex) != 0);
+}
+
+/* what became of save i once looked at, on the list of its saves (SELECT) */
+static void looked_at(const card_t *c, int i)
+{
+    sync_saves_set(i, !svSig[i] ? SY_FAILED : goes(c, i) ? SY_WAITING : SY_UNCHANGED);
+}
+
 /* each save's signature: the engine's, which reads the card's file; a Memory Card's, from its .psu (mcman reads it:
- * the engine doesn't read its files one by one) */
+ * the engine doesn't read its files one by one). A Memory Card's save whose folder lists what it listed when it was
+ * last sent isn't read: its signature is the one it had then (reading every save takes half a minute on a full card,
+ * listing them, a second). Only while the console's clock goes on: one that stands still dates every save the same */
 static int signatures(const card_t *c, int n)
 {
-    int i;
+    int i, listed = 0, stamps;
     if (library_path(c->path)) {   /* (the Library: kept since each save went into it, nothing read) */
         for (i = 0; i < n; i++)
-            svSig[i] = library_signature(sv[i].folder);
+            svSig[i] = library_signature(sv[i].folder), svStamp[i][0] = 0;
         return 0;
     }
-    if (mcfs_slot_port(c->path) < 0)
+    if (mcfs_slot_port(c->path) < 0) {
+        for (i = 0; i < n; i++)
+            svStamp[i][0] = 0;
         return mcfs_save_signatures(c->path, sv, n, svSig);
+    }
+    stamps = clock_goes();
     for (i = 0; i < n; i++) {   /* (the slot's card is read through mcman, a save at a time: its bar, and a cancel heard) */
         buffer_t psu = {0};
-        unsigned long long h = 1469598103934665603ULL;   /* (FNV-1a, 64 bits) */
+        unsigned long long h = 1469598103934665603ULL, stamp;   /* (FNV-1a, 64 bits) */
+        const char *was;
         size_t k;
         svSig[i] = 0;
+        svStamp[i][0] = 0;
         if (on_progress(i, n))
             return -1;
+        sync_saves_set(i, SY_CHECKING);
+        if (stamps && mcfs_save_stamp(c->path, &sv[i], &stamp) == 0) {
+            snprintf(svStamp[i], sizeof(svStamp[i]), "%016llx", stamp);
+            if ((was = state_save(owner_of(c), sv[i].folder)) != NULL && !strcmp(state_save_stamp(owner_of(c), sv[i].folder), svStamp[i])) {
+                svSig[i] = strtoull(was, NULL, 16);
+                listed++;
+                looked_at(c, i);
+                continue;
+            }
+        }
 #ifdef DEBUG_BUILD
         if (i * 2 + 1 >= n)
             debug_capture_if('J');   /* (script: the screen of the saves being checked, past half of them) */
@@ -53,7 +88,9 @@ static int signatures(const card_t *c, int n)
             svSig[i] = h ? h : 1;
         }
         buf_free(&psu);
+        looked_at(c, i);
     }
+    log_msg("%s: %d of the %d saves list what they did when they were last sent: not read", c->id, listed, n);
     if (mc_no_answer()) {   /* (not "nothing changed": the backup didn't happen) */
         snprintf(googleError, sizeof(googleError), "%s", T(T_MEMCARD_NO_ANSWER));
         return -1;
@@ -113,31 +150,39 @@ static void sending_show(card_t *c, int i, int k, int m)
 #endif
 }
 
-/* the saves that changed since they were last sent (each one's signature, as the state has it) */
+/* the saves that changed since they were last sent (each one's signature, as the state has it). One that is the same
+ * but lists something else now (its dates, written again with nothing changed) keeps what it lists, to be read no more */
 static int changed(const card_t *c, int n, unsigned char *go)
 {
     char hex[17];
-    const char *was;
     int i, m = 0;
     for (i = 0; i < n; i++) {
         snprintf(hex, sizeof(hex), "%016llx", svSig[i]);
-        /* (one that couldn't be read stays as it was) */
-        go[i] = svSig[i] && ((was = state_save(owner_of(c), sv[i].folder)) == NULL || strcmp(was, hex) != 0);
+        go[i] = goes(c, i);
+        if (svSig[i] && !go[i] && svStamp[i][0] && strcmp(state_save_stamp(owner_of(c), sv[i].folder), svStamp[i]) != 0)
+            state_set_save(owner_of(c), sv[i].folder, hex, svStamp[i]);
+        looked_at(c, i);
         m += go[i];
     }
     return m;
 }
 
-int saves_backup(card_t *c, const char *folderId)
+static int backup_saves(card_t *c, const char *folderId)
 {
     static drive_file_t old[200];
     static unsigned char go[MCFS_MAX_SAVES];
-    char savesId[80] = "", name[160], desc[200], tag[140], hex[17], id[80];
+    char savesId[80] = "", name[160], desc[200], tag[140], hex[17], id[80], cardId[80];
     datetime_t when;
     int n, i, k, m, sent = 0, r, shown = 0, pending;
     u64 start = now_ms();
     if ((n = mcfs_list_saves(c->path, sv, MCFS_MAX_SAVES, NULL)) <= 0)
         return n < 0 ? -1 : 0;
+    for (i = k = 0; i < n; i++)   /* (SD2Cloud's own folder, the SAS package: nobody's save) */
+        if (strcasecmp(sv[i].folder, helper_place() + 1) != 0)
+            sv[k++] = sv[i];
+    if (!(n = k))
+        return 0;
+    sync_saves_start(c, sv, n);   /* (the list SELECT shows: these saves now) */
     work_text(T(T_SAVES_CHECKING));   /* (each save read, to tell which changed: a bar for them) */
     upload_screen(0, n);
     r = signatures(c, n);
@@ -151,10 +196,18 @@ int saves_backup(card_t *c, const char *folderId)
         if (!go[i])
             continue;
         snprintf(hex, sizeof(hex), "%016llx", svSig[i]);
+        sync_saves_set(i, SY_SENDING);
         sending_show(c, i, ++shown, pending);
         save_tag(c, sv[i].folder, tag, sizeof(tag));
         r = 0;
         if (!DRY) {
+            if (!folderId) {   /* (the card's folder on Drive, found or made once a save has to go) */
+                r = card_folder(c, cardId, sizeof(cardId));
+                log_msg("%s: its folder on Drive %s", c->id, r == 0 ? "found" : "not found");
+                if (r != 0)
+                    return -1;
+                folderId = cardId;
+            }
             /* (once for the card; the Library's, for each save's game) */
             if ((!savesId[0] || library_path(c->path)) && saves_folder(c, sv[i].folder, folderId, savesId, sizeof(savesId)) != 0)
                 return -1;
@@ -170,8 +223,9 @@ int saves_backup(card_t *c, const char *folderId)
         }
         buf_free(&psu);
         log_msg("save %s of %s, by itself to Drive: %d%s", sv[i].folder, c->id, r, DRY ? " (dry)" : "");
+        sync_saves_set(i, r == 0 ? SY_SENT : sync_stop() ? SY_WAITING : SY_FAILED);
         if (r == 0) {
-            state_set_save(owner_of(c), sv[i].folder, hex);
+            state_set_save(owner_of(c), sv[i].folder, hex, svStamp[i][0] ? svStamp[i] : NULL);
             sent++;
         }
     }
@@ -182,6 +236,13 @@ int saves_backup(card_t *c, const char *folderId)
     }
     state_write();
     return sent;
+}
+
+int saves_backup(card_t *c, const char *folderId)
+{
+    int r = backup_saves(c, folderId);
+    sync_saves_end();   /* (the list is the sync's cards again) */
+    return r;
 }
 
 /* -------- "Versions on Drive", on a save's page: the ones the backup by save (or "Send to Drive") kept of it */

@@ -21,8 +21,9 @@ SLUS-21065/SLUS-21065-1: 2 saves, read in N ms; 2 changed since they were last s
 save BASLUS-21065ALPHA of SLUS-21065/SLUS-21065-1, by itself to Drive: 0 (dry)
 save BASLUS-21065BETA of SLUS-21065/SLUS-21065-1, by itself to Drive: 0 (dry)
 SLUS-21065-1: 2 saves uploaded
-slot/mc1: its folder on Drive found
+the console's clock goes on
 signature of BASLUS-99999TESTS...
+slot/mc1: 0 of the 1 saves list what they did when they were last sent: not read
 slot/mc1: 1 saves, read in N ms; 1 changed since they were last sent
 save BASLUS-99999TESTS of slot/mc1, by itself to Drive: 0 (dry)
 Memory Card: 1 save uploaded
@@ -33,4 +34,4 @@ e67be4206c58f05d290d04e24ef9bd240e0a329b479dd8d202f12d40f464d347  MemoryCards/PS
 9b26f87a6ae6b13ddf74cec52f77df98dccf3447dd4041c66394f113efddc738  MemoryCards/PS2/Card2/Card2-1.mcd
 e67be4206c58f05d290d04e24ef9bd240e0a329b479dd8d202f12d40f464d347  MemoryCards/PS2/SLUS-21065/SLUS-21065-1.mcd
 b04fe24d844dbc33f73751a1c4fec06a7fa73aaad0ce64bfb7d3f281df639386  SD2Cloud/sd2cloud.ini
-72896910896b9e9b85020b750e3002e583bfd5df49663130e88be7ec6a9694a5  SD2Cloud/state-debug.ini
+265a3964698458b8cbf5e95e045cb51bfee71124a73fbf6206e5da21eb9c3939  SD2Cloud/state-debug.ini

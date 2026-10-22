@@ -19,6 +19,8 @@ int igrMode;
 int standalone;
 #ifdef DEBUG_BUILD
 int debugUnplugged;
+char debugHome[32];   /* the test's own folder (script, rescue, log) when it isn't the data folder (data-on-usb.txt) */
+const char *debug_home(void) { return debugHome[0] ? debugHome : dataDir; }
 #endif
 
 /* ------------------------------------------------------------ start and leave */
@@ -157,6 +159,19 @@ static void standalone_root(void)
     if (root[0])
         snprintf(sdRoot, sizeof(sdRoot), "%s", root);
     snprintf(dataDir, sizeof(dataDir), "%sSD2Cloud/", sdRoot);
+#ifdef DEBUG_BUILD
+    {   /* a console test of a USB drive's data, started from the hard disk (what the launcher starts surely): with
+         * data-on-usb.txt in the data folder, the data is the USB drive's; the script, the rescue and the log stay here */
+        char c[64];
+        snprintf(c, sizeof(c), "%sdata-on-usb.txt", dataDir);
+        debugHome[0] = 0;
+        if (d != DEV_USB && file_exists(c) && drive_open(DRIVE_USB, 8000, root, sizeof(root)) == 0 && root[0]) {
+            snprintf(debugHome, sizeof(debugHome), "%s", dataDir);
+            snprintf(sdRoot, sizeof(sdRoot), "%s", root);
+            snprintf(dataDir, sizeof(dataDir), "%sSD2Cloud/", sdRoot);
+        }
+    }
+#endif
 }
 
 static void started_elsewhere(const char *a0)
@@ -246,6 +261,7 @@ void system_init(int argc, char *argv[])
         started_elsewhere(a0);
     if (init_joystick_driver(false) == JOYSTICK_INIT_STATUS_OK)
         padOpen = padPortOpen(0, 0, padArea);
+    clock_mark();
 #ifdef DEBUG_BUILD
     script_read();
 #endif
@@ -275,7 +291,7 @@ void iop_cleanup(int card)
     rescue_stop();
     if (logRam.len) {
         char c[260];
-        snprintf(c, sizeof(c), "%sdebug-log.txt", dataDir);
+        snprintf(c, sizeof(c), "%sdebug-log.txt", debug_home());
         file_write(c, logRam.data, logRam.len);
     }
 #endif

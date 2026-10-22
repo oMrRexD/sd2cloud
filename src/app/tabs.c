@@ -45,8 +45,8 @@ int rowsWide;          /* and their text may be this wide (0 = as usual): the fo
 /* the rows of a list: scrolls with the cursor, arrows when there's more */
 void list_rows(int n, int cursor, int top, const char *(*text)(int i, char *buf), u32 (*dot)(int i))
 {
-    char buf[64];
-    int i, y;
+    char buf[64], lit[160];
+    int i, y, w = rowsWide ? rowsWide : dot ? 150 : 172;
     for (i = top, y = ROW_Y0; i < n && i < top + ROWS; i++, y += ROW_H) {
         const char *s = text(i, buf);
         float x = LIST_X + rowsDx;
@@ -56,11 +56,13 @@ void list_rows(int n, int cursor, int top, const char *(*text)(int i, char *buf)
             ui_rect(x + 27, cy - 1, 2, 2, dot(i), 0x80);
         }
         /* without the status light (the backups' dates) the text starts further left: a whole date fits */
-        if (i == cursor)
+        if (i == cursor) {   /* (cut short as the others: a long game's name would run over the big card's picture) */
+            snprintf(lit, sizeof(lit), "%s", s);
+            fit(FONT_TEXT, lit, sizeof(lit), w);
             look_glow_text(FONT_TEXT, x + (dot ? 42 : 24), y, i == rowsLit ? COLOR_OK : COLOR_ITEM,
-                           i == rowsLit ? 0xE6FFEA : COLOR_ITEM_ON, s);
-        else
-            ui_text_fit(FONT_TEXT, x + (dot ? 42 : 24), y, rowsWide ? rowsWide : dot ? 150 : 172, i == rowsLit ? COLOR_OK : COLOR_ITEM, s);
+                           i == rowsLit ? 0xE6FFEA : COLOR_ITEM_ON, lit);
+        } else
+            ui_text_fit(FONT_TEXT, x + (dot ? 42 : 24), y, w, i == rowsLit ? COLOR_OK : COLOR_ITEM, s);
     }
     if (top > 0)
         look_arrow(LIST_X + 186, ROW_Y0 - 14, 0, 0x6E9AE0);
@@ -402,7 +404,8 @@ void tabs_show(tabs_t *g, int tab)
             g->idx[g->n++] = i;
         }
     }
-    if (g->newGame[0] && !g->count[TAB_GAMES])   /* no game card yet: the group is there for the new one */
+    if (g->newGame[0] && !g->count[TAB_GAMES] && !standalone)   /* no game card yet: the group is there for the new one
+                                                                   (an sd2psx's: with none, no game card is made) */
         g->count[TAB_GAMES] = 1;
     if (g->create && nVmcPlaces && !cardsOther) {   /* the VMCs' group ends with "New VMC": it is there for it */
         g->count[TAB_VMC]++;
@@ -438,7 +441,7 @@ void tabs_show(tabs_t *g, int tab)
 void tabs_redo(tabs_t *g)
 {
     int k, was = g->n ? g->idx[g->cursor] : ROW_ALL;
-    if (g->newGame[0] && !g->count[TAB_GAMES])
+    if (g->newGame[0] && !g->count[TAB_GAMES] && !standalone)
         g->count[TAB_GAMES] = 1;
     if (g->tab != TAB_GAMES)
         return;
@@ -679,6 +682,11 @@ void tabs_draw(const tabs_t *g, int dots)
             if (g->tab == TAB_LIBRARY) {   /* a game of the Library: an arrow, as a folder has (its saves open) */
                 if (g->library == 1)
                     ui_triangle(x + 5, y - 6, x + 5, y + 6, x + 14, y, 0x6E9AE0, 0x80);
+                else if (library_dest_fresh()) {   /* (where the saves go: a game with no folder there yet, a plus as
+                                                      "New card" has) */
+                    ui_rect(x + 4, y - 1, 12, 2, COLOR_ACCENT, 0x70);
+                    ui_rect(x + 9, y - 6, 2, 12, COLOR_ACCENT, 0x70);
+                }
                 continue;
             }
             if (g->idx[k] == ROW_NEW) {   /* "New card": a plus where a folder has its picture (among cards, their light) */

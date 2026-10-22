@@ -17,5 +17,9 @@ int font_has(unsigned int code);   /* 1 = the font has this character (a Unicode
  * memory is still left after them (0 = whatever is left) */
 int font_japanese(long spare);
 void font_japanese_free(void);     /* let go of: their glyphs already drawn stay, any other is a '?' until read again */
+#ifdef DEBUG_BUILD
+#define FONT_BACK_AUTO -100
+extern int fontBackTry;   /* how far back a text's first letter is drawn, instead of what it is worked out to be */
+#endif
 
 #endif

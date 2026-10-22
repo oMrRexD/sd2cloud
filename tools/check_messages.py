@@ -375,6 +375,11 @@ PLACE = {
     "T_WRITING_FILE": ("text", DIALOG, 1),
     "T_FIRST_QUESTION_ONE": ("text", DIALOG, 2),
     "T_AUTO_WHERE_ALONE": ("small", WIDE, 2),
+    "T_MIGRATE_ALL_OFF": ("text", 200, 1),
+    "T_MIGRATE_ALL_ON": ("text", 200, 1),
+    "T_MIGRATE_MARK": ("text", 200, 1),
+    "T_LIBRARY_NEW_FOLDER": ("small", 200, 1),
+    "T_SY_CHECKING": ("small", 220, 1),
     "T_SET_LIBRARY_DRIVE": ("text", 300, 1), "T_LIBRARY_DRIVE_NOTE": ("text", WIDE, 3),
     # the hard disk's two sides, to pick one; with no sd2psx, a card is made as a file (its hint); a split by game done
     # (the box's title); the Memory Card's saves sent by themselves (one; read first; the card that didn't answer, after
@@ -443,7 +448,8 @@ LEGENDS = [
     (("T_MIGRATE_REMOVE", "T_CONTINUE"), False),
     (("T_MENU_EXIT", "T_TPL_CREATE", "T_TOOLS", "T_SETTINGS"), 2), (("T_BACK", "T_REPLACE"), False),
     # a card's saves by game; the question of deleting them from it after
-    (("T_BACK", "T_MARK", "T_MIGRATE_SIZE", "T_MIGRATE_START"), False), (("T_BACK", "T_MARK", "T_MIGRATE_START"), False),
+    (("T_BACK", "T_MIGRATE_MARK", "T_MIGRATE_SIZE", "T_MIGRATE_ALL_OFF", "T_MIGRATE_START"), False),
+     (("T_BACK", "T_MIGRATE_MARK", "T_MIGRATE_ALL_OFF", "T_MIGRATE_START"), False), (("T_BACK", "T_MIGRATE_MARK", "T_MIGRATE_ALL_ON"), False),
     (("T_BACK", "T_MIGRATE_START"), False), (("T_MIGRATE_KEEP", "T_DELETE"), False),
 ]
 

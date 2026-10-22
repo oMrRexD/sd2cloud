@@ -166,12 +166,13 @@ static void scene_migrate(float t)
         ui_text_right(FONT_SMALL, MG_RIGHT, MG_Y0 + MG_ROWS * MG_ROW + 20, 0x8E98AA, s);
     }
     {
-        legend_t l[4] = {{BUTTON_CIRCLE, T(T_BACK)}};
+        legend_t l[5] = {{BUTTON_CIRCLE, T(T_BACK)}};
         int n = 1;
         if (mg.nGames) {
-            l[n].button = BUTTON_CROSS, l[n++].text = T(T_MARK);
+            l[n].button = BUTTON_CROSS, l[n++].text = T(T_MIGRATE_MARK);
             if (!mg.games[mg.cursor].card && mg.games[mg.cursor].on)
                 l[n].button = BUTTON_TRIANGLE, l[n++].text = T(T_MIGRATE_SIZE);
+            l[n].button = BUTTON_SQUARE, l[n++].text = T(games ? T_MIGRATE_ALL_OFF : T_MIGRATE_ALL_ON);
             if (going)
                 l[n].button = BUTTON_START, l[n++].text = T(T_MIGRATE_START);
         }
@@ -420,7 +421,7 @@ void migrate_screen(card_t *src)
     }
     ui_scene(scene_migrate);
     for (;;) {
-        u32 b = wait_nav(PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT | PAD_CROSS | PAD_CIRCLE | PAD_TRIANGLE | PAD_START);
+        u32 b = wait_nav(PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT | PAD_CROSS | PAD_CIRCLE | PAD_TRIANGLE | PAD_SQUARE | PAD_START);
         mg_game_t *g = mg.nGames ? &mg.games[mg.cursor] : NULL;
         if (b & PAD_CIRCLE) {
             sound_play(SND_BACK);
@@ -449,6 +450,15 @@ void migrate_screen(card_t *src)
             g->on = !g->on;
             ui_unlock();
             sound_play(g->on ? SND_CONFIRM : SND_BACK);
+        } else if ((b & PAD_SQUARE) && g) {   /* every game off, to pick a few; with none on, every game back on */
+            int k, any = 0;
+            for (k = 0; k < mg.nGames; k++)
+                any |= mg.games[k].on;
+            ui_lock();
+            for (k = 0; k < mg.nGames; k++)
+                mg.games[k].on = !any;
+            ui_unlock();
+            sound_play(any ? SND_BACK : SND_CONFIRM);
         } else if ((b & PAD_TRIANGLE) && g && g->on && !g->card) {   /* a new card's size */
             int mb;
             sound_play(SND_CONFIRM);

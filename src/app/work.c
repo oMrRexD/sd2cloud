@@ -308,6 +308,8 @@ void card_work_done(void)
 }
 
 #ifdef DEBUG_BUILD
+#include "../ui/font.h"
+
 /* the backup screen as it was set (a card's, or a save's), for 6 s without sending anything, its bar a fifth of the
  * way by then, and captured: to check the icons and the time left on PCSX2 */
 void debug_preview_shown(void)
@@ -319,6 +321,38 @@ void debug_preview_shown(void)
         sleep_ms(100);
     }
     debug_capture_and_stop();
+}
+
+/* script "q" at the start: three rows of the settings, four times side by side, the middle one's first letter (an "I")
+ * moved by a pixel more each time, to see on a console which lines up */
+static void scene_font_try(float t)
+{
+    static const char *const rows[] = {"Cartões", "Idioma", "Atualizações"};
+    char n[8];
+    int c, r;
+    (void)t;
+    look_space();
+    for (c = 0; c < 4; c++) {
+        snprintf(n, sizeof(n), "%+d", c);
+        ui_text(FONT_SMALL, 70 + c * 140, 90, COLOR_DIM, n);
+        for (r = 0; r < 3; r++) {
+            if (r == 1)
+                fontBackTry = -c;
+            ui_text(FONT_TEXT, 70 + c * 140, 130 + r * 26, COLOR_ITEM, rows[r]);
+            fontBackTry = FONT_BACK_AUTO;
+        }
+    }
+}
+
+void debug_font_try(void)
+{
+    u64 end = now_ms() + 15000;
+    ui_scene(scene_font_try);
+    sleep_ms(500);
+    debug_capture_if('C');   /* (PCSX2) */
+    while (now_ms() < end)
+        sleep_ms(100);
+    ui_scene(scene_frame);
 }
 
 /* script "V<n>" at the start: the backup screen of card n (in the menu's order) */

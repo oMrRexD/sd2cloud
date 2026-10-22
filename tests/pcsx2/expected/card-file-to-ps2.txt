@@ -35,7 +35,7 @@ files: host:: 5 entries
 [script] S
 [script] X
 install: host:Files/card.mcd as host:card.ps2.tmp
-install: file/host:card.ps2 written and verified (8388608 bytes, sha e67be4206c58f05d)
+install: file/card.ps2 written and verified (8388608 bytes, sha e67be4206c58f05d)
 install: from memory, N s reading the file, N s writing the card, N s reading it back
 card host:card.ps2.tmp written to host:card.ps2 with its ECC: 0
 install card.mcd as a file: host:card.ps2: 0

@@ -89,7 +89,18 @@ the SAS package's folder holds the data). A device's folders on that drive are n
 Cards group; the Memory Cards of both slots are in the Files group (`memcard_pick`), their saves sent each by itself
 (the backup by save is on unless the settings say no), and the texts that say MMCE name the drive (`i18n_storage`).
 The SAS package on the memory card is told where the program is, with that drive's drivers (`helper_point()`, read by
-the helper and the shortcut in `igr/igr.c`). The debug build tries it on PCSX2 with `SD2Cloud/standalone.txt`.
+the helper and the shortcut in `igr/igr.c`; a launcher that resets the IOP first, as wLaunchELF and OPL's Apps list
+do, leaves nothing that reads the card, and they load the ROM's `SIO2MAN` and `MCMAN` for it: `card_readable()`). The
+debug build tries it on PCSX2 with `SD2Cloud/standalone.txt`.
+
+The backup by save tells a changed save by its signature, the whole save read. A Memory Card's (through mcman, half a
+minute for a full card) is read only when its folder lists something other than when it was last sent: each file's
+name, size and date (`mcfs_save_stamp`, kept in `state.ini` after the signature), which takes a second for the card.
+That only while the console's clock goes on (`clock_goes()`): a clock that stands still dates every save the same.
+
+`file_replace()` writes a file beside the old one (`.new`) and puts it in its place; when that fails, what reads the
+file (`ini_read`, `ini_set`, `config_set`) puts the `.new` back first (`file_recover`), so the settings aren't
+written again from the defaults.
 
 ## What a backup does
 
@@ -115,6 +126,10 @@ The main thread waits for the controller in `wait_button()` and `wait_nav()` (`p
 `idleHook` runs: that is how `device_watch()` (`app/active.c`) notices the card changed on the device itself, or the
 device taken out or put back: then `device_changed()` looks at the slots again (`system_redetect()`) and everything is
 read again from `reloadPoint` in `main.c`, as when the program starts.
+
+A screen of saves reads their icons between two looks at the controller (`browser_wait`, `app/saves.c`). An icon is
+read in pieces, and `mcfs_set_break()` asks between them whether a button was pressed (`nav_pressed()`): the reading
+is then given up, the icon read again later, and the press kept for the next `wait_nav()`, so none is lost.
 
 Every text on screen has its id in `ui/messages.def` and its text in each file of `lang/` (one per language,
 `en.txt` the original). The Makefile builds all of them into the program and lists them in `langs.c`; `ui/i18n.c`

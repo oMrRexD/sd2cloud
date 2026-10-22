@@ -210,6 +210,11 @@ SCENARIOS = [
     # Card's, in the other slot. Each save's signature is kept in the state, and a save as it was sent isn't sent again)
     {"name": "save-backup", "what": "the backup by save: each card's saves, and the Memory Card's, sent one by one",
      "cards": CARDS, "memcard": "memcard.ps2", "settings": "[cards]\r\nsaves = yes\r\n", "script": "BwC"},
+    # (the Memory Card's save as save-backup left it in the state: its signature and what its folder listed then)
+    {"name": "save-backup-listed", "what": "the backup by save again: the Memory Card's save lists what it did when it was sent, and isn't read",
+     "cards": CARDS, "memcard": "memcard.ps2", "settings": "[cards]\r\nsaves = yes\r\n",
+     "files": {"SD2Cloud/state-debug.ini": b"[slot/memcard]\r\nsave:BASLUS-99999TESTS = 4d2170dfd47ab2de 325d930c1bf81199\r\n"},
+     "script": "BwC"},
     # (no sd2psx: standalone.txt makes host: a drive the program was started from, with no device in the slots. Its
     # VMCs are its cards, the Memory Cards of both slots are in the Files group, and nothing is taken as in use)
     {"name": "standalone", "what": "no sd2psx: the drive's VMCs as cards, the Memory Cards of both slots in Files",

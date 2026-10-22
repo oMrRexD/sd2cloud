@@ -95,21 +95,35 @@ int file_write_checked(const char *path, const unsigned char *d, size_t n)
 
 int file_replace(const char *path, const unsigned char *d, size_t n)
 {
-    char tmp[260];
+    char tmp[260], old[260];
+    int kept, moved;
     snprintf(tmp, sizeof(tmp), "%s.new", path);
+    snprintf(old, sizeof(old), "%s.old", path);
     unlink(tmp);
     if (!file_write_checked(tmp, d, n)) {
+        log_msg("files: %s couldn't be written", tmp);
         unlink(tmp);
         return -1;
     }
-    unlink(path);
-    if (rename(tmp, path) == 0)
+    /* The file that is there is set aside (.old), not deleted, until the new one is in its place: whatever fails on the
+     * way, one of the two stays whole (file_recover). On a file system that can't rename (an sd2psx before its
+     * firmware 1.4.0) it is deleted, and the new one written again in its place; the .new stays if that fails */
+    unlink(old);
+    kept = file_exists(path) ? rename(path, old) : 1;   /* (1: there was none) */
+    if (kept < 0)
+        unlink(path);
+    if ((moved = rename(tmp, path)) == 0 || file_write_checked(path, d, n)) {
+        unlink(tmp);
+        unlink(old);
         return 0;
-    /* a file system that can't rename (the sd2psx's): written again in its place; the .new stays if that fails */
-    if (!file_write_checked(path, d, n))
-        return -1;
-    unlink(tmp);
-    return 0;
+    }
+    if (kept == 0 && file_exists(old)) {   /* (the old one back in its place) */
+        unlink(path);
+        rename(old, path);
+    }
+    log_msg("files: %s couldn't take the place of %s (setting the old one aside: %d; renaming: %d); %s", tmp, path, kept,
+            moved, file_exists(path) ? "it is as it was" : "left as .new");
+    return -1;
 }
 
 /* n bytes of a file from at, the file open only while they are read. Returns how many were read */
@@ -337,11 +351,34 @@ void utf8_fix(char *s, size_t size)
     s[n] = 0;
 }
 
+int file_recover(const char *path)
+{
+    char tmp[260];
+    buffer_t b = {0};
+    snprintf(tmp, sizeof(tmp), "%s.new", path);   /* (the new one, read back when it was written; else the old one) */
+    if (!file_exists(tmp)) {
+        snprintf(tmp, sizeof(tmp), "%s.old", path);
+        if (!file_exists(tmp))
+            return 0;
+    }
+    if (file_exists(path))
+        return 0;
+    if (rename(tmp, path) != 0 && file_read(tmp, &b) == 0 && file_write_checked(path, b.data, b.len))
+        unlink(tmp);
+    buf_free(&b);
+    log_msg("files: %s was only %s, as file_replace left it: %s", path, tmp,
+            file_exists(path) ? "put back in its place" : "it can't be put back");
+    return file_exists(path) ? 0 : -1;
+}
+
 int ini_read(const char *path, void (*cb)(const char *section, const char *key, const char *value, void *u), void *u)
 {
     buffer_t b = {0};
-    char section[64] = "", *line, *next;
-    if (file_read(path, &b) != 0)
+    char section[64] = "", *line, *next, tmp[260], old[260];
+    snprintf(tmp, sizeof(tmp), "%s.new", path);
+    snprintf(old, sizeof(old), "%s.old", path);
+    if (file_read(path, &b) != 0 &&
+        (file_recover(path) != 0 ? file_read(tmp, &b) != 0 && file_read(old, &b) != 0 : file_read(path, &b) != 0))
         return -1;
     /* skip the UTF-8 BOM, if the file was saved with Notepad */
     line = (char *)b.data;

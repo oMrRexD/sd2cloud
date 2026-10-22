@@ -81,9 +81,18 @@ u32 wait_button(u32 mask, int seconds)
  * screen) only counts after it's released. ms >= 0: gives up after that long and returns 0 (the screen has something
  * to do in the background meanwhile) */
 #define ARROWS (PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT)
+static u32 held;    /* the buttons held at the last look (nav_wait) */
+static u32 caught;  /* pressed while something was read between two looks (nav_pressed): the next one takes them */
+
+int nav_pressed(u32 mask)
+{
+    u32 b = pad_buttons() & mask;
+    caught |= b & ~held;
+    return (caught & mask) != 0;
+}
+
 static u32 nav_wait(u32 mask, int ms, u32 repeat)
 {
-    static u32 held;
     static u64 next;
     u32 now = pad_buttons() & mask;
     u64 end = now_ms() + (ms > 0 ? ms : 0);
@@ -98,8 +107,9 @@ static u32 nav_wait(u32 mask, int ms, u32 repeat)
 #endif
     held = (held & now) | (now & ~repeat);
     for (;;) {
-        u32 b = pad_buttons() & mask, fresh = b & ~held;
+        u32 b = pad_buttons() & mask, fresh = (b & ~held) | (caught & mask);
         u64 t = now_ms();
+        caught = 0;
         if (fresh) {
             held = b;
             next = t + 400;
@@ -152,6 +162,42 @@ void local_time(datetime_t *t)
         t->second = BCD(c.second);
 #undef BCD
     }
+}
+
+/* the console clock's seconds since midnight; -1 = it can't be read */
+static int clock_seconds(void)
+{
+    sceCdCLOCK c;
+#define BCD(x) (((x) >> 4) * 10 + ((x) & 0xF))
+    if (!sceCdInit(SCECdINoD) || !sceCdReadClock(&c))
+        return -1;
+    return BCD(c.hour) * 3600 + BCD(c.minute) * 60 + BCD(c.second);
+#undef BCD
+}
+
+static int clockStart = -1;
+static u64 clockStartMs;
+
+void clock_mark(void)
+{
+    clockStart = clock_seconds();
+    clockStartMs = now_ms();
+}
+
+int clock_goes(void)
+{
+    static int known = -1;
+    int now;
+    if (known >= 0)
+        return known;
+    if (clockStart < 0)
+        return known = 0;
+    while (now_ms() - clockStartMs < 1500)   /* (more than a second since it was read first) */
+        sleep_ms(100);
+    now = clock_seconds();
+    known = now >= 0 && now != clockStart;
+    log_msg("the console's clock %s", known ? "goes on" : "stands still: the dates of what is written tell nothing");
+    return known;
 }
 
 /* a file written now is dated so on a card: the console clock as it is (Japan time, not converted), as the PS2 does */

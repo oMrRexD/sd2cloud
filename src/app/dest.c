@@ -139,6 +139,12 @@ card_t *choose_dest(const card_t *from, int title, long long need, const char *s
         /* (counted again: the Games group may be there only for this, and is then the one to open on) */
         tabs_show(&dst.g, dst.g.tab == TAB_FILES ? TAB_GAMES : dst.g.tab);
     }
+    if (!dst.g.count[dst.g.tab]) {   /* (with no sd2psx there is no Cards nor Games group: the first one there is) */
+        for (i = 0; i < TABS && !dst.g.count[i]; i++)
+            ;
+        if (i < TABS)
+            tabs_show(&dst.g, i);
+    }
     for (i = 0; i < MAX_CARDS; i++)
         dst.freeBytes[i] = -2;
 shown:

@@ -383,6 +383,9 @@ void helper_point(void)
     unsigned int size[4];
     char path[60], where[sizeof(appPath) + 4];
     int n = point_drivers(name, data, size), i, r = 0, wrote = 0, port;
+#ifdef DEBUG_BUILD
+    n = 0;   /* (the debug build doesn't take the program's place: the shortcut goes on opening the real one) */
+#endif
     if (!n)
         return;
     port = mc_slot();
@@ -953,7 +956,7 @@ static int slot_read(int port, const char *folder, const char *name, buffer_t *o
 {
     static unsigned char block[16 * 1024] __attribute__((aligned(64)));
     char path[80];
-    int fd, k, r = 0;
+    int fd, k, r = 0, gaveUp = 0;
     buf_free(out);
     if (memcard_start() != 0)
         return -1;
@@ -971,11 +974,17 @@ static int slot_read(int port, const char *folder, const char *name, buffer_t *o
             r = -1;
             break;
         }
+        if (mcfs_break_now()) {   /* (an icon given up for a button: mcfs_set_break) */
+            r = -1;
+            gaveUp = 1;
+            break;
+        }
     }
     mcClose(fd);
     mc_wait();
     if (r < 0) {
-        log_msg("memory card: mc%d %s couldn't be read (%d)", port, path, r);
+        if (!gaveUp)
+            log_msg("memory card: mc%d %s couldn't be read (%d)", port, path, r);
         buf_free(out);
     }
     return r < 0 ? -1 : 0;

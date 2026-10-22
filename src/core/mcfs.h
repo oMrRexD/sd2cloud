@@ -32,6 +32,12 @@ int mcfs_list_saves(const char *path, mcfs_save_t *list, int max, long long *fre
 const char *mcfs_last_error(void);         /* why the last card that couldn't be read couldn't, for the log */
 /* the icon.sys and the 3D icon of a save from that list. 0 = ok */
 int mcfs_save_icon(const char *path, const mcfs_save_t *save, buffer_t *iconsys, buffer_t *ico);
+/* While a save's icon is read: brk is asked between its pieces (32 KB at most), and != 0 gives the reading up (it
+ * fails, and mcfs_broken says why). NULL = never. mcfs_break_now is that asking, for what reads a memory card in a
+ * slot (helper.c) */
+void mcfs_set_break(int (*brk)(void));
+int mcfs_break_now(void);
+int mcfs_broken(void);   /* the reading since mcfs_set_break was given up (and that is forgotten) */
 /* Is that save a program to start, the way the Save Application System keeps one: a title.cfg whose "boot" line names
  * a file of the same folder? 1 = yes, and boot is that file's name as the folder has it */
 int mcfs_save_app(const char *path, const mcfs_save_t *save, char *boot, size_t size);
@@ -40,6 +46,10 @@ int mcfs_save_app(const char *path, const mcfs_save_t *save, char *boot, size_t 
  * doesn't, whatever its dates say (a console whose clock stands still dates every save the same). Every file is
  * read for it. sig[i] = 0: that save couldn't be read. Returns 0 when the card was opened */
 int mcfs_save_signatures(const char *path, const mcfs_save_t *saves, int n, unsigned long long *sig);
+/* A Memory Card's save (in a slot) by what its folder lists, without reading a file: its date and each file's name,
+ * size and date, in one number. Read in a moment where the signature takes the whole save: a save a game wrote again
+ * has other dates, as long as the console's clock goes on. 0 = ok */
+int mcfs_save_stamp(const char *path, const mcfs_save_t *save, unsigned long long *stamp);
 /* changing a card (a .mcd that the sd2psx is NOT using right now): copy a save to another card (read back and
  * compared), delete a save, export a save as a .psu, import one from a .psu file (also read back and compared).
  * 0 = ok, else MCFS_ERR_* (BAD = the file isn't a .psu this can use) */

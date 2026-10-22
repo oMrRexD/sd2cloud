@@ -231,10 +231,51 @@ static void state_comes_back(void)
     CHECK(state_folder("PS2 Memory Card Backups/Card2") == NULL);
 }
 
+/* a save sent by itself: its signature, and a Memory Card's what its folder listed then; a state from before that
+ * (the signature alone) is read as it was */
+static void state_save_stamps(void)
+{
+    state_read();
+    state_set_save("slot/memcard1", "BASLUS-21065", "0123456789abcdef", "fedcba9876543210");
+    state_set_save("Card1/Card1-1", "BASLUS-20001", "1111222233334444", NULL);
+    CHECK_INT(state_write(), 0);
+    CHECK(strstr(text_of("sd/SD2Cloud/state.ini"), "save:BASLUS-21065 = 0123456789abcdef fedcba9876543210\r\n") != NULL);
+    CHECK(strstr(text_of("sd/SD2Cloud/state.ini"), "save:BASLUS-20001 = 1111222233334444\r\n") != NULL);
+    state_read();
+    CHECK_STR(state_save("slot/memcard1", "BASLUS-21065"), "0123456789abcdef");
+    CHECK_STR(state_save_stamp("slot/memcard1", "BASLUS-21065"), "fedcba9876543210");
+    CHECK_STR(state_save("Card1/Card1-1", "BASLUS-20001"), "1111222233334444");
+    CHECK_STR(state_save_stamp("Card1/Card1-1", "BASLUS-20001"), "");
+    CHECK_STR(state_save_stamp("Card1/Card1-1", "BASLUS-99999"), "");
+    CHECK(state_save("Card1/Card1-1", "BASLUS-99999") == NULL);
+}
+
+/* a file file_replace couldn't put in place (the old one deleted, the new one left beside it as .new): read from
+ * there and put back, never written again from nothing */
+static void file_left_as_new(void)
+{
+    t_text("b.ini.new", "[igr]\r\nreturn = ata0:/OPL.ELF\r\n");
+    CHECK_STR(ini_keys("b.ini"), "[igr]return=ata0:/OPL.ELF;");
+    CHECK_STR(text_of("b.ini"), "[igr]\r\nreturn = ata0:/OPL.ELF\r\n");
+    CHECK_INT(file_exists("b.ini.new"), 0);
+    t_text("c.ini.new", "[general]\r\nlanguage = pt\r\n");   /* (and before a setting is changed in it) */
+    CHECK_INT(ini_set("c.ini", "general", "ask_connect", "no"), 0);
+    CHECK_STR(text_of("c.ini"), "[general]\r\nlanguage = pt\r\nask_connect = no\r\n");
+    CHECK_INT(file_exists("c.ini.old"), 0);   /* (set aside while the new one went in, and gone after) */
+    t_text("d.ini.old", "[igr]\r\nreturn = osd\r\n");   /* (the old one set aside, the new one never in its place) */
+    CHECK_STR(ini_keys("d.ini"), "[igr]return=osd;");
+    CHECK_INT(file_exists("d.ini"), 1);
+}
+
 void suite_ini(void)
 {
     RUN(ini_set_keeps_the_rest);
     RUN(settings_read_and_set);
+    RUN(file_left_as_new);
 }
 
-void suite_state(void) { RUN(state_comes_back); }
+void suite_state(void)
+{
+    RUN(state_comes_back);
+    RUN(state_save_stamps);
+}

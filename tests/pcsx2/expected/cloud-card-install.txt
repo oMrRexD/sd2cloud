@@ -39,7 +39,7 @@ files: host:: 4 entries
 [script] S
 [script] X
 install: host:SD2Cloud/cloud-card.mcd as host:Card1-1 2026-10-19 21h40.mcd
-install: file/host:Card1-1 2026-10-19 21h40.mcd written and verified (8388608 bytes, sha e67be4206c58f05d)
+install: file/Card1-1 2026-10-19 21h40.mcd written and verified (8388608 bytes, sha e67be4206c58f05d)
 install: from memory, N s reading the file, N s writing the card, N s reading it back
 install Card1-1 2026-10-19 21h40.mcd as a file: host:Card1-1 2026-10-19 21h40.mcd: 0
 [script] X

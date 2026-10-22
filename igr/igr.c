@@ -138,6 +138,37 @@ static void run(const char *path, int igr)
     note("LoadELFFromFile", path, fd);
 }
 
+/* Started from a memory card by a launcher that reset the IOP first (wLaunchELF, OPL's Apps list): nothing reads the
+ * card yet, and this file's own folder (look_beside, look_carried) couldn't be looked into. The ROM's drivers, as OPL's
+ * IGR leaves them. self = this file's own path */
+static void card_readable(const char *self)
+{
+    int fd, t;
+    if (strncmp(self, "mc", 2) != 0)
+        return;
+    if ((fd = open(self, O_RDONLY)) >= 0) {
+        close(fd);
+        return;
+    }
+    note("open", self, fd);
+    while (!SifIopReset("", 0))
+        ;
+    while (!SifIopSync())
+        ;
+    SifInitRpc(0);
+    SifLoadFileInit();
+    SifInitIopHeap();
+    sbv_patch_enable_lmb();
+    sbv_patch_disable_prefix_check();
+    SifLoadModule("rom0:SIO2MAN", 0, NULL);
+    SifLoadModule("rom0:MCMAN", 0, NULL);
+    for (t = 0; t < 20 && (fd = open(self, O_RDONLY)) < 0; t++)   /* (the card answers after a moment) */
+        usleep(100 * 1000);
+    note("open, with the ROM's card drivers", self, fd);
+    if (fd >= 0)
+        close(fd);
+}
+
 /* Started from somewhere other than a memory card: SD2Cloud may be right next to this file, in the folder that was
  * copied there. Whatever started this file can still read that folder, so SD2Cloud is started as things are, before
  * anything is reset. self = this file's own path */
@@ -559,6 +590,7 @@ int main(int argc, char *argv[])
     int i, k, elsewhere = 0;
     SifInitRpc(0);
     note("started as", argc > 0 && argv[0] ? argv[0] : "(nothing)", argc);
+    card_readable(argc > 0 && argv[0] ? argv[0] : "");
 #ifndef OPEN
     look_beside(argc > 0 && argv[0] ? argv[0] : "");
 #endif

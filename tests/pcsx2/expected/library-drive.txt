@@ -14,7 +14,6 @@ SLUS-21065/SLUS-21065-1: 2 folders, fingerprint 64fbc81ffd3ff7a8, new
 Card1-1: uploaded (2.0 MB)
 Card2-1: uploaded (2.0 MB)
 SLUS-21065-1: uploaded (2.0 MB)
-library: its folder on Drive found
 library: 1 saves, read in N ms; 1 changed since they were last sent
 save BASLUS-21065ALPHA of library, by itself to Drive: 0 (dry)
 Library: 1 save uploaded

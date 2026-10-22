@@ -29,7 +29,8 @@ static void card_options(card_t *c)
             items[n] = T(dev->sd2psx ? T_INSERT : T_INSERT_PREVIEW), id[n++] = OPT_INSERT;
         items[n] = T(T_RENAME), id[n++] = OPT_RENAME;
         items[n] = T(T_RESIZE), id[n++] = OPT_RESIZE;
-        items[n] = T(T_MIGRATE), id[n++] = OPT_BY_GAME;
+        if (!standalone)   /* (its games' cards are an sd2psx's: with none, nothing would show them) */
+            items[n] = T(T_MIGRATE), id[n++] = OPT_BY_GAME;
         items[n] = T(T_CHECK_CARD), id[n++] = OPT_CHECK;
         /* (the card alone: its folder, whole, from the folder's own options, triangle on its row in the Games group.
          * Offered here too, right under this one, it was taken for it, the list going round from its top) */
@@ -325,6 +326,8 @@ void manual(void)
 #ifdef DEBUG_BUILD
     if (debug_take('V'))
         debug_preview(debug_digit());
+    if (debug_take('q'))
+        debug_font_try();
 #endif
     helperState = helper_status();
     helper_follow();

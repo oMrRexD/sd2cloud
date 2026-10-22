@@ -14,7 +14,7 @@
 
 sync_card_t syncCards[MAX_CARDS];
 int nSync;
-int syncListed;   /* the sync under way has the list: cards sent one after the other, more than one */
+int syncListed;   /* the sync under way has the list: the cards of a whole sync, sent one after the other */
 int syncView;     /* the list is the one on screen */
 static struct {
     int cursor, top;
@@ -25,6 +25,17 @@ static struct {
 
 /* the Memory Cards of a sync: a row each, after the cards, for their saves sent each by itself (the backup by save) */
 static card_t memcards[2];
+
+static void show(int k);
+
+/* on the turn of a card whose saves go each by itself: those saves, which the list is then */
+static struct {
+    const card_t *c;   /* NULL = none: the list is the sync's cards */
+    int n;
+    char name[MCFS_MAX_SAVES][48];
+    char folder[MCFS_MAX_SAVES][33];
+    unsigned char state[MCFS_MAX_SAVES];
+} ss;
 
 /* the cards a sync sends (is_selected), in its order: each still to be sent */
 void sync_list_start(int mode)
@@ -58,7 +69,8 @@ void sync_list_start(int mode)
         syncCards[nSync].taken = 0;
         syncCards[nSync++].state = SY_WAITING;
     }
-    syncListed = mode != 3 && nSync > 1;   /* (a card synced by itself has its own screen only) */
+    syncListed = mode != 3 && nSync > 0;   /* (a card synced by itself has its own screen only; a sync of them all, the
+                                              list even with one, as the Memory Card alone with no sd2psx) */
     syncView = 0;
     sy.cursor = sy.top = 0;
     sy.follow = 1;
@@ -70,6 +82,7 @@ void sync_list_end(void)
 {
     ui_lock();
     syncListed = syncView = 0;
+    ss.c = NULL;
     ui_unlock();
 }
 
@@ -80,7 +93,62 @@ void sync_set(int k, int state)
     ui_unlock();
 }
 
-/* (with ui_lock held) the cursor on card k, the rows scrolled to show it */
+/* how many rows the list has now, and the one under way (-1 = none) */
+static int rows(void) { return ss.c ? ss.n : nSync; }
+
+static int under_way(void)
+{
+    int k;
+    for (k = 0; k < rows(); k++)
+        if (ss.c ? ss.state[k] == SY_SENDING || ss.state[k] == SY_CHECKING : syncCards[k].state == SY_SENDING)
+            return k;
+    return -1;
+}
+
+void sync_saves_start(const card_t *c, const mcfs_save_t *saves, int n)
+{
+    char id[12];
+    int i;
+    if (!syncListed)
+        return;
+    ui_lock();
+    for (i = 0; i < n && i < MCFS_MAX_SAVES; i++) {   /* (by its game's name; the folder under the list) */
+        snprintf(ss.folder[i], sizeof(ss.folder[i]), "%s", saves[i].folder);
+        if (!save_game_id(saves[i].folder, id) || !game_title(id, ss.name[i], sizeof(ss.name[i])))
+            snprintf(ss.name[i], sizeof(ss.name[i]), "%s", saves[i].folder);
+        ss.state[i] = SY_WAITING;
+    }
+    ss.n = i;
+    ss.c = c;
+    sy.cursor = sy.top = 0;
+    sy.follow = 1;
+    ui_unlock();
+}
+
+void sync_saves_set(int i, int state)
+{
+    if (!ss.c || i < 0 || i >= ss.n)
+        return;
+    ui_lock();
+    ss.state[i] = state;
+    ui_unlock();
+}
+
+void sync_saves_end(void)
+{
+    int k;
+    if (!ss.c)
+        return;
+    ui_lock();
+    ss.c = NULL;
+    sy.cursor = sy.top = 0;
+    sy.follow = 1;
+    if ((k = under_way()) >= 0)   /* (the cards again, on the one on its way) */
+        show(k);
+    ui_unlock();
+}
+
+/* (with ui_lock held) the cursor on row k, the rows scrolled to show it */
 static void show(int k)
 {
     sy.cursor = k;
@@ -88,15 +156,6 @@ static void show(int k)
         sy.top = k;
     else if (k >= sy.top + SY_ROWS)
         sy.top = k - SY_ROWS + 1;
-}
-
-static int sending(void)
-{
-    int k;
-    for (k = 0; k < nSync; k++)
-        if (syncCards[k].state == SY_SENDING)
-            return k;
-    return -1;
 }
 
 /* X on the selected card: what can be done to it, while it's still to be sent or on its way. Returns what was asked
@@ -154,8 +213,9 @@ static int skip(void)
 }
 
 /* From the sync's look at the buttons (stop_asked), many times a second while cards are sent: SELECT turns the list
- * on and off; on it, the arrows move, X offers what can be done to the card and square skips it. Returns what was
- * asked of the card on its way (options, skip) */
+ * on and off; on it, the arrows move, X offers what can be done to the card and square skips it. On the turn of a
+ * card whose saves go each by itself the list is those saves, and square skips the card. Returns what was asked of
+ * the card on its way (options, skip) */
 int sync_list_poll(void)
 {
     u32 pad, press, arrow;
@@ -171,23 +231,23 @@ int sync_list_poll(void)
         ui_lock();
         syncView = !syncView;
         sy.follow = 1;
-        if ((k = sending()) >= 0)
+        if ((k = under_way()) >= 0)
             show(k);
         ui_unlock();
-        log_msg("sync: %s on screen", syncView ? "the list of its cards" : "the card on its way");
+        log_msg("sync: %s on screen", !syncView ? "the card on its way" : ss.c ? "the list of its saves" : "the list of its cards");
         ui_scene(syncView ? scene_sync : scene_upload);
         return 0;
     }
     if (!syncView)
         return 0;
     ui_lock();
-    if (sy.follow && (k = sending()) >= 0)
+    if (sy.follow && (k = under_way()) >= 0)
         show(k);
     arrow = (press & ARROWS) ? press & ARROWS : (pad & ARROWS) && now >= sy.repeat ? pad & ARROWS : 0;
     if (arrow) {
         sy.repeat = now + ((press & ARROWS) ? 400 : 100);
         k = sy.cursor;
-        n = nSync;
+        n = rows();
         if (arrow & PAD_UP)   /* (left and right: a page at a time) */
             k = k > 0 ? k - 1 : 0;
         else if (arrow & PAD_DOWN)
@@ -203,17 +263,62 @@ int sync_list_poll(void)
         }
     }
     ui_unlock();
+    if (ss.c) {   /* (its saves: square skips the card on its way, what is left of them) */
+        if (!(press & PAD_SQUARE))
+            return 0;
+        sound_play(SND_CONFIRM);
+        log_msg("sync: %s skipped (square, on its saves)", ss.c->id);
+        return 1;
+    }
     return (press & PAD_CROSS) ? options() : (press & PAD_SQUARE) ? skip() : 0;
 }
 
 static const int stateText[] = {T_SY_WAITING, T_SY_SENDING, T_SY_SENT, T_SY_FAILED, T_SY_SKIPPED, T_SY_RESOLVED, T_SY_OFF,
-                                T_SY_UNCHANGED};
-static const u32 stateColor[] = {COLOR_DIM, COLOR_TEXT, COLOR_OK, COLOR_ERROR, COLOR_DIM, 0x6E9AE0, COLOR_DIM, COLOR_DIM};
+                                T_SY_UNCHANGED, T_SY_CHECKING};
+static const u32 stateColor[] = {COLOR_DIM, COLOR_TEXT, COLOR_OK, COLOR_ERROR, COLOR_DIM, 0x6E9AE0, COLOR_DIM, COLOR_DIM,
+                                 COLOR_TEXT};
 
 /* a card as its row names it: its channel's name, or its game's, or its file's */
 static const char *row_name(const card_t *c)
 {
     return c->name[0] ? c->name : c->game[0] ? c->game : c->base;
+}
+
+/* the saves of the card on its way (ss), as the cards are: each one's game, and on the right what became of it */
+static void scene_saves(void)
+{
+    char s[120];
+    int i, y, lh = ui_line_height(FONT_TEXT);
+    ui_text_right(FONT_TEXT, SY_RIGHT, 82, COLOR_TEXT, row_name(ss.c));
+    for (i = sy.top, y = SY_Y0; i < ss.n && i < sy.top + SY_ROWS; i++, y += SY_ROW) {
+        int on = ss.state[i] == SY_WAITING || ss.state[i] == SY_SENDING || ss.state[i] == SY_CHECKING;
+        float my = y + lh / 2.0f + 1;
+        snprintf(s, sizeof(s), "%s", ss.name[i]);
+        fit(FONT_TEXT, s, sizeof(s), SY_RIGHT - SY_STATE - 16 - (SY_X + 28));
+        if (i == sy.cursor)
+            look_item(SY_X + 28, y, s, 1, 0);
+        else
+            ui_text(FONT_TEXT, SY_X + 28, y, on ? COLOR_ITEM : COLOR_DIM, s);
+        if (ss.state[i] == SY_SENDING) {
+            long long done = shownDone, total = shownTotal;
+            look_bar(SY_RIGHT - 120, my - 2, 120, total ? (int)(done * 1000 / total) : 0);
+        } else
+            ui_text_right(FONT_SMALL, SY_RIGHT, y + 2, stateColor[ss.state[i]], T(stateText[ss.state[i]]));
+    }
+    if (sy.top > 0)
+        look_arrow(W / 2.0f, SY_Y0 - 12, 0, 0x6E9AE0);
+    if (sy.top + SY_ROWS < ss.n)
+        look_arrow(W / 2.0f, SY_Y0 + SY_ROWS * SY_ROW + 2, 1, 0x6E9AE0);
+    if (ss.n) {   /* under the list: the selected save's folder, and where the cursor is */
+        if (strcmp(ss.name[sy.cursor], ss.folder[sy.cursor]))
+            ui_text_fit(FONT_SMALL, SY_X + 28, SY_Y0 + SY_ROWS * SY_ROW + 2, 300, 0x8E98AA, ss.folder[sy.cursor]);
+        snprintf(s, sizeof(s), "%d/%d", sy.cursor + 1, ss.n);
+        ui_text_right(FONT_SMALL, SY_RIGHT, SY_Y0 + SY_ROWS * SY_ROW + 2, 0x8E98AA, s);
+    }
+    {
+        legend_t l[3] = {{BUTTON_CIRCLE, T(T_CANCEL)}, {BUTTON_SQUARE, T(T_SKIP)}, {BUTTON_SELECT, T(T_VIEW)}};
+        look_legend(l, 3, 0);
+    }
 }
 
 void scene_sync(float t)
@@ -224,6 +329,10 @@ void scene_sync(float t)
     look_frame();
     ui_alpha(look_fade(t));
     look_title(SY_X, 82, T(igrMode ? T_IGR_TITLE : T_SYNC_TITLE), 0);
+    if (ss.c) {
+        scene_saves();
+        return;
+    }
     snprintf(s, sizeof(s), T(T_SYNC_CARD_N), currentN, totalN);
     ui_text_right(FONT_TEXT, SY_RIGHT, 82, COLOR_TEXT, s);
     /* each card: its name, and on the right what became of it; the one on its way, a bar of how far it went */

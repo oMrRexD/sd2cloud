@@ -39,6 +39,9 @@ typedef struct {
 int dir_list(const char *path, dir_entry_t *list, int max);
 void ensure_data_dir(void);                 /* creates <sd>SD2Cloud/ if needed */
 void ensure_dir(const char *dir);           /* creates a folder (a path ending in /) and the ones above it, if needed */
+/* the file as file_replace left it when something failed on the way (not there, and only the new one, <path>.new, or
+ * the old one, <path>.old): put back. 0 = it is there (now, or it was); -1 = only the .new or the .old is */
+int file_recover(const char *path);
 /* reads an .ini: cb(section, key, value) for each "key = value" (section "" before the first one) */
 int ini_read(const char *path, void (*cb)(const char *section, const char *key, const char *value, void *u), void *u);
 void trim(char *s);

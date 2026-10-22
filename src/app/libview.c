@@ -83,10 +83,15 @@ void library_picture(int k, icon_t *ic, float t)
 static char destId[12];   /* the game the saves go under ("" = several) */
 static int destGames;
 static char destName[80];
+static int destFresh;     /* that game has no folder in the Library yet: the saves make it */
 
 static void dest_named(void)
 {
     char name[64];
+    int k;
+    for (k = 0; k < library_games() && strcmp(library_game_id(k), destId); k++)
+        ;
+    destFresh = destGames == 1 && k == library_games();
     if (destGames > 1)
         snprintf(destName, sizeof(destName), T(T_LIBRARY_GAMES), destGames);
     else if (!strcmp(destId, LIBRARY_OTHER))
@@ -121,10 +126,12 @@ void library_dest_marked(void)
 }
 
 const char *library_dest_name(void) { return destName; }
+int library_dest_fresh(void) { return destFresh; }
 
 void library_place(int words)
 {
     static card_t shown;   /* (the game's card, as the Library's group draws it; with several, the Library's) */
+    int y = CARD_Y + LOOK_CARD_H + 2;
     if (destGames == 1) {
         memset(&shown, 0, sizeof(shown));
         shown.type = strcmp(destId, LIBRARY_OTHER) ? TYPE_GAMEID : TYPE_NAMED;
@@ -132,6 +139,8 @@ void library_place(int words)
         draw_card_picture(&shown, NULL, ui_clock());
     } else
         look_card(CARD_X, CARD_Y, NULL, T(T_TAB_LIBRARY));
-    if (words)
-        ui_paragraph_center(FONT_SMALL, CARD_CX, CARD_Y + LOOK_CARD_H + 2, PANEL_TITLE_W + 26, COLOR_DIM, T(T_LIBRARY_HINT));
+    if (destFresh)   /* (under the count, as a new card's name is; or in place of the words, which don't fit under it) */
+        ui_text_center(FONT_SMALL, CARD_CX, words ? y : y + 24, COLOR_OK, T(T_LIBRARY_NEW_FOLDER));
+    else if (words)
+        ui_paragraph_center(FONT_SMALL, CARD_CX, y, PANEL_TITLE_W + 26, COLOR_DIM, T(T_LIBRARY_HINT));
 }

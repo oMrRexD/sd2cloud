@@ -36,7 +36,7 @@ void script_read(void)
 {
     char c[260];
     buffer_t b = {0};
-    snprintf(c, sizeof(c), "%sscript.txt", dataDir);
+    snprintf(c, sizeof(c), "%sscript.txt", debug_home());
     if (file_read(c, &b) == 0 && b.len) {
         const char *s = (char *)b.data;
         if (*s == '@') {
@@ -294,7 +294,7 @@ void debug_log_save(void)
     char c[260];
     if (!hasScript || !logRam.len || rescuing)
         return;
-    snprintf(c, sizeof(c), "%sdebug-log.txt", dataDir);
+    snprintf(c, sizeof(c), "%sdebug-log.txt", debug_home());
     file_write(c, logRam.data, logRam.len);
 }
 
@@ -312,19 +312,19 @@ void rescue(const char *why)
     if (GetThreadId() == mainThread) {   /* (the script's end: the hard disk let go of first, as on the way out. Not
                                           * from the watch: the main thread may be stopped inside a call to fileXio) */
         log_msg("[rescue] the hard disk is let go of, and the IOP reset, next");
-        snprintf(c, sizeof(c), "%sdebug-log.txt", dataDir);   /* (before: the data folder may be on that disk) */
+        snprintf(c, sizeof(c), "%sdebug-log.txt", debug_home());   /* (before: the data folder may be on that disk) */
         file_write(c, logRam.data, logRam.len);
         drives_close();
     }
     iop_reset();
     load_sd_drivers(1);
     if (!again && logRam.len) {
-        int d = device_of(dataDir);
-        snprintf(c, sizeof(c), "%sdebug-log.txt", dataDir);
+        int d = device_of(debug_home());
+        snprintf(c, sizeof(c), "%sdebug-log.txt", debug_home());
         if (d == DEV_ATA || d == DEV_USB || d == DEV_MX4SIO) {   /* (a data folder on a drive: its drivers back first,
                                                                   * and the folder by the name they give it) */
             char *slash;
-            snprintf(c, sizeof(c), "%srescue.txt", dataDir);
+            snprintf(c, sizeof(c), "%srescue.txt", debug_home());
             if (open_device(d, c, sizeof(c), part, sizeof(part)) == 0 && (slash = strrchr(c, '/')) != NULL)
                 snprintf(slash + 1, sizeof(c) - (size_t)(slash + 1 - c), "debug-log.txt");
             else
@@ -476,7 +476,7 @@ void rescue_init(void)
     ee_thread_t th;
     int i;
     probes_read();
-    snprintf(c, sizeof(c), "%srescue.txt", dataDir);
+    snprintf(c, sizeof(c), "%srescue.txt", debug_home());
     if (file_read(c, &b) == 0 && b.len)
         for (line = strtok((char *)b.data, "\r\n"); line && nRescue < 4; line = strtok(NULL, "\r\n")) {
             snprintf(rescuePaths[nRescue], sizeof(rescuePaths[0]), "%s", line);
