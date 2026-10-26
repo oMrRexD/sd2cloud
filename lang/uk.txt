@@ -404,6 +404,8 @@ T_ABOUT_CREDITS = Дизайн натхненний PlayStation BB Navigator. Ш
 T_ABOUT_LICENSES = Сторонні ліцензії: див. THIRD-PARTY-NOTICES.txt.
 # Up to 3 lines. English: Developed by MrRexD.
 T_ABOUT_AUTHOR = Розробник: MrRexD.
+# One line. English: Thanks to %s for testing.
+T_ABOUT_TESTERS = Дякуємо %s за тестування.
 # One line. English: Exit to
 T_EXIT_TO = Вийти в
 # Up to 3 lines. English: Connect a Google account now to sync your memory cards?

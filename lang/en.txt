@@ -408,6 +408,8 @@ T_ABOUT_LICENSES = Third-party licenses: see THIRD-PARTY-NOTICES.txt.
 # Up to 3 lines.
 T_ABOUT_AUTHOR = Developed by MrRexD.
 # One line.
+T_ABOUT_TESTERS = Thanks to %s for testing.
+# One line.
 T_EXIT_TO = Exit to
 # Up to 3 lines.
 T_CONNECT_ASK = Connect a Google account now to sync your memory cards?

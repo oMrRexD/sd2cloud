@@ -8,7 +8,7 @@ dialog_t dlg, next;
 
 static void scene_dialog(float t)
 {
-    int w = dlg.wide ? 520 : 440, x = (W - w) / 2, pad = 28, inner = w - 2 * pad, h = 2 * pad, y, i;
+    int w = dlg.wide ? 520 : 440, x = (W - w) / 2, pad = 28, inner = w - 2 * pad, top = dlg.pad ? dlg.pad : pad, h = 2 * top, y, i;
     look_space();
     look_frame();
     ui_alpha(look_fade(t));
@@ -22,9 +22,9 @@ static void scene_dialog(float t)
         h = 130;
     y = LOOK_TOP + (LOOK_BOTTOM - LOOK_TOP - h) / 2;
     look_panel(x, y, w, h);
-    y += pad;
+    y += top;
     if (h == 130 && !dlg.title[0] && dlg.nlines == 1 && dlg.permille < 0)   /* a single short line: in the middle */
-        y += (130 - 2 * pad - ui_paragraph_height(dlg.line[0].font, inner, dlg.line[0].text)) / 2;
+        y += (130 - 2 * top - ui_paragraph_height(dlg.line[0].font, inner, dlg.line[0].text)) / 2;
     if (dlg.title[0]) {
         if (dlg.titleColor == COLOR_TITLE && ui_paragraph_height(FONT_TEXT, inner, dlg.title) <= ui_line_height(FONT_TEXT) + 2) {
             look_title(x + pad, y, dlg.title, 0);

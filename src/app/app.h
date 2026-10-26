@@ -39,6 +39,7 @@ typedef struct {
         int font, gap;
     } line[DLG_LINES];
     int nlines, permille, wide;   /* permille < 0: no bar */
+    int pad;                      /* from its top and its bottom to what it says (0 = the usual 28 px, as at its sides) */
     char note[48];                /* under the bar, on the right ("1 of 3") */
     legend_t legend[3];
     int nlegend;

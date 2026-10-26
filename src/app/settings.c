@@ -691,6 +691,9 @@ static void pick_format(void)
     config_set("cards", "format", k ? "ps2" : "mcd");
 }
 
+/* the people who tested it on their own consoles, by the names they go by (more of them: ", " between) */
+#define TESTERS "nuno6573"
+
 static void about_screen(void)
 {
     char t[120];
@@ -708,11 +711,14 @@ static void about_screen(void)
     dlg_line(FONT_SMALL, COLOR_DIM, 4, T(T_ABOUT_CREDITS));
     dlg_line(FONT_SMALL, COLOR_DIM, 8, T(T_ABOUT_LICENSES));
     dlg_line(FONT_TEXT, COLOR_TEXT, 2, T(T_ABOUT_AUTHOR));
+    snprintf(t, sizeof(t), T(T_ABOUT_TESTERS), TESTERS);
+    dlg_line(FONT_SMALL, COLOR_DIM, 6, t);
     snprintf(t, sizeof(t), "github.com/%s", cfg.repo);
     dlg_line(FONT_SMALL, COLOR_ACCENT, 6, t);
     dlg_line(FONT_SMALL, COLOR_DIM, 0, appPath);   /* where the program is, as the IGR helper is told */
     dlg_buttons(BUTTON_CIRCLE, T_BACK, 0, 0);
     next.wide = 1;
+    next.pad = 16;   /* (closer to its top and bottom than the other boxes: it has the most to say) */
     dlg_show();
     wait_button(PAD_CROSS | PAD_CIRCLE, 0);
     sound_play(SND_BACK);

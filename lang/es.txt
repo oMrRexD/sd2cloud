@@ -404,6 +404,8 @@ T_ABOUT_CREDITS = Diseño inspirado en el PlayStation BB Navigator. Fuentes: Var
 T_ABOUT_LICENSES = Licencias de terceros: consulte THIRD-PARTY-NOTICES.txt.
 # Up to 3 lines. English: Developed by MrRexD.
 T_ABOUT_AUTHOR = Desarrollado por MrRexD.
+# One line. English: Thanks to %s for testing.
+T_ABOUT_TESTERS = Agradecimientos a %s por las pruebas.
 # One line. English: Exit to
 T_EXIT_TO = Salir a
 # Up to 3 lines. English: Connect a Google account now to sync your memory cards?

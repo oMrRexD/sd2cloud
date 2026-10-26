@@ -405,6 +405,8 @@ T_ABOUT_CREDITS = PlayStation BB Navigator をもとにしたデザイン。フ�
 T_ABOUT_LICENSES = ライセンス情報: THIRD-PARTY-NOTICES.txt
 # Up to 3 lines. English: Developed by MrRexD.
 T_ABOUT_AUTHOR = 開発: MrRexD
+# One line. English: Thanks to %s for testing.
+T_ABOUT_TESTERS = テストにご協力いただいた %s に感謝します。
 # One line. English: Exit to
 T_EXIT_TO = 終了先
 # Up to 3 lines. English: Connect a Google account now to sync your memory cards?
