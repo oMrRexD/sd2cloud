@@ -117,10 +117,12 @@ the PS2 calls it the MMCE) and of the MemCard PRO2, and with regular Memory Card
 ## Installation
 
 1. Download `SD2Cloud-vX.Y.zip` from the [latest release](../../releases/latest).
-2. Extract it to the root of the MMCE. It adds `APPS/SD2Cloud` (the application) and
-   `SD2Cloud/sd2cloud.ini` (the settings, explained in `sd2cloud.example.ini` next to it). The cover and the logo
-   OPL shows for SD2Cloud in its Apps tab go to the `ART` folder. The same art with its line in
-   Portuguese is in `Extras/ART pt-BR`, to copy over those two files.
+2. Extract it to the root of the MMCE. It adds `APPS/SD2Cloud` (the application) and `SD2Cloud/sd2cloud.example.ini`,
+   which explains every setting: SD2Cloud writes its settings (`SD2Cloud/sd2cloud.ini`) the first time it runs, so
+   extracting a new version over an old one keeps them. To set them on a PC before the first run, rename
+   `sd2cloud.example.ini` to `sd2cloud.ini` and edit it. The cover and the logo OPL shows for SD2Cloud in its Apps
+   tab go to the `ART` folder. The same art with its line in Portuguese is in `Extras/ART pt-BR`, to copy over those
+   two files.
 3. Open SD2Cloud: from the Apps tab of OPL, or by running `APPS/SD2Cloud/SD2CLOUD.ELF` with any launcher
    (wLaunchELF, for example). The folder does not have to stay in `APPS`.
 4. Connect your Google account when asked (or later, in Settings > Google Drive): visit google.com/device on your
@@ -160,7 +162,7 @@ The [README.txt](package/README.txt) included in the release explains every scre
 | After Copy | The save is selected, and so can others be: X selects or deselects a save · O: leave the card for the list of cards, to select saves on other cards too · TRIANGLE: cancel · START: paste them all into the card that is open, or into the one under the cursor in the list. In the list's Games tab, the folder of their game comes first, highlighted, with "New card" in it. The Library tab keeps them off the cards. In the Files tab, X opens a device's folders: START pastes them there as `.psu` files, or into the memory card file under the cursor. START on the Memory Card pastes them into it |
 | Files tab | X: open the device, a folder, a `.psu` file or a memory card file · SQUARE: install the selected `.psu` or save folder in a card, or the selected memory card file as a card of the MMCE or as a file on a device (its Files tab) · Left/Right: a page up or down · O: back |
 | Files tab > Google Drive | X: open a folder, a save's `.psu` (its page: import to card, download, delete from Drive) or a card's backup (its card) · SQUARE: install a card's backup (as from its card), download any other file · TRIANGLE: delete it (to Drive's trash) · O: back |
-| Tools (SELECT) | Templates (X: a new template or an existing one; TRIANGLE: set as default, add saves, apply template, linked games, rename, delete) · Safety copies (X: put one back, or delete it) |
+| Tools (SELECT) | Templates (X: a new template or an existing one; TRIANGLE: set as default, add saves, apply template, template games, rename, delete) · Safety copies (X: put one back, or delete it) |
 | Settings (START) | Sync all cards · Google Drive (account, backups kept, format, backup by save, Library on Drive) · Automatic sync (on or off, SAS package, IGR path) · Cards (device, new card size, OPL VMC folders) · Updates · Language · About |
 | During a sync | O: cancel · SQUARE: skip the card being uploaded · SELECT: the list of the sync's cards, with what became of each, and back. On it, SQUARE skips a card (again: undo) and X offers to skip it, mark it as resolved (the automatic sync leaves it alone until it changes again) or turn its sync off |
 

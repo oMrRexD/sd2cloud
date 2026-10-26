@@ -1068,8 +1068,8 @@ T_TPL_WARN = Карт игр без их шаблона: %d
 T_TPL_NO_WARN = Не предупреждать
 # One line. English: Re-enable warnings
 T_TPL_WARN_AGAIN = Включить предупреждения
-# One line. English: Linked games
-T_TPL_GAMES = Связанные игры
+# One line. English: Template games
+T_TPL_GAMES = Игры шаблона
 # One line. English: Update existing saves
 T_TPL_UPDATE = Обновить сохранения
 # Up to 3 lines. English: Update the saves of the template "%s" on the game cards?

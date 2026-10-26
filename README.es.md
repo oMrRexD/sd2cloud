@@ -123,10 +123,12 @@ PicoMemcard+/Zero; la PS2 la llama MMCE) y de la MemCard PRO2, y con Memory Card
 ## Instalación
 
 1. Descarga `SD2Cloud-vX.Y.zip` desde la [última release](../../releases/latest).
-2. Extráelo en la raíz del MMCE. Añade `APPS/SD2Cloud` (la aplicación) y `SD2Cloud/sd2cloud.ini` (los ajustes,
-   explicados en el `sd2cloud.example.ini` que está al lado). La carátula y el logo que OPL muestra para SD2Cloud en su
-   pestaña Apps van a la carpeta `ART`. El mismo arte con su línea en portugués está en `Extras/ART pt-BR`, para copiarlo
-   sobre esos dos archivos.
+2. Extráelo en la raíz del MMCE. Añade `APPS/SD2Cloud` (la aplicación) y `SD2Cloud/sd2cloud.example.ini`, que explica
+   cada ajuste: SD2Cloud escribe sus ajustes (`SD2Cloud/sd2cloud.ini`) la primera vez que se abre, así que extraer una
+   versión nueva sobre la anterior los conserva. Para configurarlos en un PC antes del primer uso, cambia el nombre de
+   `sd2cloud.example.ini` a `sd2cloud.ini` y edítalo. La carátula y el logo que OPL muestra para SD2Cloud en su pestaña
+   Apps van a la carpeta `ART`. El mismo arte con su línea en portugués está en `Extras/ART pt-BR`, para copiarlo sobre
+   esos dos archivos.
 3. Abre SD2Cloud: desde la pestaña Apps de OPL o ejecutando `APPS/SD2Cloud/SD2CLOUD.ELF` con cualquier lanzador
    (wLaunchELF, por ejemplo). La carpeta no tiene que quedarse en `APPS`.
 4. Conecta tu cuenta de Google cuando te lo pida (o más tarde, en Ajustes > Google Drive): entra en google.com/device
@@ -168,7 +170,7 @@ El [README.txt](package/README.txt) incluido en la release explica cada pantalla
 | Después de Copiar | La partida queda seleccionada, y otras también pueden quedarlo: X selecciona o deselecciona una partida · O: salir de la tarjeta a la lista de tarjetas, para seleccionar partidas de otras tarjetas también · TRIÁNGULO: cancelar · START: pegarlas todas en la tarjeta abierta, o en la que está bajo el cursor en la lista. En la pestaña Juegos de la lista, la carpeta de su juego aparece primero, resaltada, con "Nueva tarjeta" dentro. La pestaña Biblioteca las guarda fuera de las tarjetas. En la pestaña Archivos, X abre las carpetas de un dispositivo: START las pega ahí como archivos `.psu`, o dentro del archivo de tarjeta de memoria bajo el cursor. START en la Memory Card las pega en ella |
 | Pestaña Archivos | X: abrir el dispositivo, una carpeta, un archivo `.psu` o un archivo de tarjeta de memoria · CUADRADO: instalar el `.psu` o la carpeta de partida seleccionados en una tarjeta, o el archivo de tarjeta seleccionado como tarjeta del MMCE o como archivo en un dispositivo (su pestaña Archivos) · Izquierda/Derecha: una página arriba o abajo · O: volver |
 | Pestaña Archivos > Google Drive | X: abrir una carpeta, el `.psu` de una partida (su página: importar a tarjeta, descargar, eliminar de Drive) o la copia de una tarjeta (la tarjeta) · CUADRADO: instalar la copia de una tarjeta (como desde la tarjeta), descargar cualquier otro archivo · TRIÁNGULO: eliminarlo (va a la papelera de Drive) · O: volver |
-| Utilidades (SELECT) | Plantillas (X: una plantilla nueva o una existente; TRIÁNGULO: fijar como principal, agregar partidas, aplicar plantilla, juegos vinculados, cambiar nombre, eliminar) · Copias de seguridad (X: restaurar una, o eliminarla) |
+| Utilidades (SELECT) | Plantillas (X: una plantilla nueva o una existente; TRIÁNGULO: fijar como principal, agregar partidas, aplicar plantilla, juegos de la plantilla, cambiar nombre, eliminar) · Copias de seguridad (X: restaurar una, o eliminarla) |
 | Ajustes (START) | Sincronizar todas las tarjetas · Google Drive (cuenta, copias conservadas, formato, copia por partida, Biblioteca en Drive) · Sincronización automática (activada o desactivada, paquete SAS, salida del IGR) · Tarjetas (dispositivo, tamaño de tarjetas nuevas, carpetas de VMC del OPL) · Actualizaciones · Idioma · Acerca de |
 | Durante una sincronización | O: cancelar · CUADRADO: omitir la tarjeta que se está subiendo · SELECT: la lista de las tarjetas de la sincronización, con lo que pasó con cada una, y de vuelta. En ella, CUADRADO omite una tarjeta (otra vez: deshace) y X ofrece omitirla, marcarla como resuelta (la sincronización automática la deja en paz hasta que vuelva a cambiar) o desactivar su sincronización |
 

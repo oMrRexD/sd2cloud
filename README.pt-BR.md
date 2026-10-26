@@ -120,10 +120,12 @@ PicoMemcard+/Zero; o PS2 o chama de MMCE) e do MemCard PRO2, e com Memory Cards 
 ## Instalação
 
 1. Baixe o `SD2Cloud-vX.Y.zip` da [release mais recente](../../releases/latest).
-2. Extraia na raiz do MMCE. Serão criadas as pastas `APPS/SD2Cloud` (o aplicativo) e `SD2Cloud`,
-   com o `sd2cloud.ini` (as configurações, explicadas no `sd2cloud.example.ini` ao lado dele). A capa e a logo
-   que o OPL exibe para o SD2Cloud na aba Apps vão para a pasta `ART`. A mesma arte com a frase em
-   português está em `Extras/ART pt-BR`, para copiar por cima desses dois arquivos.
+2. Extraia na raiz do MMCE. Serão criadas as pastas `APPS/SD2Cloud` (o aplicativo) e `SD2Cloud`, com o
+   `sd2cloud.example.ini`, que explica cada configuração: o SD2Cloud grava as configurações dele
+   (`SD2Cloud/sd2cloud.ini`) na primeira vez que é aberto, por isso extrair uma versão nova por cima da anterior não
+   as altera. Para ajustá-las no PC antes do primeiro uso, renomeie o `sd2cloud.example.ini` para `sd2cloud.ini` e
+   edite-o. A capa e a logo que o OPL exibe para o SD2Cloud na aba Apps vão para a pasta `ART`. A mesma arte com a
+   frase em português está em `Extras/ART pt-BR`, para copiar por cima desses dois arquivos.
 3. Abra o SD2Cloud: pela aba Apps do OPL, ou executando `APPS/SD2Cloud/SD2CLOUD.ELF` em qualquer programa que abra
    um ELF (o wLaunchELF, por exemplo). A pasta não precisa ficar em `APPS`.
 4. Conecte a sua conta do Google quando ele perguntar (ou depois, em Ajustes > Google Drive): acesse
@@ -164,7 +166,7 @@ O [LEIA-ME.txt](package/LEIA-ME.txt) incluído na release explica cada tela em d
 | Depois de Copiar | O item fica selecionado, e outros também podem ficar: X seleciona ou desmarca um item · O: sair do cartão para a lista de cartões, para selecionar itens de outros cartões também · TRIÂNGULO: cancelar · START: colar todos no cartão que está aberto, ou no que está sob o cursor na lista. Na aba Jogos da lista, a pasta do jogo deles vem primeiro, em destaque, com "Novo cartão" dentro. A aba Biblioteca os guarda fora dos cartões. Na aba Arquivos, X abre as pastas de um dispositivo: START cola os itens ali como arquivos `.psu`, ou dentro do arquivo de cartão de memória sob o cursor. START no Memory Card cola os itens nele |
 | Aba Arquivos | X: abrir o dispositivo, uma pasta, um arquivo `.psu` ou um arquivo de cartão de memória · QUADRADO: instalar o `.psu` ou a pasta de save selecionados em um cartão, ou o arquivo de cartão selecionado como cartão do MMCE ou como arquivo em um dispositivo (a aba Arquivos dele) · Esquerda/Direita: uma página acima ou abaixo · O: voltar |
 | Aba Arquivos > Google Drive | X: abrir uma pasta, o `.psu` de um save (a página dele: importar para cartão, baixar, excluir do Drive) ou o backup de um cartão (o cartão) · QUADRADO: instalar o backup de um cartão (como pelo cartão), baixar qualquer outro arquivo · TRIÂNGULO: excluí-lo (vai para a lixeira do Drive) · O: voltar |
-| Ferramentas (SELECT) | Templates (X: um template novo ou um existente; TRIÂNGULO: definir como principal, adicionar saves, aplicar template, jogos vinculados, renomear, excluir) · Cópias de segurança (X: restaurar uma, ou excluí-la) |
+| Ferramentas (SELECT) | Templates (X: um template novo ou um existente; TRIÂNGULO: definir como principal, adicionar saves, aplicar template, jogos do template, renomear, excluir) · Cópias de segurança (X: restaurar uma, ou excluí-la) |
 | Ajustes (START) | Sincronizar todos os cartões · Google Drive (conta, backups mantidos, formato, backup por save, Biblioteca no Drive) · Sincronização automática (ativada ou desativada, pacote SAS, saída do IGR) · Cartões (dispositivo, tamanho dos cartões novos, pastas de VMC do OPL) · Atualizações · Idioma · Sobre |
 | Durante uma sincronização | O: cancelar · QUADRADO: pular o cartão que está sendo enviado · SELECT: a lista dos cartões da sincronização, com a situação de cada um, e de volta. Nela, QUADRADO pula um cartão (de novo: desfaz) e X oferece pular, marcar como resolvido (a sincronização automática o deixa de lado até ele mudar de novo) ou desativar a sincronização dele |
 

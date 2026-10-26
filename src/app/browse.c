@@ -29,25 +29,17 @@ static unsigned char fbSave[FB_MAX];
 #define IS_SAVE(i) (fbSave[i] == 2)
 static int fbHereSave;   /* the folder shown is one of those (never the device's root): square there opens its page */
 
-static int is_psu(const char *name)
-{
-    size_t n = strlen(name);
-    return n > 4 && !strcasecmp(name + n - 4, ".psu");
-}
-
 /* a whole card: a .mcd, a MemCard PRO2's .mc2, a .ps2, one of OPL's virtual memory cards (a .bin: so much else is
  * called that, that only a file of a size a card has counts), or the .zip "Copy to a device" writes with a card
  * inside (what the file really is gets checked when it's opened) */
 static int is_card_file(const char *name, long long size)
 {
-    size_t n = strlen(name);
-    const char *e = n > 4 ? name + n - 4 : "";
-    if (!strcasecmp(e, ".bin")) {
+    if (file_ext(name, ".bin")) {
         if ((size & (size - 1)) && size % 528 == 0)   /* with the ECC bytes: 528 for each 512 */
             size = size / 528 * 512;
         return size >= 512 * 1024 && !(size & (size - 1));
     }
-    return !strcasecmp(e, ".mcd") || !strcasecmp(e, ".mc2") || !strcasecmp(e, ".ps2") || !strcasecmp(e, ".zip");
+    return file_ext(name, ".mcd") || file_ext(name, ".mc2") || file_ext(name, ".ps2") || file_ext(name, ".zip");
 }
 
 /* What X does with an entry of the folder shown: FB_ENTER a folder, FB_PSU or FB_CARD show what the file holds, FB_ELF
@@ -64,21 +56,15 @@ int fbHereText;
 int fbCardOpen;
 char fbPicked[200];
 
-static int is_elf(const char *name)
-{
-    size_t n = strlen(name);
-    return n > 4 && !strcasecmp(name + n - 4, ".elf");
-}
-
 static int fb_opens(const dir_entry_t *e)
 {
     if (e->dir)
         return FB_ENTER;
-    if (is_elf(e->name) && !fbGive.c && !fbCard)
+    if (file_ext(e->name, ".elf") && !fbGive.c && !fbCard)
         return FB_ELF;
     if (fbCardOpen)   /* (a card file on its way to a folder: what else would open has to wait) */
         return 0;
-    if (is_psu(e->name) && !fbGive.c)
+    if (file_ext(e->name, ".psu") && !fbGive.c)
         return FB_PSU;
     if (is_card_file(e->name, e->size) && !fbCard)   /* (during a copy too: to mark saves of it, or paste into it) */
         return FB_CARD;
@@ -115,13 +101,7 @@ static void fb_title(void)
     }
 }
 
-static void fb_scroll(void)
-{
-    if (fb.cursor < fb.top)
-        fb.top = fb.cursor;
-    if (fb.cursor >= fb.top + FB_ROWS)
-        fb.top = fb.cursor - FB_ROWS + 1;
-}
+static void fb_scroll(void) { scroll_to(fb.cursor, &fb.top, FB_ROWS); }
 
 /* whether the folders of the rows from that one on are saves; n = how many rows the list has */
 static void fb_look(int from, int n)
@@ -241,13 +221,12 @@ static void scene_files(float t)
     }
     for (i = fb.top, y = FB_Y0; i < fb.n && i < fb.top + FB_ROWS; i++, y += FB_ROW) {
         const dir_entry_t *e = &fb.list[i];
-        int elf = !e->dir && is_elf(e->name);
-        int usable = e->dir || elf || is_psu(e->name) || is_card_file(e->name, e->size);
+        int elf = !e->dir && file_ext(e->name, ".elf");
+        int usable = e->dir || elf || file_ext(e->name, ".psu") || is_card_file(e->name, e->size);
         float my = y + lh / 2.0f + 1;
-        if (e->dir) {   /* a small folder */
-            ui_rect(FB_X, my - 8, 7, 3, 0xD9B95C, 0x58);
-            ui_rect(FB_X, my - 6, 16, 12, 0xD9B95C, 0x58);
-        } else if (elf)   /* a program: a small page, lit */
+        if (e->dir)
+            look_folder(FB_X, my);
+        else if (elf)   /* a program: a small page, lit */
             ui_rect(FB_X + 3, my - 7, 10, 13, 0x8FB4E8, 0x60);
         else if (usable)
             ui_image(IMG_MINICARD, FB_X + 2, my - 8, 13, 15, 0xFFFFFF, 0x80);
@@ -272,15 +251,8 @@ static void scene_files(float t)
     }
     if (!fb.n && !fb.loading)
         ui_text_center(FONT_TEXT, W / 2.0f, 200, fb.error ? COLOR_WARN : COLOR_DIM, T(fb.error ? T_DIR_ERROR : T_DIR_EMPTY));
-    if (fb.top > 0)
-        look_arrow(W / 2.0f, FB_Y0 - 12, 0, 0x6E9AE0);
-    if (fb.top + FB_ROWS < fb.n)
-        look_arrow(W / 2.0f, FB_Y0 + FB_ROWS * FB_ROW + 2, 1, 0x6E9AE0);
-    if (fb.n) {
-        char s[24];
-        snprintf(s, sizeof(s), "%d/%d", fb.cursor + 1, fb.n);
-        ui_text_right(FONT_SMALL, FB_RIGHT, FB_Y0 + FB_ROWS * FB_ROW + 2, 0x8E98AA, s);
-    }
+    list_arrows(fb.top, FB_ROWS, fb.n, FB_Y0, FB_ROW);
+    list_count(fb.cursor, fb.n, FB_RIGHT, FB_Y0 + FB_ROWS * FB_ROW + 2);
     {
         /* only what can be done with the selected entry is offered */
         legend_t l[4] = {{BUTTON_CIRCLE, T(T_BACK)}};
@@ -298,7 +270,7 @@ static void scene_files(float t)
         else if (fbHere) {   /* a folder is being picked: this one */
             if (!fb.error)
                 l[n].button = BUTTON_TRIANGLE, l[n++].text = T(fbHereText);
-        } else if (e && (e->dir ? IS_SAVE(fb.cursor) : is_psu(e->name)))   /* what the selected file is good for */
+        } else if (e && (e->dir ? IS_SAVE(fb.cursor) : file_ext(e->name, ".psu")))   /* what the selected file is good for */
             l[n].button = BUTTON_SQUARE, l[n++].text = T(T_INSTALL_SAVE);
         else if (e && !e->dir && is_card_file(e->name, e->size))
             l[n].button = BUTTON_SQUARE, l[n++].text = T(T_INSTALL);
@@ -729,17 +701,7 @@ static void browse(int dev)
         b = wait_nav(PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT | PAD_CROSS | PAD_CIRCLE | PAD_TRIANGLE | PAD_SQUARE |
                      (fbGive.c || card_file_marks() ? PAD_START : 0));
         if (b & (PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT)) {   /* left and right: a screenful at a time */
-            int k = fb.cursor;
-            if (!fb.n)
-                continue;
-            if (b & PAD_UP)
-                k = (k + fb.n - 1) % fb.n;
-            else if (b & PAD_DOWN)
-                k = (k + 1) % fb.n;
-            else if (b & PAD_LEFT)
-                k = k >= FB_ROWS ? k - FB_ROWS : 0;
-            else
-                k = k + FB_ROWS < fb.n ? k + FB_ROWS : fb.n - 1;
+            int k = list_move(b, fb.cursor, fb.n, FB_ROWS);
             if (k != fb.cursor) {
                 ui_lock();
                 fb.cursor = k;
@@ -795,7 +757,7 @@ static void browse(int dev)
             if (e && e->dir && IS_SAVE(fb.cursor)) {   /* a save copied as a folder: its page first */
                 sound_play(SND_CONFIRM);
                 psu_screen(name, 0);
-            } else if (e && !e->dir && is_psu(name)) {
+            } else if (e && !e->dir && file_ext(name, ".psu")) {
                 sound_play(SND_CONFIRM);
                 psu_screen(name, 1);
             } else if (e && !e->dir && is_card_file(name, e->size)) {

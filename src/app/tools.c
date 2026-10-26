@@ -581,19 +581,115 @@ static void template_toggle_main(template_t *t)
     template_to_game_cards(t, 1, 0);
 }
 
-/* -------- the games a template is for: the folders of game cards, each one marked or not */
+/* -------- a list whose rows are marked, the selected row's card drawn big on the right: the games a template is for
+ * (the folders of game cards), or the cards it goes into. X marks and unmarks the row under the cursor (and held, the
+ * rows the cursor moves onto: drag_moved), square all of them at once (none, or all again when none is) */
 
-#define LIST_ROWS  5    /* (the rows of a list, and how far apart: tabs.c) */
-#define LIST_ROW_H 30
+static struct {
+    int n, cursor, top;
+    int title, start;                      /* (start: START's text, when it ends the list; 0 = it doesn't) */
+    const char *(*text)(int i, char *buf);
+    const card_t *(*card)(int i);          /* the card drawn on the right */
+    int (*on)(int i);                      /* is the i-th marked? */
+    int (*set)(int i, int on);             /* the i-th marked (1) or not (0): 1 = it changed (drag_moved's too) */
+    int (*count)(void);                    /* "Selected: N" */
+} ml;
+
+static int ml_any(void)
+{
+    int i;
+    for (i = 0; i < ml.n; i++)
+        if (ml.on(i))
+            return 1;
+    return 0;
+}
+
+static void scene_marklist(float t)
+{
+    char s[64];
+    int i, n = ml.count();
+    look_space();
+    look_frame();
+    ui_alpha(look_fade(t));
+    rowsWide = 236;   /* (a game's name is longer than a card's: up to where the big card's picture starts) */
+    list_rows(ml.n, ml.cursor, ml.top, ml.text, NULL);
+    rowsWide = 0;
+    for (i = ml.top; i < ml.n && i < ml.top + LIST_ROWS; i++)   /* a green tick before each marked row */
+        if (ml.on(i))
+            look_tick(LIST_X + 2, ROW_Y0 + (i - ml.top) * LIST_ROW_H + ui_line_height(FONT_TEXT) / 2.0f + 1);
+    {
+        legend_t l[4] = {{BUTTON_CIRCLE, T(T_BACK)}, {BUTTON_CROSS, T(T_MIGRATE_MARK)},
+                         {BUTTON_SQUARE, T(ml_any() ? T_MIGRATE_ALL_OFF : T_MIGRATE_ALL_ON)}, {BUTTON_START, T(ml.start)}};
+        look_legend(l, ml.start ? 4 : 3, 0);
+    }
+    look_title(CARD_CX, 82, T(ml.title), 1);
+    draw_card_picture(ml.card(ml.cursor), NULL, ui_clock());
+    snprintf(s, sizeof(s), T(T_PICKED_N), n);
+    ui_text_center(FONT_TEXT, CARD_CX, CARD_Y + LOOK_CARD_H + 2, n ? COLOR_OK : COLOR_DIM, s);
+}
+
+/* The list, until circle (0) or START with something marked (1: the list is still there, as it was left, for what
+ * START asks to come back to it) */
+static int mark_list(void)
+{
+    ui_scene(scene_marklist);
+    drag_stop();
+    for (;;) {
+        u32 b = wait_nav(PAD_UP | PAD_DOWN | PAD_CROSS | PAD_CIRCLE | PAD_SQUARE | (ml.start ? PAD_START : 0));
+        int i, on;
+        if (!(b & (PAD_UP | PAD_DOWN)))
+            drag_stop();
+        if (b & PAD_CIRCLE) {
+            sound_play(SND_BACK);
+            return 0;
+        }
+        if (b & PAD_START) {
+            sound_play(ml.count() ? SND_CONFIRM : SND_BACK);
+            if (ml.count())
+                return 1;
+        } else if (b & PAD_CROSS) {
+            on = !ml.on(ml.cursor);
+            ml.set(ml.cursor, on);
+            drag_start(on, ml.set);
+            sound_play(on ? SND_CONFIRM : SND_BACK);
+        } else if (b & PAD_SQUARE) {
+            on = !ml_any();
+            for (i = 0; i < ml.n; i++)
+                ml.set(i, on);
+            sound_play(on ? SND_CONFIRM : SND_BACK);
+        } else {
+            ui_lock();
+            ml.cursor = list_move(b, ml.cursor, ml.n, LIST_ROWS);
+            scroll_to(ml.cursor, &ml.top, LIST_ROWS);
+            ui_unlock();
+            sound_play(drag_moved(ml.cursor));   /* (X held: the row moved onto marked or unmarked as X did) */
+        }
+    }
+}
+
+/* the list's rows from 0, the cursor on the first */
+static void ml_new(int n, int title, int start)
+{
+    ui_lock();
+    ml.n = n;
+    ml.cursor = ml.top = 0;
+    ml.title = title;
+    ml.start = start;
+    ui_unlock();
+}
+
+/* -------- the games a template is for: the folders of game cards, each one marked or not */
 
 static struct {
     const template_t *t;
-    int n, cursor, top;
     int first[MAX_CARDS];   /* the first card of each game's folder (indexes in cards[]) */
     int changed;            /* a game was marked or unmarked: templates.ini is written when the screen is left */
 } gl;
 
-/* the template made the i-th game's (1) or not (0), by X or X held over it (drag_moved's). 1 = it changed */
+static int games_on(int i) { return template_has_game(gl.t, cards[gl.first[i]].folder); }
+static const card_t *games_card(int i) { return &cards[gl.first[i]]; }
+static int games_count(void) { return template_games(gl.t); }   /* (the games it is for, those without cards too) */
+
 static int games_set(int i, int on)
 {
     const char *game = cards[gl.first[i]].folder;
@@ -613,73 +709,30 @@ static const char *games_text(int i, char *buf)
     return buf;
 }
 
-static void scene_games(float t)
-{
-    char s[64];
-    int i;
-    look_space();
-    look_frame();
-    ui_alpha(look_fade(t));
-    rowsWide = 236;   /* (a game's name is longer than a card's: up to where the big card's picture starts) */
-    list_rows(gl.n, gl.cursor, gl.top, games_text, NULL);
-    rowsWide = 0;
-    for (i = gl.top; i < gl.n && i < gl.top + LIST_ROWS; i++)   /* a green light before each game it is for */
-        if (template_has_game(gl.t, cards[gl.first[i]].folder)) {
-            float y = ROW_Y0 + (i - gl.top) * LIST_ROW_H + ui_line_height(FONT_TEXT) / 2.0f + 1;
-            ui_image(IMG_GLOW, LIST_X + 1, y - 9, 18, 18, COLOR_OK, 0x80);
-            ui_rect(LIST_X + 8, y - 2, 4, 4, COLOR_OK, 0x80);
-        }
-    {
-        legend_t l[2] = {{BUTTON_CIRCLE, T(T_BACK)}, {BUTTON_CROSS, T(T_MARK)}};
-        look_legend(l, 2, 0);
-    }
-    look_title(CARD_CX, 82, T(T_TPL_GAMES), 1);
-    draw_card_picture(&cards[gl.first[gl.cursor]], NULL, ui_clock());
-    snprintf(s, sizeof(s), T(T_MARKED_N), template_games(gl.t));
-    ui_text_center(FONT_TEXT, CARD_CX, CARD_Y + LOOK_CARD_H + 2, template_games(gl.t) ? COLOR_OK : COLOR_DIM, s);
-}
-
 static void template_games_screen(template_t *t)
 {
-    int i, k;
-    ui_lock();
+    int i, k, n = 0;
     gl.t = t;
-    gl.n = gl.cursor = gl.top = gl.changed = 0;
+    gl.changed = 0;
     for (i = 0; i < nCards; i++) {
         if (cards[i].type != TYPE_GAMEID)
             continue;
-        for (k = 0; k < gl.n && strcasecmp(cards[gl.first[k]].folder, cards[i].folder); k++)
+        for (k = 0; k < n && strcasecmp(cards[gl.first[k]].folder, cards[i].folder); k++)
             ;
-        if (k == gl.n)
-            gl.first[gl.n++] = i;
+        if (k == n)
+            gl.first[n++] = i;
     }
-    ui_unlock();
-    if (!gl.n) {
+    if (!n) {
         message_wait(0, NULL, COLOR_WARN, T(T_TPL_NO_GAME_CARDS));
         return;
     }
-    ui_scene(scene_games);
-    drag_stop();
-    for (;;) {
-        u32 b = wait_nav(PAD_UP | PAD_DOWN | PAD_CROSS | PAD_CIRCLE);
-        if (b & PAD_CIRCLE) {
-            drag_stop();
-            sound_play(SND_BACK);
-            break;
-        }
-        if (b & PAD_CROSS) {
-            int on = !template_has_game(t, cards[gl.first[gl.cursor]].folder);
-            games_set(gl.cursor, on);
-            drag_start(on, games_set);
-            sound_play(on ? SND_CONFIRM : SND_BACK);
-            continue;
-        }
-        ui_lock();
-        gl.cursor = (b & PAD_UP) ? (gl.cursor + gl.n - 1) % gl.n : (gl.cursor + 1) % gl.n;
-        scroll_to(gl.cursor, &gl.top);
-        ui_unlock();
-        sound_play(drag_moved(gl.cursor));   /* (X held: the game moved onto marked or unmarked as X did) */
-    }
+    ml.text = games_text;
+    ml.card = games_card;
+    ml.on = games_on;
+    ml.set = games_set;
+    ml.count = games_count;
+    ml_new(n, T_TPL_GAMES, 0);
+    mark_list();
     if (!gl.changed)
         return;
     if (templates_save() != 0)
@@ -691,12 +744,15 @@ static void template_games_screen(template_t *t)
 /* -------- the cards a template goes into, marked one by one */
 
 static struct {
-    int n, cursor, top, marked;
+    int marked;
     int card[MAX_CARDS];            /* the cards: the game cards first, by their games' names (indexes in cards[]) */
     unsigned char on[MAX_CARDS];    /* marked */
 } pk;
 
-/* the i-th card marked (1) or not (0), by X or X held over it (drag_moved's). 1 = it changed */
+static int pick_on(int i) { return pk.on[i]; }
+static const card_t *pick_card(int i) { return &cards[pk.card[i]]; }
+static int pick_count(void) { return pk.marked; }
+
 static int pick_set(int i, int on)
 {
     if (pk.on[i] == on)
@@ -717,7 +773,7 @@ static const char *pick_text(int i, char *buf)
         snprintf(buf, 64, "%s", c->base);
         return buf;
     }
-    for (k = 0; k < pk.n; k++)
+    for (k = 0; k < ml.n; k++)
         same += !strcasecmp(cards[pk.card[k]].folder, c->folder);
     if (same > 1)   /* (a game with more than one card: which of them) */
         snprintf(channel, sizeof(channel), " (%d)", c->channel);
@@ -727,33 +783,7 @@ static const char *pick_text(int i, char *buf)
     return buf;
 }
 
-static void scene_pick(float t)
-{
-    char s[64];
-    int i;
-    look_space();
-    look_frame();
-    ui_alpha(look_fade(t));
-    rowsWide = 236;   /* (a game's name is longer than a card's: up to where the big card's picture starts) */
-    list_rows(pk.n, pk.cursor, pk.top, pick_text, NULL);
-    rowsWide = 0;
-    for (i = pk.top; i < pk.n && i < pk.top + LIST_ROWS; i++)   /* a green light before each marked card */
-        if (pk.on[i]) {
-            float y = ROW_Y0 + (i - pk.top) * LIST_ROW_H + ui_line_height(FONT_TEXT) / 2.0f + 1;
-            ui_image(IMG_GLOW, LIST_X + 1, y - 9, 18, 18, COLOR_OK, 0x80);
-            ui_rect(LIST_X + 8, y - 2, 4, 4, COLOR_OK, 0x80);
-        }
-    {
-        legend_t l[3] = {{BUTTON_CIRCLE, T(T_BACK)}, {BUTTON_CROSS, T(T_MARK)}, {BUTTON_START, T(T_TPL_APPLY)}};
-        look_legend(l, 3, 0);
-    }
-    look_title(CARD_CX, 82, T(T_TPL_PICK_CARDS), 1);
-    draw_card_picture(&cards[pk.card[pk.cursor]], NULL, ui_clock());
-    snprintf(s, sizeof(s), T(T_MARKED_N), pk.marked);
-    ui_text_center(FONT_TEXT, CARD_CX, CARD_Y + LOOK_CARD_H + 2, pk.marked ? COLOR_OK : COLOR_DIM, s);
-}
-
-/* "Select cards": X marks and unmarks a card, START puts the template into the marked ones */
+/* "Select cards": the cards marked, START puts the template into them (asked first) */
 static void template_pick_cards(template_t *t)
 {
     char s[300], f[100];
@@ -762,61 +792,38 @@ static void template_pick_cards(template_t *t)
         message_wait(0, NULL, COLOR_WARN, T(T_TPL_EMPTY));
         return;
     }
-    ui_lock();
     memset(&pk, 0, sizeof(pk));
     for (i = 0; i < nCards; i++) {   /* the game cards first: a template is mostly for them */
         if (cards[i].type != TYPE_GAMEID)
             continue;
-        for (k = pk.n++; k > 0 && strcasecmp(game_of(&cards[pk.card[k - 1]]), game_of(&cards[i])) > 0; k--)
+        for (k = n++; k > 0 && strcasecmp(game_of(&cards[pk.card[k - 1]]), game_of(&cards[i])) > 0; k--)
             pk.card[k] = pk.card[k - 1];
         pk.card[k] = i;
     }
     for (i = 0; i < nCards; i++)
         if (cards[i].type != TYPE_GAMEID)
-            pk.card[pk.n++] = i;
-    ui_unlock();
-    if (!pk.n) {
+            pk.card[n++] = i;
+    if (!n) {
         message_wait(0, NULL, COLOR_WARN, T(T_NO_CARDS_SD));
         return;
     }
-    drag_stop();
-    for (;;) {
-        u32 b;
-        ui_scene(scene_pick);
-        b = wait_nav(PAD_UP | PAD_DOWN | PAD_CROSS | PAD_CIRCLE | PAD_START);
-        if (!(b & (PAD_UP | PAD_DOWN)))
-            drag_stop();
-        if (b & PAD_CIRCLE) {
-            sound_play(SND_BACK);
-            return;
-        }
-        if (b & PAD_START) {
-            sound_play(pk.marked ? SND_CONFIRM : SND_BACK);
-            if (!pk.marked)
-                continue;
-            snprintf(s, sizeof(s), T(T_TPL_PICK_ASK), t->name);
-            snprintf(f, sizeof(f), T(T_MARKED_N), pk.marked);
-            if (!confirm(s, f, T_TPL_APPLY))
-                continue;
-            for (i = 0; i < pk.n; i++)
-                if (pk.on[i])
-                    gameCards[n++] = pk.card[i];
-            find_active();
-            cards_get(t, n, 0);
-            return;
-        }
-        if (b & PAD_CROSS) {
-            int on = !pk.on[pk.cursor];
-            pick_set(pk.cursor, on);
-            drag_start(on, pick_set);
-            sound_play(on ? SND_CONFIRM : SND_BACK);
+    ml.text = pick_text;
+    ml.card = pick_card;
+    ml.on = pick_on;
+    ml.set = pick_set;
+    ml.count = pick_count;
+    ml_new(n, T_TPL_PICK_CARDS, T_TPL_APPLY);
+    while (mark_list()) {   /* (circle on the question: back to the list, as it was) */
+        snprintf(s, sizeof(s), T(T_TPL_PICK_ASK), t->name);
+        snprintf(f, sizeof(f), T(T_PICKED_N), pk.marked);
+        if (!confirm(s, f, T_TPL_APPLY))
             continue;
-        }
-        ui_lock();
-        pk.cursor = (b & PAD_UP) ? (pk.cursor + pk.n - 1) % pk.n : (pk.cursor + 1) % pk.n;
-        scroll_to(pk.cursor, &pk.top);
-        ui_unlock();
-        sound_play(drag_moved(pk.cursor));   /* (X held: the card moved onto marked or unmarked as X did) */
+        for (i = k = 0; i < ml.n; i++)
+            if (pk.on[i])
+                gameCards[k++] = pk.card[i];
+        find_active();
+        cards_get(t, k, 0);
+        return;
     }
 }
 
@@ -1116,7 +1123,7 @@ static void list_set(const char *name)
     ui_lock();
     tl.n = nTemplates + 2;
     tl.cursor = t ? (int)(t - templates) + 1 : 0;
-    scroll_to(tl.cursor, &tl.top);
+    scroll_to(tl.cursor, &tl.top, LIST_ROWS);
     ui_unlock();
 }
 
@@ -1148,8 +1155,8 @@ static void templates_screen(void)
         }
         if (b & (PAD_UP | PAD_DOWN)) {
             ui_lock();
-            tl.cursor = (b & PAD_UP) ? (tl.cursor + tl.n - 1) % tl.n : (tl.cursor + 1) % tl.n;
-            scroll_to(tl.cursor, &tl.top);
+            tl.cursor = list_move(b, tl.cursor, tl.n, LIST_ROWS);
+            scroll_to(tl.cursor, &tl.top, LIST_ROWS);
             ui_unlock();
             sound_play(SND_MOVE);
             continue;

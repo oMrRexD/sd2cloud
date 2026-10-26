@@ -152,10 +152,7 @@ void sync_saves_end(void)
 static void show(int k)
 {
     sy.cursor = k;
-    if (k < sy.top)
-        sy.top = k;
-    else if (k >= sy.top + SY_ROWS)
-        sy.top = k - SY_ROWS + 1;
+    scroll_to(k, &sy.top, SY_ROWS);
 }
 
 /* X on the selected card: what can be done to it, while it's still to be sent or on its way. Returns what was asked
@@ -305,16 +302,10 @@ static void scene_saves(void)
         } else
             ui_text_right(FONT_SMALL, SY_RIGHT, y + 2, stateColor[ss.state[i]], T(stateText[ss.state[i]]));
     }
-    if (sy.top > 0)
-        look_arrow(W / 2.0f, SY_Y0 - 12, 0, 0x6E9AE0);
-    if (sy.top + SY_ROWS < ss.n)
-        look_arrow(W / 2.0f, SY_Y0 + SY_ROWS * SY_ROW + 2, 1, 0x6E9AE0);
-    if (ss.n) {   /* under the list: the selected save's folder, and where the cursor is */
-        if (strcmp(ss.name[sy.cursor], ss.folder[sy.cursor]))
-            ui_text_fit(FONT_SMALL, SY_X + 28, SY_Y0 + SY_ROWS * SY_ROW + 2, 300, 0x8E98AA, ss.folder[sy.cursor]);
-        snprintf(s, sizeof(s), "%d/%d", sy.cursor + 1, ss.n);
-        ui_text_right(FONT_SMALL, SY_RIGHT, SY_Y0 + SY_ROWS * SY_ROW + 2, 0x8E98AA, s);
-    }
+    list_arrows(sy.top, SY_ROWS, ss.n, SY_Y0, SY_ROW);
+    if (ss.n && strcmp(ss.name[sy.cursor], ss.folder[sy.cursor]))   /* (under the list: the selected save's folder) */
+        ui_text_fit(FONT_SMALL, SY_X + 28, SY_Y0 + SY_ROWS * SY_ROW + 2, 300, 0x8E98AA, ss.folder[sy.cursor]);
+    list_count(sy.cursor, ss.n, SY_RIGHT, SY_Y0 + SY_ROWS * SY_ROW + 2);
     {
         legend_t l[3] = {{BUTTON_CIRCLE, T(T_CANCEL)}, {BUTTON_SQUARE, T(T_SKIP)}, {BUTTON_SELECT, T(T_VIEW)}};
         look_legend(l, 3, 0);
@@ -353,17 +344,13 @@ void scene_sync(float t)
         } else
             ui_text_right(FONT_SMALL, SY_RIGHT, y + 2, stateColor[e->state], T(stateText[e->state]));
     }
-    if (sy.top > 0)
-        look_arrow(W / 2.0f, SY_Y0 - 12, 0, 0x6E9AE0);
-    if (sy.top + SY_ROWS < nSync)
-        look_arrow(W / 2.0f, SY_Y0 + SY_ROWS * SY_ROW + 2, 1, 0x6E9AE0);
-    if (nSync) {   /* under the list: the selected card's file, and where the cursor is */
+    list_arrows(sy.top, SY_ROWS, nSync, SY_Y0, SY_ROW);
+    if (nSync) {   /* under the list: the selected card's file */
         const card_t *c = syncCards[sy.cursor].c;
         if (strcmp(row_name(c), c->base))
             ui_text_fit(FONT_SMALL, SY_X + 28, SY_Y0 + SY_ROWS * SY_ROW + 2, 300, 0x8E98AA, c->base);
-        snprintf(s, sizeof(s), "%d/%d", sy.cursor + 1, nSync);
-        ui_text_right(FONT_SMALL, SY_RIGHT, SY_Y0 + SY_ROWS * SY_ROW + 2, 0x8E98AA, s);
     }
+    list_count(sy.cursor, nSync, SY_RIGHT, SY_Y0 + SY_ROWS * SY_ROW + 2);
     {
         /* only what can be done to the selected card is offered */
         const sync_card_t *e = nSync ? &syncCards[sy.cursor] : NULL;

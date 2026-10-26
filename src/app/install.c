@@ -512,7 +512,6 @@ void card_file_screen(const char *file, int install)
 
 void card_file_at(const char *path, const char *file, int install)
 {
-    size_t n = strlen(file);
     int r;
     if (held && !marks.n)   /* (kept for marks there are no more) */
         card_file_let_go();
@@ -534,7 +533,7 @@ void card_file_at(const char *path, const char *file, int install)
     }
     dlg_new(0, NULL);
     dlg_line(FONT_TEXT, COLOR_TEXT, 0, T(T_LOADING));
-    if (n > 4 && !strcasecmp(file + n - 4, ".zip")) {
+    if (file_ext(file, ".zip")) {
         dlg_bar(0, NULL);
         dlg_buttons(BUTTON_CIRCLE, T_CANCEL, 0, 0);
     }

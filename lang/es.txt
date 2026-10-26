@@ -1068,8 +1068,8 @@ T_TPL_WARN = Tarjetas de juego sin su plantilla: %d
 T_TPL_NO_WARN = No avisar
 # One line. English: Re-enable warnings
 T_TPL_WARN_AGAIN = Reactivar avisos
-# One line. English: Linked games
-T_TPL_GAMES = Juegos vinculados
+# One line. English: Template games
+T_TPL_GAMES = Juegos de la plantilla
 # One line. English: Update existing saves
 T_TPL_UPDATE = Actualizar partidas existentes
 # Up to 3 lines. English: Update the saves of the template "%s" on the game cards?

@@ -6,8 +6,6 @@
 
 #define LIST_W     208    /* its width: the tabs and the counter are centered on it */
 #define LIST_Y     104
-#define ROW_H      30
-#define ROWS       5
 
 /* a numbered card's number: what comes after "Card" (or what the device calls them) in its folder's name */
 int card_number(const card_t *c) { return atoi(c->folder + strlen(dev->numbered)); }
@@ -47,7 +45,7 @@ void list_rows(int n, int cursor, int top, const char *(*text)(int i, char *buf)
 {
     char buf[64], lit[160];
     int i, y, w = rowsWide ? rowsWide : dot ? 150 : 172;
-    for (i = top, y = ROW_Y0; i < n && i < top + ROWS; i++, y += ROW_H) {
+    for (i = top, y = ROW_Y0; i < n && i < top + LIST_ROWS; i++, y += LIST_ROW_H) {
         const char *s = text(i, buf);
         float x = LIST_X + rowsDx;
         if (dot && dot(i)) {   /* the card's status: a small colored light (0 = none on that row) */
@@ -66,8 +64,8 @@ void list_rows(int n, int cursor, int top, const char *(*text)(int i, char *buf)
     }
     if (top > 0)
         look_arrow(LIST_X + 186, ROW_Y0 - 14, 0, 0x6E9AE0);
-    if (top + ROWS < n)
-        look_arrow(LIST_X + 186, ROW_Y0 + ROWS * ROW_H, 1, 0x6E9AE0);
+    if (top + LIST_ROWS < n)
+        look_arrow(LIST_X + 186, ROW_Y0 + LIST_ROWS * LIST_ROW_H, 1, 0x6E9AE0);
     if (n > 0) {   /* "3/12" under the list: where the cursor is in it */
         char t[24];
         snprintf(t, sizeof(t), "%d/%d", cursor + 1, n);
@@ -75,14 +73,62 @@ void list_rows(int n, int cursor, int top, const char *(*text)(int i, char *buf)
     }
 }
 
-void scroll_to(int cursor, int *top)
+int list_move(u32 b, int cursor, int n, int rows)
+{
+    if (n <= 0)
+        return 0;
+    if (b & PAD_UP)
+        return (cursor + n - 1) % n;
+    if (b & PAD_DOWN)
+        return (cursor + 1) % n;
+    if (b & PAD_LEFT)
+        return cursor >= rows ? cursor - rows : 0;
+    if (b & PAD_RIGHT)
+        return cursor + rows < n ? cursor + rows : n - 1;
+    return cursor;
+}
+
+void scroll_to(int cursor, int *top, int rows)
 {
     if (cursor < *top)
         *top = cursor;
-    if (cursor >= *top + ROWS)
-        *top = cursor - ROWS + 1;
+    if (cursor >= *top + rows)
+        *top = cursor - rows + 1;
     if (*top < 0)
         *top = 0;
+}
+
+void list_arrows(int top, int rows, int n, float y0, int rowH)
+{
+    if (top > 0)
+        look_arrow(W / 2.0f, y0 - 12, 0, 0x6E9AE0);
+    if (top + rows < n)
+        look_arrow(W / 2.0f, y0 + rows * rowH + 2, 1, 0x6E9AE0);
+}
+
+void list_count(int cursor, int n, float right, float y)
+{
+    char s[24];
+    if (n <= 0)
+        return;
+    snprintf(s, sizeof(s), "%d/%d", cursor + 1, n);
+    ui_text_right(FONT_SMALL, right, y, 0x8E98AA, s);
+}
+
+void look_folder(float x, float my)
+{
+    ui_rect(x, my - 8, 7, 3, 0xD9B95C, 0x58);
+    ui_rect(x, my - 6, 16, 12, 0xD9B95C, 0x58);
+}
+
+void look_tick(float x, float y)
+{
+    int k;
+    ui_light(x + 7, y + 1, 16, 16, COLOR_OK, 0x60);
+    for (k = 0; k < 3; k++) {
+        ui_line(x, y + k, x + 5, y + 5 + k, COLOR_OK, 0x80);
+        ui_line(x + 5, y + 5 + k, x + 15, y - 6 + k, COLOR_OK, 0x80);
+    }
 }
 /* -------- the cards in groups, one shown at a time, chosen with left/right (or L1/R1) over the list: the numbered
  * cards (CardN, with the folders the user named), the game cards (Game ID) and the boot cards. A group without cards
@@ -366,7 +412,7 @@ static void tabs_close(tabs_t *g, int slide)
     for (k = g->cursor = 0; k < g->n; k++)
         if (g->fold[k] == was)
             g->cursor = k;
-    scroll_to(g->cursor, &g->top);
+    scroll_to(g->cursor, &g->top, LIST_ROWS);
     if (slide) {
         g->moved = ui_clock();
         g->way = -1;
@@ -433,7 +479,7 @@ void tabs_show(tabs_t *g, int tab)
         tabs_folders(g);
     g->cursor = g->keep[tab][0] < g->n ? g->keep[tab][0] : 0;
     g->top = g->keep[tab][1];
-    scroll_to(g->cursor, &g->top);
+    scroll_to(g->cursor, &g->top, LIST_ROWS);
 }
 
 /* the list shown made again, on the same card or folder when it is still there (with ui_lock held): the game of the
@@ -451,7 +497,7 @@ void tabs_redo(tabs_t *g)
             g->cursor = k;
     if (g->cursor >= g->n)
         g->cursor = g->n ? g->n - 1 : 0;
-    scroll_to(g->cursor, &g->top);
+    scroll_to(g->cursor, &g->top, LIST_ROWS);
 }
 
 /* the Memory Cards a list offers (the one the saves come from left out): how many; their slots in g->mcPorts */
@@ -529,7 +575,7 @@ void tabs_find(tabs_t *g, int card)
             for (i = g->first[g->fold[k]]; i < g->first[g->fold[k] + 1]; i++)
                 if (g->games[i] == card)
                     g->cursor = k;
-    scroll_to(g->cursor, &g->top);
+    scroll_to(g->cursor, &g->top, LIST_ROWS);
 }
 
 /* X on a folder opens it, circle inside one closes it (with the sound). 1 = the press was one of those */
@@ -558,8 +604,8 @@ int tabs_nav(tabs_t *g, u32 b)
     if (b & (PAD_UP | PAD_DOWN)) {
         if (g->n) {
             ui_lock();
-            g->cursor = (b & PAD_UP) ? (g->cursor + g->n - 1) % g->n : (g->cursor + 1) % g->n;
-            scroll_to(g->cursor, &g->top);
+            g->cursor = list_move(b, g->cursor, g->n, LIST_ROWS);
+            scroll_to(g->cursor, &g->top, LIST_ROWS);
             ui_unlock();
             sound_play(SND_MOVE);
         }
@@ -676,8 +722,8 @@ void tabs_draw(const tabs_t *g, int dots)
         rowsWide = folders ? FOLDER_W : 0;
         rowsLit = g->tab == TAB_GAMES ? g->lit : -1;
         list_rows(g->n, g->cursor, g->top, tabs_text, folders ? NULL : dots ? tabs_dot : NULL);
-        for (k = g->top; g->tab != TAB_FILES && k < g->n && k < g->top + ROWS; k++) {
-            float x = LIST_X + rowsDx, y = ROW_Y0 + (k - g->top) * ROW_H + ui_line_height(FONT_TEXT) / 2.0f + 1;
+        for (k = g->top; g->tab != TAB_FILES && k < g->n && k < g->top + LIST_ROWS; k++) {
+            float x = LIST_X + rowsDx, y = ROW_Y0 + (k - g->top) * LIST_ROW_H + ui_line_height(FONT_TEXT) / 2.0f + 1;
             int here = g->idx[k] >= 0 && g->idx[k] == activeCard;
             if (g->tab == TAB_LIBRARY) {   /* a game of the Library: an arrow, as a folder has (its saves open) */
                 if (g->library == 1)

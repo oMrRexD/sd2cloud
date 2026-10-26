@@ -321,7 +321,7 @@ int save_page_choice(void)
         }
         if (sp.nOptions > 1) {
             ui_lock();
-            sp.cursor = (b & PAD_UP) ? (sp.cursor + sp.nOptions - 1) % sp.nOptions : (sp.cursor + 1) % sp.nOptions;
+            sp.cursor = list_move(b, sp.cursor, sp.nOptions, sp.nOptions);
             ui_unlock();
             sound_play(SND_MOVE);
         }

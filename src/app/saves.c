@@ -169,15 +169,10 @@ static void scene_browser(float t)
         int i;
         for (i = first; i < brw.n && i < last; i++) {
             float cx, cy;
-            int k;
             if (!grid_marked(i))
                 continue;
             grid_cell(i, 4.2f, &cx, &cy);
-            ui_light(cx + 22, cy + 2, 16, 16, COLOR_OK, 0x60);
-            for (k = 0; k < 3; k++) {
-                ui_line(cx + 15, cy + 1 + k, cx + 20, cy + 6 + k, COLOR_OK, 0x80);
-                ui_line(cx + 20, cy + 6 + k, cx + 30, cy - 5 + k, COLOR_OK, 0x80);
-            }
+            look_tick(cx + 15, cy + 1);
         }
     }
     if (brw.top > 0)
@@ -320,8 +315,7 @@ static void browser_set(card_t *c, int n, int cursor, long long freeBytes)
     brw.n = n;
     brw.cursor = cursor < n ? cursor : n > 0 ? n - 1 : 0;
     brw.top = 0;
-    while (brw.cursor / GRID_COLS >= brw.top + GRID_ROWS)
-        brw.top++;
+    scroll_to(brw.cursor / GRID_COLS, &brw.top, GRID_ROWS);   /* (the grid scrolls by rows of saves) */
     brw.freeBytes = freeBytes;
     brw.since = now_ms();
 }
@@ -700,10 +694,7 @@ u32 browser_wait(u32 buttons)
             ui_lock();
             brw.cursor = k;
             brw.since = now_ms();
-            if (k / GRID_COLS < brw.top)
-                brw.top = k / GRID_COLS;
-            if (k / GRID_COLS >= brw.top + GRID_ROWS)
-                brw.top = k / GRID_COLS - GRID_ROWS + 1;
+            scroll_to(k / GRID_COLS, &brw.top, GRID_ROWS);
             ui_unlock();
             drop_far_icons();
             sound_play(brw.pick || marks.on ? drag_moved(k) : SND_MOVE);
@@ -794,7 +785,7 @@ made:
         }
         if (b & (PAD_UP | PAD_DOWN)) {
             ui_lock();
-            opt.cursor = (b & PAD_UP) ? (opt.cursor + opt.n - 1) % opt.n : (opt.cursor + 1) % opt.n;
+            opt.cursor = list_move(b, opt.cursor, opt.n, opt.n);
             ui_unlock();
             sound_play(SND_MOVE);
             continue;

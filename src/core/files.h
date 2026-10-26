@@ -16,6 +16,7 @@ int file_write(const char *path, const unsigned char *d, size_t n);
 int file_replace(const char *path, const unsigned char *d, size_t n);   /* .new -> verify -> rename */
 int file_write_checked(const char *path, const unsigned char *d, size_t n);   /* written and read back: 1 = it's there, as it should be */
 int file_exists(const char *path);
+int file_ext(const char *name, const char *ext);   /* does the name end in ext (".psu"), whatever the case? */
 /* a file copied a piece at a time, with one file open at a time (the sd2psx's way), read back and compared. 0 =
  * copied; -1 = not (a file at to already; or it couldn't be, and nothing is left at to) */
 int file_copy(const char *from, const char *to);

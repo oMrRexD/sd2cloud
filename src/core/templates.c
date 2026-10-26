@@ -224,12 +224,6 @@ void template_path(const template_t *t, int i, char *out, size_t size)
     snprintf(out, size, "%s%s/%s", root, t->name, i < 0 ? "" : t->saves[i].file);
 }
 
-static int is_psu(const char *name)
-{
-    size_t n = strlen(name);
-    return n > 4 && !strcasecmp(name + n - 4, ".psu");
-}
-
 static int by_name(const void *a, const void *b) { return strcasecmp(((const template_t *)a)->name, ((const template_t *)b)->name); }
 
 static void sum(template_t *t)
@@ -270,7 +264,7 @@ static void read_saves(template_t *t)
     t->n = 0;
     n = dir_list(dir, files, TPL_SAVES * 2);
     for (i = 0; i < n && t->n < TPL_SAVES; i++) {
-        if (files[i].dir || !is_psu(files[i].name) || strlen(files[i].name) >= sizeof(t->saves[0].file))
+        if (files[i].dir || !file_ext(files[i].name, ".psu") || strlen(files[i].name) >= sizeof(t->saves[0].file))
             continue;
         /* (a second .psu of the same save, put there by hand: the first one is the template's) */
         if (read_save(t, t->n, files[i].name) == MCFS_OK && template_find_save(t, t->saves[t->n].folder) < 0)

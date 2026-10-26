@@ -599,7 +599,7 @@ static int add_vmc(const vmc_place_t *p, const char *file, long long size)
 {
     size_t len = strlen(file);
     card_t *c = &cards[nCards];
-    if (nCards == MAX_CARDS || len < 5 || len - 4 >= sizeof(c->base) || strcasecmp(file + len - 4, ".bin") != 0)
+    if (nCards == MAX_CARDS || !file_ext(file, ".bin") || len - 4 >= sizeof(c->base))
         return 0;
     memset(c, 0, sizeof(*c));
     snprintf(c->path, sizeof(c->path), "%s/%s", p->dir, file);

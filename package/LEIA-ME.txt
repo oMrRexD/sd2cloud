@@ -59,11 +59,12 @@ REQUISITOS
   cabo, e uma conta do Google.
 
 INSTALAÇÃO
-1. Extraia este arquivo .zip na raiz do MMCE. Serão criadas as pastas APPS/SD2Cloud (o aplicativo) e
-   SD2Cloud, com o arquivo sd2cloud.ini (as configurações; é possível editá-lo no PC antes do primeiro uso).
-   O arquivo traz somente as opções: cada uma é explicada no sd2cloud.example.ini, que fica ao lado dele. A
-   capa e a logo que o OPL exibe para o SD2Cloud na aba Apps vão para a pasta ART. A mesma arte com a frase em
-   português está em Extras/ART pt-BR, para copiar por cima desses dois arquivos.
+1. Extraia este arquivo .zip na raiz do MMCE. Serão criadas as pastas APPS/SD2Cloud (o aplicativo) e SD2Cloud, com
+   o sd2cloud.example.ini, que explica cada configuração. O SD2Cloud grava as configurações dele,
+   SD2Cloud/sd2cloud.ini, na primeira vez que é aberto; por isso, extrair uma versão nova por cima da anterior não
+   as altera. Para ajustá-las no PC antes disso, renomeie o sd2cloud.example.ini para sd2cloud.ini (tire o
+   "example" do nome) e edite-o. A capa e a logo que o OPL exibe para o SD2Cloud na aba Apps vão para a pasta ART.
+   A mesma arte com a frase em português está em Extras/ART pt-BR, para copiar por cima desses dois arquivos.
 2. Abra o SD2Cloud: pela aba Apps do OPL, ou executando APPS/SD2Cloud/SD2CLOUD.ELF em qualquer programa que
    abra um ELF (o wLaunchELF, por exemplo). A pasta não precisa ficar em APPS.
    Com um sd2psx, o SD2Cloud também pode ficar em um pendrive, em um cartão MX4SIO ou no HD interno (exFAT ou
@@ -290,23 +291,23 @@ Templates é a primeira.
   template; TRIÂNGULO desiste.
 - X sobre um template o abre, exibido como um cartão. X sobre um item o remove do template. TRIÂNGULO, sobre um
   template da lista ou com ele aberto, tem o resto: Definir como principal, Adicionar saves (marcados do mesmo
-  jeito; um item que o template já tem pode ser substituído pelo marcado), Aplicar template, Jogos vinculados,
+  jeito; um item que o template já tem pode ser substituído pelo marcado), Aplicar template, Jogos do template,
   Renomear e Excluir template.
-- Aplicar template coloca nos cartões os itens que faltam neles: um item que o cartão já tem nunca é tocado, e
-  um cartão sem espaço suficiente fica como está. Todos os cartões de jogos: todo cartão de jogo que não tem
-  itens do template os recebe, um depois do outro, e o SD2Cloud diz quantos receberam. Selecionar cartões: o
-  mesmo, para os cartões que você marcar, de jogos ou não (X marca e desmarca, START aplica). Atualizar saves
-  existentes é o que substitui: nos cartões de jogos, os itens do template que um cartão já tem em outra versão
-  dão lugar aos do template. Nenhum outro item do cartão é alterado, um item que falta no cartão não é
-  acrescentado, e ele pergunta antes. Os itens de um template não contam como alteração: um cartão que estava
+- Aplicar template coloca nos cartões os itens que faltam neles: um item que o cartão já tem nunca é tocado, e um
+  cartão sem espaço suficiente fica como está. Todos os cartões de jogos: todo cartão de jogo que não tem itens do
+  template os recebe, um depois do outro, e o SD2Cloud diz quantos receberam. Selecionar cartões: o mesmo, para os
+  cartões que você marcar, de jogos ou não (X marca e desmarca, QUADRADO todos de uma vez, START aplica).
+  Atualizar saves existentes é o que substitui: nos cartões de jogos, os itens do template que um cartão já tem em
+  outra versão dão lugar aos do template. Nenhum outro item do cartão é alterado, um item que falta no cartão não
+  é acrescentado, e ele pergunta antes. Os itens de um template não contam como alteração: um cartão que estava
   sincronizado continua sincronizado.
 - Definir como principal: o template principal é o que todo cartão de jogo deve ter (uma luz amarela o marca na
   lista). Quando o SD2Cloud abre e um cartão de jogo não tem ele, como acontece com o cartão de um jogo novo, o
   SD2Cloud diz quais e espera uma resposta: X aplica, O deixa para depois, QUADRADO desativa o aviso para esses
   cartões. Um cartão é perguntado uma vez; só é perguntado de novo quando os templates dele ganham outros itens.
-- Jogos vinculados: um template que não é o principal pode ser de alguns jogos: X marca e desmarca cada jogo
-  (uma luz verde). Os cartões desses jogos passam a ser tratados como o template principal trata todo cartão de
-  jogo.
+- Jogos do template: um template que não é o principal pode ser de alguns jogos: X marca e desmarca cada jogo (um
+  visto verde), QUADRADO todos de uma vez. Os cartões desses jogos passam a ser tratados como o template principal
+  trata todo cartão de jogo.
 - Aplicar automaticamente (a última linha da lista, Ativado ou Desativado): com a sincronização automática,
   quando um jogo é encerrado pelo IGR, os cartões de jogos que vão ser enviados recebem os itens que faltam dos
   templates deles, sem perguntar, antes de serem enviados. Um cartão só é alterado nesse momento quando com
@@ -411,7 +412,7 @@ LOCAL DOS ARQUIVOS
 - APPS/SD2Cloud/   o aplicativo (atualizado pelo próprio SD2Cloud; veja ATUALIZAÇÃO).
 - SD2Cloud/        na raiz do MMCE (sem sd2psx, no dispositivo de onde o SD2Cloud é aberto):
                    sd2cloud.ini (as configurações; se for apagado, o SD2Cloud o recria),
-                   sd2cloud.example.ini (o que cada configuração significa; o SD2Cloud nunca o lê),
+                   sd2cloud.example.ini (o que cada configuração significa; renomeado sd2cloud.ini, é lido),
                    sync-error.txt (o que aconteceu na última sincronização automática que falhou, se houver:
                    vale mandar junto ao relatar um problema),
                    state.ini (o registro do que já foi enviado) e token.dat (o acesso à sua conta do Google;

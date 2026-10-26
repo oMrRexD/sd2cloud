@@ -2,8 +2,10 @@
 update downloads those), SHA256SUMS.txt and RELEASE-NOTES.md (docs/release-notes.md with the table of hashes).
 
 The zip holds the two ELFs built by make (dist/SD2CLOUD.ELF, dist/SD2CLOUD-IGR.ELF) and what is in package/: the
-texts, the settings file (the same one the app creates when there is none) and its example, and the cover and the
-logo OPL shows for the app in its Apps tab (package/art, made by tools/make_opl_art.py).
+texts, the example of the settings file, and the cover and the logo OPL shows for the app in its Apps tab
+(package/art, made by tools/make_opl_art.py). Not the settings file itself (package/sd2cloud.ini): the app writes
+that one the first time it runs, and a zip extracted over an installation would put the user's settings back to
+their defaults.
 
 It also holds Extras/APP_SD2CLOUD.psu, the Save Application System (SAS) package: the save folder SD2Cloud itself
 writes to the memory card when the automatic sync is turned on (the IGR helper, the shortcut that opens SD2Cloud from
@@ -90,7 +92,6 @@ def main():
         ("APPS/SD2Cloud/SD2CLOUD.ELF", (DIST / "SD2CLOUD.ELF").read_bytes()),
         ("APPS/SD2Cloud/SD2CLOUD-IGR.ELF", (DIST / "SD2CLOUD-IGR.ELF").read_bytes()),
         ("APPS/SD2Cloud/title.cfg", title),
-        ("SD2Cloud/sd2cloud.ini", crlf((PKG / "sd2cloud.ini").read_bytes())),
         ("SD2Cloud/sd2cloud.example.ini", crlf((PKG / "sd2cloud.example.ini").read_bytes())),
         ("README.txt", crlf((PKG / "README.txt").read_bytes())),
         ("LEIA-ME.txt", crlf((PKG / "LEIA-ME.txt").read_bytes())),

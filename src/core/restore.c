@@ -492,13 +492,12 @@ out:
 int card_file_open(card_file_t *f, const char *path, int (*progress)(int phase, long long done, long long total))
 {
     unsigned char sb[512];
-    size_t n = strlen(path);
     long long total = 0;
     int fd, page = 512, r = -1;
     memset(f, 0, sizeof(*f));
     snprintf(f->path, sizeof(f->path), "%s", path);
     googleError[0] = 0;
-    f->zip = n > 4 && !strcasecmp(path + n - 4, ".zip");
+    f->zip = file_ext(path, ".zip");
     if ((fd = open(path, O_RDONLY)) >= 0) {
         total = lseek(fd, 0, SEEK_END);
         lseek(fd, 0, SEEK_SET);

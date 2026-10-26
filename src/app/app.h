@@ -47,6 +47,8 @@ typedef struct {
 
 #define LIST_X     86     /* the list on the left */
 #define ROW_Y0     158    /* the first row */
+#define LIST_ROWS  5      /* its rows on screen, and how far apart */
+#define LIST_ROW_H 30
 #define CARD_X     392
 /* the right side's title, on the line of the tabs: at most this wide (panel_title), so the tabs end before it */
 #define PANEL_TITLE_W 210
@@ -495,7 +497,15 @@ int card_number(const card_t *c);
 void draw_card_picture(const card_t *c, icon_t *ic, float t);
 extern int rowsWide;
 void list_rows(int n, int cursor, int top, const char *(*text)(int i, char *buf), u32 (*dot)(int i));
-void scroll_to(int cursor, int *top);
+/* Any list: the row the cursor goes to with those arrows, in one of n rows with rows of them on screen (up and down
+ * one, going round at the ends; left and right a screenful), and the first row on screen that shows it */
+int list_move(u32 b, int cursor, int n, int rows);
+void scroll_to(int cursor, int *top, int rows);
+/* a list's arrows, "more above / below" (y0 = its first row), and "3/12": where the cursor is in it (right-aligned) */
+void list_arrows(int top, int rows, int n, float y0, int rowH);
+void list_count(int cursor, int n, float right, float y);
+void look_folder(float x, float my);   /* a small folder, before a row's name (my = the row's middle) */
+void look_tick(float x, float y);      /* a green tick, in a soft light: a marked row or save (x, y = its left, middle) */
 extern const int deviceText[FDEVS];
 /* the devices the Files group lists (FDEV_*), in order; how many */
 int fdev_list(int out[FDEVS]);

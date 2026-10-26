@@ -57,10 +57,11 @@ REQUIREMENTS
 
 INSTALLATION
 1. Extract this .zip file to the root of the MMCE. It adds APPS/SD2Cloud (the application) and
-   SD2Cloud/sd2cloud.ini (the settings; it can be edited on a PC before the first run). The file only has
-   the options: each one is explained in sd2cloud.example.ini, next to it. The cover and the logo OPL shows
-   for SD2Cloud in its Apps tab go to the ART folder. The same art with its line in Portuguese is in
-   Extras/ART pt-BR, to copy over those two files.
+   SD2Cloud/sd2cloud.example.ini, which explains every setting. SD2Cloud writes its settings,
+   SD2Cloud/sd2cloud.ini, the first time it runs, so extracting a new version over an old one keeps them; to set
+   them on a PC before that, rename sd2cloud.example.ini to sd2cloud.ini (take "example" out of its name) and edit
+   it. The cover and the logo OPL shows for SD2Cloud in its Apps tab go to the ART folder. The same art with its
+   line in Portuguese is in Extras/ART pt-BR, to copy over those two files.
 2. Open SD2Cloud: from the Apps tab of OPL, or by running APPS/SD2Cloud/SD2CLOUD.ELF with any launcher
    (wLaunchELF, for example). The folder does not have to stay in APPS.
    With an sd2psx, SD2Cloud can also live on a USB drive, an MX4SIO card or the internal HDD (exFAT or APA):
@@ -274,22 +275,22 @@ settings an online game asks for. SELECT, on the main screen, opens the tools; T
   the template; TRIANGLE gives it up.
 - X on a template opens it, shown as a card is. X on an item removes it from the template. TRIANGLE, on a
   template of the list or with it open, has the rest: Set as default, Add saves (marked the same way; an
-  item the template already has can be replaced by the one marked), Apply template, Linked games, Rename
+  item the template already has can be replaced by the one marked), Apply template, Template games, Rename
   and Delete template.
-- Apply template puts into cards the items they lack: an item a card already has is never touched, and a
-  card without enough space is left as it is. All game cards: every game card that lacks items of the
-  template gets them, one after the other, and SD2Cloud says how many did. Select cards: the same, for the
-  cards you mark, game cards or not (X marks and unmarks, START applies). Update existing saves is the one
-  that replaces: on the game cards, the items of the template that a card already has in another version
-  give way to the template's. No other item of the card is changed, an item the card lacks is not added,
-  and it asks first. A template's items are no change to sync: a card that was synced stays synced.
+- Apply template puts into cards the items they lack: an item a card already has is never touched, and a card
+  without enough space is left as it is. All game cards: every game card that lacks items of the template gets
+  them, one after the other, and SD2Cloud says how many did. Select cards: the same, for the cards you mark, game
+  cards or not (X marks and unmarks, SQUARE all of them at once, START applies). Update existing saves is the one
+  that replaces: on the game cards, the items of the template that a card already has in another version give way
+  to the template's. No other item of the card is changed, an item the card lacks is not added, and it asks first.
+  A template's items are no change to sync: a card that was synced stays synced.
 - Set as default: the default template is the one every game card should have (a yellow light marks it in the
   list). When SD2Cloud opens and a game card lacks it, as the card of a new game does, SD2Cloud says which
   and waits for an answer: X applies it, O leaves it for later, SQUARE stops the warning for those cards. A
   card is asked about once; it is asked about again only when its templates get other items.
-- Linked games: a template that isn't the main one can be made some games': X marks and unmarks
-  each game (a green light). The cards of those games are then treated as the default template treats every
-  game card.
+- Template games: a template that isn't the main one can be made some games': X marks and unmarks each game (a
+  green tick), SQUARE all of them at once. The cards of those games are then treated as the default template
+  treats every game card.
 - Auto-apply (the last row of the list, On or Off): with the automatic sync, when a game is left with
   IGR the game cards about to be sent get the items they lack of their templates, with no question asked,
   before they are sent. A card is only changed then when it surely isn't the one in the sd2psx (OPL has it
@@ -389,7 +390,7 @@ FILE LOCATIONS
 - APPS/SD2Cloud/   the application (updated by SD2Cloud itself; see UPDATING).
 - SD2Cloud/        on the MMCE root (without an sd2psx, on the device SD2Cloud is opened from):
                    sd2cloud.ini (the settings; if deleted, SD2Cloud recreates it),
-                   sd2cloud.example.ini (what each setting means; SD2Cloud never reads it),
+                   sd2cloud.example.ini (what each setting means; renamed sd2cloud.ini, it is read),
                    sync-error.txt (what happened in the last automatic sync that failed, if any: worth
                    sending along when reporting a problem),
                    state.ini (a record of what has been uploaded) and token.dat (access to your Google

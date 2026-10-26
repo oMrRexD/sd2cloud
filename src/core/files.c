@@ -310,6 +310,12 @@ int file_exists(const char *path)
     return 1;
 }
 
+int file_ext(const char *name, const char *ext)
+{
+    size_t n = strlen(name), e = strlen(ext);
+    return n > e && !strcasecmp(name + n - e, ext);
+}
+
 void trim(char *s)
 {
     char *p = s, *e;

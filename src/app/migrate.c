@@ -122,13 +122,8 @@ static void scene_migrate(float t)
         const mg_game_t *g = &mg.games[i];
         float my = y + lh / 2.0f + 1;
         int w = MG_RIGHT - 190 - (MG_X + 28);
-        if (g->on) {   /* a green tick, as a marked save has: its saves go */
-            int k;
-            for (k = 0; k < 2; k++) {
-                ui_line(MG_X + 3, my - 1 + k, MG_X + 7, my + 3 + k, COLOR_OK, 0x80);
-                ui_line(MG_X + 7, my + 3 + k, MG_X + 15, my - 6 + k, COLOR_OK, 0x80);
-            }
-        }
+        if (g->on)   /* a green tick, as a marked save has: its saves go */
+            look_tick(MG_X + 2, my);
         snprintf(s, sizeof(s), "%s (%d)", g->name, g->n);   /* (and how many of its saves) */
         if (ui_measure(FONT_TEXT, s) > w) {
             char n[16];
@@ -149,10 +144,7 @@ static void scene_migrate(float t)
             snprintf(s, sizeof(s), T(T_MIGRATE_NEW), g->mb);
         ui_text_right(FONT_SMALL, MG_RIGHT, y + 2, g->on ? (g->card ? COLOR_TEXT : COLOR_OK) : COLOR_DIM, s);
     }
-    if (mg.top > 0)
-        look_arrow(W / 2.0f, MG_Y0 - 12, 0, 0x6E9AE0);
-    if (mg.top + MG_ROWS < mg.nGames)
-        look_arrow(W / 2.0f, MG_Y0 + MG_ROWS * MG_ROW + 2, 1, 0x6E9AE0);
+    list_arrows(mg.top, MG_ROWS, mg.nGames, MG_Y0, MG_ROW);
     for (i = 0; i < mg.nGames; i++)
         if (mg.games[i].on)
             going += mg.games[i].n, games++;
@@ -161,10 +153,7 @@ static void scene_migrate(float t)
     /* under the list, past its arrow: how many go, how many stay */
     snprintf(s, sizeof(s), T(T_MIGRATE_SUMMARY), going, games, mg.stay);
     ui_text_fit(FONT_SMALL, MG_X + 4, MG_Y0 + MG_ROWS * MG_ROW + 20, MG_RIGHT - MG_X - 70, 0x8E98AA, s);
-    if (mg.nGames) {
-        snprintf(s, sizeof(s), "%d/%d", mg.cursor + 1, mg.nGames);
-        ui_text_right(FONT_SMALL, MG_RIGHT, MG_Y0 + MG_ROWS * MG_ROW + 20, 0x8E98AA, s);
-    }
+    list_count(mg.cursor, mg.nGames, MG_RIGHT, MG_Y0 + MG_ROWS * MG_ROW + 20);
     {
         legend_t l[5] = {{BUTTON_CIRCLE, T(T_BACK)}};
         int n = 1;
@@ -491,21 +480,10 @@ void migrate_screen(card_t *src)
             return;
         }
         if ((b & (PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT)) && mg.nGames) {
-            int k = mg.cursor;
-            if (b & PAD_UP)
-                k = (k + mg.nGames - 1) % mg.nGames;
-            else if (b & PAD_DOWN)
-                k = (k + 1) % mg.nGames;
-            else if (b & PAD_LEFT)
-                k = k >= MG_ROWS ? k - MG_ROWS : 0;
-            else
-                k = k + MG_ROWS < mg.nGames ? k + MG_ROWS : mg.nGames - 1;
+            int k = list_move(b, mg.cursor, mg.nGames, MG_ROWS);
             ui_lock();
             mg.cursor = k;
-            if (k < mg.top)
-                mg.top = k;
-            if (k >= mg.top + MG_ROWS)
-                mg.top = k - MG_ROWS + 1;
+            scroll_to(k, &mg.top, MG_ROWS);
             ui_unlock();
             sound_play(drag_moved(k));   /* (X held: taken in or out as X did) */
         } else if ((b & PAD_CROSS) && g) {

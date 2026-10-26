@@ -36,13 +36,7 @@ static int group_title(int id)
 }
 
 /* the cursor's row on the screen */
-static void set_scroll(void)
-{
-    if (st.cursor < st.top)
-        st.top = st.cursor;
-    if (st.cursor >= st.top + SET_ROWS)
-        st.top = st.cursor - SET_ROWS + 1;
-}
+static void set_scroll(void) { scroll_to(st.cursor, &st.top, SET_ROWS); }
 
 static void set_item(int *i, int id, const char *label, const char *value)
 {
@@ -145,10 +139,7 @@ static void scene_settings(float t)
             ui_text(FONT_TEXT, SET_X, y, COLOR_ITEM, st.label[i]);
         ui_text_right(FONT_TEXT, right, y, on ? 0xD8E4F4 : COLOR_DIM, st.value[i]);
     }
-    if (st.top > 0)
-        look_arrow(W / 2.0f, SET_Y0 - 12, 0, 0x6E9AE0);
-    if (st.top + SET_ROWS < st.n)
-        look_arrow(W / 2.0f, SET_Y0 + SET_ROWS * SET_ROW + 2, 1, 0x6E9AE0);
+    list_arrows(st.top, SET_ROWS, st.n, SET_Y0, SET_ROW);
     {
         legend_t l[2] = {{BUTTON_CIRCLE, T(T_BACK)}, {BUTTON_CROSS, T(T_SELECT)}};
         look_legend(l, 2, 0);
@@ -806,7 +797,7 @@ void settings_screen(void)
         }
         if (b & (PAD_UP | PAD_DOWN)) {
             ui_lock();
-            st.cursor = (b & PAD_UP) ? (st.cursor + st.n - 1) % st.n : (st.cursor + 1) % st.n;
+            st.cursor = list_move(b, st.cursor, st.n, SET_ROWS);
             set_scroll();
             ui_unlock();
             sound_play(SND_MOVE);

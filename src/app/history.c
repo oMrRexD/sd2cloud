@@ -247,8 +247,8 @@ void history_screen(card_t *c, icon_t *icon)
         }
         if (b & (PAD_UP | PAD_DOWN)) {
             ui_lock();
-            hist.cursor = (b & PAD_UP) ? (hist.cursor > 0 ? hist.cursor - 1 : n - 1) : (hist.cursor < n - 1 ? hist.cursor + 1 : 0);
-            scroll_to(hist.cursor, &hist.top);
+            hist.cursor = list_move(b, hist.cursor, n, LIST_ROWS);
+            scroll_to(hist.cursor, &hist.top, LIST_ROWS);
             ui_unlock();
             sound_play(SND_MOVE);
         } else if (b & PAD_CROSS) {

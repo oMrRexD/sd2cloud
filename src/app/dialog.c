@@ -222,11 +222,8 @@ int choose_noted(const char *title, const char *const *items, int n, int start, 
             return pick.cursor;
         }
         ui_lock();
-        pick.cursor = (b & PAD_UP) ? (pick.cursor + n - 1) % n : (pick.cursor + 1) % n;
-        if (pick.cursor < pick.top)
-            pick.top = pick.cursor;
-        if (pick.cursor >= pick.top + rows)
-            pick.top = pick.cursor - rows + 1;
+        pick.cursor = list_move(b, pick.cursor, n, rows);
+        scroll_to(pick.cursor, &pick.top, rows);
         snprintf(pick.note, sizeof(pick.note), "%s", note && note(pick.cursor) ? note(pick.cursor) : "");
         ui_unlock();
         sound_play(SND_MOVE);

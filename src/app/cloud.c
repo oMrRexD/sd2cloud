@@ -34,18 +34,6 @@ int cloud_listed(void)
     return google_has_access();
 }
 
-static int is_psu_name(const char *name)
-{
-    size_t n = strlen(name);
-    return n > 4 && !strcasecmp(name + n - 4, ".psu");
-}
-
-static int is_zip_name(const char *name)
-{
-    size_t n = strlen(name);
-    return n > 4 && !strcasecmp(name + n - 4, ".zip");
-}
-
 static void cl_select(void)
 {
     cl.selected[0] = 0;
@@ -55,13 +43,7 @@ static void cl_select(void)
     }
 }
 
-static void cl_scroll(void)
-{
-    if (cl.cursor < cl.top)
-        cl.top = cl.cursor;
-    if (cl.cursor >= cl.top + CL_ROWS)
-        cl.top = cl.cursor - CL_ROWS + 1;
-}
+static void cl_scroll(void) { scroll_to(cl.cursor, &cl.top, CL_ROWS); }
 
 static void scene_cloud(float t)
 {
@@ -73,10 +55,9 @@ static void scene_cloud(float t)
     for (i = cl.top, y = CL_Y0; i < cl.n && i < cl.top + CL_ROWS; i++, y += CL_ROW) {
         const drive_node_t *e = &cl.list[i];
         float my = y + lh / 2.0f + 1;
-        if (e->folder) {   /* a small folder, as a device's */
-            ui_rect(CL_X, my - 8, 7, 3, 0xD9B95C, 0x58);
-            ui_rect(CL_X, my - 6, 16, 12, 0xD9B95C, 0x58);
-        } else
+        if (e->folder)   /* (as a device's) */
+            look_folder(CL_X, my);
+        else
             ui_image(IMG_MINICARD, CL_X + 2, my - 8, 13, 15, 0xFFFFFF, 0x80);
         if (i == cl.cursor)
             look_item(CL_X + 28, y, cl.selected, 1, 0);
@@ -90,15 +71,8 @@ static void scene_cloud(float t)
     }
     if (!cl.n)
         ui_text_center(FONT_TEXT, W / 2.0f, 200, cl.error ? COLOR_WARN : COLOR_DIM, T(cl.error ? T_DIR_ERROR : T_DIR_EMPTY));
-    if (cl.top > 0)
-        look_arrow(W / 2.0f, CL_Y0 - 12, 0, 0x6E9AE0);
-    if (cl.top + CL_ROWS < cl.n)
-        look_arrow(W / 2.0f, CL_Y0 + CL_ROWS * CL_ROW + 2, 1, 0x6E9AE0);
-    if (cl.n) {
-        char s[24];
-        snprintf(s, sizeof(s), "%d/%d", cl.cursor + 1, cl.n);
-        ui_text_right(FONT_SMALL, CL_RIGHT, CL_Y0 + CL_ROWS * CL_ROW + 2, 0x8E98AA, s);
-    }
+    list_arrows(cl.top, CL_ROWS, cl.n, CL_Y0, CL_ROW);
+    list_count(cl.cursor, cl.n, CL_RIGHT, CL_Y0 + CL_ROWS * CL_ROW + 2);
     {   /* X opens a folder, a save's .psu (its page) and a card's backup (its card); another file is downloaded.
          * Triangle: a file to the trash; square: a card's backup installed (as from its card: on the microSD, or as a
          * file of a device), a save's .psu downloaded as it is */
@@ -106,12 +80,12 @@ static void scene_cloud(float t)
         int n = 1;
         if (cl.n) {
             const drive_node_t *e = &cl.list[cl.cursor];
-            int opens = e->folder || is_psu_name(e->name) || is_zip_name(e->name);
+            int opens = e->folder || file_ext(e->name, ".psu") || file_ext(e->name, ".zip");
             l[n].button = BUTTON_CROSS, l[n++].text = T(opens ? T_OPEN : T_DOWNLOAD);
             if (!e->folder)
                 l[n].button = BUTTON_TRIANGLE, l[n++].text = T(T_DELETE);
             if (!e->folder && opens)
-                l[n].button = BUTTON_SQUARE, l[n++].text = T(is_zip_name(e->name) ? T_INSTALL : T_DOWNLOAD);
+                l[n].button = BUTTON_SQUARE, l[n++].text = T(file_ext(e->name, ".zip") ? T_INSTALL : T_DOWNLOAD);
         }
         look_legend(l, n, 0);
     }
@@ -495,17 +469,7 @@ void cloud_screen(void)
         ui_scene(scene_cloud);
         b = wait_nav(PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT | PAD_CROSS | PAD_CIRCLE | PAD_TRIANGLE | PAD_SQUARE);
         if (b & (PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT)) {   /* left and right: a screenful at a time */
-            int k = cl.cursor;
-            if (!cl.n)
-                continue;
-            if (b & PAD_UP)
-                k = (k + cl.n - 1) % cl.n;
-            else if (b & PAD_DOWN)
-                k = (k + 1) % cl.n;
-            else if (b & PAD_LEFT)
-                k = k >= CL_ROWS ? k - CL_ROWS : 0;
-            else
-                k = k + CL_ROWS < cl.n ? k + CL_ROWS : cl.n - 1;
+            int k = list_move(b, cl.cursor, cl.n, CL_ROWS);
             if (k != cl.cursor) {
                 ui_lock();
                 cl.cursor = k;
@@ -528,17 +492,17 @@ void cloud_screen(void)
                 snprintf(cl.name[cl.depth], sizeof(cl.name[0]), "%s", e->name);
                 cl.depth++;
                 cl_load(NULL);
-            } else if (!e->folder && is_psu_name(e->name)) {
+            } else if (!e->folder && file_ext(e->name, ".psu")) {
                 if (cloud_save(e))
                     cl_reload();
-            } else if (!e->folder && is_zip_name(e->name))
+            } else if (!e->folder && file_ext(e->name, ".zip"))
                 cloud_card(e, 0);
             else if (!e->folder)
                 download(e);
         } else if ((b & PAD_SQUARE) && cl.n && !cl.list[cl.cursor].folder) {   /* a card's backup installed; another
                                                                                  file, downloaded as it is */
             sound_play(SND_CONFIRM);
-            if (is_zip_name(cl.list[cl.cursor].name))
+            if (file_ext(cl.list[cl.cursor].name, ".zip"))
                 cloud_card(&cl.list[cl.cursor], 1);
             else
                 download(&cl.list[cl.cursor]);
