@@ -27,7 +27,8 @@
  * itself to Drive (the backup by save), once past half of them, and "J" the one of a Memory Card's saves being
  * checked. As IGR: "s" right after the "I" captures its first screen, and "N" works after its cards are checked too;
  * "g" captures the sync's screen as it starts getting online, and "o" presses circle there. "c" right after the answer
- * that keeps going (circle's question, square's) captures the screen put back. */
+ * that keeps going (circle's question, square's) captures the screen put back. "h" captures the screen of a drive of
+ * the Files group being looked for (and "K" there gives it up). */
 char script[256];
 int scriptPos, hasScript;
 int nRescue, rescueSeconds = 300, pastEnd;

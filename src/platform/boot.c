@@ -149,11 +149,11 @@ static void standalone_root(void)
         return;
     }
     if (d == DEV_USB || d == DEV_MX4SIO || d == DEV_ATA)
-        drive_open(d == DEV_USB ? DRIVE_USB : d == DEV_MX4SIO ? DRIVE_MX4SIO : DRIVE_HDD, 8000, root, sizeof(root));
+        drive_open(d == DEV_USB ? DRIVE_USB : d == DEV_MX4SIO ? DRIVE_MX4SIO : DRIVE_HDD, 8000, root, sizeof(root), NULL);
     else if (d == DEV_HDD) {   /* hdd0:PARTITION:pfs:/path: that partition */
         const char *p = strchr(appPath, ':') + 1;
         snprintf(part, sizeof(part), "%.*s", (int)strcspn(p, ":/"), p);
-        if (drive_open(DRIVE_HDD, 12000, root, sizeof(root)) != 0 || hdd_mount(part, root, sizeof(root)) != 0)
+        if (drive_open(DRIVE_HDD, 12000, root, sizeof(root), NULL) != 0 || hdd_mount(part, root, sizeof(root)) != 0)
             root[0] = 0;
     }
     if (root[0])
@@ -165,7 +165,7 @@ static void standalone_root(void)
         char c[64];
         snprintf(c, sizeof(c), "%sdata-on-usb.txt", dataDir);
         debugHome[0] = 0;
-        if (d != DEV_USB && file_exists(c) && drive_open(DRIVE_USB, 8000, root, sizeof(root)) == 0 && root[0]) {
+        if (d != DEV_USB && file_exists(c) && drive_open(DRIVE_USB, 8000, root, sizeof(root), NULL) == 0 && root[0]) {
             snprintf(debugHome, sizeof(debugHome), "%s", dataDir);
             snprintf(sdRoot, sizeof(sdRoot), "%s", root);
             snprintf(dataDir, sizeof(dataDir), "%sSD2Cloud/", sdRoot);

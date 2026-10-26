@@ -35,7 +35,7 @@ static int find_places(vmc_place_t *more, int max)
             log_msg("VMCs: the MX4SIO's left out (a memory card in slot 2)");
             continue;
         }
-        if (keyDrive[k] >= 0 && drive_open(keyDrive[k], keyDrive[k] == DRIVE_HDD ? 12000 : 3000, root, sizeof(root)) != 0)
+        if (keyDrive[k] >= 0 && drive_open(keyDrive[k], keyDrive[k] == DRIVE_HDD ? 12000 : 3000, root, sizeof(root), NULL) != 0)
             continue;
         memset(p, 0, sizeof(*p));
         if (k == VMC_APA) {

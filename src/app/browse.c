@@ -671,16 +671,37 @@ static void file_options(const dir_entry_t *e)
 /* a folder things can be written into (the list of the hard disk's partitions isn't one) */
 static int fb_writable(void) { return !fb.error && strcmp(fb.dir, "hdd0:") != 0; }
 
+/* circle while a drive is looked for: given up at once (looking changes nothing) */
+static int search_stop(void)
+{
+    watch_cancel();
+    return cancelLatched;
+}
+
 static void browse(int dev)
 {
     static const int drive[FDEVS] = {-1, DRIVE_USB, DRIVE_HDD, DRIVE_MX4SIO};
     static const int looking[FDEVS] = {0, T_USB_SEARCHING, T_HDD_SEARCHING, T_MX4SIO_SEARCHING};
     static const int none[FDEVS] = {0, T_USB_NONE, T_HDD_NONE, T_MX4SIO_NONE};
     char root[sizeof(fb.root)];
+    int r;
     snprintf(root, sizeof(root), "%s", sdRoot);
-    if (dev != FDEV_SD) {   /* (the hard disk takes longest: it may have to spin up) */
-        message(0, NULL, COLOR_TEXT, T(looking[dev]));
-        if (drive_open(drive[dev], dev == FDEV_HDD ? 12000 : 6000, root, sizeof(root)) != 0) {
+    if (dev != FDEV_SD) {   /* (the hard disk takes longest: it may have to spin up, or look for a disk that isn't there) */
+        dlg_new(0, NULL);
+        dlg_line(FONT_TEXT, COLOR_TEXT, 0, T(looking[dev]));
+        dlg_buttons(BUTTON_CIRCLE, T_CANCEL, 0, 0);
+        dlg_show();
+#ifdef DEBUG_BUILD
+        debug_capture_if('h');   /* (script: the screen of a drive looked for) */
+#endif
+        cancelLatched = 0;
+        r = drive_open(drive[dev], dev == FDEV_HDD ? 12000 : 6000, root, sizeof(root), search_stop);
+        cancelLatched = 0;
+        if (r == -2) {   /* (circle: back to where it was asked from) */
+            sound_play(SND_BACK);
+            return;
+        }
+        if (r != 0) {
             message_wait(0, NULL, COLOR_WARN, T(none[dev]));
             return;
         }

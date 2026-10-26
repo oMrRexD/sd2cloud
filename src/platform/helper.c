@@ -142,6 +142,7 @@ static int memcard_start(void)
     static int started;
     int r;
     if (!started) {
+        drivers_settle();   /* (the IOP's loader takes one module at a time: a drive's still on its way first) */
         /* ps2_drivers only loads mcman and mcserv (returns 1); mcInit is up to us */
         r = init_memcard_driver(false);
         log_msg("helper: init_memcard_driver %d", r);

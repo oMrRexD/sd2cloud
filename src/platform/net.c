@@ -121,6 +121,7 @@ int network_up(int (*stop)(void))
 #ifdef DEBUG_BUILD
         debug_log_memory("before the network drivers");
 #endif
+        drivers_settle();   /* (the IOP's loader takes one module at a time: a drive's still on its way first) */
         zeroNew = 1;   /* see __wrap_malloc */
 #ifdef DEBUG_BUILD
         if (debugNoZero) {   /* script "u": as it was before, to see the difference */

@@ -124,7 +124,11 @@ const device_t *device_here(void);   /* the one in the slot */
  * asked for, then up to ms is waited for it. 0 = it's there, and root has its folders ("usb0:/"; a hard disk
  * formatted APA: "hdd0:", whose folders are its partitions, each opened with hdd_mount) */
 enum { DRIVE_USB, DRIVE_MX4SIO, DRIVE_HDD };
-int drive_open(int drive, int ms, char *root, size_t size);
+/* stop (NULL = none) is asked while it is looked for: != 0 = given up, -2 (a driver whose start takes long is left to
+ * end by itself meanwhile: the hard disk's) */
+int drive_open(int drive, int ms, char *root, size_t size, int (*stop)(void));
+/* a driver left to end by itself (drive_open given up), waited for: whatever loads a module calls it first */
+void drivers_settle(void);
 extern int hddBoth;   /* the hard disk opened has APA partitions (hdd0:) besides the exFAT one it was opened at */
 /* a partition of the hard disk mounted, for its files to be read and written: at a pfsN: of its own, while the
  * program runs (up to four; the one opened longest ago gives its place). 0 = done, its root in root ("pfs1:/") */
