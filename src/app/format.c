@@ -74,20 +74,29 @@ const char *status_text(const card_t *c)
            : c->status == ST_CHANGED ? T(T_ST_CHANGED) : c->status == ST_ERROR ? T(T_ST_ERROR) : T(T_ST_NEW);
 }
 
-/* shortens a text with "..." until it fits maxw (with ui_lock held: it measures with the fonts) */
+/* shortens a text with "..." until it fits maxw (with ui_lock held: it measures with the fonts). The most of its
+ * letters that fit with "..." after them (none, at worst) are found by halves: some screens fit their rows every
+ * frame, and a letter less at a time took a measure for each letter cut */
 void fit(int font, char *s, size_t size, int maxw)
 {
-    size_t n = strlen(s);
+    unsigned short at[256];   /* where each letter starts (never in the middle of a UTF-8 one) */
+    char t[300];
+    size_t n, limit = strlen(s);
+    int letters = 0, lo, hi;
     if (ui_measure(font, s) <= maxw)
         return;
-    if (n > size - 4)
-        n = size - 4;
-    while (n > 0) {
-        do
-            n--;
-        while (n > 0 && ((unsigned char)s[n] & 0xC0) == 0x80);   /* not in the middle of a UTF-8 letter */
-        strcpy(s + n, "...");
-        if (ui_measure(font, s) <= maxw)
-            return;
+    if (limit > size - 4)
+        limit = size - 4;
+    for (n = 0; n < limit && letters < 256; n++)
+        if (((unsigned char)s[n] & 0xC0) != 0x80)
+            at[letters++] = (unsigned short)n;
+    for (lo = 0, hi = letters - 1; lo < hi;) {
+        int mid = (lo + hi + 1) / 2;
+        snprintf(t, sizeof(t), "%.*s...", (int)at[mid], s);
+        if (ui_measure(font, t) <= maxw)
+            lo = mid;
+        else
+            hi = mid - 1;
     }
+    strcpy(s + (letters ? at[lo] : 0), "...");
 }

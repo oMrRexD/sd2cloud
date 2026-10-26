@@ -327,9 +327,10 @@ static int mg_go(void)
                     mg.done[s] = MG_KEPT;
                     continue;
                 }
-                mcfs_delete_save(g->card->path, mg.saves[s].folder);
-            }
-            r = mcfs_copy_save(mg.src->path, mg.saves[s].folder, g->card->path, NULL);
+                /* (that one in its place, kept aside first: back there if this one can't go in) */
+                r = mcfs_replace_save(mg.src->path, NULL, mg.saves[s].folder, g->card->path, NULL);
+            } else
+                r = mcfs_copy_save(mg.src->path, mg.saves[s].folder, g->card->path, NULL);
             mg.done[s] = r == MCFS_OK ? MG_COPIED : MG_FAILED;
             if (r == MCFS_OK)
                 copied++;

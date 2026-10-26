@@ -24,9 +24,6 @@
 #define MAX_ZIP (20 * 1024 * 1024)   /* the PS2 has 32 MB; an 8 MB card is usually a 1-5 MB zip */
 #define BLOCK   (64 * 1024)
 
-static unsigned int le32(const unsigned char *p) { return p[0] | (p[1] << 8) | (p[2] << 16) | ((unsigned int)p[3] << 24); }
-static unsigned int le16(const unsigned char *p) { return p[0] | (p[1] << 8); }
-
 typedef struct {
     buffer_t zip;
     long long total;
@@ -102,7 +99,7 @@ static int inflate_all(const unsigned char *src, size_t n, int fd, int phase, un
     unsigned char h[WC_SHA256_DIGEST_SIZE];
     wc_Sha256 s;
     z_stream z;
-    int st, r = -1, i;
+    int st, r = -1;
     unsigned at = 0;   /* a .ps2: where in the page and its 16 bytes (0..527) the next byte is */
     memset(&z, 0, sizeof(z));
     if (inflateInit2(&z, -15) != Z_OK)
@@ -138,8 +135,7 @@ static int inflate_all(const unsigned char *src, size_t n, int fd, int phase, un
         }
     } while (st != Z_STREAM_END);
     wc_Sha256Final(&s, h);
-    for (i = 0; i < WC_SHA256_DIGEST_SIZE; i++)
-        sprintf(sha + i * 2, "%02x", h[i]);
+    hex_of(h, sizeof(h), sha);
     r = 0;
 out:
     inflateEnd(&z);
@@ -154,7 +150,7 @@ static int hash_file(const char *path, char sha[65], unsigned long size, int (*p
     unsigned char h[WC_SHA256_DIGEST_SIZE];
     wc_Sha256 s;
     long long done = 0;
-    int fd = open(path, O_RDONLY), n, i, stop = 0;
+    int fd = open(path, O_RDONLY), n, stop = 0;
     if (fd < 0)
         return -1;
     wc_InitSha256(&s);
@@ -167,8 +163,7 @@ static int hash_file(const char *path, char sha[65], unsigned long size, int (*p
     close(fd);
     wc_Sha256Final(&s, h);
     wc_Sha256Free(&s);
-    for (i = 0; i < WC_SHA256_DIGEST_SIZE; i++)
-        sprintf(sha + i * 2, "%02x", h[i]);
+    hex_of(h, sizeof(h), sha);
     return stop ? -2 : n < 0 ? -1 : 0;
 }
 
@@ -432,7 +427,7 @@ static int open_zip(card_file_t *f, int fd, long long total, int (*progress)(int
     unsigned at = 0;
     wc_Sha256 s;
     z_stream z;
-    int st, n, i, r = -1;
+    int st, n, r = -1;
     if (zip_file_entry(fd, total, &start, &len, &zipCrc, &zipSize, &f->ecc) != 0 || zipSize % (f->ecc ? 528 : 512))
         return -1;
     f->size = f->ecc ? (long long)zipSize / 528 * 512 : zipSize;
@@ -481,8 +476,7 @@ static int open_zip(card_file_t *f, int fd, long long total, int (*progress)(int
     } while (st != Z_STREAM_END);
     if (crc == zipCrc && done == zipSize && got == f->size) {
         wc_Sha256Final(&s, h);
-        for (i = 0; i < WC_SHA256_DIGEST_SIZE; i++)
-            sprintf(f->sha + i * 2, "%02x", h[i]);
+        hex_of(h, sizeof(h), f->sha);
         r = 0;
     }
 out:
@@ -569,11 +563,9 @@ static int file_piece(const card_file_t *f, long long at, unsigned char *out, in
 static void sha_hex(wc_Sha256 *s, char sha[65])
 {
     unsigned char h[WC_SHA256_DIGEST_SIZE];
-    int i;
     wc_Sha256Final(s, h);
     wc_Sha256Free(s);
-    for (i = 0; i < WC_SHA256_DIGEST_SIZE; i++)
-        sprintf(sha + i * 2, "%02x", h[i]);
+    hex_of(h, sizeof(h), sha);
 }
 
 /* how long the file took to be read and the card to be written, for the log: on the console those are what an

@@ -561,19 +561,31 @@ int ui_paragraph_height(int font, int width, const char *utf8)
 
 int ui_text_fit(int font, float x, float y, int width, u32 color, const char *utf8)
 {
-    char c[256];
+    char c[256], t[256];
+    unsigned short at[256];   /* where each character starts */
+    int chars = 0, lo, hi;
     size_t n;
     if (ui_measure(font, utf8) <= width)
         return ui_text(font, x, y, color, utf8);
+    /* as many of its characters as fit with "..." after them: found by halves (this is drawn every frame, and measuring
+     * it one character shorter at a time took as many measures as there were characters to cut) */
     snprintf(c, sizeof(c), "%s", utf8);
-    for (n = strlen(c); n > 0; n--) {
-        if ((c[n] & 0xC0) == 0x80)   /* don't cut a UTF-8 character in half */
-            continue;
-        snprintf(c + n, sizeof(c) - n, "\xE2\x80\xA6");   /* ... */
-        if (ui_measure(font, c) <= width)
-            break;
+    for (n = 0; c[n] && n < sizeof(c) - 4; n++)
+        if ((c[n] & 0xC0) != 0x80)   /* (never half of a UTF-8 character) */
+            at[chars++] = (unsigned short)n;
+    at[chars] = (unsigned short)n;
+    if (!chars)   /* (nothing to cut: no room at all) */
+        return 0;
+    for (lo = 1, hi = chars > 1 ? chars - 1 : 1; lo < hi;) {   /* the most characters, lo (one at least), that fit with "..." */
+        int mid = (lo + hi + 1) / 2;
+        snprintf(t, sizeof(t), "%.*s\xE2\x80\xA6", (int)at[mid], c);
+        if (ui_measure(font, t) <= width)
+            lo = mid;
+        else
+            hi = mid - 1;
     }
-    return ui_text(font, x, y, color, c);
+    snprintf(t, sizeof(t), "%.*s\xE2\x80\xA6", (int)at[lo], c);
+    return ui_text(font, x, y, color, t);
 }
 
 /* ------------------------------------------------------------ shapes */

@@ -62,6 +62,11 @@ enum { MCFS_STEP_READ, MCFS_STEP_WRITE, MCFS_STEP_CHECK };
 typedef int (*mcfs_step_cb)(int phase, long long done, long long total);
 int mcfs_save_info(const char *path, const char *folder, long long *bytes, int *files);
 int mcfs_copy_save(const char *from, const char *folder, const char *to, mcfs_step_cb progress);
+/* The save of that folder in card to, in place of the one there: copied from card from or, with from NULL, from the
+ * .psu psu. The one there is kept aside in memory first and put back when the new one can't go in, so a failure never
+ * leaves the card without it (one that can't be read is left as it is: never replaced). With none there, it is only
+ * copied. MCFS_OK or MCFS_ERR_* */
+int mcfs_replace_save(const char *from, const char *psu, const char *folder, const char *to, mcfs_step_cb progress);
 int mcfs_delete_save(const char *path, const char *folder);
 int mcfs_export_psu(const char *path, const char *folder, buffer_t *out);
 /* a new card in that file: empty and formatted, of that size (a power of two from 1 to 128 MB), as the PS2 formats

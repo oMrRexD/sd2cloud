@@ -50,6 +50,9 @@ int file_read(const char *path, buffer_t *b)
         return fd;
     size = lseek(fd, 0, SEEK_END);   /* a read that ends before the file does failed: it isn't the file */
     lseek(fd, 0, SEEK_SET);
+    /* the whole size at once: grown piece by piece, the buffer of an 8 MB file would end up taking 16 */
+    if (size > 0 && (b->data = malloc((size_t)size + 1)) != NULL)
+        b->cap = (size_t)size + 1;
     while ((n = read(fd, block, sizeof(block))) > 0) {
         if (buf_append(b, block, n)) {
             n = -1;
@@ -415,15 +418,24 @@ int ini_read(const char *path, void (*cb)(const char *section, const char *key, 
     return 0;
 }
 
+void hex_of(const unsigned char *d, size_t n, char *out)
+{
+    static const char digits[] = "0123456789abcdef";
+    size_t i;
+    for (i = 0; i < n; i++) {
+        out[i * 2] = digits[d[i] >> 4];
+        out[i * 2 + 1] = digits[d[i] & 15];
+    }
+    out[n * 2] = 0;
+}
+
 void sha256_hex(const unsigned char *d, size_t n, char *out)
 {
     wc_Sha256 s;
     unsigned char h[WC_SHA256_DIGEST_SIZE];
-    int i;
     wc_InitSha256(&s);
     wc_Sha256Update(&s, d, n);
     wc_Sha256Final(&s, h);
     wc_Sha256Free(&s);
-    for (i = 0; i < WC_SHA256_DIGEST_SIZE; i++)
-        sprintf(out + i * 2, "%02x", h[i]);
+    hex_of(h, sizeof(h), out);
 }

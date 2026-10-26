@@ -91,7 +91,7 @@ static int drivers(int drive)
             load("hdd", "ps2fs", ps2fs_irx, size_ps2fs_irx, sizeof(pfsArgs), pfsArgs) != 0)
             log_msg("hdd: its APA partitions can't be read");
     }
-    bdmKinds++;
+    bdmKinds += ok;   /* (one whose driver didn't load names no drive: mass0: may still be the other kind's) */
     loaded[drive] = ok ? 1 : -1;
 #ifdef DEBUG_BUILD
     debug_log_memory("after a drive's drivers");

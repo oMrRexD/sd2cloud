@@ -274,6 +274,51 @@ static void save_given_up_and_card_full(void)
     CHECK_STR(after, before);
 }
 
+/* a save in place of the one of its folder: the new one goes in; one that can't (a .psu cut short, or no room for it)
+ * leaves the one there whole */
+static void save_replaced(void)
+{
+    static const unsigned int big[] = {3 * 1024 * 1024};
+    buffer_t a = {0}, whole;
+    make_psu("save.psu", SAVE, SIZES, FILES, 7);
+    make_psu("other.psu", SAVE, SIZES, FILES, 8);   /* (the same folder, with other bytes) */
+    CHECK_INT(mcfs_new_card("sd/a.mcd", MCFS_CARD_8MB, NULL), MCFS_OK);
+    /* none there: it is only put in */
+    CHECK_INT(mcfs_replace_save(NULL, "save.psu", SAVE, "sd/a.mcd", NULL), MCFS_OK);
+    CHECK_INT(mcfs_export_psu("sd/a.mcd", SAVE, &a), MCFS_OK);
+    CHECK(psu_holds(&a, SAVE, SIZES, FILES, 7));
+    /* one there: the other takes its place */
+    CHECK_INT(mcfs_replace_save(NULL, "other.psu", SAVE, "sd/a.mcd", NULL), MCFS_OK);
+    CHECK_INT(saves_of("sd/a.mcd", NULL), 1);
+    CHECK_INT(mcfs_export_psu("sd/a.mcd", SAVE, &a), MCFS_OK);
+    CHECK(psu_holds(&a, SAVE, SIZES, FILES, 8));
+    /* a .psu cut short: refused, and the one there is back as it was */
+    whole = t_read("save.psu");
+    t_write("cut.psu", whole.data, 3 * ENT + ENT + 1024 + ENT + 1024 + ENT + 30000);
+    buf_free(&whole);
+    CHECK_INT(mcfs_replace_save(NULL, "cut.psu", SAVE, "sd/a.mcd", NULL), MCFS_ERR_BAD);
+    CHECK_INT(saves_of("sd/a.mcd", NULL), 1);
+    CHECK_INT(mcfs_export_psu("sd/a.mcd", SAVE, &a), MCFS_OK);
+    CHECK(psu_holds(&a, SAVE, SIZES, FILES, 8));
+    /* no room for the new one (two big saves take the rest of the card): the same */
+    make_psu("big1.psu", "BASLUS-99999BIG1", big, 1, 21);
+    make_psu("big2.psu", "BASLUS-99999BIG2", big, 1, 22);
+    make_psu("big.psu", SAVE, big, 1, 24);
+    CHECK_INT(mcfs_import_psu("big1.psu", "sd/a.mcd", NULL), MCFS_OK);
+    CHECK_INT(mcfs_import_psu("big2.psu", "sd/a.mcd", NULL), MCFS_OK);
+    CHECK_INT(mcfs_replace_save(NULL, "big.psu", SAVE, "sd/a.mcd", NULL), MCFS_ERR_FULL);
+    CHECK_INT(saves_of("sd/a.mcd", NULL), 3);
+    CHECK_INT(mcfs_export_psu("sd/a.mcd", SAVE, &a), MCFS_OK);
+    CHECK(psu_holds(&a, SAVE, SIZES, FILES, 8));
+    /* from another card, as a copy is made */
+    CHECK_INT(mcfs_new_card("sd/b.mcd", MCFS_CARD_8MB, NULL), MCFS_OK);
+    CHECK_INT(mcfs_import_psu("save.psu", "sd/b.mcd", NULL), MCFS_OK);
+    CHECK_INT(mcfs_replace_save("sd/b.mcd", NULL, SAVE, "sd/a.mcd", NULL), MCFS_OK);
+    CHECK_INT(mcfs_export_psu("sd/a.mcd", SAVE, &a), MCFS_OK);
+    CHECK(psu_holds(&a, SAVE, SIZES, FILES, 7));
+    buf_free(&a);
+}
+
 static void psu_that_is_not_one(void)
 {
     buffer_t whole;
@@ -406,6 +451,7 @@ void suite_mcfs(void)
     RUN(save_in_and_out);
     RUN(save_from_card_to_card);
     RUN(save_given_up_and_card_full);
+    RUN(save_replaced);
     RUN(psu_that_is_not_one);
     RUN(save_from_a_folder);
     RUN(card_checked);

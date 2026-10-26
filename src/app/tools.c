@@ -266,9 +266,13 @@ static int template_into(const template_t *t, card_t *c, int replace, int show, 
                 save_into_fixed();   /* (nothing tells how far it is, and it can't be given up) */
             }
             template_path(t, i, path, sizeof(path));
-            if (has && mc_delete_save(port, t->saves[i].folder) != 0)
-                r = MCFS_ERR_IO;
-            else if ((r = mc_put_save(port, path)) == MCFS_OK)
+            if (has) {   /* (the card's own kept aside, and back in its place if the template's can't go in) */
+                char slot[8];
+                snprintf(slot, sizeof(slot), "mc%d:", port);
+                r = mcfs_replace_save(NULL, path, t->saves[i].folder, slot, NULL);
+            } else
+                r = mc_put_save(port, path);
+            if (r == MCFS_OK)
                 (*put)++;
         }
     }

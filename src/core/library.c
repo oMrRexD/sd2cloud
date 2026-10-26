@@ -41,9 +41,6 @@ static int nGames;
 static char heldFolder[33];
 static buffer_t held;
 
-static unsigned int le32(const unsigned char *p) { return p[0] | p[1] << 8 | p[2] << 16 | (unsigned int)p[3] << 24; }
-static unsigned int le16(const unsigned char *p) { return p[0] | p[1] << 8; }
-
 /* the game a save's folder names (BASLUS-21065...): its ID in id, or LIBRARY_OTHER */
 void library_game_of(const char *folder, char id[12])
 {

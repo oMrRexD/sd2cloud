@@ -38,7 +38,6 @@ static sound_t sounds[SND_COUNT] = {
 };
 static int audioOn;
 
-static unsigned int le32(const unsigned char *p) { return p[0] | (p[1] << 8) | (p[2] << 16) | ((unsigned int)p[3] << 24); }
 
 /* how long a sample lasts, from its .adp header: "APCM", version, channels, loop flag, then the pitch (4096 = 48 kHz)
  * at byte 8 and the number of samples at byte 12 */

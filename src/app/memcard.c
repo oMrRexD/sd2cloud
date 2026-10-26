@@ -279,9 +279,9 @@ int memcard_restore(card_t *c, const drive_file_t *f)
         workFixed = 1;
         ui_unlock();
         upload_screen(i, n);
-        k = mcfs_copy_save(c->path, list[i].folder, slotCard.path, NULL);
-        if (k == MCFS_ERR_EXISTS && mcfs_delete_save(slotCard.path, list[i].folder) == MCFS_OK)
-            k = mcfs_copy_save(c->path, list[i].folder, slotCard.path, NULL);
+        /* (in place of one of the same folder there, which is kept aside and put back if the backup's can't go in) */
+        if ((k = mcfs_copy_save(c->path, list[i].folder, slotCard.path, NULL)) == MCFS_ERR_EXISTS)
+            k = mcfs_replace_save(c->path, NULL, list[i].folder, slotCard.path, NULL);
         log_msg("memory card restore: %s: %d", list[i].folder, k);
         if (k == MCFS_OK)
             ok++;
@@ -290,8 +290,8 @@ int memcard_restore(card_t *c, const drive_file_t *f)
     }
     for (i = 0; r == 0 && regions[i]; i++) {   /* (and its system data, when the backup has it) */
         snprintf(system, sizeof(system), "B%cDATA-SYSTEM", regions[i]);
-        if (mcfs_copy_save(c->path, system, slotCard.path, NULL) == MCFS_ERR_EXISTS && mcfs_delete_save(slotCard.path, system) == MCFS_OK)
-            mcfs_copy_save(c->path, system, slotCard.path, NULL);
+        if (mcfs_copy_save(c->path, system, slotCard.path, NULL) == MCFS_ERR_EXISTS)
+            mcfs_replace_save(c->path, NULL, system, slotCard.path, NULL);
     }
     card_work_done();
     restoreNew = 0;

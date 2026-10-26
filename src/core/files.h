@@ -49,5 +49,10 @@ void trim(char *s);
  * converted: its accents show on screen, and Google refuses a request that isn't UTF-8 */
 void utf8_fix(char *s, size_t size);
 void sha256_hex(const unsigned char *d, size_t n, char *out);
+void hex_of(const unsigned char *d, size_t n, char *out);   /* n bytes as 2n hex digits, and a 0 */
+
+/* a number as a memory card, a .zip or a .wav keeps it (little-endian) */
+static inline unsigned int le32(const unsigned char *p) { return p[0] | p[1] << 8 | p[2] << 16 | (unsigned int)p[3] << 24; }
+static inline unsigned int le16(const unsigned char *p) { return p[0] | p[1] << 8; }
 
 #endif

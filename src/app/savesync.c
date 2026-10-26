@@ -259,7 +259,7 @@ void save_versions_screen(card_t *c, save_view_t *v)
     static drive_file_t list[200];
     static const char *items[200];
     static char text[200][48];
-    char folderId[80], savesId[80], tag[140], t[300], when[40], name[100], fresh[200], before[200];
+    char folderId[80], savesId[80], tag[140], t[300], when[40], name[100], fresh[200];
     const drive_file_t *f;
     int n, i, k, r;
     googleError[0] = 0;
@@ -295,25 +295,18 @@ void save_versions_screen(card_t *c, save_view_t *v)
     snprintf(t, sizeof(t), T(T_SAVE_VERSION_ASK), name, when);
     if (!confirm(t, T(T_SAVE_VERSION_TEXT), T_RESTORE) || card_free(c, NULL))
         return;
-    /* the version, downloaded; the save as it is now, kept beside it; then the one in place of the other (and the save
-     * as it was put back, when the version can't go in) */
+    /* the version, downloaded; then in place of the save as it is now (which is kept aside, and put back when the
+     * version can't go in) */
     message(0, NULL, COLOR_TEXT, T(T_RESTORE_STEP_DOWNLOAD));
     snprintf(fresh, sizeof(fresh), "%ssave-version.psu", dataDir);
-    snprintf(before, sizeof(before), "%ssave-before.psu", dataDir);
     buf_free(&got);
     r = google_download(f->id, to_buffer, NULL) == 0 && file_write(fresh, got.data, got.len) == 0 ? 0 : -1;
     buf_free(&got);
     if (r == 0) {
-        buffer_t now = {0};
         message(0, NULL, COLOR_TEXT, T(T_RESTORE_STEP_WRITE));
-        r = mcfs_export_psu(c->path, v->s.folder, &now) == MCFS_OK && file_write(before, now.data, now.len) == 0 ? 0 : -1;
-        buf_free(&now);
-        if (r == 0 && (r = mcfs_delete_save(c->path, v->s.folder)) == MCFS_OK &&
-            (r = mcfs_import_psu(fresh, c->path, NULL)) != MCFS_OK)
-            log_msg("save version: not put in (%d); the save as it was, back: %d", r, mcfs_import_psu(before, c->path, NULL));
+        r = mcfs_replace_save(NULL, fresh, v->s.folder, c->path, NULL);
     }
     unlink(fresh);
-    unlink(before);
     log_msg("save %s of %s: version %s put back: %d", v->s.folder, c->id, f->name, r);
     if (r == 0 && mcfs_slot_port(c->path) < 0 && !card_file_card(c))
         cards_recheck(c);

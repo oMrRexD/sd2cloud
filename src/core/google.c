@@ -261,6 +261,18 @@ static void reason(const response_t *r, char *out, size_t size)
         js_get_string(t, r->body.len, "error", out, size);
 }
 
+/* Drive answered h (0 = nothing came: the network's failure is said already) and not what was asked for: its reason
+ * into googleError, and the answer let go of. -1 */
+static int refused(long h, response_t *r)
+{
+    char m[200];
+    reason(r, m, sizeof(m));
+    if (h)
+        fail("Drive %ld: %s", h, m);
+    buf_free(&r->body);
+    return -1;
+}
+
 /* API request with the access token; retries on network failures and on 429/5xx, and once with a new access token when
  * Google says this one expired (it lasts an hour: syncing many cards can take longer). Returns the HTTP status
  * (0 = network). The body is JSON, or of the type given (api_typed) */
@@ -477,26 +489,6 @@ static void quote(const char *s, char *out, size_t size)
     out[n] = 0;
 }
 
-/* text for inside JSON (quotes and backslashes escaped; control characters dropped). What doesn't fit is left out a
- * whole character at a time: half of one (a kanji's 3 bytes of UTF-8) would make the JSON invalid */
-static void json_escape(const char *s, char *out, size_t size)
-{
-    size_t n = 0;
-    while (*s) {
-        unsigned char c = *s;
-        size_t len = c >= 0xF0 ? 4 : c >= 0xE0 ? 3 : c >= 0xC0 ? 2 : 1, i;
-        if (n + len + 2 >= size)
-            break;
-        if (c == '"' || c == '\\')
-            out[n++] = '\\';
-        for (i = 0; i < len && s[i]; i++)
-            if ((unsigned char)s[i] >= 0x20)
-                out[n++] = s[i];
-        s += i;
-    }
-    out[n] = 0;
-}
-
 static char *url_escape(const char *s)
 {
     char *e = curl_easy_escape(curl, s, 0);
@@ -520,60 +512,6 @@ static int first_id(const response_t *r, char *id, size_t idsize)
     return -1;
 }
 
-int google_folder(const char *name, const char *parent, char *id, size_t idsize)
-{
-    response_t r = {0};
-    char q[400], nq[160], url[900], body[400], nj[160], m[200];
-    char *e;
-    long h;
-
-    /* does the cached one still exist? (it may have been deleted on Drive) */
-    if (id[0]) {
-        json_t v;
-        int ok;
-        snprintf(url, sizeof(url), URL_DRIVE "/%s?fields=id,trashed", id);
-        h = api("GET", url, NULL, &r);
-        ok = h == 200 && r.body.data &&
-             !(js_find((char *)r.body.data, r.body.len, "trashed", &v) == 0 && v.p < v.end && *v.p == 't');
-        buf_free(&r.body);
-        if (ok)
-            return 0;
-        if (h == 0)
-            return -1;
-        id[0] = 0;
-    }
-    quote(name, nq, sizeof(nq));
-    snprintf(q, sizeof(q), "name='%s' and mimeType='application/vnd.google-apps.folder' and trashed=false and '%s' in parents", nq, parent);
-    e = url_escape(q);
-    snprintf(url, sizeof(url), URL_DRIVE "?q=%s&fields=files(id)&spaces=drive&pageSize=10", e);
-    curl_free(e);
-    h = api("GET", url, NULL, &r);
-    if (h != 200) {
-        reason(&r, m, sizeof(m));
-        if (h)
-            fail("Drive %ld: %s", h, m);
-        buf_free(&r.body);
-        return -1;
-    }
-    if (first_id(&r, id, idsize) == 0 && id[0]) {
-        buf_free(&r.body);
-        return 0;
-    }
-    json_escape(name, nj, sizeof(nj));
-    snprintf(body, sizeof(body), "{\"name\":\"%s\",\"mimeType\":\"application/vnd.google-apps.folder\",\"parents\":[\"%s\"]}", nj, parent);
-    h = api("POST", URL_DRIVE "?fields=id", body, &r);
-    if (h != 200 || !r.body.data || js_get_string((char *)r.body.data, r.body.len, "id", id, idsize)) {
-        reason(&r, m, sizeof(m));
-        if (h)
-            fail("Drive %ld: %s", h, m);
-        buf_free(&r.body);
-        return -1;
-    }
-    log_msg("created the \"%s\" folder on Drive", name);
-    buf_free(&r.body);
-    return 0;
-}
-
 #define FOLDER_MIME "application/vnd.google-apps.folder"
 
 /* is that folder (an id cached) still there, not in the trash? 1 = yes; 0 = no; -1 = Drive couldn't be asked */
@@ -591,68 +529,76 @@ static int folder_alive(const char *id)
     return ok ? 1 : h == 0 ? -1 : 0;
 }
 
-int google_folder_key(const char *key, const char *name, const char *parent, char *id, size_t idsize)
+/* The first folder the query finds; with none, the one body makes (NULL = none is made: 1), which the log calls name
+ * (and key). 0 = id is the folder */
+static int folder_find(const char *query, const char *body, const char *name, const char *key, char *id, size_t idsize)
 {
     response_t r = {0};
-    char q[400], kq[DRIVE_KEY + 40], url[1200], m[200], nj[300], kj[DRIVE_KEY + 40], body[900];
-    char *e;
+    char url[1200], *e = url_escape(query);
     long h;
+    snprintf(url, sizeof(url), URL_DRIVE "?q=%s&fields=files(id)&spaces=drive&pageSize=10", e);
+    curl_free(e);
+    h = api("GET", url, NULL, &r);
+    if (h != 200)
+        return refused(h, &r);
+    if (first_id(&r, id, idsize) == 0 && id[0]) {
+        buf_free(&r.body);
+        return 0;
+    }
+    buf_free(&r.body);
+    if (!body)
+        return 1;
+    h = api("POST", URL_DRIVE "?fields=id", body, &r);
+    if (h != 200 || !r.body.data || js_get_string((char *)r.body.data, r.body.len, "id", id, idsize))
+        return refused(h, &r);
+    log_msg("created the \"%s\" folder on Drive%s%s%s", name, key ? " (" : "", key ? key : "", key ? ")" : "");
+    buf_free(&r.body);
+    return 0;
+}
+
+int google_folder(const char *name, const char *parent, char *id, size_t idsize)
+{
+    char q[400], nq[160], body[400], nj[160];
+    int alive;
+    if (id[0] && (alive = folder_alive(id)) != 0)   /* (the cached one may have been deleted on Drive) */
+        return alive > 0 ? 0 : -1;
+    id[0] = 0;
+    quote(name, nq, sizeof(nq));
+    snprintf(q, sizeof(q), "name='%s' and mimeType='" FOLDER_MIME "' and trashed=false and '%s' in parents", nq, parent);
+    js_escape(name, nj, sizeof(nj));
+    snprintf(body, sizeof(body), "{\"name\":\"%s\",\"mimeType\":\"" FOLDER_MIME "\",\"parents\":[\"%s\"]}", nj, parent);
+    return folder_find(q, body, name, NULL, id, idsize);
+}
+
+int google_folder_key(const char *key, const char *name, const char *parent, char *id, size_t idsize)
+{
+    char q[400], kq[DRIVE_KEY + 40], nj[300], kj[DRIVE_KEY + 40], body[900];
     int alive;
     if (id[0] && (alive = folder_alive(id)) != 0)
         return alive > 0 ? 0 : -1;
     id[0] = 0;
     quote(key, kq, sizeof(kq));
     snprintf(q, sizeof(q), "appProperties has { key='folder' and value='%s' } and mimeType='" FOLDER_MIME "' and trashed=false", kq);
-    e = url_escape(q);
-    snprintf(url, sizeof(url), URL_DRIVE "?q=%s&fields=files(id)&spaces=drive&pageSize=10", e);
-    curl_free(e);
-    h = api("GET", url, NULL, &r);
-    if (h != 200) {
-        reason(&r, m, sizeof(m));
-        if (h)
-            fail("Drive %ld: %s", h, m);
-        buf_free(&r.body);
-        return -1;
+    if (name) {
+        js_escape(name, nj, sizeof(nj));
+        js_escape(key, kj, sizeof(kj));
+        snprintf(body, sizeof(body), "{\"name\":\"%s\",\"mimeType\":\"" FOLDER_MIME "\",\"parents\":[\"%s\"],"
+                 "\"appProperties\":{\"sd2cloud\":\"1\",\"folder\":\"%s\"}}", nj, parent, kj);
     }
-    if (first_id(&r, id, idsize) == 0 && id[0]) {
-        buf_free(&r.body);
-        return 0;
-    }
-    if (!name) {
-        buf_free(&r.body);
-        return 1;
-    }
-    json_escape(name, nj, sizeof(nj));
-    json_escape(key, kj, sizeof(kj));
-    snprintf(body, sizeof(body), "{\"name\":\"%s\",\"mimeType\":\"" FOLDER_MIME "\",\"parents\":[\"%s\"],"
-             "\"appProperties\":{\"sd2cloud\":\"1\",\"folder\":\"%s\"}}", nj, parent, kj);
-    h = api("POST", URL_DRIVE "?fields=id", body, &r);
-    if (h != 200 || !r.body.data || js_get_string((char *)r.body.data, r.body.len, "id", id, idsize)) {
-        reason(&r, m, sizeof(m));
-        if (h)
-            fail("Drive %ld: %s", h, m);
-        buf_free(&r.body);
-        return -1;
-    }
-    log_msg("created the \"%s\" folder on Drive (%s)", name, key);
-    buf_free(&r.body);
-    return 0;
+    return folder_find(q, name ? body : NULL, name, key, id, idsize);
 }
 
 int google_patch(const char *id, const char *query, const char *json)
 {
     response_t r = {0};
-    char url[600], m[200];
+    char url[600];
     long h;
     snprintf(url, sizeof(url), URL_DRIVE "/%s?%s%sfields=id", id, query ? query : "", query && query[0] ? "&" : "");
     h = api("PATCH", url, json ? json : "{}", &r);
-    if (h != 200) {
-        reason(&r, m, sizeof(m));
-        if (h)
-            fail("Drive %ld: %s", h, m);
-    }
+    if (h != 200)
+        return refused(h, &r);
     buf_free(&r.body);
-    return h == 200 ? 0 : -1;
+    return 0;
 }
 
 /* -------- what is in some folders, all of it (the move to the second layout, and Drive in the Files group) */
@@ -716,7 +662,7 @@ int google_nodes(const char *const *parents, int nParents, drive_node_t *out, in
     int i, k, ok = 0;
     for (i = 0; i < nParents && c.n < max; i += 25) {   /* (25 folders a query: a URL of a few KB) */
         buffer_t q = {0}, url = {0};
-        char token[400] = "", m[200], *e;
+        char token[400] = "", *e;
         response_t r = {0};
         long h;
         buf_append(&q, "(", 1);
@@ -737,11 +683,7 @@ int google_nodes(const char *const *parents, int nParents, drive_node_t *out, in
             buf_append(&url, e, strlen(e) + 1);
             h = api("GET", (char *)url.data, NULL, &r);
             if (h != 200 || !r.body.data || js_each((char *)r.body.data, r.body.len, "files", on_node, &c)) {
-                reason(&r, m, sizeof(m));
-                if (h)
-                    fail("Drive %ld: %s", h, m);
-                buf_free(&r.body);
-                ok = -1;
+                ok = refused(h, &r);
                 break;
             }
             if (js_get_string((char *)r.body.data, r.body.len, "nextPageToken", token, sizeof(token)) != 0)
@@ -766,7 +708,7 @@ int google_batch(int n, const char *const *method, const char *const *path, cons
 {
     response_t r = {0};
     size_t size = 1024 + (size_t)n * 1400;
-    char *body = malloc(size), m[200];
+    char *body = malloc(size);
     long h;
     int got;
     if (!body || !drive_batch_body(body, size, BOUNDARY, n, method, path, json)) {
@@ -776,13 +718,8 @@ int google_batch(int n, const char *const *method, const char *const *path, cons
     }
     h = api_typed("POST", URL_BATCH, body, "multipart/mixed; boundary=" BOUNDARY, &r);
     free(body);
-    if (h != 200 || !r.body.data) {
-        reason(&r, m, sizeof(m));
-        if (h)
-            fail("Drive %ld: %s", h, m);
-        buf_free(&r.body);
-        return -1;
-    }
+    if (h != 200 || !r.body.data)
+        return refused(h, &r);
     got = drive_batch_read((char *)r.body.data, r.body.len, n, status, id);
     buf_free(&r.body);
     return got;
@@ -820,7 +757,7 @@ static void on_file(const char *obj, size_t n, void *u)
 int google_list(const char *folder, const char *card, drive_file_t *list, int max)
 {
     response_t r = {0};
-    char q[400], cq[160], url[900], m[200];
+    char q[400], cq[160], url[900];
     collect_t c = {list, max, 0};
     char *e;
     long h;
@@ -833,13 +770,8 @@ int google_list(const char *folder, const char *card, drive_file_t *list, int ma
     snprintf(url, sizeof(url), URL_DRIVE "?q=%s&orderBy=createdTime%%20desc&pageSize=200&spaces=drive&fields=files(id,name,createdTime,size,appProperties)", e);
     curl_free(e);
     h = api("GET", url, NULL, &r);
-    if (h != 200 || !r.body.data || js_each((char *)r.body.data, r.body.len, "files", on_file, &c)) {
-        reason(&r, m, sizeof(m));
-        if (h)
-            fail("Drive %ld: %s", h, m);
-        buf_free(&r.body);
-        return -1;
-    }
+    if (h != 200 || !r.body.data || js_each((char *)r.body.data, r.body.len, "files", on_file, &c))
+        return refused(h, &r);
     buf_free(&r.body);
     for (i = 0; i < c.n / 2; i++) {   /* handed out oldest first */
         drive_file_t t = list[i];
@@ -960,16 +892,16 @@ int google_upload(const card_t *c, const char *folder, const char *name, const d
                   int (*progress)(long long done, long long total), char *id, size_t idsize)
 {
     upload_t *up = calloc(1, sizeof(upload_t));
-    char body[900], nj[160], cj[160], dj[120], url[256], checksum[80] = "", m[200];
+    char body[900], nj[160], cj[160], dj[120], url[256], checksum[80] = "";
     long h;
     int r = -1;
     if (!up)
         return -1;
     up->s = s;
     s->progress = progress;
-    json_escape(name, nj, sizeof(nj));
-    json_escape(c->id, cj, sizeof(cj));
-    json_escape(c->name[0] ? c->name : c->base, dj, sizeof(dj));
+    js_escape(name, nj, sizeof(nj));
+    js_escape(c->id, cj, sizeof(cj));
+    js_escape(c->name[0] ? c->name : c->base, dj, sizeof(dj));
     snprintf(body, sizeof(body),
              "{\"name\":\"%s\",\"mimeType\":\"application/zip\",\"parents\":[\"%s\"],"
              "\"description\":\"%s (%s, %s/%s%s) - " APP_NAME " " APP_VERSION "\","
@@ -977,9 +909,7 @@ int google_upload(const card_t *c, const char *folder, const char *name, const d
              nj, folder, dj, dev->name, dev->cards, cj, dev->ext, cj);
     h = api("POST", URL_UPLOAD "?uploadType=resumable&fields=id,size,sha256Checksum,md5Checksum", body, &up->r);
     if (h != 200 || !up->r.location[0]) {
-        reason(&up->r, m, sizeof(m));
-        if (h)
-            fail("Drive %ld: %s", h, m);
+        refused(h, &up->r);
         goto out;
     }
     snprintf(up->session, sizeof(up->session), "%s", up->r.location);
@@ -1021,21 +951,16 @@ int google_upload_buffer(const char *folder, const char *name, const char *descr
     struct curl_slist *hdr = NULL;
     CURLcode cc;
     long h;
-    json_escape(name, nj, sizeof(nj));
-    json_escape(description, dj, sizeof(dj));
-    json_escape(tag ? tag : "", tj, sizeof(tj));
+    js_escape(name, nj, sizeof(nj));
+    js_escape(description, dj, sizeof(dj));
+    js_escape(tag ? tag : "", tj, sizeof(tj));
     snprintf(body, sizeof(body),
              "{\"name\":\"%s\",\"mimeType\":\"application/octet-stream\",\"parents\":[\"%s\"],\"description\":\"%s\","
              "\"appProperties\":{\"sd2cloud\":\"1\",\"save\":\"1\"%s%s%s}}",
              nj, folder, dj, tag ? ",\"card\":\"" : "", tj, tag ? "\"" : "");
     h = api("POST", URL_UPLOAD "?uploadType=resumable&fields=id,sha256Checksum", body, &r);
-    if (h != 200 || !r.location[0]) {
-        reason(&r, m, sizeof(m));
-        if (h)
-            fail("Drive %ld: %s", h, m);
-        buf_free(&r.body);
-        return -1;
-    }
+    if (h != 200 || !r.location[0])
+        return refused(h, &r);
     snprintf(session, sizeof(session), "%s", r.location);
     snprintf(range, sizeof(range), "Content-Range: bytes 0-%u/%u", (unsigned)n - 1, (unsigned)n);
     hdr = curl_slist_append(hdr, range);
@@ -1075,15 +1000,18 @@ int google_upload_buffer(const char *folder, const char *name, const char *descr
  * handshake. What is downloaded is checked afterwards (the SHA-256 of an update, the checksum of a backup) */
 #define DOWNLOAD_TRIES 3
 
-static void next_try(int attempt, CURLcode c, long long from)
+/* 1 = given up meanwhile (retry_wait: nothing more is tried) */
+static int next_try(int attempt, CURLcode c, long long from)
 {
     char range[32];
     log_msg("download: broke off (%s), try %d of %d from byte %lld", curl_text(c), attempt + 1, DOWNLOAD_TRIES, from);
-    sleep_ms(2000);
+    if (retry_wait(2000))
+        return 1;
     snprintf(range, sizeof(range), "%lld-", from);
     curl_easy_setopt(curl, CURLOPT_RANGE, from > 0 ? range : NULL);
     curl_easy_setopt(curl, CURLOPT_FRESH_CONNECT, 1L);
     curl_easy_setopt(curl, CURLOPT_SSL_SESSIONID_CACHE, 0L);
+    return 0;
 }
 
 static void tries_done(void)
@@ -1166,7 +1094,8 @@ int google_download(const char *id, int (*sink)(const unsigned char *d, size_t n
         if (c == CURLE_OK || d.stopped || userStop || attempt == DOWNLOAD_TRIES)
             break;
         buf_free(&d.errorBody);
-        next_try(attempt, c, d.got);
+        if (next_try(attempt, c, d.got))
+            break;
     }
     tries_done();
     if (c == CURLE_OK && r.http == 206)

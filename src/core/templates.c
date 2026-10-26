@@ -521,7 +521,8 @@ int template_lacking(const template_t *t, const char *card, unsigned char lacks[
 {
     static mcfs_save_t list[MCFS_MAX_SAVES];
     long long f = -1;
-    int n = mcfs_list_saves(card, list, MCFS_MAX_SAVES, &f), i, k, count = 0;
+    /* (the card's free room only when it is asked for: counting it goes through the card's whole FAT) */
+    int n = mcfs_list_saves(card, list, MCFS_MAX_SAVES, freeBytes ? &f : NULL), i, k, count = 0;
     memset(lacks, 0, TPL_SAVES);
     if (bytes)
         *bytes = 0;
@@ -571,8 +572,6 @@ int template_apply(const template_t *t, const char *card, int (*before)(const te
     log_msg("templates: %s into %s: %d save(s) put, %d", t->name, card, n, r);
     return r;
 }
-
-static unsigned int le32(const unsigned char *p) { return p[0] | (p[1] << 8) | (p[2] << 16) | ((unsigned int)p[3] << 24); }
 
 /* Do two .psu hold the same save: the same files, by name and in the same order, with the same bytes? Their dates
  * don't count: a save that was put into a card through the slot has the dates the PS2 gave its folder then */
@@ -631,9 +630,8 @@ int template_update(const template_t *t, const char *card, int (*before)(const t
             r = MCFS_ERR_CANCELLED;
             break;
         }
-        if ((r = mcfs_delete_save(card, t->saves[i].folder)) != MCFS_OK)
-            break;
-        if ((r = mcfs_import_psu(path, card, progress)) == MCFS_OK)
+        /* (the card's own is kept aside, and back in its place if the template's can't go in) */
+        if ((r = mcfs_replace_save(NULL, path, t->saves[i].folder, card, progress)) == MCFS_OK)
             n++;
     }
     if (put)

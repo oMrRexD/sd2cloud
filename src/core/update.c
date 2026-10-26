@@ -241,24 +241,16 @@ static int download_elsewhere(void)
 
 int update_install(void (*progress)(long long done, long long total))
 {
-    char c[260];
-    static const char title[] = "title=SD2Cloud\nboot=SD2CLOUD.ELF\n";
     if (!latest.tag[0])
         return -1;
     if (appOnCard)
         return install_on_card(progress);
     if (appElsewhere)
         return download_elsewhere();
-    /* started from another device with no SD2Cloud on the microSD: the update is what puts it there (with the title.cfg
-     * that makes OPL list it) */
+    /* the program on the microSD, in its folder. The helper first: if it fails, the app doesn't change; the new app then
+     * offers to update the memory card's one */
     ensure_dir(appDir);
-    /* the helper first: if it fails, the app doesn't change; the new app then offers to update the memory card's one */
     if (latest.url_igr[0] && install_file(latest.url_igr, latest.sha_igr, "SD2CLOUD-IGR.ELF") != 0)
         return -1;
-    if (install_file(latest.url_app, latest.sha_app, "SD2CLOUD.ELF") != 0)
-        return -1;
-    snprintf(c, sizeof(c), "%stitle.cfg", appDir);
-    if (appElsewhere && !file_exists(c))
-        file_write(c, (const unsigned char *)title, sizeof(title) - 1);
-    return 0;
+    return install_file(latest.url_app, latest.sha_app, "SD2CLOUD.ELF");
 }

@@ -96,9 +96,6 @@ void mcfs_image(const char *file, const unsigned char *mem, size_t len)
     imageLen = mem ? len : 0;
 }
 
-static unsigned int le32(const unsigned char *p) { return p[0] | (p[1] << 8) | (p[2] << 16) | ((unsigned int)p[3] << 24); }
-static unsigned int le16(const unsigned char *p) { return p[0] | (p[1] << 8); }
-
 /* why a card couldn't be read, the last time one couldn't: for the log ("" = it could) */
 static char lastError[100];
 const char *mcfs_last_error(void) { return lastError; }
@@ -375,8 +372,7 @@ void mcfs_sign_records(unsigned char (*rec)[ROOT_REC], int n, char hex[65])
         wc_Sha256Update(&sha, rec[i], ROOT_REC);
     wc_Sha256Final(&sha, h);
     wc_Sha256Free(&sha);
-    for (i = 0; i < WC_SHA256_DIGEST_SIZE; i++)
-        sprintf(hex + i * 2, "%02x", h[i]);
+    hex_of(h, sizeof(h), hex);
 }
 
 #define MAX_ROOT 512
@@ -448,15 +444,25 @@ static int on_save_dir(mc_t *m, const unsigned char *e, void *u)
     return 0;
 }
 
+static unsigned int fat_cluster(mc_t *m, unsigned int n);
+
 /* the clusters the FAT doesn't mark as in use, up to the end of the allocatable area (like mymc); a FAT entry that
- * can't be read counts as in use */
+ * can't be read counts as in use. A cluster of the FAT at a time, as it is being changed (see mc_t) or as the card
+ * has it: entry by entry (fat) each one would be looked for in the cache twice */
 static unsigned int free_clusters(mc_t *m)
 {
-    unsigned int n, k = 0;
-    for (n = 0; n < m->allocEnd; n++)
-        if (!(fat(m, n) & FAT_ALLOC))
-            k++;
-    return k;
+    unsigned int per = m->csz / 4, n = 0, k, i, icl, freeN = 0;
+    for (k = 0; n < m->allocEnd; k++) {
+        const unsigned char *c = m->fatc && k < m->nfat ? m->fatc[k] : NULL;
+        if (!c && ((icl = fat_cluster(m, k * per)) == FAT_END || !(c = cluster(m, icl)))) {
+            n += per;
+            continue;
+        }
+        for (i = 0; i < per && n < m->allocEnd; i++, n++)
+            if (!(le32(c + i * 4) & FAT_ALLOC))
+                freeN++;
+    }
+    return freeN;
 }
 
 /* the newest first, as the PS2 browser shows them; two of the same moment, by name */
@@ -797,7 +803,7 @@ int mcfs_fingerprint_root(const char *path, char hex[65], int *saves, char rootS
     wc_Sha256 sha;
     root_ctx_t root = {rootRec, 0};
     ctx_t x = {&sha, 0, rootSig ? &root : NULL};
-    int rootdir = mc_open(&mc, path), r = -1, i;
+    int rootdir = mc_open(&mc, path), r = -1;
     if (rootSig)
         rootSig[0] = 0;
     if (rootdir < 0)
@@ -805,8 +811,7 @@ int mcfs_fingerprint_root(const char *path, char hex[65], int *saves, char rootS
     wc_InitSha256(&sha);
     if (walk_root(&mc, rootdir, on_root_entry, &x) == 0) {
         wc_Sha256Final(&sha, h);
-        for (i = 0; i < WC_SHA256_DIGEST_SIZE; i++)
-            sprintf(hex + i * 2, "%02x", h[i]);
+        hex_of(h, sizeof(h), hex);
         if (saves)
             *saves = x.saves;
         if (rootSig)
@@ -1804,6 +1809,26 @@ int mcfs_import_psu(const char *psu, const char *to, mcfs_step_cb progress)
     save_free(&srcSave);
     onStep = NULL;
     log_msg("mcfs: import of %s: %d, %u reads and %u writes of the card in %u ms", psu, r, ioReads, ioWrites, (unsigned)(now_ms() - start));
+    return r;
+}
+
+int mcfs_replace_save(const char *from, const char *psu, const char *folder, const char *to, mcfs_step_cb progress)
+{
+    buffer_t was = {0};
+    int r = mcfs_export_psu(to, folder, &was), back, deleted = 0;
+    if (r == MCFS_OK)
+        deleted = (r = mcfs_delete_save(to, folder)) == MCFS_OK;
+    else if (r == MCFS_ERR_NOT_FOUND)   /* (none there: nothing to keep aside) */
+        r = MCFS_OK;
+    if (r == MCFS_OK)
+        r = from ? mcfs_copy_save(from, folder, to, progress) : mcfs_import_psu(psu, to, progress);
+    if (r != MCFS_OK && deleted) {   /* (the new one couldn't go in, where the old one was deleted: that one back) */
+        mcfs_psu_memory(was.data, was.len);
+        back = mcfs_import_psu(MCFS_PSU_MEMORY, to, NULL);
+        mcfs_psu_memory(NULL, 0);
+        log_msg("mcfs: %s couldn't take the place of the one in %s (%d): that one put back, %d", folder, to, r, back);
+    }
+    buf_free(&was);
     return r;
 }
 

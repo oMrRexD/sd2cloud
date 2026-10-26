@@ -130,8 +130,6 @@ extern unsigned int size_asset_gamenames_bin;
 static char namesText[NAMES_TEXT];
 static int namesAt = -1;   /* the block in namesText */
 
-static unsigned int le32(const unsigned char *p) { return p[0] | p[1] << 8 | p[2] << 16 | (unsigned)p[3] << 24; }
-
 static int names_blocks(void)
 {
     return size_asset_gamenames_bin >= 8 && !memcmp(asset_gamenames_bin, "GNB1", 4) ? (int)le32(asset_gamenames_bin + 4) : 0;
@@ -370,20 +368,15 @@ static void group_names(void)
             }
 }
 
+/* each game card's game, looked up by its folder (game_title: the cards come in the order of their folders, so each
+ * block of the list is unpacked once at most); then the groups' names */
 static void game_names(void)
 {
-    names_t it = {0};
-    const char *p, *name;
-    int i, any = 0, n, nameLen;
+    int i, any = 0;
     for (i = 0; i < nCards; i++)
-        any |= cards[i].type == TYPE_GAMEID;
-    while (any && names_next(&it, &p, &n, &name, &nameLen))
-        for (i = 0; i < nCards; i++) {
-            card_t *c = &cards[i];
-            if (c->type != TYPE_GAMEID || strlen(c->folder) != (size_t)n || strncasecmp(c->folder, p, n))
-                continue;
-            snprintf(c->game, sizeof(c->game), "%.*s", nameLen, name);
-            utf8_fix(c->game, sizeof(c->game));
+        if (cards[i].type == TYPE_GAMEID) {
+            any = 1;
+            game_title(cards[i].folder, cards[i].game, sizeof(cards[i].game));
         }
     if (any)
         group_names();
@@ -505,8 +498,29 @@ int max_channels_set(const char *folder, int n)
     return r;
 }
 
-/* a file of a folder of cards, as the next of cards[] when it is the .mcd of one of that folder's channels (1) */
-static int add_file(const char *base, const char *folder, const char *file)
+/* A folder's listing, each file's size in it (one folder at a time: the cards found, a folder renamed or deleted).
+ * The size a card's file has there spares opening each card to ask it, which on the sd2psx takes tens of
+ * milliseconds a card */
+#define FOLDER_MAX MAX_NAMES
+static dir_entry_t folderList[FOLDER_MAX];
+
+/* a size from a folder's listing that can be a card's (else the file is asked: known_size) */
+static long long listed_size(long long size) { return size > 0 && size <= (1LL << 30) ? size : 0; }
+
+/* the file's size, opened to ask it when the listing didn't say (0 = it can't be opened) */
+static long long known_size(const char *path, long long size)
+{
+    int fd;
+    if (size > 0 || (fd = open(path, O_RDONLY)) < 0)
+        return size;
+    size = lseek(fd, 0, SEEK_END);
+    close(fd);
+    return size;
+}
+
+/* a file of a folder of cards, as the next of cards[] when it is the .mcd of one of that folder's channels (1). size =
+ * the file's, from the folder's listing (0 = not known: fill_cards asks the file) */
+static int add_file(const char *base, const char *folder, const char *file, long long size)
 {
     int boot = dev->sd2psx && !strcasecmp(folder, "BOOT"), channel;
     const char *prefix = boot ? "BootCard" : folder, *dash;
@@ -529,24 +543,21 @@ static int add_file(const char *base, const char *folder, const char *file)
     snprintf(c->id, sizeof(c->id), "%s/%.*s", folder, (int)(len - 4), file);
     snprintf(c->path, sizeof(c->path), "%s/%s/%s", base, folder, file);
     c->channel = channel;
+    c->size = listed_size(size);
     c->type = boot ? TYPE_BOOT : is_cardn(folder) ? TYPE_NORMAL
               : (is_game_id(folder) || list_has(mapped, folder)) ? TYPE_GAMEID : TYPE_NAMED;
     return 1;
 }
 
-/* the size of each card from first on (one file open at a time) and their channel names, from their folder's .ini */
+/* the size of each card from first on that the listing didn't give (one file open at a time) and their channel names,
+ * from their folder's .ini */
 static void fill_cards(const char *base, const char *folder, int first)
 {
     range_t r = {first, nCards};
     char path[260];
     int j;
-    for (j = first; j < nCards; j++) {
-        int fd = open(cards[j].path, O_RDONLY);
-        if (fd >= 0) {
-            cards[j].size = lseek(fd, 0, SEEK_END);
-            close(fd);
-        }
-    }
+    for (j = first; j < nCards; j++)
+        cards[j].size = known_size(cards[j].path, cards[j].size);
     snprintf(path, sizeof(path), "%s/%s/%s.ini", base, folder, strcasecmp(folder, "BOOT") ? folder : "BootCard");
     if (nCards > first && dev->sd2psx)
         ini_read(path, on_channel, &r);
@@ -582,20 +593,17 @@ const vmc_place_t *vmc_place(const char *folder)
     return NULL;
 }
 
-/* a file of a place's VMC folder as the next of cards[], when it is a card (1 to 128 MB, a power of 2). 1 = it is */
-static int add_vmc(const vmc_place_t *p, const char *file)
+/* a file of a place's VMC folder as the next of cards[], when it is a card (1 to 128 MB, a power of 2). size = the
+ * file's, from the folder's listing (0 = not known: the file is asked). 1 = it is */
+static int add_vmc(const vmc_place_t *p, const char *file, long long size)
 {
     size_t len = strlen(file);
     card_t *c = &cards[nCards];
-    int fd;
     if (nCards == MAX_CARDS || len < 5 || len - 4 >= sizeof(c->base) || strcasecmp(file + len - 4, ".bin") != 0)
         return 0;
     memset(c, 0, sizeof(*c));
     snprintf(c->path, sizeof(c->path), "%s/%s", p->dir, file);
-    if ((fd = open(c->path, O_RDONLY)) < 0)
-        return 0;
-    c->size = lseek(fd, 0, SEEK_END);
-    close(fd);
+    c->size = known_size(c->path, listed_size(size));
     if (c->size < (1LL << 20) || c->size > (128LL << 20) || (c->size & (c->size - 1)))
         return 0;
     snprintf(c->folder, sizeof(c->folder), "%s", p->folder);
@@ -635,7 +643,7 @@ static void add_vmcs(void)
     for (k = nVmcPlaces = 0; k < 1 + more; k++) {
         if (k && !strcasecmp(vmcPlaces[k].dir, vmcPlaces[0].dir))
             continue;
-        if ((n = list_dir(vmcPlaces[k].dir)) < 0) {
+        if ((n = dir_list(vmcPlaces[k].dir, folderList, FOLDER_MAX)) < 0) {
             if (k)
                 log_msg("VMCs: %s can't be read (%s)", vmcPlaces[k].dir, vmcPlaces[k].key);
             continue;
@@ -644,7 +652,8 @@ static void add_vmcs(void)
             vmcPlaces[nVmcPlaces] = vmcPlaces[k];
         p = &vmcPlaces[nVmcPlaces++];
         for (i = 0; i < n; i++)
-            add_vmc(p, names[i]);
+            if (!folderList[i].dir)
+                add_vmc(p, folderList[i].name, folderList[i].size);
         if (k)
             log_msg("VMCs: %s, as %s", p->dir, p->folder);
     }
@@ -655,7 +664,7 @@ card_t *vmc_append(const char *folder, const char *name)
     const vmc_place_t *p = vmc_place(folder);
     char file[80];
     snprintf(file, sizeof(file), "%s.bin", name);
-    if (!p || !add_vmc(p, file))
+    if (!p || !add_vmc(p, file, 0))
         return NULL;
     set_included(&cards[nCards - 1]);
     log_msg("%s joined the cards: %d on the microSD", cards[nCards - 1].id, nCards);
@@ -849,10 +858,11 @@ int cards_scan(void)
     for (i = 0; i < nFolders && nCards < MAX_CARDS; i++) {
         int n, first = nCards;
         snprintf(path, sizeof(path), "%s/%s", base, folders[i]);
-        if ((n = list_dir(path)) <= 0)
+        if ((n = dir_list(path, folderList, FOLDER_MAX)) <= 0)
             continue;   /* a loose file or an empty folder */
         for (j = 0; j < n; j++)
-            add_file(base, folders[i], names[j]);
+            if (!folderList[j].dir)
+                add_file(base, folders[i], folderList[j].name, folderList[j].size);
         fill_cards(base, folders[i], first);
     }
     if (!cardsOther)
@@ -873,7 +883,7 @@ card_t *cards_append(const char *folder, const char *file)
 {
     char base[96];
     snprintf(base, sizeof(base), "%s%s", sdRoot, dev->cards);
-    if (!add_file(base, folder, file))
+    if (!add_file(base, folder, file, 0))
         return NULL;
     fill_cards(base, folder, nCards - 1);
     set_included(&cards[nCards - 1]);
@@ -946,8 +956,8 @@ static void game2folder_rename(const char *from, const char *to)
 
 int cards_rename_folder(const char *folder, const char *name)
 {
-    static dir_entry_t list[256];
     static char dest[256][64];   /* each file's new name */
+    dir_entry_t *list = folderList;
     char from[200], to[200], a[520], b[520], old[48];
     size_t len;
     int n, i, k, r = 0, whole;
@@ -1034,12 +1044,12 @@ int cards_delete(card_t *c)
 
 int cards_delete_folder(const char *folder)
 {
-    static dir_entry_t list[256];
+    dir_entry_t *list = folderList;
     char dir[260], path[520], name[48];
     int n, i, left = 0;
     snprintf(name, sizeof(name), "%s", folder);   /* (it may be a card's, which goes) */
     snprintf(dir, sizeof(dir), "%s%s/%s/", sdRoot, dev->cards, name);
-    if ((n = dir_list(dir, list, 256)) < 0)
+    if ((n = dir_list(dir, list, FOLDER_MAX)) < 0)
         return -1;
     for (i = 0; i < n; i++) {   /* everything in it: its cards, its .ini, its pictures (and a folder in it, empty) */
         snprintf(path, sizeof(path), "%s%s", dir, list[i].name);

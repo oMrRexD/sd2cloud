@@ -30,6 +30,16 @@ typedef struct {
 static void p16(unsigned char *p, unsigned v) { p[0] = v; p[1] = v >> 8; }
 static void p32(unsigned char *p, unsigned long v) { p[0] = v; p[1] = v >> 8; p[2] = v >> 16; p[3] = v >> 24; }
 
+/* what deflate puts out, a block at a time (the .zip sent to Drive and the one written to a device: one at a time) */
+static unsigned char comp[BLOCK];
+
+/* a moment as a .zip keeps it (the way of MS-DOS: two seconds apart) */
+static void dos_time(const datetime_t *t, unsigned *time, unsigned *date)
+{
+    *time = (t->hour << 11) | (t->minute << 5) | (t->second / 2);
+    *date = ((t->year - 1980) << 9) | (t->month << 5) | t->day;
+}
+
 /* adds bytes to the .zip; hands out every full CHUNK */
 static void emit(output_t *o, const unsigned char *d, size_t n)
 {
@@ -47,6 +57,32 @@ static void emit(output_t *o, const unsigned char *d, size_t n)
             o->used = 0;
         }
     }
+}
+
+/* n more bytes of the file inside the .zip, compressed into it */
+static void zip_deflate(z_stream *z, output_t *o, const unsigned char *d, int n)
+{
+    z->next_in = (unsigned char *)d;
+    z->avail_in = n;
+    do {
+        z->next_out = comp;
+        z->avail_out = sizeof(comp);
+        deflate(z, Z_NO_FLUSH);
+        emit(o, comp, sizeof(comp) - z->avail_out);
+    } while (z->avail_out == 0 && !o->error);
+}
+
+/* and the end of it: what deflate still holds. Z_STREAM_END = all of it is in the .zip */
+static int zip_deflate_end(z_stream *z, output_t *o)
+{
+    int st;
+    do {
+        z->next_out = comp;
+        z->avail_out = sizeof(comp);
+        st = deflate(z, Z_FINISH);
+        emit(o, comp, sizeof(comp) - z->avail_out);
+    } while (st == Z_OK || st == Z_BUF_ERROR);
+    return st;
 }
 
 /* the .zip's only file starts: its local header. The CRC and the sizes come in the descriptor after the data (bit 3) */
@@ -79,13 +115,6 @@ static void zip_tail(output_t *o, const char *name, unsigned dosTime, unsigned d
     p32(hdr, 0x06054b50); p16(hdr + 4, 0); p16(hdr + 6, 0); p16(hdr + 8, 1); p16(hdr + 10, 1);
     p32(hdr + 12, o->s->sent - cdStart); p32(hdr + 16, cdStart); p16(hdr + 20, 0);
     emit(o, hdr, 22);
-}
-
-static void hex(const unsigned char *h, char *out)
-{
-    int i;
-    for (i = 0; i < WC_SHA256_DIGEST_SIZE; i++)
-        sprintf(out + i * 2, "%02x", h[i]);
 }
 
 /* The .ps2 of PCSX2 is the card as its flash chip holds it: after each 512-byte page come 16 bytes, 3 of error
@@ -141,20 +170,20 @@ static int add_ecc(const unsigned char *in, int n, unsigned char *out)
 
 int stream_zip(const card_t *c, const datetime_t *t, stream_t *s, chunk_cb cb, void *u)
 {
-    static unsigned char block[BLOCK] __attribute__((aligned(64))), comp[BLOCK], withEcc[BLOCK / PAGE * PAGE_ECC];
+    static unsigned char block[BLOCK] __attribute__((aligned(64))), withEcc[BLOCK / PAGE * PAGE_ECC];
     const unsigned char *in;
     int ps2 = cfg.ps2, inLen;
     unsigned long unc = 0;   /* the size of the file inside the zip: the card's, or more with the ECC */
-    unsigned dosTime = (t->hour << 11) | (t->minute << 5) | (t->second / 2);
-    unsigned dosDate = ((t->year - 1980) << 9) | (t->month << 5) | t->day;
+    unsigned dosTime, dosDate;
     char name[80];
     unsigned char h[WC_SHA256_DIGEST_SIZE];
     wc_Sha256 shaMcd;
     uLong crc = crc32(0, NULL, 0);
     z_stream z;
     output_t o;
-    int fd, n, r = -1;
+    int fd, n, st, r = -1;
 
+    dos_time(t, &dosTime, &dosDate);
     memset(&o, 0, sizeof(o));
     o.s = s;
     o.cb = cb;
@@ -205,14 +234,7 @@ int stream_zip(const card_t *c, const datetime_t *t, stream_t *s, chunk_cb cb, v
         }
         unc += inLen;
         crc = crc32(crc, in, inLen);
-        z.next_in = (unsigned char *)in;
-        z.avail_in = inLen;
-        do {
-            z.next_out = comp;
-            z.avail_out = sizeof(comp);
-            deflate(&z, Z_NO_FLUSH);
-            emit(&o, comp, sizeof(comp) - z.avail_out);
-        } while (z.avail_out == 0 && !o.error);
+        zip_deflate(&z, &o, in, inLen);
         if (o.error)
             goto out_z;
         if (s->progress && s->progress(s->read, s->total)) {
@@ -224,18 +246,9 @@ int stream_zip(const card_t *c, const datetime_t *t, stream_t *s, chunk_cb cb, v
         log_msg("%s: read %lld of %lld bytes", c->id, s->read, s->total);
         goto out_z;
     }
-    for (;;) {
-        int st;
-        z.next_out = comp;
-        z.avail_out = sizeof(comp);
-        st = deflate(&z, Z_FINISH);
-        emit(&o, comp, sizeof(comp) - z.avail_out);
-        if (st == Z_STREAM_END)
-            break;
-        if (st != Z_OK && st != Z_BUF_ERROR) {
-            log_msg("%s: zlib error %d", c->id, st);
-            goto out_z;
-        }
+    if ((st = zip_deflate_end(&z, &o)) != Z_STREAM_END) {
+        log_msg("%s: zlib error %d", c->id, st);
+        goto out_z;
     }
 
     zip_tail(&o, name, dosTime, dosDate, crc, z.total_out, unc);
@@ -243,9 +256,9 @@ int stream_zip(const card_t *c, const datetime_t *t, stream_t *s, chunk_cb cb, v
         goto out_z;
 
     wc_Sha256Final(&shaMcd, h);
-    hex(h, s->sha_mcd);
+    hex_of(h, sizeof(h), s->sha_mcd);
     wc_Sha256Final(&o.sha, h);
-    hex(h, s->sha_zip);
+    hex_of(h, sizeof(h), s->sha_zip);
     /* the last chunk (smaller than CHUNK, or even empty if the zip ended right on a boundary) */
     if (cb(o.buf, o.used, 1, u) == 0)
         r = 0;
@@ -294,12 +307,38 @@ static int zip_to_file(const unsigned char *d, size_t n, int last, void *u)
     return 0;
 }
 
+/* What was written to dest, read back: it has to be n bytes whose SHA-256 is want. The bar goes on from total (the
+ * reading back is the second half of total * 2). buf has room for a BLOCK. 0 = it is */
+static int read_back(const char *dest, unsigned char *buf, long long n, const unsigned char *want, long long total,
+                     int (*progress)(long long done, long long total))
+{
+    unsigned char h[WC_SHA256_DIGEST_SIZE];
+    wc_Sha256 sha;
+    long long back = 0;
+    int fd, k = -1, r = -1;
+    wc_InitSha256(&sha);
+    if ((fd = open(dest, O_RDONLY)) >= 0) {
+        while ((k = read(fd, buf, BLOCK)) > 0) {
+            wc_Sha256Update(&sha, buf, k);
+            back += k;
+            if (progress)
+                progress(total + back * total / (n ? n : 1), total * 2);
+        }
+        close(fd);
+        wc_Sha256Final(&sha, h);
+        if (k == 0 && back == n && !memcmp(h, want, sizeof(h)))
+            r = 0;
+    }
+    wc_Sha256Free(&sha);
+    return r;
+}
+
 int card_write_file(const char *card, const char *dest, int ps2, int (*progress)(long long done, long long total))
 {
     unsigned char *in = malloc(PIECE), *ecc = ps2 ? malloc(PIECE / PAGE * PAGE_ECC) : NULL;
-    unsigned char h1[WC_SHA256_DIGEST_SIZE], h2[WC_SHA256_DIGEST_SIZE];
-    wc_Sha256 sha, back;
-    long long total, at = 0, wrote = 0, read2 = 0;
+    unsigned char h1[WC_SHA256_DIGEST_SIZE];
+    wc_Sha256 sha;
+    long long total, at = 0, wrote = 0;
     int r = -1, fd, n = 0, k, got, done;
     ecc_tables();
     if (!in || (ps2 && !ecc) || (fd = open(card, O_RDONLY)) < 0)
@@ -337,21 +376,7 @@ int card_write_file(const char *card, const char *dest, int ps2, int (*progress)
             progress(at, total * 2);
     }
     wc_Sha256Final(&sha, h1);
-    /* read back: the file there has to be what was written */
-    wc_InitSha256(&back);
-    if ((fd = open(dest, O_RDONLY)) >= 0) {
-        while ((n = read(fd, in, BLOCK)) > 0) {
-            wc_Sha256Update(&back, in, n);
-            read2 += n;
-            if (progress)
-                progress(total + read2 * total / (wrote ? wrote : 1), total * 2);
-        }
-        close(fd);
-        wc_Sha256Final(&back, h2);
-        if (n == 0 && read2 == wrote && !memcmp(h1, h2, sizeof(h1)))
-            r = 0;
-    }
-    wc_Sha256Free(&back);
+    r = read_back(dest, in, wrote, h1, total, progress);   /* (the file there has to be what was written) */
 end_sha:
     wc_Sha256Free(&sha);
 end:
@@ -365,24 +390,21 @@ end:
 
 int card_export(const card_t *c, const char *dest, int ps2, int (*progress)(long long done, long long total))
 {
-    static unsigned char comp[BLOCK];
     unsigned char *in = malloc(PIECE), *ecc = ps2 ? malloc(PIECE / PAGE * PAGE_ECC) : NULL;
-    unsigned char h1[WC_SHA256_DIGEST_SIZE], h2[WC_SHA256_DIGEST_SIZE];
+    unsigned char h1[WC_SHA256_DIGEST_SIZE];
     zip_file_t f = {dest, 0};
     datetime_t t;
     stream_t s;
     output_t o;
     z_stream z;
-    wc_Sha256 sha;
     uLong crc = crc32(0, NULL, 0);
     unsigned long unc = 0;
     unsigned dosTime, dosDate;
-    long long total = c->size, at = 0, back = 0;
+    long long total = c->size, at = 0;
     char name[80];
-    int r = -1, fd, n = 0, k, got, st;
+    int r = -1, fd, n = 0, k, got;
     local_time(&t);
-    dosTime = (t.hour << 11) | (t.minute << 5) | (t.second / 2);
-    dosDate = ((t.year - 1980) << 9) | (t.month << 5) | t.day;
+    dos_time(&t, &dosTime, &dosDate);
     snprintf(name, sizeof(name), "%s%s", c->base, ps2 ? ".ps2" : dev->ext);
     memset(&s, 0, sizeof(s));
     memset(&o, 0, sizeof(o));
@@ -413,47 +435,20 @@ int card_export(const card_t *c, const char *dest, int ps2, int (*progress)(long
         }
         unc += k;
         crc = crc32(crc, d, k);
-        z.next_in = (unsigned char *)d;
-        z.avail_in = k;
-        do {
-            z.next_out = comp;
-            z.avail_out = sizeof(comp);
-            deflate(&z, Z_NO_FLUSH);
-            emit(&o, comp, sizeof(comp) - z.avail_out);
-        } while (z.avail_out == 0 && !o.error);
+        zip_deflate(&z, &o, d, k);
         if (o.error)
             goto end_z;
         at += n;
         if (progress)
             progress(at, total * 2);
     }
-    do {
-        z.next_out = comp;
-        z.avail_out = sizeof(comp);
-        st = deflate(&z, Z_FINISH);
-        emit(&o, comp, sizeof(comp) - z.avail_out);
-    } while (st == Z_OK || st == Z_BUF_ERROR);
-    if (st != Z_STREAM_END)
+    if (zip_deflate_end(&z, &o) != Z_STREAM_END)
         goto end_z;
     zip_tail(&o, name, dosTime, dosDate, crc, z.total_out, unc);
     if (o.error || zip_to_file(o.buf, o.used, 1, &f) != 0)
         goto end_z;
     wc_Sha256Final(&o.sha, h1);
-    /* read back: the file there has to be the .zip that was made */
-    wc_InitSha256(&sha);
-    if ((fd = open(dest, O_RDONLY)) >= 0) {
-        while ((n = read(fd, in, BLOCK)) > 0) {
-            wc_Sha256Update(&sha, in, n);
-            back += n;
-            if (progress)
-                progress(total + back * total / f.wrote, total * 2);
-        }
-        close(fd);
-        wc_Sha256Final(&sha, h2);
-        if (n == 0 && back == f.wrote && !memcmp(h1, h2, sizeof(h1)))
-            r = 0;
-    }
-    wc_Sha256Free(&sha);
+    r = read_back(dest, in, f.wrote, h1, total, progress);   /* (the file there has to be the .zip that was made) */
 end_z:
     deflateEnd(&z);
     wc_Sha256Free(&o.sha);
