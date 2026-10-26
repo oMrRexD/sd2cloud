@@ -94,19 +94,40 @@ static void delete_old(const card_t *c, const char *folder, const char *newId)
  * it (or no sync is under way), 0 = not yet, -1 = it couldn't be had (said in googleError) */
 static int online = 1;
 
-static int go_online(void)
+/* a step of getting online once the cards are being sent (the network starting, Google reached), said on the sync's
+ * screen instead of "Uploading": the card or save on its way stays there, and so do its buttons */
+static void online_step(const char *text)
+{
+    work_text(text);
+    ui_scene(syncView ? scene_sync : scene_upload);
+#ifdef DEBUG_BUILD
+    debug_capture_if('g');   /* (script: the sync's screen getting online) */
+    if (debug_take('o'))   /* (script: circle while it gets online) */
+        cancelLatched = 1;
+#endif
+}
+
+/* within = once the cards are being sent (card_folder): the steps on the sync's screen, and circle and square heard
+ * while the network waits too; else the sign-in before the sync's screen, with screens of its own */
+static int go_online(int within)
 {
     char t[sizeof(googleError)];
+    const char *was = workText;
     int r;
     if (online)
         return online > 0 ? 0 : -1;
     googleError[0] = 0;
 #ifdef DEBUG_BUILD
-    r = debugDry ? 0 : ensure_google(!igrMode);   /* (a dry sync: nothing goes, nothing is asked) */
+    r = debugDry ? 0 /* (a dry sync: nothing goes, nothing is asked) */
+        : within ? google_access(!igrMode, stop_asked, online_step) : ensure_google(!igrMode);
 #else
-    r = ensure_google(!igrMode);
+    r = within ? google_access(!igrMode, stop_asked, online_step) : ensure_google(!igrMode);
 #endif
+    if (within)
+        work_text(was);
     if (r != 0) {
+        if (r < 0 && backupSkip)   /* square while it got online: that card is left out, and the next one tries again */
+            return -1;
         online = -1;
         if (r < 0)   /* backed out of the sign-in: the same as cancelling */
             backupCancelled = 1;
@@ -127,7 +148,7 @@ int card_folder(const card_t *c, char *folderId, size_t size)
 {
     char key[200];
     const char *cache;
-    if (go_online() != 0)
+    if (go_online(1) != 0)
         return -1;
     if (drive_layout() == 2)   /* (each card in a folder of its own, its group's in its device's: drive.c) */
         return drive_folder_of(c, 0, NULL, folderId, size);
@@ -257,7 +278,7 @@ void run_backup(int mode, int rotate)
     googleError[0] = 0;
     online = 0;   /* (asked for once something has to go: go_online) */
     if (!DRY && !google_has_access()) {   /* no account yet: the sign-in first, before the screen of the sync */
-        if (go_online() != 0) {
+        if (go_online(0) != 0) {
             if (!backupCancelled) {
                 add_result(COLOR_ERROR, "%s", googleError);
                 failed++;

@@ -65,24 +65,40 @@ static void show_login(const char *url, const char *code, int seconds)
 
 static int cancel_login(void) { return (pad_buttons() & PAD_CIRCLE) != 0; }
 
+/* a step of getting there, said: on a screen of its own, or by what it is part of (say) */
+static void step(void (*say)(const char *text), int text)
+{
+    if (say)
+        say(T(text));
+    else
+        message(0, NULL, COLOR_TEXT, T(text));
+}
+
 /* network + access to Google. 0 = ok, -1 = the user backed out of the sign-in (nothing to say), else the id of the
  * error message */
-int ensure_google(int allowLogin)
+int ensure_google(int allowLogin) { return google_access(allowLogin, NULL, NULL); }
+
+/* the same from within something under way (the sync): stop is asked all along, the waits of the network for the cable
+ * and the router included (in the middle of a request, it is the one google_set_stop has: the caller's), != 0 = give
+ * up, which returns -1; say tells the steps on its screen */
+int google_access(int allowLogin, int (*stop)(void), void (*say)(const char *text))
 {
     int r;
     if (!networkUp) {
-        message(0, NULL, COLOR_TEXT, T(T_NET_STARTING));
-        if ((r = network_up()) != 0)
+        step(say, T_NET_STARTING);
+        if ((r = network_up(stop)) != 0)
             return r;
         networkUp = 1;
     }
     if (google_init() != 0)
         return T_ERR_INTERNET;
     if (google_has_access()) {
-        message(0, NULL, COLOR_TEXT, T(T_SIGNING_IN));
+        step(say, T_SIGNING_IN);
         r = google_refresh();
         if (r == 0)
             return 0;
+        if (stop && stop())
+            return -1;
         if (r == -1)
             return T_ERR_INTERNET;
         refreshToken[0] = 0;   /* revoked or expired */
@@ -120,7 +136,7 @@ void account_screen(void)
         return;
     if (!networkUp) {
         message(0, NULL, COLOR_TEXT, T(T_NET_STARTING));
-        networkUp = network_up() == 0;
+        networkUp = network_up(NULL) == 0;
     }
     google_logout(networkUp && google_init() == 0);
     note_igr_auto(NULL);

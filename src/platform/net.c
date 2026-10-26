@@ -42,13 +42,28 @@ static int dhcp_bound(void)
     return i.dhcp_status == DHCP_STATE_BOUND;
 }
 
-static int wait_for(int (*check)(void), int ms)
+/* a moment of a wait (200 ms, the network looked at as often as ever), stop asked meanwhile often enough for a button
+ * pressed. 1 = given up */
+static int pause_or_stop(int (*stop)(void))
+{
+    int k;
+    for (k = 0; k < 4; k++) {
+        if (stop && stop())
+            return 1;
+        sleep_ms(50);
+    }
+    return 0;
+}
+
+/* 0 = it came, -1 = not within ms, 1 = given up (stop) */
+static int wait_for(int (*check)(void), int ms, int (*stop)(void))
 {
     u64 end = now_ms() + ms;
     while (!check()) {
         if (now_ms() >= end)
             return -1;
-        sleep_ms(200);
+        if (pause_or_stop(stop))
+            return 1;
     }
     return 0;
 }
@@ -97,7 +112,7 @@ void *__wrap_memalign(size_t align, size_t size)
     return zeroed(__real_memalign(align, size), size, align >= 64 && align % 64 == 0 && size % 64 == 0);
 }
 
-int network_up(void)
+int network_up(int (*stop)(void))
 {
     struct ip4_addr ip, nm, gw;
     int fresh = !netStarted, i;
@@ -131,7 +146,11 @@ int network_up(void)
 #endif
     }
     /* (right after a game the link has taken more than 5 s to come up, and a sync at IGR failed for it) */
-    if (wait_for(link_up, 12000) != 0) {
+    if ((i = wait_for(link_up, 12000, stop)) > 0) {
+        log_msg("network: given up while waiting for the link, after %d ms", (int)(now_ms() - t0));
+        return -1;
+    }
+    if (i != 0) {
         log_msg("network: no link (cable?) after %d ms", (int)(now_ms() - t0));
 #ifdef DEBUG_BUILD
         debugNoLinkOnce = 0;
@@ -157,7 +176,10 @@ int network_up(void)
                 last = now_ms();
                 asked++;
             }
-            sleep_ms(200);
+            if (pause_or_stop(stop)) {
+                log_msg("network: given up while waiting for an address, after %d ms", (int)(now_ms() - t0));
+                return -1;
+            }
         }
         log_msg("network: the router was asked for an address %d time(s), %d ms after the start", asked, (int)(now_ms() - t0));
         if (!dhcp_bound()) {

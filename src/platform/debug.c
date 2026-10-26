@@ -25,7 +25,9 @@
  * download of more than 100 KB breaks off halfway (it is taken up where it stopped). For the rescue (at the end of this file): "@<seconds>" at the very
  * start is the test's time limit, "Y" hangs and "Z" crashes, to try it. "v" captures the screen of a save sent by
  * itself to Drive (the backup by save), once past half of them, and "J" the one of a Memory Card's saves being
- * checked. */
+ * checked. As IGR: "s" right after the "I" captures its first screen, and "N" works after its cards are checked too;
+ * "g" captures the sync's screen as it starts getting online, and "o" presses circle there. "c" right after the answer
+ * that keeps going (circle's question, square's) captures the screen put back. */
 char script[256];
 int scriptPos, hasScript;
 int nRescue, rescueSeconds = 300, pastEnd;

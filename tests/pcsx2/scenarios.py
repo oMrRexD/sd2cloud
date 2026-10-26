@@ -379,6 +379,14 @@ SCENARIOS = [
      "files": {"MemoryCards/PS2/Card1/notes.txt": b"x", "SD2Cloud/token.dat": b"refresh_token = test\r\n",
                "SD2Cloud/state-debug.ini": b"[slot/memcard]\r\nsave:BASLUS-99999TESTS = 4d2170dfd47ab2de 325d930c1bf81199\r\n"},
      "memcard": "memcard.ps2", "settings": "[cards]\r\nsaves = yes\r\n", "script": "I"},
+    # circle from IGR's first screen on: asked, and "yes" goes straight back, before the cards are even read
+    {"name": "igr-cancel-first", "what": "after IGR, circle on its first screen: nothing read or sent, straight back",
+     "cards": CARDS, "files": {"SD2Cloud/token.dat": b"refresh_token = test\r\n"}, "script": "IKX"},
+    # and while the sync gets online, the Memory Card's save on its way (the network's first try finds no cable: nothing
+    # reaches Google, whatever happens)
+    {"name": "igr-cancel-online", "what": "after IGR, circle while the sync gets online: straight back, nothing sent",
+     "files": {"MemoryCards/PS2/Card1/notes.txt": b"x", "SD2Cloud/token.dat": b"refresh_token = test\r\n"},
+     "memcard": "memcard.ps2", "settings": "[cards]\r\nsaves = yes\r\n", "script": "INoX"},
     # the tools (SELECT) and the templates. The keyboard starts on A: DD>> is W. Triangle has a template's options, on
     # the list (LXDT) or with the template open (LXDXT)
     {"name": "template-create", "what": "a template made of two saves marked on a card, under the name it is offered; "

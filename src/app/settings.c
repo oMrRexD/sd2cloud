@@ -445,7 +445,7 @@ static void check_updates_now(int back)
     if (!updateAvailable) {
         if (!networkUp) {
             message(0, NULL, COLOR_TEXT, T(T_NET_STARTING));
-            if ((r = network_up()) != 0) {
+            if ((r = network_up(NULL)) != 0) {
                 snprintf(t, sizeof(t), "%s %s", T(T_UPDATE_CHECK_FAILED), T(r));
                 message_wait(0, NULL, COLOR_ERROR, t);
                 return;

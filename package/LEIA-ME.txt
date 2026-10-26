@@ -377,7 +377,8 @@ SINCRONIZAÇÃO AUTOMÁTICA APÓS UM JOGO (IGR)
 3. No OPL, ative também "Slot(s) de Bootcard IGR" (página MMCE), com o slot do sd2psx ou BOTH: ao sair de um
    jogo, o OPL volta para o BootCard, onde o pacote está instalado.
 A partir daí, sair de um jogo pelo IGR abre o SD2Cloud: ele envia os cartões alterados, mostra "Envio
-concluído" e volta para o OPL. Nesse modo, cancelar o envio também volta para o OPL.
+concluído" e volta para o OPL. Nesse modo, o botão O cancela desde a primeira tela, inclusive enquanto os
+cartões são verificados e a conexão é feita, e cancelar também volta para o OPL.
 O SD2Cloud pode ficar em qualquer pasta, no MMCE ou em outro dispositivo: sempre que é aberto, ele registra onde
 está (no sd2cloud.ini do MMCE, "app_path"; sem sd2psx, no próprio pacote, com os drivers desse dispositivo), e o
 pacote o abre de lá. Uma pasta de APPS renomeada ou movida no MMCE também é encontrada pelo pacote, mesmo antes de

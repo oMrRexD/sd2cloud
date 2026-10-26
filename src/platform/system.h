@@ -57,7 +57,9 @@ void log_raw(const char *d, size_t n);
 void log_msg(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
 /* a sync started by IGR failed: what the log said of that run goes to <data>sync-error.txt (the last failure only) */
 void log_save_sync_error(void);
-int network_up(void);                       /* 0 = ok, else the id of the message to show */
+/* 0 = ok, else the id of the message to show; stop (NULL = none) is asked while it waits for the cable and the
+ * router: != 0 = given up, -1 */
+int network_up(int (*stop)(void));
 void run_elf(const char *path) __attribute__((noreturn));   /* falls back to the OSD if it can't */
 /* where a program to open is: the sd2psx (or PCSX2's host:), a memory card, USB, MX4SIO, the HDD exFAT or APA */
 enum { DEV_SD, DEV_MC, DEV_USB, DEV_MX4SIO, DEV_ATA, DEV_HDD };

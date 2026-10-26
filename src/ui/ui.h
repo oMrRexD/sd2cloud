@@ -42,6 +42,7 @@ int ui_height(void);
 /* ---- scenes: draw(t) is called every frame on the drawing thread, t = seconds since this scene started. The main
  * thread changes what the scene shows between ui_lock and ui_unlock (it waits for the frame being drawn to end) */
 void ui_scene(void (*draw)(float t));
+void (*ui_scene_now(void))(float t);   /* the scene on the screen (to put it back after another one) */
 void ui_lock(void);
 void ui_unlock(void);
 float ui_clock(void);              /* seconds since the app started (animations that go on across scenes) */

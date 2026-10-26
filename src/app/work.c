@@ -12,6 +12,8 @@ void checking_progress(int i, int n, const card_t *c)
     snprintf(t, sizeof(t), "%s %s", T(T_CHECKING), c->name[0] ? c->name : c->base);
     dlg_line(FONT_TEXT, COLOR_DIM, 0, t);
     dlg_bar(n ? (i * 1000) / n : 0, NULL);
+    if (igrMode)   /* (at IGR, circle gives the sync up from its first screen on: autosync.c) */
+        dlg_buttons(BUTTON_CIRCLE, T_CANCEL, 0, 0);
     dlg_show();
 #ifdef DEBUG_BUILD
     if (n && i * 2 >= n)
@@ -48,11 +50,37 @@ void watch_cancel(void)
 
 int watchOff;   /* the device isn't watched (device_watch): something is under way that can't be left halfway */
 
+/* The screen a question is asked over, in the middle of what is being done: put back as it was when the answer is to
+ * keep going. What is under way may not draw it again for a while (the network starting waits for the cable and the
+ * router) */
+static void (*underScene)(float t);
+static dialog_t under;
+
+static void ask_over(void)
+{
+    ui_lock();
+    underScene = ui_scene_now();
+    under = dlg;
+    ui_unlock();
+}
+
+static void back_under(void)
+{
+    ui_lock();
+    dlg = under;
+    ui_unlock();
+    ui_scene(underScene);
+#ifdef DEBUG_BUILD
+    debug_capture_if('c');   /* (script: the screen put back) */
+#endif
+}
+
 /* 1 = yes, cancel */
 int confirm_cancel(int title, int text)
 {
     int yes;
     watchOff++;   /* (asked in the middle of what is being done) */
+    ask_over();
     sound_play(SND_BACK);
     dlg_new(COLOR_WARN, T(title));
     dlg_line(FONT_TEXT, COLOR_TEXT, 0, T(text));
@@ -63,6 +91,8 @@ int confirm_cancel(int title, int text)
     cancelLatched = 0;
     circleDown = 1;   /* the circle of "keep going": it counts again only after being released */
     log_msg("cancel? %s", yes ? "yes" : "no, keep going");
+    if (!yes)
+        back_under();
     watchOff--;
     return yes;
 }
@@ -76,6 +106,7 @@ int confirm_skip(const card_t *c)
     u32 b;
     int r;
     watchOff++;
+    ask_over();
     sound_play(SND_BACK);
     snprintf(t, sizeof(t), T(T_SKIP_ASK), c->base);
     dlg_new(COLOR_WARN, t);
@@ -90,6 +121,8 @@ int confirm_skip(const card_t *c)
     skipLatched = cancelLatched = 0;
     circleDown = squareDown = 1;   /* (the button that answered counts again only after being released) */
     log_msg("skip %s? %s", c->id, r == 2 ? "yes, and no more sync for it" : r ? "yes" : "no, keep going");
+    if (!r)
+        back_under();
     watchOff--;
     return r;
 }

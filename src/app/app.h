@@ -112,6 +112,7 @@ typedef struct {
 
 /* ------------------------------------------------------------ account.c */
 int ensure_google(int allowLogin);
+int google_access(int allowLogin, int (*stop)(void), void (*say)(const char *text));
 void account_screen(void);
 int ask_connect(void);
 

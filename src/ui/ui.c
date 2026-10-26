@@ -232,6 +232,8 @@ void ui_scene(void (*draw)(float t))
     ui_unlock();
 }
 
+void (*ui_scene_now(void))(float t) { return sceneFn; }
+
 float ui_clock(void) { return (now_ms() - clockStart) / 1000.0f; }
 
 #ifdef DEBUG_BUILD

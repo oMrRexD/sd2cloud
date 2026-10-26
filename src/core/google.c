@@ -142,6 +142,21 @@ static int on_xfer(void *u, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ult
 void google_set_poll(void (*poll)(void)) { pollHook = poll; }
 void google_set_stop(int (*stop)(void)) { stopHook = stop; }
 
+/* the wait before a request is tried again: the controller watched meanwhile, as during a request. 1 = stopped
+ * (userStop: nothing more is tried) */
+static int retry_wait(int ms)
+{
+    u64 end = now_ms() + ms;
+    while (now_ms() < end) {
+        if (pollHook)
+            pollHook();
+        if (stopHook && stopHook())
+            return userStop = 1;
+        sleep_ms(50);
+    }
+    return 0;
+}
+
 static int on_debug(CURL *c, curl_infotype type, char *d, size_t n, void *u)
 {
     (void)c;
@@ -275,8 +290,8 @@ static long api_typed(const char *method, const char *url, const char *body, con
         if (c == CURLE_OK && r->http != 429 && r->http < 500)
             return r->http;
         log_msg("%s %s: %s", method, url, c != CURLE_OK ? curl_text(c) : "429/5xx");
-        if (attempt < max)
-            sleep_ms(3000);
+        if (attempt < max && retry_wait(3000))
+            break;
     }
     if (c != CURLE_OK)
         fail("%s", curl_text(c));
@@ -327,8 +342,8 @@ static long oauth(const char *url, char *fields, response_t *r)
         curl_slist_free_all(hdr);
         if (c == CURLE_OK && r->http < 500)
             break;
-        if (attempt < 3)
-            sleep_ms(3000);
+        if (userStop || (attempt < 3 && retry_wait(3000)))   /* (stopped: not tried again) */
+            break;
     }
     free(fields);
     if (c != CURLE_OK)
@@ -925,7 +940,8 @@ static int on_chunk(const unsigned char *d, size_t n, int last, void *u)
             return -1;
         }
         /* ask where it stopped */
-        sleep_ms(2000);
+        if (retry_wait(2000))
+            return -1;
         h = put(up, NULL, 0, 0, total);
         if (userStop)
             return -1;

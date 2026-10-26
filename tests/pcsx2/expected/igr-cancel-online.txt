@@ -1,0 +1,20 @@
+# log
+SD2Cloud <version> -- program in host:APPS/SD2Cloud/ (host:SD2CLOUD-DEBUG.ELF), data in host:SD2Cloud/, manual
+settings: [app] app_path = host:SD2CLOUD-DEBUG.ELF (0)
+settings: [drive] layout = 2 (0)
+0 card(s) on the microSD
+the console's clock goes on
+signature of BASLUS-99999TESTS...
+slot/mc1: 0 of the 1 saves list what they did when they were last sent: not read
+slot/mc1: 1 saves, read in N ms; 1 changed since they were last sent
+[script] X
+cancel? yes
+slot/mc1: its folder on Drive not found
+returning to: osd
+(end: OSD)
+
+# files
+2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881  MemoryCards/PS2/Card1/notes.txt
+b04fe24d844dbc33f73751a1c4fec06a7fa73aaad0ce64bfb7d3f281df639386  SD2Cloud/sd2cloud.ini
+7d1a40d801b3ac77ad96195aee0311d26cd315c1de03702004526ea0bb51677b  SD2Cloud/state-debug.ini
+1772af4675a992f94fc6527e0d3bb946246e417f5fb7d4d819e6502ed4e6b7ba  SD2Cloud/token.dat

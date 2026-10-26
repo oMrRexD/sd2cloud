@@ -358,7 +358,8 @@ AUTOMATIC SYNC AFTER A GAME (IGR)
 3. In OPL, also turn on "IGR Bootcard Slot(s)" (MMCE page), set to the sd2psx slot or BOTH: when you exit a
    game, OPL switches back to the BootCard, where the package is installed.
 From then on, exiting a game with IGR starts SD2Cloud: it uploads the changed cards, shows "Upload complete"
-and returns to OPL. In this mode, cancelling the upload also returns to OPL.
+and returns to OPL. In this mode, the O button cancels from the first screen on, also while the cards are
+checked and while it connects, and cancelling also returns to OPL.
 SD2Cloud can be kept in any folder, on the MMCE or on another device: every time it is opened, it records where
 it is (in sd2cloud.ini on the MMCE, "app_path"; without an sd2psx, in the package itself, with the drivers of that
 device), and the package starts it from there. A folder of APPS on the MMCE that was renamed or moved is found by
