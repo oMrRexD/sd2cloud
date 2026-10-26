@@ -829,6 +829,12 @@ T_MIGRATE_DELETE_TEXT = 削除するセーブデータ: %d。ゲーム ID のな
 T_MIGRATE_KEEP = 残す
 # One line. English: Conversion to Game ID complete
 T_MIGRATE_DONE = Game ID形式への変換が完了しました
+# One line. English: Conversion to Game ID cancelled
+T_MIGRATE_CANCELLED = Game ID形式への変換をキャンセルしました
+# One line. English: Cancel the conversion?
+T_MIGRATE_CANCEL_TITLE = 変換をキャンセルしますか？
+# Up to 3 lines. English: The saves already copied stay on their games' cards. The card they come from will not be changed.
+T_MIGRATE_CANCEL_TEXT = コピー済みのセーブデータは各ゲームのカードに残ります。コピー元のカードは変更されません。
 # Button. English: Remove copied saves
 T_MIGRATE_REMOVE = コピー済みを削除
 # One line. English: Not connected

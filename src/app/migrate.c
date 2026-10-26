@@ -226,9 +226,44 @@ static int mg_conflicts(int *same)
 /* The whole split on one screen: each game by its name, the icon of its first save turning, and "N of M" of the
  * games; one bar for all of it, the bytes of the cards made and of the saves copied, with the time left */
 static long long mgDone, mgTotal;
+static int mgStop;   /* circle, and the answer was to cancel: the saves copied so far stay, the rest doesn't go */
+
+/* circle while the saves go: asked, there and then (1 = cancelled). While a new card is being made it is only noted,
+ * and asked once the card is there */
+static int mg_cancel(void)
+{
+    watch_cancel();
+    if (!mgStop && cancelLatched && confirm_cancel(T_MIGRATE_CANCEL_TITLE, T_MIGRATE_CANCEL_TEXT)) {
+        mgStop = 1;
+        ui_lock();
+        workText = T(T_CANCELLING);
+        workFixed = 1;
+        ui_unlock();
+        upload_screen(mgDone, mgTotal);
+    }
+    return mgStop;
+}
+
+/* (a save's way into its game's card) cancelled while it is read or written: what was written of it gives its room
+ * back, and the card is left without it */
+static int mg_step(int phase, long long done, long long total)
+{
+#ifdef DEBUG_BUILD
+    if (phase == MCFS_STEP_WRITE && total && done * 2 >= total && debug_take('k'))
+        cancelLatched = 1;   /* (script: circle halfway through the writing) */
+#else
+    (void)done, (void)total;
+#endif
+    return phase != MCFS_STEP_CHECK && mg_cancel();
+}
 
 static void mg_made(long long done, long long total)
 {
+    watch_cancel();
+#ifdef DEBUG_BUILD
+    if (total && done * 2 >= total && debug_take('k'))
+        cancelLatched = 1;   /* (script: circle halfway through the card's making) */
+#endif
     upload_screen(mgDone + done, mgTotal);
 #ifdef DEBUG_BUILD
     if (done * 2 >= total)
@@ -290,11 +325,12 @@ static int mg_go(void)
     for (mgTotal = mgDone = 0, k = 0; k < mg.nGames; k++)
         if (mg.games[k].on)
             mgTotal += (mg.games[k].card ? 0 : (long long)mg.games[k].mb << 20) + mg.games[k].room;
-    card_work(mg.src, 0, T(T_RESIZE_COPYING), 1);
+    mgStop = 0;
+    card_work(mg.src, 0, T(T_RESIZE_COPYING), 0);   /* (circle cancels: mg_cancel) */
     upload_screen(0, mgTotal);
-    for (k = 0; k < mg.nGames; k++) {
+    for (k = 0; k < mg.nGames && !mg_cancel(); k++) {
         mg_game_t *g = &mg.games[k];
-        int fresh = !g->card;
+        int fresh = !g->card, in = 0;   /* in = its saves that went into its card */
         long long end = mgDone + (fresh ? (long long)g->mb << 20 : 0) + g->room;   /* (where the bar is after it) */
         if (!g->on)
             continue;
@@ -305,6 +341,8 @@ static int mg_go(void)
             g->card = dest_card_sized(g->folder, 1, (long long)g->mb << 20);
             destProgress = NULL;
             mgDone += (long long)g->mb << 20;
+            if (!mgStop)
+                work_text(T(T_RESIZE_COPYING));
         }
         if (!g->card || card_free(g->card, mg.src)) {   /* (it couldn't be made, said; or the device is on it, and
                                                           couldn't be moved off: its saves don't go) */
@@ -313,35 +351,43 @@ static int mg_go(void)
             mgDone = end;
             continue;
         }
-        work_text(T(T_RESIZE_COPYING));
-        for (i = g->first; i < g->first + g->n; i++) {
+        for (i = g->first; i < g->first + g->n && !mg_cancel(); i++) {
             int s = mg.order[i], r, newer = mg.done[s] & 0x20;
             upload_screen(mgDone, mgTotal);
             mgDone += mg.room[s];
-            if (mg.done[s] == MG_THERE) {
-                there++;
+            if (mg.done[s] == MG_THERE)
                 continue;
-            }
             if ((mg.done[s] & 0xF) == MG_KEPT) {   /* a save of that folder, saved differently, is on the game's card */
                 if (policy == 0 || (policy == 2 && !newer)) {
                     mg.done[s] = MG_KEPT;
                     continue;
                 }
                 /* (that one in its place, kept aside first: back there if this one can't go in) */
-                r = mcfs_replace_save(mg.src->path, NULL, mg.saves[s].folder, g->card->path, NULL);
+                r = mcfs_replace_save(mg.src->path, NULL, mg.saves[s].folder, g->card->path, mg_step);
             } else
-                r = mcfs_copy_save(mg.src->path, mg.saves[s].folder, g->card->path, NULL);
+                r = mcfs_copy_save(mg.src->path, mg.saves[s].folder, g->card->path, mg_step);
+            log_msg("by game: %s into %s: %d", mg.saves[s].folder, g->card->id, r);
+            if (r == MCFS_ERR_CANCELLED)   /* (it stays where it was, as if it hadn't been reached) */
+                break;
             mg.done[s] = r == MCFS_OK ? MG_COPIED : MG_FAILED;
             if (r == MCFS_OK)
-                copied++;
+                copied++, in++;
             else
                 failed++;
-            log_msg("by game: %s into %s: %d", mg.saves[s].folder, g->card->id, r);
         }
-        upload_screen(mgDone = end, mgTotal);
+        if (!mgStop)
+            upload_screen(mgDone = end, mgTotal);
+        if (mgStop && fresh && !in) {   /* a card made for a game none of whose saves got into it: no card at all */
+            char dir[200];
+            snprintf(dir, sizeof(dir), "%s%s/%s", sdRoot, dev->cards, g->folder);
+            cards_delete(g->card);
+            rmdir(dir);   /* (its folder, when nothing else is in it) */
+            g->card = NULL;
+            continue;
+        }
         cards_recheck(g->card);
         card_back();
-        if (fresh) {   /* (a new game card: its templates too, as the device's new cards get them) */
+        if (fresh && !mgStop) {   /* (a new game card: its templates too, as the device's new cards get them) */
             work_text(T(T_TPL_APPLYING));
             templates_new_card(g->card, 0);
         }
@@ -349,10 +395,12 @@ static int mg_go(void)
     work_item_done();
     mg_game_shown(NULL, 0, 0);
     card_work_done();
-    log_msg("by game: %d game(s), %d copied, %d there, %d failed", games, copied, there, failed);
+    for (i = 0; i < mg.n; i++)   /* (on their games' cards already: the ones the copy didn't reach too) */
+        there += mg.done[i] == MG_THERE;
+    log_msg("by game: %d game(s), %d copied, %d there, %d failed%s", games, copied, there, failed, mgStop ? ", cancelled" : "");
     /* how it went: X goes on. The saves now on their game's card (copied, or there already) can be removed from the
      * card they came from, with R2: out of the way of a press made too fast, and asked again before anything goes */
-    dlg_new(failed ? COLOR_WARN : COLOR_OK, T(T_MIGRATE_DONE));
+    dlg_new(failed || mgStop ? COLOR_WARN : COLOR_OK, T(mgStop ? T_MIGRATE_CANCELLED : T_MIGRATE_DONE));
     snprintf(t, sizeof(t), T(T_TPL_COPIED_N), copied);
     dlg_line(FONT_TEXT, COLOR_TEXT, 2, t);
     if (there) {

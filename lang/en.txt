@@ -831,6 +831,12 @@ T_MIGRATE_DELETE_TEXT = Saves to remove: %d. Saves without a game ID and saves n
 T_MIGRATE_KEEP = Keep
 # One line.
 T_MIGRATE_DONE = Conversion to Game ID complete
+# One line.
+T_MIGRATE_CANCELLED = Conversion to Game ID cancelled
+# One line.
+T_MIGRATE_CANCEL_TITLE = Cancel the conversion?
+# Up to 3 lines.
+T_MIGRATE_CANCEL_TEXT = The saves already copied stay on their games' cards. The card they come from will not be changed.
 # Button.
 T_MIGRATE_REMOVE = Remove copied saves
 # One line.

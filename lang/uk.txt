@@ -828,6 +828,12 @@ T_MIGRATE_DELETE_TEXT = Збережень до видалення: %d. Збер
 T_MIGRATE_KEEP = Залишити
 # One line. English: Conversion to Game ID complete
 T_MIGRATE_DONE = Перетворення на Game ID завершено
+# One line. English: Conversion to Game ID cancelled
+T_MIGRATE_CANCELLED = Перетворення на Game ID скасовано
+# One line. English: Cancel the conversion?
+T_MIGRATE_CANCEL_TITLE = Скасувати перетворення?
+# Up to 3 lines. English: The saves already copied stay on their games' cards. The card they come from will not be changed.
+T_MIGRATE_CANCEL_TEXT = Уже скопійовані збереження залишаться на картках ігор. Вихідну картку не буде змінено.
 # Button. English: Remove copied saves
 T_MIGRATE_REMOVE = Видалити скопійовані
 # One line. English: Not connected

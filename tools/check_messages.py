@@ -385,7 +385,8 @@ PLACE = {
     # (the box's title); the Memory Card's saves sent by themselves (one; read first; the card that didn't answer, after
     # a card's name in the results); a card that had nothing new, in the sync's list
     "T_HDD_EXFAT": ("text", 320, 1), "T_HDD_APA": ("text", 320, 1), "T_CREATE_HINT_FILE": ("small", 212, 2),
-    "T_MIGRATE_DONE": ("text", WIDE, 1), "T_SAVES_SENT_ONE": ("small", 400, 1), "T_SAVES_CHECKING": ("text", 296, 1),
+    "T_MIGRATE_DONE": ("text", WIDE, 1), "T_MIGRATE_CANCELLED": ("text", WIDE, 1),
+    "T_MIGRATE_CANCEL_TITLE": ("text", DIALOG, 1), "T_MIGRATE_CANCEL_TEXT": ("text", DIALOG, 3), "T_SAVES_SENT_ONE": ("small", 400, 1), "T_SAVES_CHECKING": ("text", 296, 1),
     "T_MEMCARD_NO_ANSWER": ("small", 300, 1), "T_SY_UNCHANGED": ("small", 220, 1),
 }
 PARAGRAPH = ("text", DIALOG, 3)     # error messages and the rest: up to 3 lines in a box

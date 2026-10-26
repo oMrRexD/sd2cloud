@@ -184,12 +184,13 @@ CARTÕES
 - Alterar tamanho: os saves são copiados para um novo cartão do tamanho escolhido, que assume o lugar do atual
   depois de verificado; se algo falhar, o cartão atual fica como estava.
 - Converter para Game ID: os saves do cartão (também do Memory Card ou de um arquivo de cartão) são listados por
-  jogo, cada um com o cartão para onde vai: o cartão do jogo, ou "Novo cartão" com o tamanho (TRIÂNGULO o
-  altera). X deixa um jogo de fora; QUADRADO desmarca todos, para marcar só alguns (sem nenhum marcado, marca
-  todos de novo); START copia todos, numa tela só, com o tempo total restante. Um save que o cartão do jogo já
-  tem em outra versão é perguntado uma vez (manter o do cartão, substituir ou manter o mais recente). Os cartões
-  novos recebem os templates do jogo. No fim, R2 remove do cartão de origem os saves copiados, depois de
-  perguntar; por padrão ele fica como estava. Só com um sd2psx ou um MemCard PRO2: os cartões de jogo são deles.
+  jogo, cada um com o cartão para onde vai: o cartão do jogo, ou "Novo cartão" com o tamanho (TRIÂNGULO o altera).
+  X deixa um jogo de fora; QUADRADO desmarca todos, para marcar só alguns (sem nenhum marcado, marca todos de
+  novo); START copia todos, numa tela só, com o tempo total restante (O cancela, depois de perguntar: os saves já
+  copiados permanecem nos cartões dos jogos). Um save que o cartão do jogo já tem em outra versão é perguntado uma
+  vez (manter o do cartão, substituir ou manter o mais recente). Os cartões novos recebem os templates do jogo. No
+  fim, R2 remove do cartão de origem os saves copiados, depois de perguntar; por padrão ele fica como estava. Só
+  com um sd2psx ou um MemCard PRO2: os cartões de jogo são deles.
 - Verificar cartão: examina o sistema de arquivos do cartão (as cadeias de clusters, as entradas) e diz o que
   está errado, se houver algo. Nada é gravado.
 - Excluir cartão: pergunta antes. O cartão que o dispositivo está usando é liberado primeiro (o dispositivo passa

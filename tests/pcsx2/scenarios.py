@@ -392,6 +392,13 @@ SCENARIOS = [
     {"name": "split-drag", "what": "X held over the games of a split: each one the cursor moves onto taken out too",
      "cards": {"Card1/Card1-1": "game", "Card2/Card2-1": "empty"},
      "files": {"Files/net.psu": psu_named("save.psu", "BASLUS-20001NET")}, "script": ">XXXXXXXOOO<TDDDDDDXDX[U]XSXXC"},
+    # (circle while it goes, "k", and X to its question: halfway through the new card being made for the game, which is
+    # then deleted, none of its saves in it; halfway through a save's writing into the game's card, which is left as
+    # it was. Either way the card they come from stays as it was)
+    {"name": "split-cancel-new-card", "what": "a split cancelled while the game's new card is made: the card is not kept",
+     "cards": {"Card1/Card1-1": "game", "Card2/Card2-1": "empty"}, "script": "TDDDDDDXSXkXXC"},
+    {"name": "split-cancel-save", "what": "a split cancelled halfway through a save's writing: the game's card as it was",
+     "cards": {"Card1/Card1-1": "game", "SLUS-21065/SLUS-21065-1": "empty"}, "script": "TDDDDDDXSXkXXC"},
     # (R2 on the summary: their removal from the card is asked, and X answers it)
     {"name": "split-there-delete", "what": "a card's saves split by game, on the game's card already: deleted from it after",
      "cards": CARDS, "script": "TDDDDDDXSX2XXC"},
