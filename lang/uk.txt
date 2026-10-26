@@ -768,8 +768,10 @@ T_CREATE_FILE_ASK = Створити файл %s (%d МБ)?
 T_CREATE_SAVES = Збережень для копіювання: %d
 # Up to 2 lines. English: Card created: %s
 T_CREATE_DONE = Картку створено: %s
-# One line. English: Export all to a card
-T_EXPORT_ALL = Експорт усіх на картку
+# One line. English: Export saves to a card
+T_EXPORT_SAVES = Експорт збережень на картку
+# One line. English: Selected: %d
+T_PICKED_N = Позначено: %d
 # One line. English: Duplicate saves: %d
 T_REPEATED_ASK = Дублікатів збережень: %d
 # One line. English: Keep the newest

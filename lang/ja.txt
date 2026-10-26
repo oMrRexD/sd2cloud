@@ -769,8 +769,10 @@ T_CREATE_FILE_ASK = ファイル %s（%d MB）を作成しますか？
 T_CREATE_SAVES = コピーするセーブデータ: %d
 # Up to 2 lines. English: Card created: %s
 T_CREATE_DONE = カードを作成しました: %s
-# One line. English: Export all to a card
-T_EXPORT_ALL = すべてカードに書き出す
+# One line. English: Export saves to a card
+T_EXPORT_SAVES = セーブデータをカードに書き出す
+# One line. English: Selected: %d
+T_PICKED_N = 選択中: %d
 # One line. English: Duplicate saves: %d
 T_REPEATED_ASK = 重複したセーブデータ: %d
 # One line. English: Keep the newest

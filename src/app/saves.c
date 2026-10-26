@@ -92,8 +92,8 @@ static void scene_browser(float t)
     /* the card at the top left, its free space below */
     ui_image(IMG_MINICARD, 62, 38, 24, 28, 0xFFFFFF, 0x80);
     ui_text_shadow(FONT_BROWSER, 98, 32, 0xF4F4F4, brw.card->base);
-    if (marks.on) {   /* marking: how many saves are marked, on all the cards */
-        snprintf(s, sizeof(s), T(T_MARKED_N), marks.n);
+    if (marks.on || brw.pick) {   /* marking: how many saves are marked (on all the cards), or picked */
+        snprintf(s, sizeof(s), T(brw.pick ? T_PICKED_N : T_MARKED_N), brw.pick ? brw.picked : marks.n);
         ui_text_shadow(FONT_TEXT, 100, 60, COLOR_OK, s);
     } else if (brw.note[0])
         ui_text_shadow(FONT_TEXT, 100, 60, 0xE6E6E6, brw.note);
@@ -123,12 +123,12 @@ static void scene_browser(float t)
             ui_text_right(FONT_BROWSER, 596, 32, 0xE6E640, v->s.folder);
     }
     browser_icons(1);
-    if (marks.on) {   /* each marked save: a green tick over its icon, in a soft light */
+    if (marks.on || brw.pick) {   /* each marked (or picked) save: a green tick over its icon, in a soft light */
         int i;
         for (i = first; i < brw.n && i < last; i++) {
             float cx, cy;
             int k;
-            if (marked(brw.saves[i].card, brw.saves[i].s.folder) < 0)
+            if (brw.pick ? !brw.pick[i] : marked(brw.saves[i].card, brw.saves[i].s.folder) < 0)
                 continue;
             grid_cell(i, 4.2f, &cx, &cy);
             ui_light(cx + 22, cy + 2, 16, 16, COLOR_OK, 0x60);
@@ -142,7 +142,11 @@ static void scene_browser(float t)
         look_arrow(W / 2.0f, 92, 0, 0x3A5AE0);
     if (last < brw.n)
         look_arrow(W / 2.0f, 340, 1, 0x3A5AE0);
-    if (marks.on) {   /* (START says what the marking is for) */
+    if (brw.pick) {   /* (square: all of them at once, unmarked, or marked again when none is; START: on with them) */
+        legend_t l[4] = {{BUTTON_CIRCLE, T(T_BACK)}, {BUTTON_CROSS, T(T_MIGRATE_MARK)},
+                         {BUTTON_SQUARE, T(brw.picked ? T_MIGRATE_ALL_OFF : T_MIGRATE_ALL_ON)}, {BUTTON_START, T(T_EXPORT)}};
+        look_legend(l, 4, 0);
+    } else if (marks.on) {   /* (START says what the marking is for) */
         legend_t l[4] = {{BUTTON_CIRCLE, T(T_BACK)}, {BUTTON_CROSS, T(T_MARK)}, {BUTTON_TRIANGLE, T(T_CANCEL)},
                          {BUTTON_START, T(marks.copy ? T_PASTE : T_FINISH)}};
         look_legend(l, 4, 0);
@@ -688,7 +692,7 @@ static void scene_options(float t)
     look_title(W / 2.0f, y + 20, T(T_OPTIONS), 1);
     for (i = 0; i < opt.n; i++) {   /* what it is on the left, how it is now on the right */
         const char *label = T(opt.id[i] == OPT_SYNC ? (brw.card == &slotCard ? T_TO_CLOUD : T_SYNC_NOW)
-                              : opt.id[i] == OPT_SORT ? T_SORT_BY : opt.id[i] == OPT_EXPORT ? T_EXPORT_ALL
+                              : opt.id[i] == OPT_SORT ? T_SORT_BY : opt.id[i] == OPT_EXPORT ? T_EXPORT_SAVES
                               : opt.id[i] == OPT_BY_GAME ? T_MIGRATE : opt.id[i] == OPT_RESTORE ? T_RESTORE_BACKUP
                               : T_REPEATED);
         const char *value = opt.id[i] == OPT_SORT ? T(sortText[opt.sort])
@@ -777,20 +781,26 @@ made:
     return r;
 }
 
-/* "Export all to a card", on every game card's saves: each save shown goes into a new card (card_create). A folder
- * that is on more than one card, saved differently on each, can only be one of them there: asked, once for all
- * (the newest of each) or one by one. 1 = a card was made */
-static int export_all(void)
+/* "Export saves to a card", on every game card's saves: each save picked (pick[i], in the order shown) goes into a new
+ * card (card_create). A folder that is on more than one card, saved differently on each, can only be one of them
+ * there: asked, once for all (the newest of each) or one by one. 1 = a card was made */
+static int export_all(const unsigned char *pick)
 {
     static const char *items[MAX_CARDS];
     static char text[MAX_CARDS][100];
     save_ref_t *refs = malloc(sizeof(save_ref_t) * (brw.n ? brw.n : 1));
+    /* (the folders' names, the refs' own: a card file opened on the way, in a device's folders, has this screen's
+     * saves for its own) */
+    char (*names)[33] = malloc(33 * (brw.n ? brw.n : 1));
     int *of = malloc(sizeof(int) * (brw.n ? brw.n : 1)), i, j, k, n = 0, twice = 0, oneByOne = -1, made = 0;
-    if (!refs || !of)
+    if (!refs || !names || !of)
         goto out;
     for (i = 0; i < brw.n; i++) {   /* (of[i] = the save that its folder's place went to, among those before it) */
-        for (of[i] = -1, j = 0; j < i; j++)
-            if (of[j] < 0 && !strcmp(brw.saves[j].s.folder, brw.saves[i].s.folder))
+        of[i] = -1;
+        if (!pick[i])
+            continue;
+        for (j = 0; j < i; j++)
+            if (pick[j] && of[j] < 0 && !strcmp(brw.saves[j].s.folder, brw.saves[i].s.folder))
                 of[i] = j;
         twice += of[i] >= 0;
     }
@@ -805,7 +815,7 @@ static int export_all(void)
     }
     for (i = 0; i < brw.n; i++) {
         int best = i;
-        if (of[i] >= 0)
+        if (!pick[i] || of[i] >= 0)
             continue;   /* (one of a folder that came before: that one's turn picks) */
         for (k = 0, j = i; j < brw.n; j++)
             if (j == i || of[j] == i) {
@@ -830,13 +840,82 @@ static int export_all(void)
             best = at[pick];
         }
         refs[n].card = brw.saves[best].card;
-        refs[n++].folder = brw.saves[best].s.folder;
+        snprintf(names[n], sizeof(names[0]), "%s", brw.saves[best].s.folder);
+        refs[n].folder = names[n];
+        n++;
     }
     made = card_create(refs, n);
 out:
     free(refs);
+    free(names);
     free(of);
     return made;
+}
+
+/* "Export saves to a card": the saves shown, all picked at first. X picks or leaves out the one under the cursor,
+ * square all of them at once (none, or all again when none is), START goes on with those to where the new card goes.
+ * A card made, or circle, ends the picking */
+static void export_pick(void)
+{
+    int n = brw.n, i;
+    unsigned char *pick = malloc(n ? n : 1);
+    if (!pick)
+        return;
+    memset(pick, 1, n);
+    ui_lock();
+    brw.pick = pick;
+    brw.picked = n;
+    ui_unlock();
+    ui_scene(scene_browser);
+    for (;;) {
+        u32 b = browser_wait(PAD_CROSS | PAD_CIRCLE | PAD_SQUARE | PAD_START);
+        if (b & PAD_CIRCLE) {
+            sound_play(SND_BACK);
+            break;
+        }
+        if (b & PAD_START) {
+            int made;
+            if (!brw.picked) {
+                sound_play(SND_BACK);
+                continue;
+            }
+            sound_play(SND_CONFIRM);
+            log_msg("export to a card: %d of %d saves picked", brw.picked, n);
+            ui_lock();
+            brw.pick = NULL;   /* (while the next screens are on: one of them may show other saves here) */
+            ui_unlock();
+            made = export_all(pick);
+            if (brw.card != &allGames) {   /* (a card file opened on the way had the list: read again, the picks gone) */
+                browser_load_all();
+                break;
+            }
+            if (made)
+                break;
+            ui_lock();   /* back: the same saves picked, to change them or go on again */
+            brw.pick = pick;
+            ui_unlock();
+            ui_scene(scene_browser);
+            continue;
+        }
+        if ((b & PAD_CROSS) && !n)
+            continue;
+        ui_lock();
+        if (b & PAD_CROSS) {
+            pick[brw.cursor] = !pick[brw.cursor];
+            brw.picked += pick[brw.cursor] ? 1 : -1;
+            i = pick[brw.cursor];
+        } else {
+            i = !brw.picked;
+            memset(pick, i, n);
+            brw.picked = i ? n : 0;
+        }
+        ui_unlock();
+        sound_play(i ? SND_CONFIRM : SND_BACK);
+    }
+    ui_lock();
+    brw.pick = NULL;
+    ui_unlock();
+    free(pick);
 }
 
 /* a card's saves. &allGames = every game card's, as if they were on one card. While saves are being marked (marks.c)
@@ -955,7 +1034,7 @@ void card_screen(card_t *c)
             else if (k & 2)
                 sync_card(c);
             else if (k & 4)
-                export_all();
+                export_pick();
             else if (k & 8) {
                 migrate_screen(c);
                 browser_load(c, brw.cursor);   /* (its saves may have gone from it) */

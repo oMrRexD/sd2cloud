@@ -772,7 +772,9 @@ T_CREATE_SAVES = Saves to copy: %d
 # Up to 2 lines.
 T_CREATE_DONE = Card created: %s
 # One line.
-T_EXPORT_ALL = Export all to a card
+T_EXPORT_SAVES = Export saves to a card
+# One line.
+T_PICKED_N = Selected: %d
 # One line.
 T_REPEATED_ASK = Duplicate saves: %d
 # One line.

@@ -43,6 +43,8 @@ every game card: 3 saves on 2 cards, 3 shown
 [script] D
 [script] D
 [script] X
+[script] S
+export to a card: 3 of 3 saves picked
 [script] X
 [script] X
 [script] X

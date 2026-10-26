@@ -766,8 +766,10 @@ T_CREATE_FILE_ASK = Deseja criar o arquivo %s (%d MB)?
 T_CREATE_SAVES = Saves a copiar: %d
 # Up to 2 lines. English: Card created: %s
 T_CREATE_DONE = Cartão criado: %s
-# One line. English: Export all to a card
-T_EXPORT_ALL = Exportar todos para um cartão
+# One line. English: Export saves to a card
+T_EXPORT_SAVES = Exportar saves para um cartão
+# One line. English: Selected: %d
+T_PICKED_N = Marcados: %d
 # One line. English: Duplicate saves: %d
 T_REPEATED_ASK = Saves duplicados: %d
 # One line. English: Keep the newest

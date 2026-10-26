@@ -454,6 +454,10 @@ struct brw_s {
     int emptyText;
     legend_t legend[3];
     int nLegend;
+    /* the saves being picked for a card made of them ("Export saves to a card"): 1 for each one picked, in the order
+     * shown (NULL = none are being picked); and how many are */
+    unsigned char *pick;
+    int picked;
 };
 extern struct brw_s brw;
 extern int (*brwIcon)(const save_view_t *v, buffer_t *iconsys, buffer_t *ico);

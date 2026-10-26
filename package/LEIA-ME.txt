@@ -139,7 +139,7 @@ cinza, e as opções dele oferecem mover os saves para o cartão que o sd2psx ab
   os cartões) aparece uma vez.
 - TRIÂNGULO, com os itens de um cartão na tela, abre as opções: "Sincronizar agora", para esse cartão;
   "Ordenar por" (a data, decrescente ou crescente, ou o nome do jogo), para todos os cartões; "Converter para
-  Game ID"; e, em "Todos os saves", "Repetidos", ocultos ou exibidos, e "Exportar todos para um cartão". No
+  Game ID"; e, em "Todos os saves", "Repetidos", ocultos ou exibidos, e "Exportar saves para um cartão". No
   Memory Card: "Enviar ao Drive" e "Restaurar backup" (veja ARQUIVOS).
 - START abre os ajustes (veja AJUSTES), e SELECT as ferramentas (veja TEMPLATES e CÓPIAS DE SEGURANÇA).
 - X sobre um item abre a página dele, com Copiar, Mover, Excluir, Enviar ao Drive e Versões no Drive (veja

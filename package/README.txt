@@ -133,7 +133,7 @@ options offer to move its saves to the card the sd2psx opens.
   same folder with the same files, byte for byte, as a template put into every card) is shown once.
 - TRIANGLE, with a card's items on screen, opens the options: "Sync now", for that card; "Sort by" (the date,
   descending or ascending, or the name of their game), for every card; "Convert to Game ID"; and, in "All
-  saves", "Duplicates", hidden or shown, and "Export all to a card". On the Memory Card: "Upload to Drive"
+  saves", "Duplicates", hidden or shown, and "Export saves to a card". On the Memory Card: "Upload to Drive"
   and "Restore a backup" (see FILES).
 - START opens the settings (see SETTINGS), and SELECT the tools (see TEMPLATES and SAFETY COPIES).
 - X on a saved data item opens its page, with Copy, Move, Delete, Upload to Drive and Versions on Drive (see

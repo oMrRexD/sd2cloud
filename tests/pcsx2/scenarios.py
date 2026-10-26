@@ -346,14 +346,21 @@ SCENARIOS = [
     # a save marked for a copy goes into a card made for it: "New card" at the end of the Cards group of the list
     {"name": "marked-new-card", "what": "a marked save copied into a new numbered card, of the size recommended for it",
      "cards": CARDS, "script": "XXXOUXXXXXC"},
-    # "Export all to a card", the last of the options of "All saves": every save shown into a new card. A folder on
-    # two cards, saved differently on each, is asked about: the newest of each
+    # "Export saves to a card", the last of the options of "All saves": the saves shown, all picked at first (X picks
+    # or leaves out one, square all of them), and START takes those into a new card. A folder on two cards, saved
+    # differently on each, is asked about: the newest of each
     {"name": "all-saves-export", "what": "every save of the game cards exported to a new card",
      "cards": {"Card1/Card1-1": "empty", "SLUS-21065/SLUS-21065-1": "game", "SLUS-20001/SLUS-20001-1": "game"},
-     "script": ">XTDDXXXXXC"},
+     "script": ">XTDDXSXXXXC"},
+    {"name": "all-saves-export-picked", "what": "the saves of the game cards but one exported to a new card",
+     "cards": {"Card1/Card1-1": "empty", "SLUS-21065/SLUS-21065-1": "game", "SLUS-20001/SLUS-20001-1": "game"},
+     "script": ">XTDDXXSXXXXC"},
+    {"name": "all-saves-export-none", "what": "no save picked for the card: START does nothing, square picks them again",
+     "cards": {"Card1/Card1-1": "empty", "SLUS-21065/SLUS-21065-1": "game", "SLUS-20001/SLUS-20001-1": "game"},
+     "script": ">XTDDXQSQSXXXXC"},
     {"name": "all-saves-export-repeated", "what": "every save exported to a new card, the newest of a folder saved twice",
      "cards": {"Card1/Card1-1": "empty", "SLUS-21065/SLUS-21065-1": "game", "SLUS-20001/SLUS-20001-1": "empty"},
-     "files": {"Files/alpha.psu": "alpha-other.psu"}, "script": ">>XXXX>DXXXXOOO<XTDDXXXXXXC"},
+     "files": {"Files/alpha.psu": "alpha-other.psu"}, "script": ">>XXXX>DXXXXOOO<XTDDXSXXXXXC"},
     # marking for a copy a save whose folder is marked on another card: asked first (with each one's card and date);
     # X marks this one in the other's place
     {"name": "mark-same-folder", "what": "a save of a folder marked on another card, marked in its place once asked",
