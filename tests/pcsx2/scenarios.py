@@ -65,6 +65,10 @@ SCENARIOS = [
     # Games group of the list, their game's folder comes first, and "New card" first inside it (X D: its card)
     {"name": "save-copy", "what": "a save copied to another card: START on its own card goes to the list of cards, START "
      "there pastes it", "cards": CARDS, "script": "XXXSDSXXC"},
+    # (X held, "[" to "]", on the saves of a copy: the second save unmarked, and so the first, the cursor moved onto it;
+    # the second marked again, alone, and pasted)
+    {"name": "save-copy-drag", "what": "X held over the saves of a copy: each one the cursor moves onto unmarked too",
+     "cards": CARDS, "script": "XXX>XX[<]>XSDSXXC"},
     {"name": "save-copy-many", "what": "saves marked on two cards, copied together to a third", "cards": CARDS,
      "script": "XXXO>XDX>XO<DSXXC"},
     {"name": "save-copy-list", "what": "a save marked on a card, pasted on another card of the list", "cards": CARDS,
@@ -358,6 +362,18 @@ SCENARIOS = [
     {"name": "all-saves-export-none", "what": "no save picked for the card: START does nothing, square picks them again",
      "cards": {"Card1/Card1-1": "empty", "SLUS-21065/SLUS-21065-1": "game", "SLUS-20001/SLUS-20001-1": "game"},
      "script": ">XTDDXQSQSXXXXC"},
+    # (X held, "[" to "]": the second save left out, and so the first, the cursor moved onto it; X picks it again)
+    {"name": "all-saves-export-drag", "what": "X held over the saves to export: each one the cursor moves onto left out too",
+     "cards": {"Card1/Card1-1": "empty", "SLUS-21065/SLUS-21065-1": "game", "SLUS-20001/SLUS-20001-1": "game"},
+     "script": ">XTDDX>X[<]XSXXXXC"},
+    # (the arrow right after X, "!": before X has been held a moment, the save moved onto waits. X still held at the
+    # next move, it is left out too, and so is that one; X let go of at once, a quick press, it stays picked)
+    {"name": "all-saves-export-drag-quick", "what": "X held, an arrow pressed at once: the save moved onto left out too, once X is held a moment",
+     "cards": {"Card1/Card1-1": "empty", "SLUS-21065/SLUS-21065-1": "game", "SLUS-20001/SLUS-20001-1": "empty"},
+     "files": {"Files/alpha.psu": "alpha-other.psu"}, "script": ">>XXXX>DXXXXOOO<XTDDX!X[>>]XSXXXXC"},
+    {"name": "all-saves-export-press-move", "what": "X pressed and let go of at once, an arrow meanwhile: no drag",
+     "cards": {"Card1/Card1-1": "empty", "SLUS-21065/SLUS-21065-1": "game", "SLUS-20001/SLUS-20001-1": "empty"},
+     "files": {"Files/alpha.psu": "alpha-other.psu"}, "script": ">>XXXX>DXXXXOOO<XTDDX!X[!>]SXXXXC"},
     {"name": "all-saves-export-repeated", "what": "every save exported to a new card, the newest of a folder saved twice",
      "cards": {"Card1/Card1-1": "empty", "SLUS-21065/SLUS-21065-1": "game", "SLUS-20001/SLUS-20001-1": "empty"},
      "files": {"Files/alpha.psu": "alpha-other.psu"}, "script": ">>XXXX>DXXXXOOO<XTDDXSXXXXXC"},
@@ -371,6 +387,11 @@ SCENARIOS = [
     # The game's card has them already, the same: nothing is copied, and they are deleted from where they were
     {"name": "split-new-card", "what": "a card's saves split by game: a new card for their game, the card left as it was",
      "cards": {"Card1/Card1-1": "game", "Card2/Card2-1": "empty"}, "script": "TDDDDDDXSXXC"},
+    # (a card of two games, a save of another one imported into it first: X held, "[" to "]", takes the second game out
+    # and so the first, the cursor moved onto it; X puts that one back in, and only its saves go)
+    {"name": "split-drag", "what": "X held over the games of a split: each one the cursor moves onto taken out too",
+     "cards": {"Card1/Card1-1": "game", "Card2/Card2-1": "empty"},
+     "files": {"Files/net.psu": psu_named("save.psu", "BASLUS-20001NET")}, "script": ">XXXXXXXOOO<TDDDDDDXDX[U]XSXXC"},
     # (R2 on the summary: their removal from the card is asked, and X answers it)
     {"name": "split-there-delete", "what": "a card's saves split by game, on the game's card already: deleted from it after",
      "cards": CARDS, "script": "TDDDDDDXSX2XXC"},
@@ -423,6 +444,9 @@ SCENARIOS = [
      "cards": CARDS, "files": {"SD2Cloud/templates/Net/alpha.psu": "alpha-other.psu"}, "script": "LXDTDDXDDXXXC"},
     {"name": "template-pick-cards", "what": "a template put into the game cards marked one by one",
      "cards": dict(CARDS, **{"SLUS-20001/SLUS-20001-1": "empty"}), "files": TEMPLATE, "script": "LXDTDDXDXXSXXC"},
+    # (X held, "[" to "]": the second card marked, and so the first, the cursor moved onto it)
+    {"name": "template-pick-drag", "what": "X held over the cards a template goes into: each one the cursor moves onto marked too",
+     "cards": dict(CARDS, **{"SLUS-20001/SLUS-20001-1": "empty"}), "files": TEMPLATE, "script": "LXDTDDXDXDX[U]SXXC"},
     {"name": "template-auto-apply-off", "what": "applying the templates after a game turned off",
      "cards": CARDS, "files": TEMPLATE, "script": "LXDDXC"},
     # after a game the device is on the BootCard. Both cards have nothing in them, as the BootCard: the second one

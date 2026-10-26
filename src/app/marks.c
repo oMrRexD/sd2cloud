@@ -35,7 +35,7 @@ int mark_toggle(const save_view_t *v)
             k = -2;   /* (unmarked, and that is all) */
     }
     if (k != -2) {
-        if (marks.n < MARKS_MAX) {
+        if (marks.n < (marks.copy ? MARKS_MAX : TPL_SAVES)) {   /* (a template holds no more than that) */
             marks.save[marks.n].card = v->card;
             marks.save[marks.n].s = v->s;
             marks.n++;
@@ -46,16 +46,24 @@ int mark_toggle(const save_view_t *v)
     return ok;
 }
 
+/* the mark of a save of that one's folder on another card (-1 = there is none) */
+int marked_elsewhere(const save_view_t *v)
+{
+    int i;
+    for (i = 0; i < marks.n; i++)
+        if (marks.save[i].card != v->card && !strcmp(marks.save[i].s.folder, v->s.folder))
+            return i;
+    return -1;
+}
+
 /* X on a save of a copy whose folder is marked on another card: a card can't have two saves of one folder, so the
  * new one would take the other's place. Asked (with the card and the date of each). 1 = it can be marked, nothing
  * was asked; 2 = it can, asked; 0 = it can't (asked) */
 int mark_same_folder(const save_view_t *v)
 {
     char t[300], a[40], b[40], name[100];
-    int i;
-    for (i = 0; i < marks.n && !(marks.save[i].card != v->card && !strcmp(marks.save[i].s.folder, v->s.folder)); i++)
-        ;
-    if (i == marks.n)
+    int i = marked_elsewhere(v);
+    if (i < 0)
         return 1;
     save_name(v, name, sizeof(name));
     snprintf(t, sizeof(t), T(T_MARK_SAME_ASK), name, marks.save[i].card->base);
@@ -75,6 +83,74 @@ int mark_same_folder(const save_view_t *v)
         return 0;
     }
     return 2;
+}
+
+/* ------------------------------------------------------------ X held, on any screen that marks
+ *
+ * X marks or unmarks what is under the cursor; held down, everything the cursor then moves onto is marked, or
+ * unmarked, the same way, until it is let go of. A press and a quick move, the finger still leaving X, is no drag:
+ * what the cursor moves onto while X hasn't been held a moment yet waits, and is marked only if X still is by then
+ * (drag_tick, while the screen waits for a button; or the next move). The saves of a screen of saves (saves.c), the
+ * games of "Convert to Game ID" (migrate.c), a template's games and cards (tools.c) */
+
+#define DRAG_AFTER   300   /* ms X is held, from its press, for it to drag (a press is shorter) */
+#define DRAG_WAITING 8
+static struct {
+    int on;                        /* what X made the one under the cursor: marked (1) or not (0); -1 = no drag */
+    int held;                      /* X held long enough: it drags */
+    u64 since;                     /* when X was pressed */
+    int (*set)(int i, int on);     /* the screen's i-th made so: 1 = it changed */
+    int waiting[DRAG_WAITING], n;  /* moved onto before then: marked once X has been held long enough, or never */
+} drag = {.on = -1};
+
+void drag_start(int on, int (*set)(int i, int on))
+{
+    drag.on = on;
+    drag.held = drag.n = 0;
+    drag.since = now_ms();
+    drag.set = set;
+}
+
+void drag_stop(void) { drag.on = -1; }
+
+/* X let go of: over (the ones waiting stay as they are). Held long enough: it drags, the ones waiting are marked now.
+ * 1 = something changed */
+static int drag_check(void)
+{
+    int i, changed = 0;
+    if (drag.on < 0)
+        return 0;
+    if (!(pad_buttons() & PAD_CROSS)) {
+        drag.on = -1;
+        return 0;
+    }
+    if (!drag.held && now_ms() - drag.since >= DRAG_AFTER) {
+        drag.held = 1;
+        for (i = 0; i < drag.n; i++)
+            changed |= drag.set(drag.waiting[i], drag.on);
+        drag.n = 0;
+    }
+    return changed;
+}
+
+int drag_moved(int i)
+{
+    int changed = drag_check();
+    if (drag.on < 0)
+        return SND_MOVE;
+    if (!drag.held) {
+        if (drag.n < DRAG_WAITING)
+            drag.waiting[drag.n++] = i;
+        return SND_MOVE;
+    }
+    changed |= drag.set(i, drag.on);
+    return changed ? (drag.on ? SND_CONFIRM : SND_BACK) : SND_MOVE;
+}
+
+void drag_tick(void)
+{
+    if (drag.on >= 0 && !drag.held && drag.n && drag_check())
+        sound_play(drag.on ? SND_CONFIRM : SND_BACK);
 }
 
 /* nothing is marked any more, and nothing is marking (the device was taken out, or what the marks were for is over) */

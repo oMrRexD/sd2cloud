@@ -28,7 +28,9 @@
  * checked. As IGR: "s" right after the "I" captures its first screen, and "N" works after its cards are checked too;
  * "g" captures the sync's screen as it starts getting online, and "o" presses circle there. "c" right after the answer
  * that keeps going (circle's question, square's) captures the screen put back. "h" captures the screen of a drive of
- * the Files group being looked for (and "K" there gives it up). */
+ * the Files group being looked for (and "K" there gives it up). "[" holds X down from there on (the buttons pressed
+ * after it are pressed with X held: the arrows drag what X did over the saves or games), until "]" lets it go. "!"
+ * before a button: the one after it comes at once, not 0.4 s later (an arrow right after X, as a quick thumb). */
 char script[256];
 int scriptPos, hasScript;
 int nRescue, rescueSeconds = 300, pastEnd;
@@ -88,6 +90,7 @@ int debug_digit(void)
  * script's next button is held for a moment, one every 0.4 s; "." waits a second more, "C" captures. A letter that
  * isn't a button is left for what takes it (debug_take) */
 int scriptLive;
+u32 scriptHeld;   /* the buttons the script holds down meanwhile ("[": X), as pad_buttons sees them */
 
 u32 script_live_button(void)
 {
@@ -136,7 +139,10 @@ void debug_capture_if(char mark)
 
 u32 script_next_button(u32 mask)
 {
-    sleep_ms(400);
+    static int quick;   /* "!": the button after the next one comes at once, not 0.4 s later */
+    if (!quick)
+        sleep_ms(400);
+    quick = 0;
     while (script[scriptPos]) {
         char ch = script[scriptPos++];
         u32 b = ch == 'X' ? PAD_CROSS : ch == 'O' ? PAD_CIRCLE : ch == 'T' ? PAD_TRIANGLE : ch == 'Q' ? PAD_SQUARE : ch == 'R' ? PAD_R1
@@ -151,6 +157,15 @@ u32 script_next_button(u32 mask)
         }
         if (ch == '.') {   /* a second on this screen, for whoever is watching */
             sleep_ms(1000);
+            continue;
+        }
+        if (ch == '[' || ch == ']') {
+            scriptHeld = ch == '[' ? PAD_CROSS : 0;
+            log_msg("[script] %c", ch);
+            continue;
+        }
+        if (ch == '!') {
+            quick = 1;
             continue;
         }
         if (ch == 'Y') {

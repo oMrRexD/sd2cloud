@@ -590,7 +590,21 @@ static struct {
     const template_t *t;
     int n, cursor, top;
     int first[MAX_CARDS];   /* the first card of each game's folder (indexes in cards[]) */
+    int changed;            /* a game was marked or unmarked: templates.ini is written when the screen is left */
 } gl;
+
+/* the template made the i-th game's (1) or not (0), by X or X held over it (drag_moved's). 1 = it changed */
+static int games_set(int i, int on)
+{
+    const char *game = cards[gl.first[i]].folder;
+    if (template_has_game(gl.t, game) == on)
+        return 0;
+    ui_lock();
+    template_set_game(gl.t, game, on);
+    gl.changed = 1;
+    ui_unlock();
+    return 1;
+}
 
 static const char *games_text(int i, char *buf)
 {
@@ -627,10 +641,10 @@ static void scene_games(float t)
 
 static void template_games_screen(template_t *t)
 {
-    int i, k, changed = 0;
+    int i, k;
     ui_lock();
     gl.t = t;
-    gl.n = gl.cursor = gl.top = 0;
+    gl.n = gl.cursor = gl.top = gl.changed = 0;
     for (i = 0; i < nCards; i++) {
         if (cards[i].type != TYPE_GAMEID)
             continue;
@@ -645,25 +659,28 @@ static void template_games_screen(template_t *t)
         return;
     }
     ui_scene(scene_games);
+    drag_stop();
     for (;;) {
         u32 b = wait_nav(PAD_UP | PAD_DOWN | PAD_CROSS | PAD_CIRCLE);
         if (b & PAD_CIRCLE) {
+            drag_stop();
             sound_play(SND_BACK);
             break;
         }
-        ui_lock();
         if (b & PAD_CROSS) {
-            const char *game = cards[gl.first[gl.cursor]].folder;
-            template_set_game(t, game, !template_has_game(t, game));
-            changed = 1;
-        } else {
-            gl.cursor = (b & PAD_UP) ? (gl.cursor + gl.n - 1) % gl.n : (gl.cursor + 1) % gl.n;
-            scroll_to(gl.cursor, &gl.top);
+            int on = !template_has_game(t, cards[gl.first[gl.cursor]].folder);
+            games_set(gl.cursor, on);
+            drag_start(on, games_set);
+            sound_play(on ? SND_CONFIRM : SND_BACK);
+            continue;
         }
+        ui_lock();
+        gl.cursor = (b & PAD_UP) ? (gl.cursor + gl.n - 1) % gl.n : (gl.cursor + 1) % gl.n;
+        scroll_to(gl.cursor, &gl.top);
         ui_unlock();
-        sound_play((b & PAD_CROSS) ? SND_CONFIRM : SND_MOVE);
+        sound_play(drag_moved(gl.cursor));   /* (X held: the game moved onto marked or unmarked as X did) */
     }
-    if (!changed)
+    if (!gl.changed)
         return;
     if (templates_save() != 0)
         message_wait(0, NULL, COLOR_ERROR, T(T_ERR_MC_WRITE));
@@ -678,6 +695,18 @@ static struct {
     int card[MAX_CARDS];            /* the cards: the game cards first, by their games' names (indexes in cards[]) */
     unsigned char on[MAX_CARDS];    /* marked */
 } pk;
+
+/* the i-th card marked (1) or not (0), by X or X held over it (drag_moved's). 1 = it changed */
+static int pick_set(int i, int on)
+{
+    if (pk.on[i] == on)
+        return 0;
+    ui_lock();
+    pk.on[i] = on;
+    pk.marked += on ? 1 : -1;
+    ui_unlock();
+    return 1;
+}
 
 static const char *pick_text(int i, char *buf)
 {
@@ -750,10 +779,13 @@ static void template_pick_cards(template_t *t)
         message_wait(0, NULL, COLOR_WARN, T(T_NO_CARDS_SD));
         return;
     }
+    drag_stop();
     for (;;) {
         u32 b;
         ui_scene(scene_pick);
         b = wait_nav(PAD_UP | PAD_DOWN | PAD_CROSS | PAD_CIRCLE | PAD_START);
+        if (!(b & (PAD_UP | PAD_DOWN)))
+            drag_stop();
         if (b & PAD_CIRCLE) {
             sound_play(SND_BACK);
             return;
@@ -773,16 +805,18 @@ static void template_pick_cards(template_t *t)
             cards_get(t, n, 0);
             return;
         }
-        ui_lock();
         if (b & PAD_CROSS) {
-            pk.on[pk.cursor] = !pk.on[pk.cursor];
-            pk.marked += pk.on[pk.cursor] ? 1 : -1;
-        } else {
-            pk.cursor = (b & PAD_UP) ? (pk.cursor + pk.n - 1) % pk.n : (pk.cursor + 1) % pk.n;
-            scroll_to(pk.cursor, &pk.top);
+            int on = !pk.on[pk.cursor];
+            pick_set(pk.cursor, on);
+            drag_start(on, pick_set);
+            sound_play(on ? SND_CONFIRM : SND_BACK);
+            continue;
         }
+        ui_lock();
+        pk.cursor = (b & PAD_UP) ? (pk.cursor + pk.n - 1) % pk.n : (pk.cursor + 1) % pk.n;
+        scroll_to(pk.cursor, &pk.top);
         ui_unlock();
-        sound_play((b & PAD_CROSS) ? SND_CONFIRM : SND_MOVE);
+        sound_play(drag_moved(pk.cursor));   /* (X held: the card moved onto marked or unmarked as X did) */
     }
 }
 

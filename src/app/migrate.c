@@ -411,6 +411,17 @@ static int mg_go(void)
     return 1;
 }
 
+/* (X held over the games, drag_moved's) the i-th game's saves going (1) or not (0). 1 = it changed */
+static int mg_drag(int i, int on)
+{
+    if (mg.games[i].on == on)
+        return 0;
+    ui_lock();
+    mg.games[i].on = on;
+    ui_unlock();
+    return 1;
+}
+
 void migrate_screen(card_t *src)
 {
     mg.src = src;
@@ -421,9 +432,12 @@ void migrate_screen(card_t *src)
         return;
     }
     ui_scene(scene_migrate);
+    drag_stop();
     for (;;) {
         u32 b = wait_nav(PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT | PAD_CROSS | PAD_CIRCLE | PAD_TRIANGLE | PAD_SQUARE | PAD_START);
         mg_game_t *g = mg.nGames ? &mg.games[mg.cursor] : NULL;
+        if (!(b & (PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT)))
+            drag_stop();
         if (b & PAD_CIRCLE) {
             sound_play(SND_BACK);
             return;
@@ -445,11 +459,12 @@ void migrate_screen(card_t *src)
             if (k >= mg.top + MG_ROWS)
                 mg.top = k - MG_ROWS + 1;
             ui_unlock();
-            sound_play(SND_MOVE);
+            sound_play(drag_moved(k));   /* (X held: taken in or out as X did) */
         } else if ((b & PAD_CROSS) && g) {
             ui_lock();
             g->on = !g->on;
             ui_unlock();
+            drag_start(g->on, mg_drag);
             sound_play(g->on ? SND_CONFIRM : SND_BACK);
         } else if ((b & PAD_SQUARE) && g) {   /* every game off, to pick a few; with none on, every game back on */
             int k, any = 0;

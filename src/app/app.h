@@ -395,7 +395,7 @@ extern int activeCard;
 extern u64 watchNext;
 
 /* ------------------------------------------------------------ marks.c */
-#define MARKS_MAX TPL_SAVES
+#define MARKS_MAX MCFS_MAX_SAVES   /* saves marked for a copy, at most: as many as a card lists (a template's: TPL_SAVES) */
 struct marks_s {
     int on;                /* the screens of saves are marking */
     int copy;              /* what for: 1 = a save's "Copy" (START is "Paste"); 0 = a template (START is "Done") */
@@ -412,6 +412,14 @@ extern struct marks_s marks;
 int marked(const card_t *c, const char *folder);
 int mark_toggle(const save_view_t *v);
 int mark_same_folder(const save_view_t *v);   /* one of its folder marked on another card: asked (0 = not marked) */
+int marked_elsewhere(const save_view_t *v);   /* the mark of one of its folder on another card (-1 = none) */
+/* X held on a screen that marks: drag_start when X marked (1) or unmarked (0) what is under the cursor, with what
+ * makes the screen's i-th so (1 = it changed); drag_moved when the cursor moved onto the i-th (the sound of the
+ * move); drag_stop on any other button. drag_tick: called while the screen waits */
+void drag_start(int on, int (*set)(int i, int on));
+int drag_moved(int i);
+void drag_stop(void);
+void drag_tick(void);
 void marks_reset(void);
 int mark_cancel(void);
 int mark_saves(void);

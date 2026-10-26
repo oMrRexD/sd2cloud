@@ -100,10 +100,13 @@ is on, and OPL's IGR opens SD2Cloud through it. The sd2psx can be taken out and 
 the screens follow.
 
 MAIN SCREEN
-The memory cards are listed on the left with a status indicator (green = synced; yellow = not synced or
-never synced). The selected card is shown on the right with the date of its last backup. Press Up and Down to
-select a card. The O button exits the application: choose where to go next (the programs in the APPS folder,
-"Run an ELF..." or the PS2 browser); the last choice is remembered.
+The memory cards are listed on the left with a status indicator (green = synced; yellow = not synced or never
+synced). The selected card is shown on the right with the date of its last backup. Press Up and Down to select a
+card (the left stick moves the cursor as the D-pad does, on every screen). On a screen where X marks and unmarks
+(the items of a copy, a template's items, games and cards, "Export saves to a card", "Convert to Game ID"), X held
+down does the same to everything the cursor then moves onto (a quick press of X, the cursor moved meanwhile,
+doesn't). The O button exits the application: choose where to go next (the programs in the APPS folder, "Run an
+ELF..." or the PS2 browser); the last choice is remembered.
 The cards are grouped into tabs shown above the list: Cards (the numbered cards, Card1, Card2..., folders with
 names of your own, and "New card" as the last row), Games (Game ID cards, in folders named after each game:
 X opens a folder, O goes back), Boot (the BootCard), OPL VMCs (see OPL VMCs), Library (see THE LIBRARY,
@@ -132,9 +135,10 @@ options offer to move its saves to the card the sd2psx opens.
   the item's page, and what is done to an item is done to that card. An item that more than one card has (the
   same folder with the same files, byte for byte, as a template put into every card) is shown once.
 - TRIANGLE, with a card's items on screen, opens the options: "Sync now", for that card; "Sort by" (the date,
-  descending or ascending, or the name of their game), for every card; "Convert to Game ID"; and, in "All
-  saves", "Duplicates", hidden or shown, and "Export saves to a card". On the Memory Card: "Upload to Drive"
-  and "Restore a backup" (see FILES).
+  descending or ascending, or the name of their game), for every card; "Convert to Game ID"; and, in "All saves",
+  "Duplicates", hidden or shown, and "Export saves to a card". On the Memory Card: "Upload to Drive" and "Restore
+  a backup" (see FILES). "Export saves to a card" shows the items all selected: X leaves one out, SQUARE unselects
+  them all (with none selected, it selects them all again), and START goes on to where the new card goes.
 - START opens the settings (see SETTINGS), and SELECT the tools (see TEMPLATES and SAFETY COPIES).
 - X on a saved data item opens its page, with Copy, Move, Delete, Upload to Drive and Versions on Drive (see
   BACKUP BY SAVE).

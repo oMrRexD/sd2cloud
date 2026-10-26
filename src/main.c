@@ -25,6 +25,14 @@ u64 watchNext;              /* when the device is next asked whether it is there
 
 /* ------------------------------------------------------------ main */
 
+/* over and over while a screen waits for a button (idleHook): X held over what is being marked (a drag waiting to
+ * know it is one), and the device taken out or put back */
+static void waiting(void)
+{
+    drag_tick();
+    device_watch();
+}
+
 int main(int argc, char *argv[])
 {
     int r;
@@ -129,7 +137,7 @@ int main(int argc, char *argv[])
             config_write_template();
         log_msg("read again: %s, %s", dev->name, google_has_access() ? "with a Google account" : "no Google account");
     }
-    idleHook = device_watch;
+    idleHook = waiting;
     manual();
     return 0;
 }

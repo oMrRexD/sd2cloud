@@ -505,7 +505,8 @@ void device_changed(void)
  * for a copy stay marked: their cards are kept, by their paths, while the list is the other one */
 
 int viewOther;
-static card_t held[MARKS_MAX];   /* the cards of marked saves, while their device's cards aren't the ones listed */
+#define HELD_MAX 32
+static card_t held[HELD_MAX];   /* the cards of marked saves, while their device's cards aren't the ones listed */
 static int nHeld;
 
 void view_switch(void)
@@ -526,11 +527,21 @@ void view_switch(void)
             continue;
         for (k = 0; k < nHeld && strcmp(held[k].path, c->path); k++)
             ;
-        if (k == nHeld) {
-            if (nHeld == MARKS_MAX)
-                continue;
-            held[nHeld++] = *c;
+        if (k == nHeld && nHeld == HELD_MAX) {   /* no room to keep its card: its saves aren't marked any more (they
+                                                    would be another card's, once the cards are listed again) */
+            int j, m = 0;
+            ui_lock();
+            for (j = 0; j < marks.n; j++)
+                if (marks.save[j].card != c)
+                    marks.save[m++] = marks.save[j];
+            log_msg("%s: %d marked save(s) let go of, no room to keep the card", c->id, marks.n - m);
+            marks.n = m;
+            ui_unlock();
+            i--;
+            continue;
         }
+        if (k == nHeld)
+            held[nHeld++] = *c;
         marks_move(c, &held[k]);
     }
     viewOther = !viewOther;

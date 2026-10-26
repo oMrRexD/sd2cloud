@@ -39,7 +39,7 @@ ELF = "SD2CLOUD-DEBUG.ELF"
 SETTINGS = "[general]\r\nlanguage = en\r\nask_connect = no\r\n"
 # lines of the log that tell of the PC or of the emulator's own memory card, not of what SD2Cloud did
 DROP = ("frames:", "helper:", "SAS package", "root signature:", "sound:", "semaphores:", "drawing thread:", "memory ",
-        "usb:", "network:", "sd2psx:", "device:", "memory card: slot")
+        "usb:", "network:", "sd2psx:", "device:", "memory card: slot", "controller:")
 # files of a scenario's folder that aren't its result
 NOT_RESULT = {ELF, "log.txt", "screen.tga", "SD2Cloud/script.txt", "SD2Cloud/debug-log.txt"}
 # and, in a folder's listing, the two files that are of the run itself (the program, which every build changes, and

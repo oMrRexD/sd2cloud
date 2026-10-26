@@ -83,6 +83,48 @@ void browser_icons(int spin)
     }
 }
 
+/* -------- the saves marked on this screen, whatever for: picked for a card made of them (brw.pick, "Export saves to a
+ * card"), or marked for a copy or a template (marks.c). X marks or unmarks the one under the cursor; held, the
+ * arrows do the same to each save they move it onto (drag_mark) */
+
+static int grid_marked(int i)
+{
+    return brw.pick ? brw.pick[i] : marked(brw.saves[i].card, brw.saves[i].s.folder) >= 0;
+}
+
+/* the save at i marked (1) or not (0). 0 = it can't be: no more can be marked */
+static int grid_set(int i, int on)
+{
+    if (grid_marked(i) == on)
+        return 1;
+    if (!brw.pick)
+        return mark_toggle(&brw.saves[i]);
+    ui_lock();
+    brw.pick[i] = on;
+    brw.picked += on ? 1 : -1;
+    ui_unlock();
+    return 1;
+}
+
+/* (X held, drag_moved's) the save at i marked or unmarked as the one X was. A copy's save whose folder is marked on
+ * another card is left as it is (X asks about that one; a drag goes on). 1 = it changed */
+static int grid_drag(int i, int on)
+{
+    if (grid_marked(i) == on || (on && !brw.pick && marks.copy && marked_elsewhere(&brw.saves[i]) >= 0))
+        return 0;
+    return grid_set(i, on);
+}
+
+/* X on the save at i: marked if it wasn't, unmarked if it was. drag = X held from here drags that (not after a
+ * question that X answered) */
+static void grid_toggle(int i, int drag)
+{
+    int on = !grid_marked(i), ok = grid_set(i, on);
+    if (ok && drag)
+        drag_start(on, grid_drag);
+    sound_play(ok && on ? SND_CONFIRM : SND_BACK);
+}
+
 static void scene_browser(float t)
 {
     char s[120];
@@ -128,7 +170,7 @@ static void scene_browser(float t)
         for (i = first; i < brw.n && i < last; i++) {
             float cx, cy;
             int k;
-            if (brw.pick ? !brw.pick[i] : marked(brw.saves[i].card, brw.saves[i].s.folder) < 0)
+            if (!grid_marked(i))
                 continue;
             grid_cell(i, 4.2f, &cx, &cy);
             ui_light(cx + 22, cy + 2, 16, 16, COLOR_OK, 0x60);
@@ -631,15 +673,17 @@ static void browser_refresh(card_t *c)
 }
 
 /* Waits on the screen of saves for one of those buttons. Meanwhile the icons are read, one by one while nobody
- * presses anything, and the arrows move the cursor */
+ * presses anything, and the arrows move the cursor (marking, with X held, the saves they move it onto) */
 u32 browser_wait(u32 buttons)
 {
     for (;;) {
         int pending = 1, n = brw.n, k = brw.cursor;
         u32 b, keys = PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT | buttons;
         iconKeys = keys;
-        while (pending && !(b = wait_nav_ms(keys, 0)))
+        while (pending && !(b = wait_nav_ms(keys, 0))) {
+            drag_tick();   /* (wait_nav's own waiting has it too) */
             pending = load_next_icon();
+        }
         if (!pending)
             b = wait_nav(keys);
         if (!(b & (PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT)))
@@ -662,7 +706,7 @@ u32 browser_wait(u32 buttons)
                 brw.top = k / GRID_COLS - GRID_ROWS + 1;
             ui_unlock();
             drop_far_icons();
-            sound_play(SND_MOVE);
+            sound_play(brw.pick || marks.on ? drag_moved(k) : SND_MOVE);
         }
     }
 }
@@ -852,12 +896,12 @@ out:
     return made;
 }
 
-/* "Export saves to a card": the saves shown, all picked at first. X picks or leaves out the one under the cursor,
- * square all of them at once (none, or all again when none is), START goes on with those to where the new card goes.
- * A card made, or circle, ends the picking */
+/* "Export saves to a card": the saves shown, all picked at first. X picks or leaves out the one under the cursor (and
+ * held, each save the arrows move it onto: grid_drag), square all of them at once (none, or all again when none is),
+ * START goes on with those to where the new card goes. A card made, or circle, ends the picking */
 static void export_pick(void)
 {
-    int n = brw.n, i;
+    int n = brw.n, on;
     unsigned char *pick = malloc(n ? n : 1);
     if (!pick)
         return;
@@ -867,8 +911,10 @@ static void export_pick(void)
     brw.picked = n;
     ui_unlock();
     ui_scene(scene_browser);
+    drag_stop();
     for (;;) {
         u32 b = browser_wait(PAD_CROSS | PAD_CIRCLE | PAD_SQUARE | PAD_START);
+        drag_stop();
         if (b & PAD_CIRCLE) {
             sound_play(SND_BACK);
             break;
@@ -897,20 +943,17 @@ static void export_pick(void)
             ui_scene(scene_browser);
             continue;
         }
-        if ((b & PAD_CROSS) && !n)
-            continue;
-        ui_lock();
         if (b & PAD_CROSS) {
-            pick[brw.cursor] = !pick[brw.cursor];
-            brw.picked += pick[brw.cursor] ? 1 : -1;
-            i = pick[brw.cursor];
-        } else {
-            i = !brw.picked;
-            memset(pick, i, n);
-            brw.picked = i ? n : 0;
+            if (n)
+                grid_toggle(brw.cursor, 1);
+            continue;
         }
+        ui_lock();   /* square */
+        on = !brw.picked;
+        memset(pick, on, n);
+        brw.picked = on ? n : 0;
         ui_unlock();
-        sound_play(i ? SND_CONFIRM : SND_BACK);
+        sound_play(on ? SND_CONFIRM : SND_BACK);
     }
     ui_lock();
     brw.pick = NULL;
@@ -924,6 +967,7 @@ static void export_pick(void)
 void card_screen(card_t *c)
 {
     int all = c == &allGames, mine = 0;   /* mine = the marking going on began on this screen: a copy */
+    drag_stop();
     brw.n = 0;
     brw.note[0] = 0;
     brw.emptyText = brw.nLegend = 0;
@@ -935,6 +979,7 @@ void card_screen(card_t *c)
     for (;;) {
         u32 b = browser_wait(PAD_CROSS | PAD_CIRCLE | PAD_TRIANGLE | (marks.on ? PAD_START : (c == &fileCard ? PAD_SQUARE : 0)));
         int n = brw.n;
+        drag_stop();
         if (b & PAD_CIRCLE) {
             sound_play(SND_BACK);
             if (mine && !copy_leave(c)) {   /* (the screen stays: marking still, or with nothing marked any more) */
@@ -957,7 +1002,7 @@ void card_screen(card_t *c)
                 /* (one of that folder marked on another card: asked first, on a screen of its own) */
                 int asked = marks.copy ? mark_same_folder(&brw.saves[brw.cursor]) : 1;
                 if (asked)
-                    sound_play(mark_toggle(&brw.saves[brw.cursor]) ? SND_CONFIRM : SND_BACK);
+                    grid_toggle(brw.cursor, asked == 1);
                 if (asked != 1)
                     ui_scene(scene_browser);
             }

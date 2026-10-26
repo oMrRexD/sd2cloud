@@ -14,6 +14,37 @@ u64 now_ms(void) { return GetTimerSystemTime() / (kBUSCLK / 1000); }   /* the SD
 
 void sleep_ms(int ms) { usleep(ms * 1000); }
 
+/* A DualShock is put in analog mode once it answers (and again after it was unplugged, or its port opened again), for
+ * its left stick to move the cursor as the arrows do; its ANALOG button can still take it out of that */
+static int analogAsked;
+
+static void analog_mode(int st)
+{
+    int i, n;
+    if (st == PAD_STATE_DISCONN)
+        analogAsked = 0;
+    if (analogAsked || st != PAD_STATE_STABLE)
+        return;
+    analogAsked = 1;
+    if (padInfoMode(0, 0, PAD_MODECURID, 0) == PAD_TYPE_DUALSHOCK)
+        return;
+    for (n = padInfoMode(0, 0, PAD_MODETABLE, -1), i = 0; i < n && padInfoMode(0, 0, PAD_MODETABLE, i) != PAD_TYPE_DUALSHOCK; i++)
+        ;
+    if (i < n)
+        log_msg("controller: analog mode, for its left stick (%d)", padSetMainMode(0, 0, PAD_MMODE_DUALSHOCK, PAD_MMODE_UNLOCK));
+}
+
+/* the left stick, as the arrows: pushed well away from the middle, the way it goes most. Once it is, it is let go only
+ * nearer the middle, so that it doesn't flicker at the edge */
+static u32 stick_arrows(int h, int v)
+{
+    static u32 was;
+    int dx = h - 128, dy = v - 128, ax = dx < 0 ? -dx : dx, ay = dy < 0 ? -dy : dy, need = was ? 40 : 72;
+    if (ax < need && ay < need)
+        return was = 0;
+    return was = ax >= ay ? (dx < 0 ? PAD_LEFT : PAD_RIGHT) : (dy < 0 ? PAD_UP : PAD_DOWN);
+}
+
 u32 pad_buttons(void)
 {
     static u64 lost;   /* since when the controller hasn't answered (0 = it answers) */
@@ -23,10 +54,13 @@ u32 pad_buttons(void)
 #ifdef DEBUG_BUILD
     if (scriptLive)   /* (the script holds the buttons, while what is under way only looks at them) */
         return script_live_button();
+    if (scriptHeld)
+        return scriptHeld;
 #endif
     if (!padOpen)
         return 0;
     st = padGetState(0, 0);
+    analog_mode(st);
     if (st != PAD_STATE_STABLE && st != PAD_STATE_FINDCTP1) {
         /* The controller and the memory card in slot 1 share the PS2's port: a device that drops its card for a moment
          * left the controller without answering for most of a minute (an sd2psx, 10/2026). After 3 s of that, the
@@ -38,6 +72,7 @@ u32 pad_buttons(void)
             padPortClose(0, 0);
             log_msg("controller: no answer for 3 s (state %d), its port opened again (%d)", st, padPortOpen(0, 0, padArea));
             lost = now;
+            analogAsked = 0;
         }
         return 0;
     }
@@ -45,6 +80,8 @@ u32 pad_buttons(void)
     if (padRead(0, 0, &b) == 0)
         return 0;
     held = 0xffff ^ b.btns;
+    if ((b.mode >> 4) == PAD_TYPE_DUALSHOCK)
+        held |= stick_arrows(b.ljoy_h, b.ljoy_v);
     if (circleConfirms)   /* the program asks for cross to confirm: it gets the circle, and the other way around */
         held = (held & ~(PAD_CROSS | PAD_CIRCLE)) | (held & PAD_CROSS ? PAD_CIRCLE : 0) | (held & PAD_CIRCLE ? PAD_CROSS : 0);
     return held;
@@ -99,6 +136,7 @@ static u32 nav_wait(u32 mask, int ms, u32 repeat)
 #ifdef DEBUG_BUILD
     if (hasScript) {
         u32 b;
+        held = scriptHeld;   /* (what the script holds down isn't pressed again, as a button held isn't) */
         if (ms >= 0)
             return 0;   /* with a script, the background work goes first: the presses come when the screen just waits */
         if ((b = script_next_button(mask)) != 0)

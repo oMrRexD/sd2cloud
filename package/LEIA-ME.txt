@@ -104,9 +104,12 @@ abre o SD2Cloud por ele. O sd2psx pode ser retirado e recolocado com o SD2Cloud 
 
 TELA PRINCIPAL
 Os cartões de memória ficam listados à esquerda com um indicador de status (verde = sincronizado; amarelo = não
-sincronizado ou nunca sincronizado). O cartão selecionado aparece à direita com a data do último backup. Use
-Cima e Baixo para selecionar um cartão. O botão O sai do aplicativo: escolha para onde ir (os programas da pasta
-APPS, "Executar um ELF..." ou o navegador do PS2); a última escolha fica guardada.
+sincronizado ou nunca sincronizado). O cartão selecionado aparece à direita com a data do último backup. Use Cima
+e Baixo para selecionar um cartão (o analógico esquerdo move o cursor como o direcional, em todas as telas). Numa
+tela em que o X marca e desmarca (os itens de uma cópia, os itens, jogos e cartões de um template, "Exportar saves
+para um cartão", "Converter para Game ID"), o X segurado faz o mesmo com tudo por onde o cursor passar em seguida
+(um toque rápido no X, com o cursor movido ao mesmo tempo, não). O botão O sai do aplicativo: escolha para onde ir
+(os programas da pasta APPS, "Executar um ELF..." ou o navegador do PS2); a última escolha fica guardada.
 Os cartões ficam agrupados em abas, acima da lista: Cartões (os cartões numerados, Card1, Card2..., as pastas
 com nomes seus, e "Novo cartão" na última linha), Jogos (os cartões de Game ID, em pastas com o nome de cada
 jogo: X abre uma pasta, O volta), Boot (o BootCard), VMCs do OPL (veja VMCS DO OPL), Biblioteca (veja A
@@ -137,10 +140,12 @@ cinza, e as opções dele oferecem mover os saves para o cartão que o sd2psx ab
   cujo nome aparece no topo da página do item, e o que é feito com um item é feito nesse cartão. Um item que
   mais de um cartão tem (a mesma pasta com os mesmos arquivos, byte a byte, como um template colocado em todos
   os cartões) aparece uma vez.
-- TRIÂNGULO, com os itens de um cartão na tela, abre as opções: "Sincronizar agora", para esse cartão;
-  "Ordenar por" (a data, decrescente ou crescente, ou o nome do jogo), para todos os cartões; "Converter para
-  Game ID"; e, em "Todos os saves", "Repetidos", ocultos ou exibidos, e "Exportar saves para um cartão". No
-  Memory Card: "Enviar ao Drive" e "Restaurar backup" (veja ARQUIVOS).
+- TRIÂNGULO, com os itens de um cartão na tela, abre as opções: "Sincronizar agora", para esse cartão; "Ordenar
+  por" (a data, decrescente ou crescente, ou o nome do jogo), para todos os cartões; "Converter para Game ID"; e,
+  em "Todos os saves", "Repetidos", ocultos ou exibidos, e "Exportar saves para um cartão". No Memory Card:
+  "Enviar ao Drive" e "Restaurar backup" (veja ARQUIVOS). "Exportar saves para um cartão" mostra os itens todos
+  marcados: X deixa um de fora, QUADRADO desmarca todos (sem nenhum marcado, marca todos de novo) e START segue
+  para o local do novo cartão.
 - START abre os ajustes (veja AJUSTES), e SELECT as ferramentas (veja TEMPLATES e CÓPIAS DE SEGURANÇA).
 - X sobre um item abre a página dele, com Copiar, Mover, Excluir, Enviar ao Drive e Versões no Drive (veja
   BACKUP POR SAVE).
