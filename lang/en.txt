@@ -648,7 +648,7 @@ T_SIZE_NEED = Used space: %s
 # Up to 2 lines.
 T_SIZE_FREE = Free space: %s
 # Up to 5 lines.
-T_SIZE_BIG = Cards larger than 8 MB depend on the microSD's speed. On slow microSD cards, data corruption may occur.
+T_SIZE_BIG = Above 8 MB, a card needs a fast microSD: a slow one can corrupt its data.
 # Up to 3 lines.
 T_SIZE_NONE = The selected saves exceed the maximum capacity of a memory card.
 # Up to 6 lines.

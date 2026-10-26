@@ -644,8 +644,8 @@ T_SIZE_RECOMMENDED = %d MB (recomendado)
 T_SIZE_NEED = Espacio usado: %s
 # Up to 2 lines. English: Free space: %s
 T_SIZE_FREE = Espacio libre: %s
-# Up to 5 lines. English: Cards larger than 8 MB depend on the microSD's speed. On slow microSD cards, data corruption may occur.
-T_SIZE_BIG = Las tarjetas de más de 8 MB dependen de la velocidad de la microSD. En microSD lentas, existe riesgo de corrupción de datos.
+# Up to 5 lines. English: Above 8 MB, a card needs a fast microSD: a slow one can corrupt its data.
+T_SIZE_BIG = Por encima de 8 MB, la tarjeta necesita una microSD rápida: una lenta puede corromper los datos.
 # Up to 3 lines. English: The selected saves exceed the maximum capacity of a memory card.
 T_SIZE_NONE = Las partidas seleccionadas superan la capacidad máxima de una tarjeta de memoria.
 # Up to 6 lines. English: Below 8 MB, the sd2psx may create the card unformatted. If so, format it from the PS2 browser or from the game.

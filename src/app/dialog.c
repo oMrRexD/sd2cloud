@@ -153,14 +153,19 @@ static struct {
     int n, cursor, top;
     int noted;        /* the items have notes: the wide box */
     char note[320];   /* on the right: what the item under the cursor means ("" = nothing) */
+    int noteH;        /* the tallest of the items' notes: the box is that tall at least, whichever item is on */
 } pick;
 
 static void scene_pick(float t)
 {
     int max = pick.noted ? PICK_NOTED_ROWS : PICK_ROWS, pitch = pick.noted ? PICK_NOTED_ROW : 32,
-        rows = pick.n < max ? pick.n : max, w = pick.noted ? PICK_NOTED_W : PICK_W, h = 56 + rows * pitch + 24,
-        x = (W - w) / 2, y = LOOK_TOP + (LOOK_BOTTOM - LOOK_TOP - h) / 2, i;
-    float cx = pick.noted ? x + 28 + PICK_NOTED_LIST / 2.0f : W / 2.0f;
+        rows = pick.n < max ? pick.n : max, w = pick.noted ? PICK_NOTED_W : PICK_W, h = 56 + rows * pitch + 24, x, y, i;
+    float cx;
+    if (pick.noted && 62 + pick.noteH + 24 > h)   /* (a note taller than the list: the box holds it too) */
+        h = 62 + pick.noteH + 24;
+    x = (W - w) / 2;
+    y = LOOK_TOP + (LOOK_BOTTOM - LOOK_TOP - h) / 2;
+    cx = pick.noted ? x + 28 + PICK_NOTED_LIST / 2.0f : W / 2.0f;
     look_space();
     look_frame();
     ui_alpha(look_fade(t));
@@ -198,6 +203,11 @@ int choose_noted(const char *title, const char *const *items, int n, int start, 
     pick.n = n;
     pick.cursor = start >= 0 && start < n ? start : 0;
     pick.top = pick.cursor >= rows ? pick.cursor - rows + 1 : 0;
+    for (pick.noteH = 0, i = 0; note && i < n; i++) {   /* (the box doesn't change its height as the cursor goes) */
+        int h = note(i) ? ui_paragraph_height(FONT_SMALL, PICK_NOTE_W, note(i)) : 0;
+        if (h > pick.noteH)
+            pick.noteH = h;
+    }
     snprintf(pick.note, sizeof(pick.note), "%s", note && note(pick.cursor) ? note(pick.cursor) : "");
     ui_unlock();
     ui_scene(scene_pick);
