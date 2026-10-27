@@ -123,12 +123,14 @@ PicoMemcard+/Zero; la PS2 la llama MMCE) y de la MemCard PRO2, y con Memory Card
 ## Instalación
 
 1. Descarga `SD2Cloud-vX.Y.zip` desde la [última release](../../releases/latest).
-2. Extráelo en la raíz del MMCE. Añade `APPS/SD2Cloud` (la aplicación) y `SD2Cloud/sd2cloud.example.ini`, que explica
-   cada ajuste: SD2Cloud escribe sus ajustes (`SD2Cloud/sd2cloud.ini`) la primera vez que se abre, así que extraer una
-   versión nueva sobre la anterior los conserva. Para configurarlos en un PC antes del primer uso, cambia el nombre de
-   `sd2cloud.example.ini` a `sd2cloud.ini` y edítalo. La carátula y el logo que OPL muestra para SD2Cloud en su pestaña
-   Apps van a la carpeta `ART`. El mismo arte con su línea en portugués está en `Extras/ART pt-BR`, para copiarlo sobre
-   esos dos archivos.
+2. Extráelo en la raíz del MMCE. Esto añade:
+   - `APPS/SD2Cloud`: la aplicación;
+   - `ART`: la carátula y el logo que OPL muestra para SD2Cloud en su pestaña Apps;
+   - `Extras`: el mismo arte con su línea en portugués (para copiarlo sobre los dos archivos de `ART`), el paquete SAS
+     (ver más abajo) y `sd2cloud.example.ini`, que explica cada ajuste.
+
+   La primera vez que se abre, SD2Cloud crea su archivo de ajustes, `SD2Cloud/sd2cloud.ini`. El zip no trae ese
+   archivo, así que extraer una versión nueva sobre la anterior conserva tus ajustes.
 3. Abre SD2Cloud: desde la pestaña Apps de OPL o ejecutando `APPS/SD2Cloud/SD2CLOUD.ELF` con cualquier lanzador
    (wLaunchELF, por ejemplo). La carpeta no tiene que quedarse en `APPS`.
 4. Conecta tu cuenta de Google cuando te lo pida (o más tarde, en Ajustes > Google Drive): entra en google.com/device

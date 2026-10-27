@@ -3,14 +3,18 @@ SD2Cloud 2.0
 
 Gerencie e proteja os cartões de memória do seu PS2, direto no console.
 
-Antes de usar: o SD2Cloud altera os seus cartões de memória quando copia, move, exclui, importa ou restaura dados
-salvos, e quando cria, redimensiona ou exclui cartões. Faça um backup antes: sincronize os cartões com o Google
-Drive, ou copie a pasta MemoryCards do microSD para um PC.
+Antes de usar: o SD2Cloud grava nos seus cartões de memória sempre que copia, move, exclui, importa ou restaura
+saves, e sempre que cria, redimensiona ou exclui cartões. Faça um backup antes: sincronize os cartões com o Google
+Drive ou copie a pasta MemoryCards do microSD para um PC.
 
-O SD2Cloud roda no próprio PS2. Ele trabalha com os cartões de memória guardados no MMCE (o microSD de um
-dispositivo da família sd2psx com o firmware sd2psXtd: sd2psx, PSXMemCard, PSXMemCard Gen2, PicoMemcard+/Zero,
-como o PS2 o chama) e em um MemCard PRO2, e com Memory Cards comuns, os cartões virtuais do OPL (VMC) e
-arquivos de cartão de memória em um pendrive USB, em um MX4SIO ou no HD interno. Não é preciso um PC.
+O SD2Cloud é um aplicativo que roda no próprio PS2, sem precisar de PC. Ele faz backup dos seus cartões de memória
+no Google Drive e permite organizar os seus saves direto no console. Funciona com:
+- sd2psx e aparelhos da mesma família (PSXMemCard, PSXMemCard Gen2, PicoMemcard+/Zero) com o firmware sd2psXtd.
+  No PS2, esses aparelhos (e o microSD deles) são chamados de MMCE, e é esse o nome usado aqui.
+- MemCard PRO2.
+- Memory Cards comuns: os cartões físicos, nos slots do console.
+- VMCs do OPL (os cartões de memória virtuais) e outros arquivos de cartão de memória guardados em um pendrive
+  USB, em um MX4SIO ou no HD interno.
 
 O QUE ELE FAZ
 Sincronização com a nuvem
@@ -59,12 +63,15 @@ REQUISITOS
   cabo, e uma conta do Google.
 
 INSTALAÇÃO
-1. Extraia este arquivo .zip na raiz do MMCE. Serão criadas as pastas APPS/SD2Cloud (o aplicativo) e SD2Cloud, com
-   o sd2cloud.example.ini, que explica cada configuração. O SD2Cloud grava as configurações dele,
-   SD2Cloud/sd2cloud.ini, na primeira vez que é aberto; por isso, extrair uma versão nova por cima da anterior não
-   as altera. Para ajustá-las no PC antes disso, renomeie o sd2cloud.example.ini para sd2cloud.ini (tire o
-   "example" do nome) e edite-o. A capa e a logo que o OPL exibe para o SD2Cloud na aba Apps vão para a pasta ART.
-   A mesma arte com a frase em português está em Extras/ART pt-BR, para copiar por cima desses dois arquivos.
+1. Extraia este arquivo .zip na raiz do MMCE. Ele cria:
+   - APPS/SD2Cloud: o aplicativo;
+   - ART: a capa e a logo que o OPL mostra para o SD2Cloud na aba Apps;
+   - Extras: a mesma arte com a frase em português (para copiar por cima dos dois arquivos de ART), o pacote SAS
+     (veja abaixo) e o sd2cloud.example.ini, que explica cada configuração.
+   Na primeira vez que é aberto, o SD2Cloud cria o arquivo de configurações dele, o SD2Cloud/sd2cloud.ini. Esse
+   arquivo não vem no .zip, então extrair uma versão nova por cima da anterior mantém as suas configurações. Para
+   ajustá-las no PC antes do primeiro uso, copie o Extras/sd2cloud.example.ini para uma pasta chamada SD2Cloud na
+   raiz do MMCE, renomeie-o para sd2cloud.ini e edite-o.
 2. Abra o SD2Cloud: pela aba Apps do OPL, ou executando APPS/SD2Cloud/SD2CLOUD.ELF em qualquer programa que
    abra um ELF (o wLaunchELF, por exemplo). A pasta não precisa ficar em APPS.
    Com um sd2psx, o SD2Cloud também pode ficar em um pendrive, em um cartão MX4SIO ou no HD interno (exFAT ou
@@ -411,8 +418,8 @@ navegador do PS2. A linha "name", abaixo de "return", dá a esse programa o nome
 LOCAL DOS ARQUIVOS
 - APPS/SD2Cloud/   o aplicativo (atualizado pelo próprio SD2Cloud; veja ATUALIZAÇÃO).
 - SD2Cloud/        na raiz do MMCE (sem sd2psx, no dispositivo de onde o SD2Cloud é aberto):
-                   sd2cloud.ini (as configurações; se for apagado, o SD2Cloud o recria),
-                   sd2cloud.example.ini (o que cada configuração significa; renomeado sd2cloud.ini, é lido),
+                   sd2cloud.ini (as configurações, explicadas em Extras/sd2cloud.example.ini; se for
+                   apagado, o SD2Cloud o recria),
                    sync-error.txt (o que aconteceu na última sincronização automática que falhou, se houver:
                    vale mandar junto ao relatar um problema),
                    state.ini (o registro do que já foi enviado) e token.dat (o acesso à sua conta do Google;

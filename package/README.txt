@@ -3,14 +3,18 @@ SD2Cloud 2.0
 
 Manage and back up your PS2 memory cards, right on the console.
 
-Before you use it: SD2Cloud changes your memory cards when it copies, moves, deletes, imports or restores saved
-data, and when it creates, resizes or deletes cards. Keep a backup before you do: sync your cards to Google Drive,
-or copy the MemoryCards folder of the microSD to a PC.
+Before you use it: SD2Cloud writes to your memory cards whenever it copies, moves, deletes, imports or restores
+saves, and whenever it creates, resizes or deletes cards. Make a backup first: sync your cards to Google Drive, or
+copy the MemoryCards folder from the microSD to a PC.
 
-SD2Cloud runs on the PS2 itself. It works with the memory cards stored on the MMCE (the microSD of an
-sd2psx-family device with the sd2psXtd firmware: sd2psx, PSXMemCard, PSXMemCard Gen2, PicoMemcard+/Zero, as the
-PS2 names it) and on a MemCard PRO2, and with regular Memory Cards, the OPL's virtual memory cards (VMC) and
-memory card files on a USB drive, an MX4SIO or the internal HDD. No PC is required.
+SD2Cloud is an app that runs on the PS2 itself, with no PC needed. It backs up your memory cards to Google Drive
+and lets you manage your saves right on the console. It works with:
+- sd2psx-family devices (sd2psx, PSXMemCard, PSXMemCard Gen2, PicoMemcard+/Zero) running the sd2psXtd firmware.
+  On the PS2, these devices (and their microSD) are known as MMCE, the name this text uses for them.
+- MemCard PRO2.
+- Regular Memory Cards: the physical cards in the console's slots.
+- OPL's virtual memory cards (VMCs) and other memory card files kept on a USB drive, an MX4SIO or the internal
+  HDD.
 
 WHAT IT DOES
 Cloud sync
@@ -56,12 +60,15 @@ REQUIREMENTS
   with a cable, and a Google account.
 
 INSTALLATION
-1. Extract this .zip file to the root of the MMCE. It adds APPS/SD2Cloud (the application) and
-   SD2Cloud/sd2cloud.example.ini, which explains every setting. SD2Cloud writes its settings,
-   SD2Cloud/sd2cloud.ini, the first time it runs, so extracting a new version over an old one keeps them; to set
-   them on a PC before that, rename sd2cloud.example.ini to sd2cloud.ini (take "example" out of its name) and edit
-   it. The cover and the logo OPL shows for SD2Cloud in its Apps tab go to the ART folder. The same art with its
-   line in Portuguese is in Extras/ART pt-BR, to copy over those two files.
+1. Extract this .zip file to the root of the MMCE. It adds:
+   - APPS/SD2Cloud: the application;
+   - ART: the cover and the logo OPL shows for SD2Cloud in its Apps tab;
+   - Extras: the same art with its line in Portuguese (to copy over the two files in ART), the SAS package (see
+     below) and sd2cloud.example.ini, which explains every setting.
+   The first time it runs, SD2Cloud creates its settings file, SD2Cloud/sd2cloud.ini. This .zip doesn't have that
+   file, so extracting a new version over an old one keeps your settings. To set them on a PC before the first
+   run, copy Extras/sd2cloud.example.ini into a folder named SD2Cloud at the root of the MMCE, rename it to
+   sd2cloud.ini and edit it.
 2. Open SD2Cloud: from the Apps tab of OPL, or by running APPS/SD2Cloud/SD2CLOUD.ELF with any launcher
    (wLaunchELF, for example). The folder does not have to stay in APPS.
    With an sd2psx, SD2Cloud can also live on a USB drive, an MX4SIO card or the internal HDD (exFAT or APA):
@@ -389,8 +396,8 @@ line, under "return", gives that program the name shown on screen.
 FILE LOCATIONS
 - APPS/SD2Cloud/   the application (updated by SD2Cloud itself; see UPDATING).
 - SD2Cloud/        on the MMCE root (without an sd2psx, on the device SD2Cloud is opened from):
-                   sd2cloud.ini (the settings; if deleted, SD2Cloud recreates it),
-                   sd2cloud.example.ini (what each setting means; renamed sd2cloud.ini, it is read),
+                   sd2cloud.ini (the settings, explained in Extras/sd2cloud.example.ini; if deleted,
+                   SD2Cloud recreates it),
                    sync-error.txt (what happened in the last automatic sync that failed, if any: worth
                    sending along when reporting a problem),
                    state.ini (a record of what has been uploaded) and token.dat (access to your Google

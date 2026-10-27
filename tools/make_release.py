@@ -2,8 +2,8 @@
 update downloads those), SHA256SUMS.txt and RELEASE-NOTES.md (docs/release-notes.md with the table of hashes).
 
 The zip holds the two ELFs built by make (dist/SD2CLOUD.ELF, dist/SD2CLOUD-IGR.ELF) and what is in package/: the
-texts, the example of the settings file, and the cover and the logo OPL shows for the app in its Apps tab
-(package/art, made by tools/make_opl_art.py). Not the settings file itself (package/sd2cloud.ini): the app writes
+texts, the cover and the logo OPL shows for the app in its Apps tab (package/art, made by tools/make_opl_art.py), and
+in Extras the example of the settings file. Not the settings file itself (package/sd2cloud.ini): the app writes
 that one the first time it runs, and a zip extracted over an installation would put the user's settings back to
 their defaults.
 
@@ -92,7 +92,6 @@ def main():
         ("APPS/SD2Cloud/SD2CLOUD.ELF", (DIST / "SD2CLOUD.ELF").read_bytes()),
         ("APPS/SD2Cloud/SD2CLOUD-IGR.ELF", (DIST / "SD2CLOUD-IGR.ELF").read_bytes()),
         ("APPS/SD2Cloud/title.cfg", title),
-        ("SD2Cloud/sd2cloud.example.ini", crlf((PKG / "sd2cloud.example.ini").read_bytes())),
         ("README.txt", crlf((PKG / "README.txt").read_bytes())),
         ("LEIA-ME.txt", crlf((PKG / "LEIA-ME.txt").read_bytes())),
         ("THIRD-PARTY-NOTICES.txt", crlf((PKG / "THIRD-PARTY-NOTICES.txt").read_bytes())),
@@ -106,6 +105,9 @@ def main():
         ("Extras/ART pt-BR/SD2CLOUD.ELF_LGO.png", (PKG / "art" / "pt-BR" / "SD2CLOUD.ELF_LGO.png").read_bytes()),
         # what SD2Cloud itself writes to the memory card, for whoever wants to import it into a card by hand
         (f"Extras/{SAS}.psu", package),
+        # what each setting means; in Extras, as the app doesn't read it (a SD2Cloud folder with only this in it
+        # looked like where the program was)
+        ("Extras/sd2cloud.example.ini", crlf((PKG / "sd2cloud.example.ini").read_bytes())),
     ]
     tmp = DIST / (zip_name + ".new")
     with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as z:

@@ -136,7 +136,7 @@ void config_read(void)
 
 /* The sd2cloud.ini the app creates when there is none: package/sd2cloud.ini, embedded by the build (the zip doesn't
  * have it: extracted over an installation, it would put the settings back to their defaults). It only has the options
- * at their defaults; what each one means is in package/sd2cloud.example.ini, which the zip has */
+ * at their defaults; what each one means is in package/sd2cloud.example.ini, which the zip has in Extras */
 extern unsigned char ini_default[];
 extern unsigned int size_ini_default;
 

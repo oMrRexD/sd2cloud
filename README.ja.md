@@ -119,12 +119,14 @@ microSD にあるメモリーカード、通常のメモリーカード、OPL �
 ## インストール
 
 1. [最新のリリース](../../releases/latest) から `SD2Cloud-vX.Y.zip` をダウンロードします。
-2. MMCE のルートに展開します。`APPS/SD2Cloud`（アプリ）と、各設定を説明した `SD2Cloud/sd2cloud.example.ini` が追加されます。
-   設定ファイル（`SD2Cloud/sd2cloud.ini`）は SD2Cloud が初回起動時に作成するため、新しいバージョンを上書きで展開しても設定は保持されます。
-   初回起動の前に PC で設定したい場合は、`sd2cloud.example.ini` の名前を `sd2cloud.ini` に変更して編集します。
-   OPL の Apps タブで SD2Cloud に表示されるカバーとロゴは
-   `ART` フォルダーに入ります。ポルトガル語の一文が入った同じアートが `Extras/ART pt-BR` にあり、この 2 つの
-   ファイルに上書きコピーできます。
+2. MMCE のルートに展開します。次のものが追加されます。
+   - `APPS/SD2Cloud`：アプリ
+   - `ART`：OPL の Apps タブで SD2Cloud に表示されるカバーとロゴ
+   - `Extras`：ポルトガル語の一文が入った同じアート（`ART` の 2 つのファイルに上書きコピーできます）、SAS
+     パッケージ（下記参照）、各設定を説明した `sd2cloud.example.ini`
+
+   設定ファイル（`SD2Cloud/sd2cloud.ini`）は SD2Cloud が初回起動時に作成します。zip には含まれないため、
+   新しいバージョンを上書きで展開しても設定は保持されます。
 3. SD2Cloud を開きます。OPL の Apps タブから、または任意のランチャー（たとえば wLaunchELF）で
    `APPS/SD2Cloud/SD2CLOUD.ELF` を実行します。フォルダーは `APPS` になくてもかまいません。
 4. 求められたら（またはあとで 設定 > Google ドライブ から）Google アカウントを接続します。スマートフォンやパソコンで
