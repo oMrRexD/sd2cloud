@@ -893,7 +893,7 @@ T_SAFETY_FAILED_TEXT = Продолжить всё равно?
 # Up to 2 lines. English: There are no safety copies.
 T_SAFETY_NONE = Страховых копий нет.
 # Up to 2 lines. English: A safety copy will be created first (Tools > Safety copies).
-T_SAFETY_NOTE = Сначала будет создана страховая копия (Инструменты > Страховые копии).
+T_SAFETY_NOTE = Сначала будет создана страховая копия (Сервис > Страховые копии).
 # Up to 2 lines. English: Replace %s with its copy from %s?
 T_SAFETY_REPLACE_ASK = Заменить %s копией от %s?
 # Up to 2 lines. English: The card's current content will be replaced.

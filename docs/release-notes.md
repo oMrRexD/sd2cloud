@@ -60,7 +60,7 @@ SD2Cloud runs on the PS2 itself and works with the memory cards on the microSD o
 - Interface inspired by the PlayStation BB Navigator, with sound effects.
 - English, Portuguese, Spanish, Russian, Ukrainian and Japanese.
 
-**Installation:** extract `SD2Cloud-v2.0.zip` to the root of the sd2psx microSD and open SD2Cloud from the OPL Apps tab. With no sd2psx, extract it to a USB drive, an MX4SIO or the internal HDD instead. See README.txt for details. The zip no longer has `SD2Cloud/sd2cloud.ini`: SD2Cloud creates it the first time it runs, so extracting the zip over an installation keeps your settings (to set them before the first run, rename `sd2cloud.example.ini` to `sd2cloud.ini`).
+**Installation:** extract `SD2Cloud-v2.0.zip` to the root of the sd2psx microSD and open SD2Cloud from the OPL Apps tab. With no sd2psx, extract it to a USB drive, an MX4SIO or the internal HDD instead. See README.txt for details. The zip no longer has `SD2Cloud/sd2cloud.ini`: SD2Cloud creates it the first time it runs, so extracting the zip over an installation keeps your settings. `Extras/sd2cloud.example.ini` explains every setting.
 
 The full list of changes since 1.7.1: https://github.com/oMrRexD/sd2cloud/compare/v1.7.1...v2.0
 
@@ -91,6 +91,6 @@ Agradecimentos a nuno6573 pelos testes da beta.
 
 **Antes de usar as ferramentas novas de cartão,** faça um backup do seu microSD: elas gravam nos seus cartões e, embora cada alteração seja conferida e as cópias de segurança fiquem guardadas, o backup é a única garantia.
 
-**Instalação:** extraia o `SD2Cloud-v2.0.zip` na raiz do microSD do sd2psx e abra o SD2Cloud pela aba Apps do OPL. Sem sd2psx, extraia num pendrive, num MX4SIO ou no HD interno. Consulte o LEIA-ME.txt para mais detalhes. O zip não traz mais o `SD2Cloud/sd2cloud.ini`: o SD2Cloud o cria na primeira vez que é aberto, então extrair o zip por cima de uma instalação mantém as suas configurações (para ajustá-las antes do primeiro uso, renomeie o `sd2cloud.example.ini` para `sd2cloud.ini`).
+**Instalação:** extraia o `SD2Cloud-v2.0.zip` na raiz do microSD do sd2psx e abra o SD2Cloud pela aba Apps do OPL. Sem sd2psx, extraia num pendrive, num MX4SIO ou no HD interno. Consulte o LEIA-ME.txt para mais detalhes. O zip não traz mais o `SD2Cloud/sd2cloud.ini`: o SD2Cloud o cria na primeira vez que é aberto, então extrair o zip por cima de uma instalação mantém as suas configurações. O `Extras/sd2cloud.example.ini` explica cada configuração.
 
 A lista completa de alterações desde a 1.7.1: https://github.com/oMrRexD/sd2cloud/compare/v1.7.1...v2.0
