@@ -4,7 +4,7 @@
  * once something else is picked the header says what (ui_over). */
 #include "app.h"
 
-#define NEXT_MAX (MAX_APPS + 3)
+#define NEXT_MAX (MAX_APPS + 4)
 #define NEXT_ROWS 6
 #define NEXT_W 380
 #define NEXT_KEYS (PAD_UP | PAD_DOWN | PAD_CROSS | PAD_CIRCLE | PAD_TRIANGLE)
@@ -62,12 +62,17 @@ static void next_list(void)
     nx.n = 0;
     target_name(!strcasecmp(cfg.igr_return, "auto") ? now : cfg.igr_return, nx.items[0], sizeof(nx.items[0]));
     snprintf(nx.values[nx.n++], sizeof(nx.values[0]), "%s", cfg.igr_return);
-    for (i = 0; i < nApps && nx.n < NEXT_MAX - 2; i++) {
+    for (i = 0; i < nApps && nx.n < NEXT_MAX - 3; i++) {   /* (room left for SD2Cloud, the browser, turning off) */
         target_on_sd(apps[i].path, w, sizeof(w));
         if (!strcasecmp(w, now))   /* (the one the settings have, first already) */
             continue;
         snprintf(nx.items[nx.n], sizeof(nx.items[0]), "%s", given_name(apps[i].path) ? given_name(apps[i].path) : apps[i].title);
         target_for_ini(apps[i].path, nx.values[nx.n++], sizeof(nx.values[0]));
+    }
+    target_on_sd(appPath, w, sizeof(w));
+    if (appPath[0] && strcasecmp(w, now) != 0) {   /* (SD2Cloud itself, its main screen: APPS's list leaves it out) */
+        snprintf(nx.items[nx.n], sizeof(nx.items[0]), "%s", APP_NAME);
+        target_for_ini(appPath, nx.values[nx.n++], sizeof(nx.values[0]));
     }
     for (i = 2; i < nx.n; i++)   /* (the programs by name, as the OPL's Apps tab has them: the folder's order is any) */
         for (k = i; k > 1 && strcasecmp(nx.items[k - 1], nx.items[k]) > 0; k--) {

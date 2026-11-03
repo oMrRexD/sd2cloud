@@ -196,11 +196,15 @@ Copiar e mover
 - START (Colar) cola todos no cartão em que você apertar: o que está aberto, ou o que está sob o cursor na lista
   de cartões. Um cartão sem espaço suficiente para eles fica como está. Apertado onde eles não podem ir (o cartão
   de onde todos vieram, ou "Todos os saves"), o START leva para a lista de cartões.
+- Se esse cartão já tem um save na mesma pasta, o SD2Cloud pergunta: X (Substituir) põe o novo no lugar dele;
+  QUADRADO (Manter os existentes), oferecido quando outros saves também vão, deixa os que já estão lá e copia o
+  resto. O save substituído fica guardado até o novo ser gravado, e volta se o novo não puder ser gravado.
 - Na aba Jogos da lista, quando os saves são todos de um jogo, a pasta desse jogo vem primeiro, em verde, com
   "Novo cartão" dentro. Se o jogo ainda não tem pasta, "Novo cartão" vem primeiro entre as pastas.
 - A aba Biblioteca da lista guarda os saves fora dos cartões (veja A BIBLIOTECA). A aba Arquivos da lista leva às
   pastas de um dispositivo (veja ARQUIVOS) e ao Memory Card.
-- Mover leva o save para outro cartão, escolhido do mesmo jeito.
+- Mover leva o save para outro cartão, escolhido do mesmo jeito, e pergunta do mesmo jeito quando esse cartão já
+  tem um save na mesma pasta.
 - Enviar ao Drive envia só esse save, como .psu, para a pasta Saves do cartão no Drive.
 - Para alterar o cartão que o sd2psx está usando, o SD2Cloud pergunta antes, troca o sd2psx para outro cartão,
   faz a alteração e volta. Só no caso de uma pasta com nome próprio é você quem precisa trocar o cartão no sd2psx
@@ -335,6 +339,9 @@ Instalar um arquivo de cartão de memória
 O Memory Card
 Um cartão de memória comum de PS2 no outro slot do console (nos dois slots, sem sd2psx) é uma linha da aba
 Arquivos.
+Com sd2psx, o cartão que ele está usando também é uma linha da aba Arquivos, pelo slot: "Memory Card 1" quando o
+sd2psx está no slot 1 (o Memory Card do slot 2 passa a ser "Memory Card 2"). Ela mostra a figura e o nome do
+cartão, e o X o abre como na aba Cartões.
 - X mostra os saves dele, que são copiados, movidos, excluídos e enviados ao Drive como os de um cartão. Saves
   podem ir para ele a partir dos cartões ou de arquivos .psu.
 - TRIÂNGULO, nos saves dele, tem:
@@ -425,7 +432,7 @@ abre uma página, O volta, e START sai dos ajustes de qualquer página.
     para o navegador do PS2; veja SINCRONIZAÇÃO AUTOMÁTICA). Depois de instalado, a mesma opção o reinstala (ou
     atualiza) ou o desinstala.
   - Saída do IGR: o programa aberto depois da sincronização pelo IGR. As opções são Automático (o OPL encontrado
-    no MMCE), os programas da pasta APPS e o navegador do PS2.
+    no MMCE), os programas da pasta APPS, o navegador do PS2 e "Desligar o PS2".
 - Cartões: Dispositivo (num microSD com os cartões dos dois aparelhos), Tamanho dos cartões novos (veja CARTÕES) e
   Pastas de VMC do OPL (veja VMCS DO OPL).
 - Atualizações: Verificar atualizações (procura uma versão nova na hora e, se houver, oferece a atualização) e
@@ -471,6 +478,11 @@ SINCRONIZAÇÃO AUTOMÁTICA DEPOIS DO JOGO (IGR)
 A partir daí, sair de um jogo pelo IGR abre o SD2Cloud: ele envia os cartões que mudaram, mostra "Envio
 concluído" e volta para o OPL. Nesse modo, o O cancela desde a primeira tela, inclusive enquanto os cartões são
 verificados e enquanto ele se conecta, e cancelar também volta para o OPL.
+O TRIÂNGULO (Ao terminar), em qualquer uma dessas telas, escolhe o que vem depois, só desta vez: o programa de
+"Saída do IGR", outro programa da pasta APPS, o próprio SD2Cloud (a tela principal), o navegador do PS2 ou
+"Desligar o PS2". A sincronização continua enquanto você escolhe, a escolha aparece no canto superior direito e
+vale tanto quando a sincronização termina quanto quando ela é cancelada. Para desligar o PS2 depois de toda
+sincronização, escolha "Desligar o PS2" em "Saída do IGR".
 O SD2Cloud pode ficar em qualquer pasta, no MMCE ou em outro dispositivo. Toda vez que abre, ele registra onde
 está (no sd2cloud.ini do MMCE, "app_path"; sem sd2psx, no próprio pacote, junto com os drivers desse
 dispositivo), e o pacote o abre a partir dali. O pacote encontra até uma pasta de APPS do MMCE que foi renomeada

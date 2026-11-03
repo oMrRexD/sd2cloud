@@ -184,11 +184,15 @@ Copying and moving
 - START (Paste) pastes them all into the card where you press it: the one that is open, or the one under the
   cursor in the list of cards. A card without enough space for them is left as it is. Pressed where they can't go
   (the card they all came from, or "All saves"), START takes you to the list of cards.
+- If that card already has a save in the same folder, SD2Cloud asks: X (Replace) puts the new one in its place;
+  SQUARE (Keep existing), offered when other saves go too, leaves the ones there and copies the rest. The save
+  that is replaced is kept aside until the new one is written, and put back if it can't be.
 - In the list's Games tab, when the saves are all from one game, that game's folder comes first, in green, with
   "New card" in it. If the game has no folder yet, "New card" comes first among the folders.
 - The Library tab of the list keeps the saves outside the cards (see THE LIBRARY). The Files tab of the list
   leads to the folders of a device (see FILES) and to the Memory Card.
-- Move takes the save to another card, chosen the same way.
+- Move takes the save to another card, chosen the same way, and asks the same way when that card already has a
+  save in the same folder.
 - Upload to Drive sends only that save, as a .psu, to the card's Saves folder on Drive.
 - To change the card the sd2psx is using, SD2Cloud asks first, then switches the sd2psx to another card, makes
   the change and switches back. Only for a folder with a name of its own do you have to switch the card on the
@@ -317,6 +321,9 @@ Installing a memory card file
 
 The Memory Card
 A regular PS2 memory card in the console's other slot (both slots, without an sd2psx) is a row of the Files tab.
+With an sd2psx, the card it is using is a row of the Files tab too, by its slot: "Memory Card 1" when the sd2psx
+is in slot 1 (the Memory Card in slot 2 is then "Memory Card 2"). It shows the card's picture and name, and X
+opens it as in the Cards tab.
 - X shows its saves, which are copied, moved, deleted and uploaded to Drive like a card's. Saves can go into it
   from the cards or from .psu files.
 - TRIANGLE, on its saves, has:
@@ -400,7 +407,7 @@ page, O goes back, and START leaves the settings from any page.
     the PS2 browser; see AUTOMATIC SYNC). Once it is installed, the same option reinstalls it (or updates it) or
     uninstalls it.
   - IGR path: the program started after the IGR sync. The choices are Automatic (the OPL found on the MMCE), the
-    programs in the APPS folder and the PS2 browser.
+    programs in the APPS folder, the PS2 browser and "Turn off the PS2".
 - Cards: Device (on a microSD with the cards of both devices), New card size (see CARDS) and OPL VMC folders (see
   OPL VMCS).
 - Updates: Check for updates (looks for a new version right away and, if there is one, offers to update) and
@@ -447,6 +454,10 @@ AUTOMATIC SYNC AFTER A GAME (IGR)
 From then on, quitting a game with IGR opens SD2Cloud: it uploads the cards that changed, shows "Upload complete"
 and goes back to OPL. In this mode, O cancels from the very first screen, also while the cards are checked and
 while it connects, and cancelling also goes back to OPL.
+TRIANGLE (When done), on any of these screens, picks what comes after, this time only: the program set in
+"IGR path", another program of the APPS folder, SD2Cloud itself (its main screen), the PS2 browser or "Turn off
+the PS2". The sync goes on while you pick, the choice shows at the top right, and it applies when the sync ends
+and when it is cancelled. To turn the PS2 off after every sync, choose "Turn off the PS2" in "IGR path".
 SD2Cloud can be in any folder, on the MMCE or on another device. Each time it opens, it records where it is (in
 sd2cloud.ini on the MMCE, "app_path"; without an sd2psx, in the package itself, along with that device's
 drivers), and the package starts it from there. The package even finds a folder of APPS on the MMCE that was

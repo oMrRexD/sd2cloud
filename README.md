@@ -182,12 +182,12 @@ The [README.txt](package/README.txt) in the zip explains every screen in detail.
 | Main screen | Up/Down: choose a card · Left/Right or L1/R1: change tab · L2/R2: the other device's cards (on a microSD with both) · X: open the card · TRIANGLE: card options (sync now, restore a backup, copy to a device, insert into the sd2psx, rename, change size, convert to Game ID, check card, delete card) · SELECT: Tools · START: Settings · O: exit |
 | Inside a card | X: open a save · TRIANGLE: options (sync this card; sort the saves by name or by date; convert to Game ID; in All saves, show or hide duplicates and export them all to a card; on a Memory Card, upload it to Drive or restore a backup) · O: back |
 | A save's page | Copy · Move · Delete · Upload to Drive · Versions on Drive |
-| After Copy | The save stays selected, and you can select more: X selects or unselects a save (hold X and move to do several in a row) · O: go back to the list of cards, to select saves on other cards too · TRIANGLE: cancel · START: paste them all into the open card, or into the card under the cursor in the list. In the list's Games tab, the folder of their game comes first, highlighted, with "New card" inside. The Library tab keeps them outside the cards. In the Files tab, X opens a device's folders, and START pastes the saves there as `.psu` files, or into the memory card file under the cursor. START on a Memory Card pastes them into it |
-| Files tab | X: open a device, a folder, a `.psu` file or a memory card file · SQUARE: install the selected `.psu` or save folder into a card, or install the selected memory card file as an MMCE card or as a file on a device (in that device's Files tab) · Left/Right: page up or down · O: back |
+| After Copy | The save stays selected, and you can select more: X selects or unselects a save (hold X and move to do several in a row) · O: go back to the list of cards, to select saves on other cards too · TRIANGLE: cancel · START: paste them all into the open card, or into the card under the cursor in the list. In the list's Games tab, the folder of their game comes first, highlighted, with "New card" inside. The Library tab keeps them outside the cards. In the Files tab, X opens a device's folders, and START pastes the saves there as `.psu` files, or into the memory card file under the cursor. START on a Memory Card pastes them into it · A save of the same folder already on that card: X replaces it, SQUARE (when other saves go too) keeps it |
+| Files tab | X: open a device, a folder, a `.psu` file or a memory card file · SQUARE: install the selected `.psu` or save folder into a card, or install the selected memory card file as an MMCE card or as a file on a device (in that device's Files tab) · Left/Right: page up or down · O: back · With an sd2psx, the card it is using is a row too (Memory Card and its slot number): X opens it |
 | Files tab > Google Drive | X: open a folder, a save's `.psu` (its page: import into a card, download, delete from Drive) or a card's backup (opens as a card) · SQUARE: install a card's backup (as from the card), or download any other file · TRIANGLE: delete it (it goes to Drive's trash) · O: back |
 | Tools (SELECT) | Templates (X: create a template or open one; TRIANGLE: set as default, add saves, apply template, template games, rename, delete) · Safety copies (X: restore one, or delete it) |
 | Settings (START) | Sync all cards · Google Drive (account, backups kept, format, backup by save, Library on Drive) · Automatic sync (on or off, SAS package, IGR path) · Cards (device, new card size, OPL VMC folders) · Updates · Language · About |
-| During a sync | O: cancel · SQUARE: skip the card being uploaded · SELECT: the list of the cards in this sync and how each one went (SELECT again goes back). On that list, SQUARE skips a card (press again to undo), and X offers to skip it, mark it as resolved (automatic sync leaves it alone until it changes again) or turn off its sync |
+| During a sync | O: cancel · SQUARE: skip the card being uploaded · SELECT: the list of the cards in this sync and how each one went (SELECT again goes back). On that list, SQUARE skips a card (press again to undo), and X offers to skip it, mark it as resolved (automatic sync leaves it alone until it changes again) or turn off its sync · At IGR, TRIANGLE (When done): what opens after it, this time only |
 
 ## Automatic sync after a game (IGR)
 
@@ -203,6 +203,11 @@ The [README.txt](package/README.txt) in the zip explains every screen in detail.
 
 From then on, quitting a game with IGR opens SD2Cloud, which uploads the cards that changed and goes back to OPL.
 The same option in Settings reinstalls or removes the package.
+
+While it does that, **TRIANGLE** (When done) picks what comes after the sync, this time only: another program of
+`APPS`, SD2Cloud itself, the PS2 Browser or **Turn off the PS2**. The sync goes on while you pick, and the choice
+applies both when it ends and when it is cancelled. To turn the PS2 off after every sync, choose Turn off the PS2 in
+**IGR path**, in the Settings.
 
 SD2Cloud can be in any folder, on the MMCE or on another device. Each time it opens, it records where it is (in
 `sd2cloud.ini` on the MMCE; without an sd2psx, in the package itself, along with that device's drivers), and the

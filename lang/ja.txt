@@ -211,7 +211,7 @@ T_IGR_DONE = アップロード完了
 T_IGR_NOTHING = 変更されたメモリーカードはありません。
 T_IGR_AFTER = 終了後
 T_IGR_AFTER_NOW = 終了後: %s
-T_POWER_OFF = PS2の電源を切る
+T_POWER_OFF = PS2 の電源を切る
 # One line. English: Sync now
 T_SYNC_NOW = 今すぐ同期
 # One line. English: Restore a backup
