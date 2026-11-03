@@ -275,6 +275,12 @@ static void cards_resort(void)
     snprintf(active, sizeof(active), "%s", activeCard >= 0 ? cards[activeCard].id : "");
     snprintf(moved, sizeof(moved), "%s", movedOff ? movedOff->id : "");
     snprintf(shown, sizeof(shown), "%s", c ? c->id : "");
+    if (cardsGoTo[0] || cardsGoToShut) {   /* (cards went: the list's places are other cards' now) */
+        snprintf(shown, sizeof(shown), "%s", cardsGoTo);
+        inside = inside && !cardsGoToShut;
+        cardsGoTo[0] = 0;
+        cardsGoToShut = 0;
+    }
     ui_lock();
     cards_sort();
     for (activeCard = nCards - 1; activeCard >= 0 && strcmp(cards[activeCard].id, active); activeCard--)

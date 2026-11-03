@@ -84,6 +84,12 @@ SCENARIOS = [
     {"name": "save-copy-cancel-list", "what": "a save's Copy given up with triangle on the list of cards",
      "cards": CARDS, "script": "XXXOTC"},
     {"name": "save-move", "what": "a save moved to another card", "cards": CARDS, "script": "XXDXXXXC"},
+    # (the card pasted on has a save of the same folder: asked, X replaces it, the one there kept aside till the new
+    # one is in)
+    {"name": "save-copy-replace", "what": "a save copied to a card that has one of its folder: replaced",
+     "cards": dict(CARDS, **{"Card2/Card2-1": "game"}), "script": "XXXODSXXC"},
+    {"name": "save-move-replace", "what": "a save moved to a card that has one of its folder: replaced",
+     "cards": dict(CARDS, **{"Card2/Card2-1": "game"}), "script": "XXDXXXXC"},
     {"name": "save-delete", "what": "a save deleted", "cards": CARDS, "script": "XXDDXXXC"},
     # (after "New card", its size: the cursor starts on the one recommended for what goes into it, and X takes it)
     {"name": "save-new-card", "what": "a save copied to a new card of its game: \"New card\" in its game's folder, in the list "
@@ -319,6 +325,11 @@ SCENARIOS = [
      "cards": CARDS, "script": "DTDDDDDDDDXXXLDXXXXXC"},
     {"name": "card-delete", "what": "a card deleted from its options: its file and its folder go", "cards": CARDS,
      "script": "TDDDDDDDDXXXC"},
+    # (inside a game's folder of two cards, the last one deleted: the folder stays open, on the card left, not on the
+    # game after it, which took the deleted one's place in the list. X then opens the card left)
+    {"name": "card-delete-in-folder", "what": "a card of a game's folder of two deleted: the folder stays open, on the other",
+     "cards": dict(CARDS, **{"SLUS-21065/SLUS-21065-2": "empty", "SLUS-21066/SLUS-21066-1": "empty"}),
+     "script": ">DXDTDDDDDDDDXXXXC"},
     {"name": "folder-delete", "what": "a game's folder of two cards deleted whole: triangle on its row, the folder's options",
      "cards": dict(CARDS, **{"SLUS-21065/SLUS-21065-2": "empty"}), "script": ">DTXXXC"},
     # "Change size", sixth of its options: the cursor starts on the size recommended for what it has (1 MB)

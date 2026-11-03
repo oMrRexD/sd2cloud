@@ -120,13 +120,24 @@ void save_name(const save_view_t *v, char *out, size_t size)
         snprintf(out, size, "%s", v->s.folder);
 }
 
+/* that card has a save of that folder (0 = none, or the card couldn't be read) */
+static int card_has_save(const card_t *c, const char *folder)
+{
+    static mcfs_save_t list[MCFS_MAX_SAVES];
+    int i, n = mcfs_list_saves(c->path, list, MCFS_MAX_SAVES, NULL);
+    for (i = 0; i < n; i++)
+        if (!strcmp(list[i].folder, folder))
+            return 1;
+    return 0;
+}
+
 /* move the save to another card. 1 = it went: the card it was on changed */
 static int save_move(card_t *c, save_view_t *v)
 {
     card_t *to;
     char game[12], name[100], t[200];
     long long bytes = 0;
-    int files = 0, r, made, again;
+    int files = 0, r, made, again, there = 0, replace = 1;
     save_game_id(v->s.folder, game);   /* (a save that tells its game can always go to a new card of that game) */
     if (nCards < 2 && !game[0]) {
         message_wait(0, NULL, COLOR_WARN, T(T_NO_OTHER_CARDS));
@@ -141,7 +152,9 @@ static int save_move(card_t *c, save_view_t *v)
         made = to == &destNew;
         if (made && !dest_new_size(mcfs_save_room(bytes, files)))
             continue;   /* (circle on the sizes: back to the cards) */
-        if (confirm(t, made ? dest_new_note() : NULL, T_MOVE))
+        /* (a card that has a save of its folder already: that one is replaced, asked so) */
+        there = !made && card_has_save(to, v->s.folder);
+        if (there ? ask_there(t, to, 1, 1, &replace) : confirm(t, made ? dest_new_note() : NULL, T_MOVE))
             break;
     }
     if (!(to = dest_real(to)))
@@ -151,7 +164,10 @@ static int save_move(card_t *c, save_view_t *v)
         return 0;
     }
     save_into(to, v, T_WORKING_MOVE);
-    r = mcfs_copy_save(c->path, v->s.folder, to->path, save_progress);
+    if (there)   /* (the one there kept aside, and put back when this one can't go in) */
+        r = mcfs_replace_save(c->path, NULL, v->s.folder, to->path, save_progress);
+    else
+        r = mcfs_copy_save(c->path, v->s.folder, to->path, save_progress);
     if (r == MCFS_OK) {
         save_into_fixed();
         r = mcfs_delete_save(c->path, v->s.folder);

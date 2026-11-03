@@ -305,6 +305,8 @@ void dest_new_name(void);
 int dest_new_place(const char *game);    /* "New card" of that game picked: where it will be (destNew). 1 = it can be */
 int ask_more_channels(int max);
 extern int cardsUnsorted;
+extern char cardsGoTo[96];
+extern int cardsGoToShut;
 int card_size_pick(int title, long long room, int current, int device);   /* a card's size, in MB (0 = back): dest.c */
 int card_size_pick_in(int title, long long room, int current, int device, int minMb, int maxMb);   /* (within those) */
 int dest_new_size(long long room);       /* the new card's size (destNew.size), picked: 1 = it was, 0 = back */
@@ -431,6 +433,9 @@ void mark_show_done(void);
 void marks_report(int copied, int failed);
 int copy_start(const save_view_t *v);
 int copy_marked(card_t *into);
+/* a copy's or a move's question, when the card has saves of the same folders (there of total): 1 = go on (*replace
+ * says if they are replaced, or stay as they are), 0 = circle */
+int ask_there(const char *title, const card_t *to, int total, int there, int *replace);
 int copy_leave(const card_t *c);
 int marks_of(const card_t *c);           /* how many of the marked saves are of that card */
 void marks_move(const card_t *from, card_t *to);   /* the marked saves of one card, taken as another's */

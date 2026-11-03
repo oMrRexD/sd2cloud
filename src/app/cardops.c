@@ -553,6 +553,26 @@ static void cards_gone(const char *active)
     cardsUnsorted = 1;
 }
 
+/* Before cards of that folder go (one, c, or all of them: c NULL): where the main screen goes after. Its list still
+ * points at the places in cards[] they had, which other cards take then. One left in the folder: that one, the
+ * folder open as it was; none: the card next to the folder in its group, the folders shown */
+static void go_to_after(const card_t *c, const char *folder, int tab)
+{
+    int i, k, best = -1, pass;
+    for (k = 0; k < nCards && (c ? &cards[k] != c : strcasecmp(cards[k].folder, folder) != 0); k++)
+        ;
+    /* the first one after it, else the last one before it: of its folder first (one card gone), then of the others */
+    for (pass = c ? 0 : 1; pass < 2 && best < 0; pass++)
+        for (i = 0; i < nCards; i++)
+            if (i != k && tab_of(&cards[i]) == tab && !strcasecmp(cards[i].folder, folder) == !pass) {
+                best = i;
+                if (i > k)
+                    break;
+            }
+    snprintf(cardsGoTo, sizeof(cardsGoTo), "%s", best >= 0 ? cards[best].id : "");
+    cardsGoToShut = best < 0 || strcasecmp(cards[best].folder, folder) != 0;
+}
+
 /* what is said under the question of a card that goes: when it was last backed up, or that it never was */
 static void backup_line(const card_t *c)
 {
@@ -598,6 +618,7 @@ int card_delete(card_t *c)
     snprintf(folder, sizeof(folder), "%s", c->folder);
     for (i = 0; i < nCards; i++)
         others += &cards[i] != c && !strcasecmp(cards[i].folder, folder);
+    go_to_after(c, folder, tab_of(c));
     r = cards_delete(c);
     if (r == 0 && !others && !vmc)   /* (nothing of it is left to keep: its .ini, its pictures, the folder itself) */
         cards_delete_folder(folder);
@@ -639,6 +660,7 @@ int folder_delete(card_t *c)
             return 0;
     message(0, NULL, COLOR_TEXT, T(T_DELETING));
     snprintf(active, sizeof(active), "%s", activeCard >= 0 ? cards[activeCard].id : "");
+    go_to_after(NULL, folder, tab_of(c));
     r = cards_delete_folder(folder);
     cards_gone(active);
     message_wait(0, NULL, r == 0 ? COLOR_OK : COLOR_ERROR, T(r == 0 ? T_DONE_DELETE_FOLDER : T_DELETE_FOLDER_FAILED));

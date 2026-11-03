@@ -292,6 +292,8 @@ int ask_more_channels(int max)
 
 static int destNewMore;    /* the channels its folder has to be told it has, for the new card to be in reach (0 = as it is) */
 int cardsUnsorted;  /* a card was made and is at the end of cards[]: the list is put in order back on the main screen */
+char cardsGoTo[96]; /* cards went out of cards[]: the card the main screen goes to then, by its id (empty: as it was) */
+int cardsGoToShut;  /* and its folder is not opened (the one that was open went) */
 
 /* "New card" of a game picked as where saves go (game = its folder): where the card would be (destNew), the next free
  * channel of the game's folder. 0 = the folder has no place for one (said), or the user went back */
