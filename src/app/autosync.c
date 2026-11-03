@@ -11,7 +11,7 @@ static void cancel_point(void)
     watch_cancel();
     if (cancelLatched && confirm_cancel(T_CANCEL_TITLE, T_CANCEL_TEXT)) {
         log_msg("IGR: cancelled before the sync");
-        leave(cfg.igr_return);
+        igr_leave();
     }
 }
 
@@ -35,6 +35,7 @@ void igr(void)
     dlg_new(COLOR_TITLE, T(T_IGR_TITLE));
     dlg_line(FONT_TEXT, COLOR_DIM, 0, T(T_SEARCHING));
     dlg_buttons(BUTTON_CIRCLE, T_CANCEL, 0, 0);
+    dlg_button(BUTTON_TRIANGLE, T_IGR_AFTER);   /* (what comes after it, this time: igrnext.c) */
     dlg_show();
 #ifdef DEBUG_BUILD
     debug_capture_if('s');   /* (script: IGR's first screen) */
@@ -46,11 +47,11 @@ void igr(void)
     if (cards_scan() < 0) {
         message(COLOR_TITLE, T(T_IGR_TITLE), COLOR_ERROR, T(T_NO_SD));
         sleep_ms(3000);
-        leave(cfg.igr_return);
+        igr_leave();
     }
     if (!auto_sync_on()) {   /* no sync to do: main.c let IGR come this far for the templates alone */
         templates_after_game(1);
-        leave(cfg.igr_return);
+        igr_leave();
     }
     mcfs_set_break(keep_press);
     cards_check(checking);
@@ -70,14 +71,14 @@ void igr(void)
      * it would go unnoticed. Cancelling returns right away. */
     if (!n && !(cfg.save_backup && memcard_there())) {
         message(COLOR_TITLE, T(T_IGR_TITLE), COLOR_TEXT, T(T_IGR_NOTHING));
-        leave(cfg.igr_return);
+        igr_leave();
     }
     run_backup(0, 1);   /* (with no card changed, the Memory Card's row alone: its saves may have) */
     if (backupCancelled)
-        leave(cfg.igr_return);
+        igr_leave();
     if (!n && !sent && !failed) {
         message(COLOR_TITLE, T(T_IGR_TITLE), COLOR_TEXT, T(T_IGR_NOTHING));
-        leave(cfg.igr_return);
+        igr_leave();
     }
     if (failed) {
         datetime_t d;
@@ -86,13 +87,14 @@ void igr(void)
             log_msg("result: %s", results[i].text);
         log_msg("automatic sync failed, %04d-%02d-%02d %02d:%02d", d.year, d.month, d.day, d.hour, d.minute);
         log_save_sync_error();   /* nobody was watching: what happened is kept, to tell why later */
+        igr_next_wait();   /* (the list of what comes after, open: its buttons aren't the summary's) */
         if (cfg.igr_summary > 0)
             summary_screen(cfg.igr_summary);
-        leave(cfg.igr_return);
+        igr_leave();
     }
     dlg_new(COLOR_OK, T(T_IGR_DONE));
     for (i = nResults > DLG_LINES ? nResults - DLG_LINES : 0; i < nResults; i++)
         dlg_line(FONT_SMALL, COLOR_TEXT, 2, results[i].text);
     dlg_show();
-    leave(cfg.igr_return);
+    igr_leave();
 }

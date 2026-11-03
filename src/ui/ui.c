@@ -84,6 +84,8 @@ extern void *_gp;
 static int vsyncSema = -1, lockSema = -1, drawThread = -1, vsyncHandler = -1;
 static volatile int drawStop, drawDone;
 static void (*volatile sceneFn)(float t);
+static void (*volatile coverFn)(float t);   /* (ui_cover) */
+static void (*volatile overFn)(void);       /* (ui_over) */
 static volatile u64 sceneStart;
 static u64 clockStart;
 static unsigned char drawStack[128 * 1024] __attribute__((aligned(16)));   /* FreeType renders new glyphs here */
@@ -166,9 +168,11 @@ static void draw_loop(void *arg)
         alpha = 0x80;
         ui_additive(0);
         gsKit_clear(gs, GS_SETREG_RGBAQ(0, 0, 0, 0x80, 0));
-        fn = sceneFn;
+        fn = coverFn ? coverFn : sceneFn;
         if (fn)
             fn((now_ms() - sceneStart) / 1000.0f);
+        if (overFn)
+            overFn();
         gsKit_queue_exec(gs);
 #ifdef DEBUG_BUILD
         if (capturePath && now_ms() - sceneStart > 700) {
@@ -233,6 +237,22 @@ void ui_scene(void (*draw)(float t))
 }
 
 void (*ui_scene_now(void))(float t) { return sceneFn; }
+
+void ui_cover(void (*draw)(float t))
+{
+    ui_lock();
+    if (coverFn != draw)   /* (what comes on the screen fades in: the cover, or the scene again) */
+        sceneStart = now_ms();
+    coverFn = draw;
+    ui_unlock();
+}
+
+void ui_over(void (*draw)(void))
+{
+    ui_lock();
+    overFn = draw;
+    ui_unlock();
+}
 
 float ui_clock(void) { return (now_ms() - clockStart) / 1000.0f; }
 

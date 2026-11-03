@@ -211,6 +211,9 @@ T_CARD_EMPTY = This memory card contains no saved data.
 T_IGR_DONE = Upload complete
 # Up to 2 lines.
 T_IGR_NOTHING = No memory cards have changed.
+T_IGR_AFTER = When done
+T_IGR_AFTER_NOW = When done: %s
+T_POWER_OFF = Turn off the PS2
 # One line.
 T_SYNC_NOW = Sync now
 # One line.
@@ -941,6 +944,7 @@ T_SAVE_VERSION_DONE = Version restored.
 T_SAVE_VERSION_FAILED = Unable to restore the version.
 # One line.
 T_MEMCARD_SLOT = Memory Card %d
+T_IN_USE_ON = In use on the %s
 # Up to 5 lines.
 T_MEMCARD_HINT_ALONE = Move saves between the Memory Cards and the other cards, and back them up to Google Drive.
 # Up to 5 lines.

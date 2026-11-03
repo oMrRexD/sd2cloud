@@ -107,6 +107,8 @@ void resolve_target(const char *target, char *out, size_t size)
     snprintf(out, size, "%s", target);
     if ((p = strstr(out, "mmce?:")) != NULL)   /* mmce?: becomes the microSD's slot */
         p[4] = (strncmp(sdRoot, "mmce", 4) == 0) ? sdRoot[4] : '0';
+    if (!strcasecmp(out, "poweroff"))   /* (the console turned off: run_target) */
+        return;
     if (strcasecmp(out, "osd") != 0 && strcasecmp(out, "auto") != 0 && device_of(out) == DEV_SD && !file_exists(out)) {
         log_msg("the path in the .ini doesn't exist (%s): looking for the OPL", out);
         snprintf(out, size, "auto");
@@ -118,6 +120,8 @@ void resolve_target(const char *target, char *out, size_t size)
 void run_target(const char *resolved)
 {
     log_msg("returning to: %s", resolved);
+    if (!strcasecmp(resolved, "poweroff"))
+        power_off();
     if (strcasecmp(resolved, "osd") != 0)
         run_elf(resolved);
     go_osd();
@@ -254,8 +258,8 @@ void target_name(const char *target, char *out, size_t size)
 {
     char q[260], *p, *s;
     int i;
-    if (!strcasecmp(target, "auto") || !strcasecmp(target, "osd")) {
-        snprintf(out, size, "%s", T(!strcasecmp(target, "auto") ? T_AUTO : T_RET_OSD));
+    if (!strcasecmp(target, "auto") || !strcasecmp(target, "osd") || !strcasecmp(target, "poweroff")) {
+        snprintf(out, size, "%s", T(!strcasecmp(target, "auto") ? T_AUTO : !strcasecmp(target, "osd") ? T_RET_OSD : T_POWER_OFF));
         return;
     }
     if (given_name(target)) {

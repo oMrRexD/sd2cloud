@@ -503,12 +503,33 @@ void tabs_redo(tabs_t *g)
 /* the Memory Cards a list offers (the one the saves come from left out): how many; their slots in g->mcPorts */
 int memcard_rows(tabs_t *g)
 {
-    int ports[2], n = memcard_ports(ports), i, k = 0;
+    int ports[2], n = memcard_ports(ports), i, k = 0, p;
+    /* (and on the main screen, the card the device is using, by its slot: the two in the slots' order) */
+    int device = g->inUse && !standalone && activeCard >= 0 ? mc_slot() : -1;
     fdev_refresh();   /* (the devices are listed with the memory cards: slot 2 asked once, here) */
-    for (i = 0; i < n; i++)
-        if (!(g->skip == &slotCard && mcfs_slot_port(slotCard.path) == ports[i]))
-            g->mcPorts[k++] = ports[i];
+    for (p = 0; p < 2; p++) {
+        if (p == device)
+            g->mcPorts[k++] = p;
+        for (i = 0; i < n; i++)
+            if (ports[i] == p && p != device && !(g->skip == &slotCard && mcfs_slot_port(slotCard.path) == p))
+                g->mcPorts[k++] = p;
+    }
     return k;
+}
+
+int tabs_in_use_listed(const tabs_t *g)
+{
+    int i;
+    for (i = 0; g->inUse && !standalone && i < g->memcard; i++)
+        if (g->mcPorts[i] == mc_slot())
+            return 1;
+    return 0;
+}
+
+int tabs_on_in_use(const tabs_t *g)
+{
+    int p = tabs_memcard_port(g);
+    return p >= 0 && g->inUse && !standalone && p == mc_slot();
 }
 
 int tabs_memcard_port(const tabs_t *g)
@@ -632,7 +653,8 @@ static const char *tabs_text(int i, char *buf)
         int list[FDEVS], n = rowsOf->files ? fdev_list(list) : 0;
         if (rowsOf->tab == TAB_FILES && i < n)
             return T(deviceText[list[i]]);
-        if (rowsOf->tab == TAB_FILES && standalone && i - n < rowsOf->memcard) {   /* (with no sd2psx, each by its slot) */
+        /* (with no sd2psx, each by its slot; and with the card the device is using among them) */
+        if (rowsOf->tab == TAB_FILES && (standalone || tabs_in_use_listed(rowsOf)) && i - n < rowsOf->memcard) {
             snprintf(buf, 64, T(T_MEMCARD_SLOT), rowsOf->mcPorts[i - n] + 1);
             return buf;
         }

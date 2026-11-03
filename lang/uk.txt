@@ -208,6 +208,9 @@ T_CARD_EMPTY = На цій картці пам’яті немає збереж�
 T_IGR_DONE = Надсилання завершено
 # Up to 2 lines. English: No memory cards have changed.
 T_IGR_NOTHING = Жодна картка пам’яті не змінилася.
+T_IGR_AFTER = Наприкінці
+T_IGR_AFTER_NOW = Наприкінці: %s
+T_POWER_OFF = Вимкнути PS2
 # One line. English: Sync now
 T_SYNC_NOW = Синхронізувати зараз
 # One line. English: Restore a backup
@@ -938,6 +941,7 @@ T_SAVE_VERSION_DONE = Версію відновлено.
 T_SAVE_VERSION_FAILED = Не вдалося відновити версію.
 # One line. English: Memory Card %d
 T_MEMCARD_SLOT = Картка пам’яті %d
+T_IN_USE_ON = Використовується в %s
 # Up to 5 lines. English: Move saves between the Memory Cards and the other cards, and back them up to Google Drive.
 T_MEMCARD_HINT_ALONE = Переносьте збереження між картками пам’яті та іншими картками й робіть копії в Google Drive.
 # Up to 5 lines. English: Without an sd2psx, OPL's IGR only starts programs from a memory card or a USB drive. For the automatic sync, install SD2Cloud on a memory card (SAS package) or use it from a USB drive.

@@ -42,7 +42,7 @@ a PC's compiler. `src/app` is the only place that knows the screens; it calls do
 | `browse.c` | The Files group: folders of the microSD, a USB drive, the internal hard disk (exFAT, FAT32, or APA with its partitions) and an MX4SIO, `.psu` files, exporting; a file renamed or deleted |
 | `install.c` | A memory card file looked into, its saves copied out of it or into it, and installed as a card |
 | `memcard.c` | The Memory Card: a PS2 memory card in the console's other slot, in the Files group, and uploading it whole |
-| `backup.c`, `autosync.c`, `synclist.c` | The sync to Google Drive; the one that runs by itself after a game; the list of a sync's cards (SELECT) |
+| `backup.c`, `autosync.c`, `synclist.c`, `igrnext.c` | The sync to Google Drive; the one that runs by itself after a game; the list of a sync's cards (SELECT); what comes after IGR, picked with triangle (another program, or the PS2 turned off) |
 | `history.c` | A card's backups on Drive, and restoring one |
 | `active.c` | The card the device is using right now: finding it, switching it, noticing it change; on a microSD with both devices' cards, the two at the top right, L2 and R2 listing one's or the other's (`view_switch`) |
 | `settings.c`, `account.c` | The settings, in pages (Google Drive, the automatic sync, the cards, the updates); the Google account |
@@ -81,7 +81,7 @@ Each has its header (`mcfs.h`, `cards.h`...). `src/common.h` includes them all.
 the device, and reads the settings. Then one of two things happens:
 
 - opened by the user: `manual()` (`app/menu.c`) lists the cards and shows the main screen;
-- opened by the IGR helper, with `-igr`, after a game: `igr()` (`app/autosync.c`) syncs what changed and leaves.
+- opened by the IGR helper, with `-igr`, after a game: `igr()` (`app/autosync.c`) syncs what changed and leaves, to what the settings say or to what triangle picked meanwhile (`app/igrnext.c`).
 
 With no sd2psx in either slot (`standalone`), the program works from the drive it was started from: `standalone_root()`
 loads that drive's drivers (`platform/drives.c`) and makes its root what the microSD's would be (on a memory card,

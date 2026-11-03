@@ -138,6 +138,7 @@ int hdd_mount_kept(const char *partition, char *root, size_t size);
 const char *hdd_partition(const char *path);   /* the partition a pfsN: path is on ("" = it isn't one) */
 void drives_close(void);                       /* the partitions let go of (what is written is on the disk then) */
 void go_osd(void) __attribute__((noreturn));
+void power_off(void) __attribute__((noreturn));   /* the console turned off (the hard disk let go of first) */
 #ifdef DEBUG_BUILD
 int debug_has_script(void);
 int debug_take(char mark);                   /* the next letter of the script is this one: consume it */

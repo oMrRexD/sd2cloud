@@ -12,8 +12,10 @@ void checking_progress(int i, int n, const card_t *c)
     snprintf(t, sizeof(t), "%s %s", T(T_CHECKING), c->name[0] ? c->name : c->base);
     dlg_line(FONT_TEXT, COLOR_DIM, 0, t);
     dlg_bar(n ? (i * 1000) / n : 0, NULL);
-    if (igrMode)   /* (at IGR, circle gives the sync up from its first screen on: autosync.c) */
+    if (igrMode) {   /* (at IGR, circle gives the sync up from its first screen on, triangle picks what comes after) */
         dlg_buttons(BUTTON_CIRCLE, T_CANCEL, 0, 0);
+        dlg_button(BUTTON_TRIANGLE, T_IGR_AFTER);
+    }
     dlg_show();
 #ifdef DEBUG_BUILD
     if (n && i * 2 >= n)
@@ -36,6 +38,11 @@ void watch_cancel(void)
 {
     u32 pad = pad_buttons();
     int down = (pad & PAD_CIRCLE) != 0, square = (pad & PAD_SQUARE) != 0;
+    if (igrMode && igr_next_poll(pad)) {   /* (the list of what comes after IGR has them: not the sync's) */
+        circleDown = down;
+        squareDown = square;
+        return;
+    }
     if (down && !circleDown)
         cancelLatched = 1;
     circleDown = down;
@@ -269,9 +276,16 @@ void scene_upload(float t)
             snprintf(s, sizeof(s), T(T_TIME_LEFT_SEC), (eta.left + 4) / 5 * 5);
         ui_text(FONT_SMALL, x, y + 12, COLOR_DIM, s);
     }
-    if (!workFixed) {   /* (SELECT: the sync's cards, as a list) */
-        legend_t l[3] = {{BUTTON_CIRCLE, T(T_CANCEL)}, {BUTTON_SQUARE, T(T_SKIP)}, {BUTTON_SELECT, T(T_VIEW)}};
-        look_legend(l, syncListed ? 3 : skipOffered ? 2 : 1, 0);
+    if (!workFixed) {   /* (SELECT: the sync's cards, as a list; at IGR, triangle: what comes after it) */
+        legend_t l[4] = {{BUTTON_CIRCLE, T(T_CANCEL)}};
+        int n = 1;
+        if (skipOffered || syncListed)
+            l[n].button = BUTTON_SQUARE, l[n++].text = T(T_SKIP);
+        if (igrMode)
+            l[n].button = BUTTON_TRIANGLE, l[n++].text = T(T_IGR_AFTER);
+        if (syncListed)
+            l[n].button = BUTTON_SELECT, l[n++].text = T(T_VIEW);
+        look_legend(l, n, 0);
     }
 }
 

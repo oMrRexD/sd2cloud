@@ -25,7 +25,7 @@ EE_BIN = $(OBJ_DIR)/sd2cloud-unpacked.elf
 EE_BIN_PACKED = $(DIST)/SD2CLOUD.ELF
 endif
 # (one name each, whatever the folder: the objects all go to the same place)
-SOURCES = main format dialog leave work synclist account backup tabs memcard history active saves save dest install browse menu settings autosync \
+SOURCES = main format dialog leave work synclist account backup tabs memcard history active saves save dest install browse menu settings autosync igrnext \
           keyboard tools marks cardops migrate safety savesync vmcplaces libview drive cloud \
           boot log input net mmce drives launch debug helper ui font image look sound icon i18n files json config state cards mcfs library drivemap stream google update restore templates \
           lang
@@ -50,7 +50,8 @@ ASSET_OBJS = $(addprefix asset_, $(addsuffix _png.o, $(IMAGES)) $(addsuffix _adp
              asset_fontja_gz.o
 # the IOP modules embedded in the program: mmceman (the sd2psx), and the drivers of the other devices a program can be
 # opened from after SD2Cloud (loaded only for that, see run_elf)
-EMBEDDED_IRX = mmceman mcman mcserv usbd usbmass_bd bdm bdmfs_fatfs mx4sio_bd ata_bd ps2dev9 ps2atad ps2hdd ps2fs
+# (and poweroff: the console turned off after IGR, when that is what was picked)
+EMBEDDED_IRX = mmceman mcman mcserv usbd usbmass_bd bdm bdmfs_fatfs mx4sio_bd ata_bd ps2dev9 ps2atad ps2hdd ps2fs poweroff
 # the texts on screen: a file per language in lang/ (en.txt, pt.txt...), each one built into the program as it is,
 # and langs.c listing them (i18n.c reads them). A file added there is a language more, with nothing else to change
 LANGS = $(basename $(notdir $(wildcard lang/*.txt)))
@@ -65,7 +66,7 @@ EE_INCS += $(addprefix -I, $(SRC_DIRS)) -I. -Ithird_party/qrcodegen -I$(PORTS409
            -I$(PS2SDK)/ports/include/freetype2 -I$(GSKIT)/include
 # malloc and memalign go through system.c, which zeroes what the network libraries take while they start
 EE_LDFLAGS += -L$(PORTS4096)/lib -L$(PS2SDK)/ports/lib -L$(GSKIT)/lib -Wl,--wrap=malloc -Wl,--wrap=memalign
-EE_LIBS = -lcurl -lwolfssl -lfreetype -lpng -lz -lsocket -lps2_drivers -laudsrv -lmc -lelf-loader-nocolour -lpatches -lgskit -ldmakit -ldebug -lcdvd -lpthread -lpthreadglue -lm
+EE_LIBS = -lcurl -lwolfssl -lfreetype -lpng -lz -lsocket -lps2_drivers -laudsrv -lmc -lelf-loader-nocolour -lpatches -lgskit -ldmakit -ldebug -lcdvd -lpoweroff -lpthread -lpthreadglue -lm
 EE_CFLAGS += -Os -Wall -Wno-format-truncation $(EXTRA_CFLAGS)
 # the commit the program is built from, shown in "About": the first 7 characters of its hash (empty when it isn't
 # known). It goes into the program, so two builds only come out the same when they are given the same one: GitHub

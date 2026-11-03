@@ -542,8 +542,8 @@ static void pick_channel(void)
  * or the PS2 menu */
 static void pick_return(void)
 {
-    static const char *items[MAX_APPS + 4], *devices[FDEVS];
-    static char values[MAX_APPS + 4][200];
+    static const char *items[MAX_APPS + 5], *devices[FDEVS];
+    static char values[MAX_APPS + 5][200];
     char *now = cfg.igr_return, q[260], w[260];
     int n = 0, i, k, start = 0;
     items[n] = T(T_AUTO);
@@ -556,6 +556,8 @@ static void pick_return(void)
     snprintf(values[n++], sizeof(values[0]), "files");
     items[n] = T(T_RET_OSD);
     snprintf(values[n++], sizeof(values[0]), "osd");
+    items[n] = T(T_POWER_OFF);   /* (the console off, once the sync is over) */
+    snprintf(values[n++], sizeof(values[0]), "poweroff");
     n = add_custom(now, items, values, n);
     target_on_sd(now, q, sizeof(q));
     for (i = 0; i < n; i++) {

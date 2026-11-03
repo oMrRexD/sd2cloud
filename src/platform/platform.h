@@ -66,6 +66,8 @@ extern unsigned char ps2fs_irx[];
 extern unsigned int size_ps2fs_irx;
 extern unsigned char mmceman_irx[];
 extern unsigned int size_mmceman_irx;
+extern unsigned char poweroff_irx[];
+extern unsigned int size_poweroff_irx;
 extern unsigned char iomanX_irx[];
 extern unsigned int size_iomanX_irx;
 extern unsigned char fileXio_irx[];

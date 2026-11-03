@@ -5,6 +5,7 @@
  * fails while another file is open breaks the other file's descriptor (firmware 1.4.0, sd2psXtd#115).
  */
 #include "platform.h"
+#include <libpwroff.h>
 
 char appDir[200];
 char appPath[260];
@@ -314,6 +315,23 @@ void iop_cleanup(int card)
         SifExecModuleBuffer(sio2man_irx, size_sio2man_irx, 0, NULL, NULL);
         SifExecModuleBuffer(mmceman_irx, size_mmceman_irx, 0, NULL, NULL);
     }
+}
+
+/* The console turned off, as its power button does. Everything let go of first, as when a program comes next: the
+ * hard disk at rest and the DEV9 off (drives_close), then the IOP reset; then the SDK's poweroff module tells the
+ * CD/DVD controller to cut the power. Should the console still be on a few seconds later, the PS2 Browser */
+void power_off(void)
+{
+    u64 end;
+    log_msg("(end: power off)");
+    iop_cleanup(0);
+    if (SifExecModuleBuffer(poweroff_irx, size_poweroff_irx, 0, NULL, NULL) >= 0 && poweroffInit() >= 0)
+        poweroffShutdown();
+    for (end = now_ms() + 5000; now_ms() < end;)
+        ;
+    ExecOSD(0, NULL);
+    for (;;)
+        ;
 }
 
 void go_osd(void)

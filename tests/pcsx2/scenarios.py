@@ -176,6 +176,10 @@ SCENARIOS = [
      "SD2Cloud/Library/SLUS-21065/BASLUS-21065ALPHA.psu": "alpha-other.psu"}, "script": "BwC"},
     {"name": "memcard-move-out", "what": "a save of the Memory Card moved to a card", "cards": CARDS,
      "memcard": "memcard.ps2", "script": ">>DDDXXDXXXXC"},
+    # (the card the device is using is in the Files group too, by its slot, beside the Memory Card: "i" takes the first
+    # card as that one, which PCSX2 can't tell; X on its row opens it as the Cards group does)
+    {"name": "files-in-use", "what": "the Files group: the card in use as Memory Card 1, opened from there",
+     "cards": CARDS, "memcard": "memcard.ps2", "script": "i>>DDDXC"},
     {"name": "memcard-delete", "what": "a save of the Memory Card deleted", "cards": CARDS, "memcard": "memcard.ps2",
      "script": ">>DDDXXDDXXXC"},
     {"name": "memcard-psu-in", "what": "a .psu file imported into the Memory Card", "cards": CARDS,
@@ -428,6 +432,10 @@ SCENARIOS = [
     # circle from IGR's first screen on: asked, and "yes" goes straight back, before the cards are even read
     {"name": "igr-cancel-first", "what": "after IGR, circle on its first screen: nothing read or sent, straight back",
      "cards": CARDS, "files": {"SD2Cloud/token.dat": b"refresh_token = test\r\n"}, "script": "IKX"},
+    # (triangle, "H": the list of what comes after IGR, this time; "y1" picks its second, "Turn off the PS2" here,
+    # where there is no OPL: the PS2 Browser is the first. Cancelled, it is what comes)
+    {"name": "igr-after-power-off", "what": "after IGR, triangle: the PS2 turned off picked, then the sync cancelled",
+     "cards": CARDS, "files": {"SD2Cloud/token.dat": b"refresh_token = test\r\n"}, "script": "IHy1KX"},
     # and while the sync gets online, the Memory Card's save on its way (the network's first try finds no cable: nothing
     # reaches Google, whatever happens)
     {"name": "igr-cancel-online", "what": "after IGR, circle while the sync gets online: straight back, nothing sent",

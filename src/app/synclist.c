@@ -223,6 +223,8 @@ int sync_list_poll(void)
     pad = pad_buttons();
     press = pad & ~sy.down;
     sy.down = pad;
+    if (igrMode && igr_next_busy())   /* (the list of what comes after IGR has the buttons) */
+        return 0;
     if (press & PAD_SELECT) {
         sound_play(SND_MOVE);
         ui_lock();
@@ -307,8 +309,11 @@ static void scene_saves(void)
         ui_text_fit(FONT_SMALL, SY_X + 28, SY_Y0 + SY_ROWS * SY_ROW + 2, 300, 0x8E98AA, ss.folder[sy.cursor]);
     list_count(sy.cursor, ss.n, SY_RIGHT, SY_Y0 + SY_ROWS * SY_ROW + 2);
     {
-        legend_t l[3] = {{BUTTON_CIRCLE, T(T_CANCEL)}, {BUTTON_SQUARE, T(T_SKIP)}, {BUTTON_SELECT, T(T_VIEW)}};
-        look_legend(l, 3, 0);
+        legend_t l[4] = {{BUTTON_CIRCLE, T(T_CANCEL)}, {BUTTON_SQUARE, T(T_SKIP)}, {BUTTON_TRIANGLE, T(T_IGR_AFTER)},
+                         {BUTTON_SELECT, T(T_VIEW)}};
+        if (!igrMode)   /* (triangle: what comes after IGR, at IGR only) */
+            l[2] = l[3];
+        look_legend(l, igrMode ? 4 : 3, 0);
     }
 }
 
@@ -354,13 +359,15 @@ void scene_sync(float t)
     {
         /* only what can be done to the selected card is offered */
         const sync_card_t *e = nSync ? &syncCards[sy.cursor] : NULL;
-        legend_t l[4] = {{BUTTON_CIRCLE, T(T_CANCEL)}};
+        legend_t l[5] = {{BUTTON_CIRCLE, T(T_CANCEL)}};
         int n = 1;
         if (e && (e->state == SY_WAITING || e->state == SY_SENDING)) {
             l[n].button = BUTTON_CROSS, l[n++].text = T(T_OPTIONS);
             l[n].button = BUTTON_SQUARE, l[n++].text = T(T_SKIP);
         } else if (e && e->state == SY_SKIPPED && !e->taken)
             l[n].button = BUTTON_SQUARE, l[n++].text = T(T_UNDO);
+        if (igrMode)   /* (what comes after IGR) */
+            l[n].button = BUTTON_TRIANGLE, l[n++].text = T(T_IGR_AFTER);
         l[n].button = BUTTON_SELECT, l[n++].text = T(T_VIEW);
         look_legend(l, n, 0);
     }

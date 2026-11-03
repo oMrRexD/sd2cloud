@@ -83,10 +83,10 @@ void memcard_screen(void)
 }
 
 /* what the Files group says of it, on the right (the main screen's and the list of cards a copy marks saves on) */
-void memcard_hint(int port)
+void memcard_hint(int port, int numbered)
 {
     char t[64];
-    if (standalone)
+    if (numbered)
         snprintf(t, sizeof(t), T(T_MEMCARD_SLOT), port + 1);
     else
         snprintf(t, sizeof(t), "%s", T(T_MEMCARD));

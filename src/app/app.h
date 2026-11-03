@@ -78,6 +78,8 @@ typedef struct {
                                  how many (with no sd2psx, one per slot), and the slots (mcPorts) */
     int mcPorts[2];
     int cloud;                /* the Files group's last row is Google Drive, with an account (the main screen) */
+    int inUse;                /* the Files group has the card the device is using too, by its slot, among the Memory
+                                 Cards (the main screen): its slot in mcPorts with theirs */
     int games[MAX_CARDS], nGames;         /* the game cards, by game and then as they come in cards[] */
     int first[MAX_CARDS + 1], folders;    /* where each folder starts in games[] (first[folders] = nGames) */
     char label[MAX_CARDS][64];            /* each folder's name, cut to fit the list */
@@ -147,12 +149,19 @@ void reload_all(void) __attribute__((noreturn));
 
 /* ------------------------------------------------------------ autosync.c */
 void igr(void);
+/* at IGR, triangle: what comes after it, this time only (igrnext.c) */
+int igr_next_poll(u32 pad);   /* from watch_cancel: 1 = the buttons were the list's */
+int igr_next_busy(void);       /* the list is open, or its buttons are still down */
+void igr_next_wait(void);      /* the list, open, waited for (until it is closed, or left alone for a while) */
+void igr_leave(void) __attribute__((noreturn));   /* to what comes after IGR: the one picked, or the settings' */
 
 /* ------------------------------------------------------------ cloud.c */
 /* Google Drive in the Files group: offered (there is an account), and its folders browsed, a file downloaded */
 int cloud_listed(void);
 void cloud_screen(void);
 int tabs_on_cloud(const tabs_t *g);   /* the cursor is on its row */
+int tabs_in_use_listed(const tabs_t *g);   /* the Files group has the row of the card the device is using */
+int tabs_on_in_use(const tabs_t *g);       /* the cursor is on that row */
 #ifdef DEBUG_BUILD
 extern int cloudFake;
 #endif
@@ -226,7 +235,7 @@ void files_screen(int dev);
 extern card_t slotCard;                  /* the Memory Card, in the console's other slot */
 int memcard_there(void);
 void memcard_screen(void);
-void memcard_hint(int port);
+void memcard_hint(int port, int numbered);   /* (numbered: the row says its slot, as the others do) */
 void memcard_upload(void);
 /* whose backups the Memory Card's are, on Drive and in the state: "slot/memcard" (the slot the device isn't in);
  * with no sd2psx, "slot/memcard1" or 2, by its slot */

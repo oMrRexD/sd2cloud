@@ -165,8 +165,20 @@ static void scene_menu(float t)
             ui_paragraph_center(FONT_SMALL, CARD_CX, CARD_Y + 70, LOOK_CARD_W + 32, COLOR_DIM, T(T_CLOUD_HINT));
             return;
         }
+        if (tabs_on_in_use(&menu.g)) {   /* (the card the device is using: its picture and its name, as the Cards group's) */
+            int a = activeCard;
+            snprintf(s, sizeof(s), T(T_MEMCARD_SLOT), tabs_memcard_port(&menu.g) + 1);
+            panel_title(s);
+            if (a < 0 || a >= nCards)
+                return;
+            draw_card_picture(&cards[a], NULL, ui_clock());
+            ui_text_center(FONT_TEXT, CARD_CX, CARD_Y + LOOK_CARD_H + 2, COLOR_TEXT, cards[a].name[0] ? cards[a].name : cards[a].base);
+            snprintf(s, sizeof(s), T(T_IN_USE_ON), dev->name);
+            ui_text_center(FONT_SMALL, CARD_CX, CARD_Y + LOOK_CARD_H + 24, COLOR_DIM, s);
+            return;
+        }
         if (tabs_device(&menu.g) < 0) {   /* (the Memory Card) */
-            memcard_hint(tabs_memcard_port(&menu.g));
+            memcard_hint(tabs_memcard_port(&menu.g), standalone || tabs_in_use_listed(&menu.g));
             return;
         }
         panel_title(T(deviceText[tabs_device(&menu.g)]));
@@ -358,6 +370,11 @@ void manual(void)
             activeCard = same;
             log_msg("[script] a: %s is taken as the card in use", cards[same].id);
         }
+        /* script "i": the first card taken as the one in use, only to be shown as it (the Files group's row of it) */
+        if (nCards && debug_take('i')) {
+            activeCard = 0;
+            log_msg("[script] i: %s shown as the card in use", cards[0].id);
+        }
         /* script "t": the automatic sync's step that puts the templates into the game cards, as after a game (the
          * sync itself needs a Google account, which PCSX2 has none of) */
         /* script "j": the question square brings up while cards are sent (the sync needs a Google account) */
@@ -424,6 +441,7 @@ void manual(void)
     tabs_init(&menu.g, NULL, 1);
     menu.g.library = 1;
     menu.g.cloud = 1;
+    menu.g.inUse = 1;   /* (the Files group has the card the device is using too) */
     menu.g.all = 1;
     menu.g.create = 1;   /* (the Cards group starts with "New card": with no sd2psx, no Cards group, nor the row) */
     tabs_show(&menu.g, menu.g.tab);
@@ -506,7 +524,16 @@ void manual(void)
             sound_play(SND_CONFIRM);
             if (tabs_on_cloud(&menu.g))
                 cloud_screen();
-            else if (tabs_device(&menu.g) < 0) {
+            else if (tabs_on_in_use(&menu.g)) {   /* (the card the device is using: as X on it in the Cards group) */
+                if (activeCard >= 0) {
+                    card_t *c = &cards[activeCard];
+                    if (c->status == ST_ERROR) {
+                        message(0, NULL, COLOR_TEXT, T(T_LOADING));
+                        cards_recheck(c);
+                    }
+                    card_screen(c);
+                }
+            } else if (tabs_device(&menu.g) < 0) {
                 memcard_pick(tabs_memcard_port(&menu.g));
                 memcard_screen();
             }

@@ -208,6 +208,9 @@ T_CARD_EMPTY = Esta tarjeta no contiene datos guardados.
 T_IGR_DONE = Subida completada
 # Up to 2 lines. English: No memory cards have changed.
 T_IGR_NOTHING = Ninguna tarjeta de memoria cambió.
+T_IGR_AFTER = Al terminar
+T_IGR_AFTER_NOW = Al terminar: %s
+T_POWER_OFF = Apagar la PS2
 # One line. English: Sync now
 T_SYNC_NOW = Sincronizar ahora
 # One line. English: Restore a backup
@@ -938,6 +941,7 @@ T_SAVE_VERSION_DONE = Versión restaurada.
 T_SAVE_VERSION_FAILED = No se pudo restaurar la versión.
 # One line. English: Memory Card %d
 T_MEMCARD_SLOT = Memory Card %d
+T_IN_USE_ON = En uso en el %s
 # Up to 5 lines. English: Move saves between the Memory Cards and the other cards, and back them up to Google Drive.
 T_MEMCARD_HINT_ALONE = Transfiera partidas entre las Memory Cards y las demás tarjetas y haga copias en Google Drive.
 # Up to 5 lines. English: Without an sd2psx, OPL's IGR only starts programs from a memory card or a USB drive. For the automatic sync, install SD2Cloud on a memory card (SAS package) or use it from a USB drive.

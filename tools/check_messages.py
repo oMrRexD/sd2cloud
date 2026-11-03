@@ -424,6 +424,11 @@ LEGENDS = [
     # cards sent one after the other: the card on its way, and the list of them all (SELECT goes from one to the other)
     (("T_CANCEL", "T_SKIP", "T_VIEW"), False), (("T_CANCEL", "T_OPTIONS", "T_SKIP", "T_VIEW"), False),
     (("T_CANCEL", "T_UNDO", "T_VIEW"), False), (("T_CANCEL", "T_VIEW"), False),
+    # (at IGR, with triangle: what comes after it)
+    (("T_CANCEL", "T_IGR_AFTER"), False), (("T_CANCEL", "T_SKIP", "T_IGR_AFTER"), False),
+    (("T_CANCEL", "T_SKIP", "T_IGR_AFTER", "T_VIEW"), False),
+    (("T_CANCEL", "T_OPTIONS", "T_SKIP", "T_IGR_AFTER", "T_VIEW"), False),
+    (("T_CANCEL", "T_UNDO", "T_IGR_AFTER", "T_VIEW"), False), (("T_CANCEL", "T_IGR_AFTER", "T_VIEW"), False),
     # saves marked for a copy: on a card's saves, and on the list of cards
     (("T_BACK", "T_MARK", "T_PASTE"), False), (("T_BACK", "T_OPEN", "T_PASTE"), False), (("T_BACK", "T_COPY"), False), (("T_BACK", "T_PASTE"), False),
     # (with triangle, "Cancel": the marking given up, on its saves, the list of cards and a card file's folder)
