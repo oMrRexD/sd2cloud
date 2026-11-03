@@ -55,7 +55,7 @@ static void over_next(void)
 static void next_list(void)
 {
     char now[260], w[260];
-    int i;
+    int i, k;
     if (!appsListed)
         list_apps();
     resolve_target(cfg.igr_return, now, sizeof(now));
@@ -69,6 +69,16 @@ static void next_list(void)
         snprintf(nx.items[nx.n], sizeof(nx.items[0]), "%s", given_name(apps[i].path) ? given_name(apps[i].path) : apps[i].title);
         target_for_ini(apps[i].path, nx.values[nx.n++], sizeof(nx.values[0]));
     }
+    for (i = 2; i < nx.n; i++)   /* (the programs by name, as the OPL's Apps tab has them: the folder's order is any) */
+        for (k = i; k > 1 && strcasecmp(nx.items[k - 1], nx.items[k]) > 0; k--) {
+            char ti[100], tv[200];
+            memcpy(ti, nx.items[k], sizeof(ti));
+            memcpy(tv, nx.values[k], sizeof(tv));
+            memcpy(nx.items[k], nx.items[k - 1], sizeof(ti));
+            memcpy(nx.values[k], nx.values[k - 1], sizeof(tv));
+            memcpy(nx.items[k - 1], ti, sizeof(ti));
+            memcpy(nx.values[k - 1], tv, sizeof(tv));
+        }
     if (strcasecmp(now, "osd") != 0) {
         snprintf(nx.items[nx.n], sizeof(nx.items[0]), "%s", T(T_RET_OSD));
         snprintf(nx.values[nx.n++], sizeof(nx.values[0]), "osd");
