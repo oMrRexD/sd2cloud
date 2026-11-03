@@ -193,6 +193,7 @@ static const char *power_off_or_not(const char *target)
     u64 end;
     if (strcasecmp(target, "poweroff") != 0)
         return target;
+    log_msg("IGR: the PS2 about to be turned off, said for %d s", POWER_OFF_WAIT / 1000);
     for (end = now_ms() + POWER_OFF_WAIT; now_ms() < end; sleep_ms(16)) {
         if ((l = (int)((end - now_ms() + 999) / 1000)) != left) {
             left = l;

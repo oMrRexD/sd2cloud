@@ -319,10 +319,19 @@ void iop_cleanup(int card)
 
 /* The console turned off, as its power button does. Everything let go of first, as when a program comes next: the
  * hard disk at rest and the DEV9 off (drives_close), then the IOP reset; then the SDK's poweroff module tells the
- * CD/DVD controller to cut the power. Should the console still be on a few seconds later, the PS2 Browser */
+ * CD/DVD controller to cut the power. Should the console still be on a few seconds later, the PS2 Browser.
+ * The sd2psx's power goes with the console's: what was written through its slot a moment ago (a save copied into the
+ * card in use, a template) is in its own memory still, and on the microSD a little after. Not before the seconds IGR
+ * waits for it to write the game's card ([igr] settle_seconds) have passed since */
 void power_off(void)
 {
-    u64 end;
+    u64 end, last = mc_last_write();
+    if (!standalone && last && now_ms() - last < (u64)cfg.igr_settle * 1000) {
+        log_msg("power off: the card was written through the slot %u ms ago, the sd2psx given time to keep it",
+                (unsigned)(now_ms() - last));
+        while (now_ms() - last < (u64)cfg.igr_settle * 1000)
+            sleep_ms(50);
+    }
     log_msg("(end: power off)");
     iop_cleanup(0);
     if (SifExecModuleBuffer(poweroff_irx, size_poweroff_irx, 0, NULL, NULL) >= 0 && poweroffInit() >= 0)

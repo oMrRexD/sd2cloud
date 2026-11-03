@@ -23,6 +23,7 @@ int mc_root_signature(int port, char hex[65]);   /* mcfs_root_signature of the c
 int mc_slot(void);                               /* the slot the device is in */
 int mc_other_slot(void);
 int mc_free_kb(int port);   /* the free space mc_card_in was last told that slot's card has, in KB (-1 = none) */
+u64 mc_last_write(void);    /* when (now_ms) a card was last written through mcman (0 = never, this time) */
 int mc_card_in(int port);   /* that slot (0 or 1) has a formatted PS2 memory card: its port, else -1 */                         /* the other one, when a formatted PS2 memory card is in it; else -1 */
 int mc_ps2_card(int port);
 int mc_no_answer(void);   /* an operation of a memory card never answered (and still hasn't): 1 */   /* that slot has a PS2 memory card, formatted or not (an MX4SIO is nothing to mcman) */

@@ -106,6 +106,10 @@ static void copy_names(const copy_t *k, char *base, size_t baseSize, char *when,
     copy_names_of(k, base, baseSize, when, whenSize, NULL, 0);
 }
 
+/* the copy being put back (restore_save_copy): read only once a copy of what it replaces is made, it isn't one of
+ * the old ones let go of then, even the oldest ("" = none) */
+static char beingPutBack[320];
+
 /* the copies past the newest ones kept, of cards or of saves, let go of */
 static void let_go_of_old(void)
 {
@@ -117,6 +121,10 @@ static void let_go_of_old(void)
         if (save ? ++savesKept <= SAFETY_KEEP_SAVES : ++cardsKept <= SAFETY_KEEP)
             continue;
         copy_path(&copies[i], path, sizeof(path));
+        if (!strcmp(path, beingPutBack)) {   /* (it goes the next time, once it is put back) */
+            log_msg("safety copy %s: kept, it is being put back", path);
+            continue;
+        }
         log_msg("safety copy %s: let go of (%d)", path, unlink(path));
     }
 }
@@ -201,7 +209,9 @@ static void restore_save_copy(const copy_t *k)
     copy_path(k, from, sizeof(from));
     if (!psu_load(from))
         return;
+    snprintf(beingPutBack, sizeof(beingPutBack), "%s", from);   /* (kept while it is: see let_go_of_old) */
     psu_import();
+    beingPutBack[0] = 0;
     psu_close();
 }
 

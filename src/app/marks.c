@@ -732,9 +732,9 @@ int copy_marked(card_t *into)
 {
     card_t *from = marks.save[0].card, *to = into;
     char t[300];
-    long long size[MARKS_MAX], need = 0, room = 0;
+    long long size[MARKS_MAX], need = 0, needNew = 0, room = 0, left = -1;
     int i, n = 0, k = 0, total = 0, one = 0, last = MCFS_OK, r = MCFS_OK, made = into == &destNew;
-    int replace = 1, yes;
+    int replace = 1, yes, listed = -1;   /* (listed: how many saves the card was found to have; -1 = not read) */
     there_t th = {0};
     static unsigned char there[MARKS_MAX];   /* (the card has a save of that one's folder already) */
     if (!made && !paste_here(into))
@@ -758,37 +758,43 @@ int copy_marked(card_t *into)
         return 0;
     }
     memset(there, 0, sizeof(there));
-    if (!made) {   /* the ones the card has already, of the same folder: they are replaced, or stay as they are. Either
-                      way only what one is bigger than the one there needs room */
+    if (!made) {   /* the ones the card has already, of the same folder: they are replaced, or stay as they are. Replaced,
+                      only what one is bigger than the one there needs room; staying, none (needNew: the others') */
         static mcfs_save_t list[MCFS_MAX_SAVES];
-        long long left = -1, was;
-        int j, files, n = mcfs_list_saves(to->path, list, MCFS_MAX_SAVES, &left);
+        long long was;
+        int j, files;
+        listed = mcfs_list_saves(to->path, list, MCFS_MAX_SAVES, &left);
         for (i = 0; i < marks.n; i++) {
-            for (j = 0; marks.save[i].card != to && j < n && !there[i]; j++)
+            for (j = 0; marks.save[i].card != to && j < listed && !there[i]; j++)
                 if ((there[i] = !strcmp(list[j].folder, marks.save[i].s.folder)) != 0) {
-                    th.newer += list[j].when > marks.save[i].s.when;   /* (the one there saved after this one) */
+                    /* (the one there saved after this one; not said when this one's date isn't known) */
+                    th.newer += marks.save[i].s.when && list[j].when > marks.save[i].s.when;
                     th.was = list[j].when;
                     th.now = marks.save[i].s.when;
                 }
             was = 0;
             if (there[i] && mcfs_save_info(to->path, marks.save[i].s.folder, &was, &files) == MCFS_OK)
                 need -= size[i] < was ? size[i] : was;
+            if (marks.save[i].card != to && !there[i])
+                needNew += size[i];
             th.there += there[i];
         }
 #ifdef DEBUG_BUILD
         if (debug_take('Z'))   /* (script: the card taken as one without room for them) */
             left = 0;
 #endif
-        if (n >= 0 && left >= 0 && left < need) {   /* a card without room for them: another place, or left as it is */
-            card_t *other = ask_full(to, need, left);
-            return other ? copy_marked(other) : 0;
-        }
     }
     for (i = 0; i < marks.n; i++)   /* how many go: the ones that card doesn't have already */
         if (marks.save[i].card != to) {
             total++;
             one = i;
         }
+    /* a card without room for them: another place, or left as it is. When some are there and others aren't, those can
+     * stay as they are (square): then it is said only if the others alone don't fit, and else once Replace is picked */
+    if (listed >= 0 && left >= 0 && left < (th.there < total ? needNew : need)) {
+        card_t *other = ask_full(to, th.there < total ? needNew : need, left);
+        return other ? copy_marked(other) : 0;
+    }
     if (total == 1) {
         char name[100];
         save_name(mark_view(one), name, sizeof(name));
@@ -800,6 +806,10 @@ int copy_marked(card_t *into)
         yes = ask_there(t, to, &th, &replace);
     else
         yes = confirm(t, to == &destNew ? dest_new_note() : NULL, T_COPY);
+    if (yes && replace && th.there && listed >= 0 && left >= 0 && left < need) {   /* (replaced, they don't fit) */
+        card_t *other = ask_full(to, need, left);
+        return other ? copy_marked(other) : 0;
+    }
     if (!yes || !(to = dest_real(to)) || card_free(to, from)) {
         card_back();
         mark_show_done();

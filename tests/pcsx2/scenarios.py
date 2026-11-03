@@ -99,6 +99,14 @@ SCENARIOS = [
      "cards": CARDS, "settings": SAFETY, "script": "XXDDXXXC"},
     {"name": "safety-save-restore", "what": "a deleted save put back from its safety copy, into its card",
      "cards": CARDS, "settings": SAFETY, "script": "XXDDXXXOLDXXXXXXC"},
+    # (the thirty save copies kept, and the oldest put back in place of the one of its folder on the card: the copy made
+    # of that one first is the thirty-first, and the oldest isn't let go of then, being the one put back. U: the last
+    # of the list, the oldest)
+    {"name": "safety-save-restore-oldest", "what": "the oldest of thirty save copies put back over its save: it stays "
+     "until it is in", "cards": CARDS, "settings": SAFETY,
+     "files": {"SD2Cloud/Safety/Card1/%04d Card1-1 ~ BASLUS-21065ALPHA 2026-01-01 00h%02dm00.psu" % (n, n):
+               "alpha-other.psu" for n in range(1, 31)},
+     "script": "LDXUXXXXXC"},
     # ("Z": the card pasted into taken as one without room for them. Offered: a new card of their game, X, or the
     # Library, square)
     {"name": "save-copy-full", "what": "a save pasted into a card without room for it: put into a new card of its game",
@@ -458,6 +466,10 @@ SCENARIOS = [
     {"name": "exit-power-off", "what": "circle on the main screen: the PS2 turned off", "cards": CARDS, "script": "ODDX"},
     {"name": "igr-after-power-off", "what": "after IGR, triangle: the PS2 turned off picked, then the sync cancelled",
      "cards": CARDS, "files": {"SD2Cloud/token.dat": b"refresh_token = test\r\n"}, "script": "IHy2KX"},
+    # (the PS2 turned off in the settings, with no sync to do (no Google account here): not at once, as another program
+    # would be started, but after the wait for the sd2psx to write the game's card, and the 5 s it is said for)
+    {"name": "igr-power-off-alone", "what": "after IGR, nothing to sync and the PS2 turned off in the settings: waited "
+     "for and said first", "cards": CARDS, "settings": "[igr]\r\nreturn = poweroff\r\n", "script": "I"},
     # and while the sync gets online, the Memory Card's save on its way (the network's first try finds no cable: nothing
     # reaches Google, whatever happens)
     {"name": "igr-cancel-online", "what": "after IGR, circle while the sync gets online: straight back, nothing sent",

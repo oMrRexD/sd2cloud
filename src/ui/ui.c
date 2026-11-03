@@ -86,7 +86,7 @@ static volatile int drawStop, drawDone;
 static void (*volatile sceneFn)(float t);
 static void (*volatile coverFn)(float t);   /* (ui_cover) */
 static void (*volatile overFn)(void);       /* (ui_over) */
-static volatile u64 sceneStart;
+static volatile u64 sceneStart, coverStart;
 static u64 clockStart;
 static unsigned char drawStack[128 * 1024] __attribute__((aligned(16)));   /* FreeType renders new glyphs here */
 #ifdef DEBUG_BUILD
@@ -162,20 +162,22 @@ static void draw_loop(void *arg)
     (void)arg;
     while (!drawStop) {
         void (*fn)(float);
-        u64 t0, spent;
+        u64 t0, spent, start;
         WaitSema(lockSema);
         t0 = now_ms();
         alpha = 0x80;
         ui_additive(0);
         gsKit_clear(gs, GS_SETREG_RGBAQ(0, 0, 0, 0x80, 0));
+        /* (the cover counts its time from when it came: the scene changing under it doesn't fade it in again) */
         fn = coverFn ? coverFn : sceneFn;
+        start = coverFn ? coverStart : sceneStart;
         if (fn)
-            fn((now_ms() - sceneStart) / 1000.0f);
+            fn((now_ms() - start) / 1000.0f);
         if (overFn)
             overFn();
         gsKit_queue_exec(gs);
 #ifdef DEBUG_BUILD
-        if (capturePath && now_ms() - sceneStart > 700) {
+        if (capturePath && now_ms() - start > 700) {
             /* the frame that was just drawn is in the draw buffer until the flip; read as CT32 (CT24 is stored in
              * 32-bit words): the SDK's CT24 conversion reads the bytes out of order */
             captureResult = ps2_screenshot_file(capturePath, gs->ScreenBuffer[gs->ActiveBuffer & 1] / 256, gs->Width, gs->Height, 0);
@@ -241,7 +243,9 @@ void (*ui_scene_now(void))(float t) { return sceneFn; }
 void ui_cover(void (*draw)(float t))
 {
     ui_lock();
-    if (coverFn != draw)   /* (what comes on the screen fades in: the cover, or the scene again) */
+    if (coverFn != draw && draw)   /* (what comes on the screen fades in: the cover, or the scene again) */
+        coverStart = now_ms();
+    else if (coverFn != draw)
         sceneStart = now_ms();
     coverFn = draw;
     ui_unlock();

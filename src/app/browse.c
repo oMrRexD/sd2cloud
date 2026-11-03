@@ -352,7 +352,7 @@ void psu_import(void)
         th.total = 1;
         th.there = !made && card_has_save(to, psu.info.folder, &th.was);
         th.now = psu.info.when;
-        th.newer = th.there && th.was > th.now;
+        th.newer = th.there && th.now && th.was > th.now;   /* (not said when this one's date isn't known) */
         if (th.there ? ask_there(t, to, &th, &replace) : confirm(t, made ? dest_new_note() : NULL, T_IMPORT_YES))
             break;
     }

@@ -28,7 +28,14 @@
 #define MC_NO_ANSWER (-100)
 static int mcStuck;
 
-static int mc_wait(void)
+/* When mcman last ended something that writes a card (mc_last_write): the sd2psx keeps what is written through its
+ * slot in its own memory, and writes it to the microSD a little after; the console isn't turned off before that
+ * (power_off). The calls that write say so (the macros below the open modes), and mc_wait, which waits for each one,
+ * notes when it ended */
+static int writing;
+static u64 lastWrite;
+
+static int mc_answer(void)
 {
     int r = MC_NO_ANSWER, k;
     u64 until = now_ms() + MC_ANSWER_MS;
@@ -50,12 +57,33 @@ static int mc_wait(void)
     return k < 0 ? MC_NO_ANSWER : r;   /* (k < 0: nothing was under way, the call itself failed) */
 }
 
+static int mc_wait(void)
+{
+    int r = mc_answer();
+    if (writing) {
+        lastWrite = now_ms();
+        writing = 0;
+    }
+    return r;
+}
+
 int mc_no_answer(void) { return mcStuck; }
+
+u64 mc_last_write(void) { return lastWrite; }
 
 /* mcman's open modes (Sony's; newlib's O_* don't match) */
 #define MC_RDONLY 0x0001
 #define MC_WRONLY 0x0002
 #define MC_CREAT  0x0200
+
+/* the calls that write a card, each noted as one (writing) before it is made: the macro's own name inside it is the
+ * libmc function */
+#define mcOpen(port, slot, name, mode) (writing = ((mode) & MC_WRONLY) != 0, mcOpen(port, slot, name, mode))
+#define mcWrite(fd, data, size) (writing = 1, mcWrite(fd, data, size))
+#define mcDelete(port, slot, name) (writing = 1, mcDelete(port, slot, name))
+#define mcMkDir(port, slot, name) (writing = 1, mcMkDir(port, slot, name))
+#define mcRename(port, slot, from, to) (writing = 1, mcRename(port, slot, from, to))
+#define mcSetFileInfo(port, slot, name, info, flags) (writing = 1, mcSetFileInfo(port, slot, name, info, flags))
 
 /* a file that couldn't be written whole is deleted: OPL would try to run a broken ELF at IGR */
 static void remove_partial(int port, const char *path)

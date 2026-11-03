@@ -159,7 +159,7 @@ static int save_move(card_t *c, save_view_t *v)
         th.total = 1;
         th.there = there = !made && card_has_save(to, v->s.folder, &th.was);
         th.now = v->s.when;
-        th.newer = there && th.was > th.now;
+        th.newer = there && th.now && th.was > th.now;   /* (not said when this one's date isn't known) */
         if (there ? ask_there(t, to, &th, &replace) : confirm(t, made ? dest_new_note() : NULL, T_MOVE))
             break;
     }
