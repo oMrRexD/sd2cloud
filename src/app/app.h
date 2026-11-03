@@ -272,6 +272,9 @@ void card_check_screen(card_t *c);
  * size or has its saves moved off it; the newest ten stay. 0 = kept, or the user goes on without one (asked);
  * -1 = given up */
 int safety_copy(const card_t *c);
+/* with the safety copies on: that save of card c kept as a .psu, before it is deleted or replaced (none there: nothing
+ * to keep). ask = when it can't be kept, ask whether to go on (-1 = no); else it goes on anyway. 0 = go on */
+int safety_save(const card_t *c, const char *folder, int ask);
 void safety_screen(void);
 /* savesync.c, the backup by save: the saves of that card that changed since they were last sent, each sent by itself
  * as a .psu to the card's Saves folder on Drive (folderId = the card's folder; NULL = found once a save has to go), the
@@ -442,9 +445,17 @@ void mark_show_done(void);
 void marks_report(int copied, int failed);
 int copy_start(const save_view_t *v);
 int copy_marked(card_t *into);
-/* a copy's or a move's question, when the card has saves of the same folders (there of total): 1 = go on (*replace
- * says if they are replaced, or stay as they are), 0 = circle */
-int ask_there(const char *title, const card_t *to, int total, int there, int *replace);
+/* a copy's, a move's or an import's question, when the card has saves of the same folders: 1 = go on (*replace says if
+ * they are replaced, or stay as they are), 0 = circle */
+typedef struct {
+    int total, there, newer;          /* the saves that go; of them, the ones the card has one of the folder of; of those,
+                                         the ones whose save on the card was saved after */
+    unsigned long long was, now;      /* one save: when the card's one and this one were saved (0 = not known) */
+} there_t;
+int ask_there(const char *title, const card_t *to, const there_t *th, int *replace);
+/* that card has a save of that folder: 1, and when it was saved in *when (NULL = not asked); 0 = none, or the card
+ * couldn't be read (save.c) */
+int card_has_save(const card_t *c, const char *folder, unsigned long long *when);
 int copy_leave(const card_t *c);
 int marks_of(const card_t *c);           /* how many of the marked saves are of that card */
 void marks_move(const card_t *from, card_t *to);   /* the marked saves of one card, taken as another's */

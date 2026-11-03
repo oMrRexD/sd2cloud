@@ -214,6 +214,8 @@ T_IGR_NOTHING = No memory cards have changed.
 T_IGR_AFTER = When done
 T_IGR_AFTER_NOW = When done: %s
 T_POWER_OFF = Turn off the PS2
+T_POWER_OFF_SOON = The PS2 will turn off in %d s.
+T_POWER_OFF_NO = Don't turn off
 # One line.
 T_SYNC_NOW = Sync now
 # One line.
@@ -252,10 +254,12 @@ T_DONE_DELETE = Deleted.
 T_DELETE_ASK = Delete "%s"?
 # Up to 3 lines.
 T_DELETE_TEXT = It will be permanently removed from %s. This action cannot be undone.
+T_DELETE_TEXT_SAFE = It will be removed from %s. A copy will be kept in Tools > Safety copies.
 # Up to 3 lines.
 T_ERR_EXISTS = %s already contains data with the same name.
 # Up to 3 lines.
 T_ERR_FULL = There is not enough free space on %s.
+T_ROOM_NEED_FREE = Needed: %d KB · Free: %d KB
 # Up to 3 lines.
 T_ERR_MC_WRITE = Unable to write to the memory card.
 # Up to 3 lines.
@@ -792,6 +796,10 @@ T_MARK_SAME_TEXT = A card can't contain two saves with the same folder. Replace 
 T_MARK_SAME_SELECTED = Selected: %s (%s)
 # One line.
 T_MARK_SAME_THIS = This one: %s (%s)
+T_THERE_SAVED = On the card: %s
+T_THIS_SAVED = This save: %s
+T_THERE_NEWER = The save on the card is the newer one.
+T_THERE_NEWER_N = Newer at the destination: %d
 # One line.
 T_MIGRATE = Convert to Game ID
 # One line.
@@ -900,6 +908,8 @@ T_SAFETY_FAILED_TEXT = Continue anyway?
 T_SAFETY_NONE = There are no safety copies.
 # Up to 2 lines.
 T_SAFETY_NOTE = A safety copy will be created first (Tools > Safety copies).
+T_SAFETY_SAVES_NOTE = A copy of each save replaced will be kept in Tools > Safety copies.
+T_SAFETY_ON_NOTE = Before a card is deleted or changed, or a save is deleted or replaced, a copy of it is kept in Tools > Safety copies. The copies take room on the microSD until they are deleted.
 # Up to 2 lines.
 T_SAFETY_REPLACE_ASK = Replace %s with its copy from %s?
 # Up to 2 lines.
@@ -914,6 +924,8 @@ T_SAFETY_RESTORED = Safety copy restored.
 T_SAFETY_RESTORE_FAILED = Unable to restore the safety copy.
 # Up to 2 lines.
 T_SAFETY_DELETE_ASK = Delete the safety copy of %s (%s)?
+T_SAFETY_SAVE_OF = Save of %s, from the card %s.
+T_SAFETY_CARD_OF = The whole card %s.
 # One line.
 T_SET_SAVE_BACKUP = Backup by save
 # One line.

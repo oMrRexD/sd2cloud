@@ -132,8 +132,8 @@ amarelo, ainda não sincronizado ou nunca sincronizado. O cartão sob o cursor a
 - X abre o cartão: os saves dele, mostrados como no navegador do PS2, do mais novo ao mais antigo.
 - TRIÂNGULO abre as opções do cartão (veja abaixo).
 - START abre os ajustes (veja AJUSTES), e SELECT as ferramentas (veja TEMPLATES e CÓPIAS DE SEGURANÇA).
-- O sai do aplicativo. Você escolhe para onde ir (os programas da pasta APPS, "Executar um ELF..." ou o
-  navegador do PS2), e a última escolha fica guardada.
+- O sai do aplicativo. Você escolhe para onde ir (os programas da pasta APPS, "Executar um ELF...", o
+  navegador do PS2 ou "Desligar o PS2"), e a última escolha fica guardada (menos a de desligar).
 Nas telas em que o X marca e desmarca (os saves de uma cópia, os saves de um template, jogos e cartões,
 "Exportar saves para um cartão", "Converter para Game ID"), você pode segurar o X e mover o cursor: tudo por onde
 ele passar é marcado ou desmarcado do mesmo jeito. Um toque rápido no X enquanto o cursor se move sem querer não
@@ -194,11 +194,15 @@ Copiar e mover
   marcas continuam valendo de cartão em cartão, e a quantidade fica na tela. TRIÂNGULO (Cancelar) desfaz a
   seleção, perguntando antes quando há mais de um save marcado.
 - START (Colar) cola todos no cartão em que você apertar: o que está aberto, ou o que está sob o cursor na lista
-  de cartões. Um cartão sem espaço suficiente para eles fica como está. Apertado onde eles não podem ir (o cartão
-  de onde todos vieram, ou "Todos os saves"), o START leva para a lista de cartões.
-- Se esse cartão já tem um save na mesma pasta, o SD2Cloud pergunta: X (Substituir) põe o novo no lugar dele;
-  QUADRADO (Manter os existentes), oferecido quando outros saves também vão, deixa os que já estão lá e copia o
-  resto. O save substituído fica guardado até o novo ser gravado, e volta se o novo não puder ser gravado.
+  de cartões. Apertado onde eles não podem ir (o cartão de onde todos vieram, ou "Todos os saves"), o START leva
+  para a lista de cartões.
+- Um cartão sem espaço suficiente para eles fica como está. O SD2Cloud diz quanto é necessário e quanto está
+  livre, e oferece outros lugares: X (Novo cartão) cria um cartão novo do jogo deles, quando são todos de um jogo;
+  QUADRADO (Biblioteca) guarda os saves na Biblioteca.
+- Se esse cartão já tem um save na mesma pasta, o SD2Cloud pergunta, mostrando quando o do cartão e o novo foram
+  salvos (em amarelo quando o do cartão é o mais recente): X (Substituir) põe o novo no lugar dele; QUADRADO
+  (Manter os existentes), oferecido quando outros saves também vão, deixa os que já estão lá e copia o resto. O
+  save substituído fica guardado até o novo ser gravado, e volta se o novo não puder ser gravado.
 - Na aba Jogos da lista, quando os saves são todos de um jogo, a pasta desse jogo vem primeiro, em verde, com
   "Novo cartão" dentro. Se o jogo ainda não tem pasta, "Novo cartão" vem primeiro entre as pastas.
 - A aba Biblioteca da lista guarda os saves fora dos cartões (veja A BIBLIOTECA). A aba Arquivos da lista leva às
@@ -257,10 +261,15 @@ CARTÕES
 - Excluir pasta (TRIÂNGULO numa pasta da aba Jogos): exclui todos os cartões dela, depois de perguntar.
 
 CÓPIAS DE SEGURANÇA
-Antes de um cartão ser excluído ou redimensionado, antes de saves serem movidos para fora dele, e antes de uma
-conversão para Game ID remover os saves copiados, o SD2Cloud guarda uma cópia do cartão inteiro em SD2Cloud/Safety
-no MMCE. Ficam as 10 cópias mais novas. Ferramentas (SELECT) > Cópias de segurança lista as cópias: X restaura uma
-(no lugar do cartão, ou como o próprio cartão de novo, se ele foi excluído) ou a exclui.
+Elas ficam desativadas até você ativar, em Ajustes > Cartões > "Cópias de segurança". Ativadas:
+- antes de um cartão ser excluído ou redimensionado, antes de saves serem movidos para fora dele, e antes de uma
+  conversão para Game ID remover os saves copiados, o SD2Cloud guarda uma cópia do cartão inteiro;
+- antes de um save ser excluído ou substituído (por uma cópia ou um movimento, um .psu importado, um template, uma
+  versão do Drive ou uma restauração do Memory Card), ele guarda uma cópia do save, como .psu.
+Elas vão para SD2Cloud/Safety no MMCE (sem sd2psx, no dispositivo de onde o SD2Cloud abre) e ocupam espaço ali até
+serem excluídas. Ficam as 10 cópias mais novas de cartões e as 30 de saves. Ferramentas (SELECT) > Cópias de
+segurança lista as cópias: X restaura uma (um cartão no lugar do cartão, ou como o próprio cartão de novo, se ele
+foi excluído; um save no cartão que você escolher) ou a exclui.
 
 VMCS DO OPL
 Os cartões de memória virtuais do OPL (VMC/*.bin no MMCE) são os cartões da aba VMCs do OPL. Cada um mostra os
@@ -301,8 +310,8 @@ Importar
   cartão" pede então o cartão, escolhido nas mesmas abas da tela principal. QUADRADO sobre o arquivo, na lista,
   vai direto para o cartão, sem abrir a página.
 - O arquivo é conferido inteiro antes de o cartão ser tocado, e o que é gravado é lido de volta e comparado.
-- Um cartão que já tem um save com o mesmo nome, ou que não tem espaço suficiente, fica como está: exclua ou mova
-  esse save antes.
+- Se o cartão já tem um save com o mesmo nome, o SD2Cloud pergunta se deve substituí-lo, como ao copiar (veja
+  TELA PRINCIPAL). Um cartão sem espaço suficiente fica como está.
 - Saves em formato de pasta são instalados como um .psu. Selecione a pasta, ou entre nela, e aperte QUADRADO
   ("Instalar save"): a página do save abre, e "Importar para cartão" o coloca num cartão. X continua abrindo a
   pasta normalmente. Arquivos que um computador acrescenta a uma pasta (Thumbs.db, desktop.ini, .DS_Store) são
@@ -342,6 +351,7 @@ Arquivos.
 Com sd2psx, o cartão que ele está usando também é uma linha da aba Arquivos, pelo slot: "Memory Card 1" quando o
 sd2psx está no slot 1 (o Memory Card do slot 2 passa a ser "Memory Card 2"). Ela mostra a figura e o nome do
 cartão, e o X o abre como na aba Cartões.
+À direita da linha, a aba Arquivos mostra quanto espaço livre o Memory Card tem.
 - X mostra os saves dele, que são copiados, movidos, excluídos e enviados ao Drive como os de um cartão. Saves
   podem ir para ele a partir dos cartões ou de arquivos .psu.
 - TRIÂNGULO, nos saves dele, tem:
@@ -433,8 +443,8 @@ abre uma página, O volta, e START sai dos ajustes de qualquer página.
     atualiza) ou o desinstala.
   - Saída do IGR: o programa aberto depois da sincronização pelo IGR. As opções são Automático (o OPL encontrado
     no MMCE), os programas da pasta APPS, o navegador do PS2 e "Desligar o PS2".
-- Cartões: Dispositivo (num microSD com os cartões dos dois aparelhos), Tamanho dos cartões novos (veja CARTÕES) e
-  Pastas de VMC do OPL (veja VMCS DO OPL).
+- Cartões: Dispositivo (num microSD com os cartões dos dois aparelhos), Tamanho dos cartões novos (veja CARTÕES),
+  Pastas de VMC do OPL (veja VMCS DO OPL) e Cópias de segurança (veja CÓPIAS DE SEGURANÇA).
 - Atualizações: Verificar atualizações (procura uma versão nova na hora e, se houver, oferece a atualização) e
   Canal de atualização: Estável (as versões lançadas) ou Beta (veja ATUALIZAÇÃO).
 - Idioma.
@@ -483,6 +493,7 @@ O TRIÂNGULO (Ao terminar), em qualquer uma dessas telas, escolhe o que vem depo
 "Desligar o PS2". A sincronização continua enquanto você escolhe, a escolha aparece no canto superior direito e
 vale tanto quando a sincronização termina quanto quando ela é cancelada. Para desligar o PS2 depois de toda
 sincronização, escolha "Desligar o PS2" em "Saída do IGR".
+Antes de o PS2 desligar, o SD2Cloud avisa por 5 segundos: o O (Não desligar) abre o programa em vez disso.
 O SD2Cloud pode ficar em qualquer pasta, no MMCE ou em outro dispositivo. Toda vez que abre, ele registra onde
 está (no sd2cloud.ini do MMCE, "app_path"; sem sd2psx, no próprio pacote, junto com os drivers desse
 dispositivo), e o pacote o abre a partir dali. O pacote encontra até uma pasta de APPS do MMCE que foi renomeada

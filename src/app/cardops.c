@@ -60,7 +60,8 @@ void card_resize_screen(card_t *c)
     snprintf(t, sizeof(t), T(T_RESIZE_ASK), c->base, now, mb);
     dlg_new(COLOR_TITLE, t);
     dlg_line(FONT_TEXT, COLOR_TEXT, 6, T(T_RESIZE_TEXT));
-    dlg_line(FONT_SMALL, COLOR_DIM, 0, T(T_SAFETY_NOTE));
+    if (cfg.safety)   /* (the safety copies on: said where it goes) */
+        dlg_line(FONT_SMALL, COLOR_DIM, 0, T(T_SAFETY_NOTE));
     dlg_buttons(BUTTON_CIRCLE, T_BACK, BUTTON_CROSS, T_CONTINUE);
     next.wide = 1;
     dlg_show();
@@ -610,7 +611,8 @@ int card_delete(card_t *c)
     dlg_new(COLOR_WARN, t);
     dlg_line(FONT_TEXT, COLOR_TEXT, 8, T(vmc ? T_DELETE_VMC_TEXT : T_DELETE_CARD_TEXT));
     backup_line(c);
-    dlg_line(FONT_SMALL, COLOR_DIM, 0, T(T_SAFETY_NOTE));
+    if (cfg.safety)   /* (the safety copies on: said where it goes) */
+        dlg_line(FONT_SMALL, COLOR_DIM, 0, T(T_SAFETY_NOTE));
     if (!ask_delete() || card_free(c, NULL) || safety_copy(c) != 0)
         return 0;
     message(0, NULL, COLOR_TEXT, T(T_DELETING));
@@ -649,7 +651,8 @@ int folder_delete(card_t *c)
         dlg_line(FONT_SMALL, COLOR_WARN, 0, t);
     } else
         dlg_line(FONT_SMALL, COLOR_DIM, 0, T(T_DELETE_FOLDER_BACKUPS));
-    dlg_line(FONT_SMALL, COLOR_DIM, 0, T(T_SAFETY_NOTE));
+    if (cfg.safety)   /* (the safety copies on: said where it goes) */
+        dlg_line(FONT_SMALL, COLOR_DIM, 0, T(T_SAFETY_NOTE));
     if (!ask_delete())
         return 0;
     for (i = 0; i < n; i++)   /* (the device is on one of them, at most: that one is let go of) */

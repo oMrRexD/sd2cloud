@@ -381,6 +381,8 @@ PLACE = {
     "T_LIBRARY_NEW_FOLDER": ("small", 200, 1),
     "T_SY_CHECKING": ("small", 220, 1),
     "T_SET_LIBRARY_DRIVE": ("text", 300, 1), "T_LIBRARY_DRIVE_NOTE": ("text", WIDE, 3),
+    "T_SAFETY_ON_NOTE": ("text", WIDE, 4),
+    "T_SAFETY_SAVE_OF": ("small", 234, 5), "T_SAFETY_CARD_OF": ("small", 234, 3),
     # the hard disk's two sides, to pick one; with no sd2psx, a card is made as a file (its hint); a split by game done
     # (the box's title); the Memory Card's saves sent by themselves (one; read first; the card that didn't answer, after
     # a card's name in the results); a card that had nothing new, in the sync's list

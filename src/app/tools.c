@@ -232,6 +232,15 @@ static int card_lacks(const card_t *c, const template_t *t)
     return n;
 }
 
+/* before each of a card's saves the template's takes the place of: with the safety copies on, a copy of it; and, on the
+ * screen of a save on its way (template_into's show), that save */
+static int tplShow;
+static int update_before(const template_t *t, int i)
+{
+    safety_save(ap.to, t->saves[i].folder, 0);
+    return tplShow ? apply_before(t, i) : 0;
+}
+
 /* A template into a card: the saves the card lacks or, with replace, the template's in place of the ones the card
  * has in another version (and none it lacks). In the card's file; or, for the card the device is using, through the slot, as a game would
  * write them. show = on the screen of a save on its way. MCFS_* (or TPL_LEFT); put = how many saves were written */
@@ -250,7 +259,11 @@ static int template_into(const template_t *t, card_t *c, int replace, int show, 
         cards_recheck(c);   /* (as it is now: synced or not, before the template's saves) */
         synced = c->status == ST_UP_TO_DATE || c->status == ST_NO_BACKUP;
         resolved = c->resolved;
-        r = (replace ? template_update : template_apply)(t, c->path, show ? apply_before : NULL, show ? save_progress : NULL, put);
+        tplShow = show;
+        if (replace)   /* (update_before: with the safety copies on, each of the card's own first) */
+            r = template_update(t, c->path, update_before, show ? save_progress : NULL, put);
+        else
+            r = template_apply(t, c->path, show ? apply_before : NULL, show ? save_progress : NULL, put);
         cards_recheck(c);
         if (*put)   /* a template's saves are no change to send: a card that was synced still is */
             card_keep_synced(c, synced, resolved);
@@ -267,8 +280,12 @@ static int template_into(const template_t *t, card_t *c, int replace, int show, 
             }
             template_path(t, i, path, sizeof(path));
             if (has) {   /* (the card's own kept aside, and back in its place if the template's can't go in) */
+                static card_t of;   /* (with the safety copies on: the card's own, read through the slot, first) */
                 char slot[8];
                 snprintf(slot, sizeof(slot), "mc%d:", port);
+                of = *c;
+                snprintf(of.path, sizeof(of.path), "%s", slot);
+                safety_save(&of, t->saves[i].folder, 0);
                 r = mcfs_replace_save(NULL, path, t->saves[i].folder, slot, NULL);
             } else
                 r = mc_put_save(port, path);

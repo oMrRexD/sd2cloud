@@ -120,14 +120,16 @@ void save_name(const save_view_t *v, char *out, size_t size)
         snprintf(out, size, "%s", v->s.folder);
 }
 
-/* that card has a save of that folder (0 = none, or the card couldn't be read) */
-static int card_has_save(const card_t *c, const char *folder)
+int card_has_save(const card_t *c, const char *folder, unsigned long long *when)
 {
     static mcfs_save_t list[MCFS_MAX_SAVES];
     int i, n = mcfs_list_saves(c->path, list, MCFS_MAX_SAVES, NULL);
     for (i = 0; i < n; i++)
-        if (!strcmp(list[i].folder, folder))
+        if (!strcmp(list[i].folder, folder)) {
+            if (when)
+                *when = list[i].when;
             return 1;
+        }
     return 0;
 }
 
@@ -138,6 +140,7 @@ static int save_move(card_t *c, save_view_t *v)
     char game[12], name[100], t[200];
     long long bytes = 0;
     int files = 0, r, made, again, there = 0, replace = 1;
+    there_t th = {0};
     save_game_id(v->s.folder, game);   /* (a save that tells its game can always go to a new card of that game) */
     if (nCards < 2 && !game[0]) {
         message_wait(0, NULL, COLOR_WARN, T(T_NO_OTHER_CARDS));
@@ -152,9 +155,12 @@ static int save_move(card_t *c, save_view_t *v)
         made = to == &destNew;
         if (made && !dest_new_size(mcfs_save_room(bytes, files)))
             continue;   /* (circle on the sizes: back to the cards) */
-        /* (a card that has a save of its folder already: that one is replaced, asked so) */
-        there = !made && card_has_save(to, v->s.folder);
-        if (there ? ask_there(t, to, 1, 1, &replace) : confirm(t, made ? dest_new_note() : NULL, T_MOVE))
+        /* (a card that has a save of its folder already: that one is replaced, asked so, with when each was saved) */
+        th.total = 1;
+        th.there = there = !made && card_has_save(to, v->s.folder, &th.was);
+        th.now = v->s.when;
+        th.newer = there && th.was > th.now;
+        if (there ? ask_there(t, to, &th, &replace) : confirm(t, made ? dest_new_note() : NULL, T_MOVE))
             break;
     }
     if (!(to = dest_real(to)))
@@ -164,7 +170,9 @@ static int save_move(card_t *c, save_view_t *v)
         return 0;
     }
     save_into(to, v, T_WORKING_MOVE);
-    if (there)   /* (the one there kept aside, and put back when this one can't go in) */
+    if (there && safety_save(to, v->s.folder, 1) != 0)   /* (with the safety copies on: the one there, first) */
+        r = MCFS_ERR_CANCELLED;
+    else if (there)   /* (the one there kept aside, and put back when this one can't go in) */
         r = mcfs_replace_save(c->path, NULL, v->s.folder, to->path, save_progress);
     else
         r = mcfs_copy_save(c->path, v->s.folder, to->path, save_progress);
@@ -195,7 +203,8 @@ static int save_delete(card_t *c, save_view_t *v)
     save_name(v, name, sizeof(name));
     snprintf(t, sizeof(t), T(T_DELETE_ASK), name);
     dlg_new(COLOR_WARN, t);
-    snprintf(t, sizeof(t), T(T_DELETE_TEXT), library_path(c->path) ? T(T_TAB_LIBRARY) : c->base);
+    /* (with the safety copies on, it can be put back: said so, instead of "can't be undone") */
+    snprintf(t, sizeof(t), T(cfg.safety ? T_DELETE_TEXT_SAFE : T_DELETE_TEXT), library_path(c->path) ? T(T_TAB_LIBRARY) : c->base);
     dlg_line(FONT_TEXT, COLOR_TEXT, 0, t);
     dlg_buttons(BUTTON_CIRCLE, T_BACK, BUTTON_CROSS, T_DELETE);
     dlg_show();
@@ -207,6 +216,10 @@ static int save_delete(card_t *c, save_view_t *v)
     if (card_free(c, NULL))
         return 0;
     message(0, NULL, COLOR_TEXT, T(T_WORKING_DELETE));
+    if (safety_save(c, v->s.folder, 1) != 0) {   /* (with the safety copies on: a copy of it, first) */
+        card_back();
+        return 0;
+    }
     r = mcfs_delete_save(c->path, v->s.folder);
     log_msg("delete %s from %s: %d", v->s.folder, c->id, r);
     cards_recheck(c);

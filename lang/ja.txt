@@ -212,6 +212,8 @@ T_IGR_NOTHING = 変更されたメモリーカードはありません。
 T_IGR_AFTER = 終了後
 T_IGR_AFTER_NOW = 終了後: %s
 T_POWER_OFF = PS2 の電源を切る
+T_POWER_OFF_SOON = %d 秒後に PS2 の電源を切ります。
+T_POWER_OFF_NO = 電源を切らない
 # One line. English: Sync now
 T_SYNC_NOW = 今すぐ同期
 # One line. English: Restore a backup
@@ -250,10 +252,12 @@ T_DONE_DELETE = 削除しました。
 T_DELETE_ASK = 「%s」を削除しますか？
 # Up to 3 lines. English: It will be permanently removed from %s. This action cannot be undone.
 T_DELETE_TEXT = %s から完全に削除されます。この操作は元に戻せません。
+T_DELETE_TEXT_SAFE = %s から削除されます。コピーが「ツール > 安全コピー」に保存されます。
 # Up to 3 lines. English: %s already contains data with the same name.
 T_ERR_EXISTS = %s には同じ名前のデータがすでにあります。
 # Up to 3 lines. English: There is not enough free space on %s.
 T_ERR_FULL = %s の空き容量が足りません。
+T_ROOM_NEED_FREE = 必要: %d KB · 空き: %d KB
 # Up to 3 lines. English: Unable to write to the memory card.
 T_ERR_MC_WRITE = メモリーカードに書き込めませんでした。
 # Up to 3 lines. English: The copy on %s failed verification.
@@ -790,6 +794,10 @@ T_MARK_SAME_TEXT = 1 枚のカードに同じフォルダーのセーブデー�
 T_MARK_SAME_SELECTED = 選択済み: %s（%s）
 # One line. English: This one: %s (%s)
 T_MARK_SAME_THIS = このデータ: %s（%s）
+T_THERE_SAVED = カード上のデータ: %s
+T_THIS_SAVED = このデータ: %s
+T_THERE_NEWER = カード上のデータの方が新しいです。
+T_THERE_NEWER_N = コピー先の方が新しいもの: %d
 # One line. English: Convert to Game ID
 T_MIGRATE = Game ID形式に変換
 # One line. English: Convert to Game ID
@@ -898,6 +906,8 @@ T_SAFETY_FAILED_TEXT = このまま続行しますか？
 T_SAFETY_NONE = 安全コピーはありません。
 # Up to 2 lines. English: A safety copy will be created first (Tools > Safety copies).
 T_SAFETY_NOTE = 先に安全コピーが作成されます（ツール > 安全コピー）。
+T_SAFETY_SAVES_NOTE = 置き換えられるセーブデータのコピーが「ツール > 安全コピー」に保存されます。
+T_SAFETY_ON_NOTE = カードの削除・変更や、セーブデータの削除・置き換えの前に、コピーを「ツール > 安全コピー」に保存します。コピーは削除するまで microSD の容量を使います。
 # Up to 2 lines. English: Replace %s with its copy from %s?
 T_SAFETY_REPLACE_ASK = %s を %s のコピーで置き換えますか？
 # Up to 2 lines. English: The card's current content will be replaced.
@@ -912,6 +922,8 @@ T_SAFETY_RESTORED = 安全コピーを復元しました。
 T_SAFETY_RESTORE_FAILED = 安全コピーを復元できませんでした。
 # Up to 2 lines. English: Delete the safety copy of %s (%s)?
 T_SAFETY_DELETE_ASK = %s の安全コピー（%s）を削除しますか？
+T_SAFETY_SAVE_OF = %s のセーブデータ（カード %s）
+T_SAFETY_CARD_OF = カード %s 全体
 # One line. English: Backup by save
 T_SET_SAVE_BACKUP = セーブデータごとのバックアップ
 # One line. English: On

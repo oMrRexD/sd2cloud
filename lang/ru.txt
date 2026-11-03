@@ -211,6 +211,8 @@ T_IGR_NOTHING = Ни одна карта памяти не изменилась.
 T_IGR_AFTER = По окончании
 T_IGR_AFTER_NOW = По окончании: %s
 T_POWER_OFF = Выключить PS2
+T_POWER_OFF_SOON = PS2 выключится через %d с.
+T_POWER_OFF_NO = Не выключать
 # One line. English: Sync now
 T_SYNC_NOW = Синхронизировать сейчас
 # One line. English: Restore a backup
@@ -249,10 +251,12 @@ T_DONE_DELETE = Удалено.
 T_DELETE_ASK = Удалить «%s»?
 # Up to 3 lines. English: It will be permanently removed from %s. This action cannot be undone.
 T_DELETE_TEXT = Данные будут безвозвратно удалены с %s. Это действие нельзя отменить.
+T_DELETE_TEXT_SAFE = Данные будут удалены с %s. Копия сохранится в разделе «Сервис > Страховые копии».
 # Up to 3 lines. English: %s already contains data with the same name.
 T_ERR_EXISTS = На %s уже есть данные с таким именем.
 # Up to 3 lines. English: There is not enough free space on %s.
 T_ERR_FULL = На %s недостаточно свободного места.
+T_ROOM_NEED_FREE = Нужно: %d КБ · Свободно: %d КБ
 # Up to 3 lines. English: Unable to write to the memory card.
 T_ERR_MC_WRITE = Не удалось выполнить запись на карту памяти.
 # Up to 3 lines. English: The copy on %s failed verification.
@@ -789,6 +793,10 @@ T_MARK_SAME_TEXT = Карта не может содержать два сохр
 T_MARK_SAME_SELECTED = Отмечено: %s (%s)
 # One line. English: This one: %s (%s)
 T_MARK_SAME_THIS = Это: %s (%s)
+T_THERE_SAVED = На карте: %s
+T_THIS_SAVED = Это сохранение: %s
+T_THERE_NEWER = Сохранение на карте новее.
+T_THERE_NEWER_N = Новее в месте назначения: %d
 # One line. English: Convert to Game ID
 T_MIGRATE = Преобразовать в Game ID
 # One line. English: Convert to Game ID
@@ -897,6 +905,8 @@ T_SAFETY_FAILED_TEXT = Продолжить всё равно?
 T_SAFETY_NONE = Страховых копий нет.
 # Up to 2 lines. English: A safety copy will be created first (Tools > Safety copies).
 T_SAFETY_NOTE = Сначала будет создана страховая копия (Сервис > Страховые копии).
+T_SAFETY_SAVES_NOTE = Копия каждого заменённого сохранения сохранится в разделе «Сервис > Страховые копии».
+T_SAFETY_ON_NOTE = Перед удалением или изменением карты и перед удалением или заменой сохранения копия сохраняется в «Сервис > Страховые копии». Копии занимают место на microSD.
 # Up to 2 lines. English: Replace %s with its copy from %s?
 T_SAFETY_REPLACE_ASK = Заменить %s копией от %s?
 # Up to 2 lines. English: The card's current content will be replaced.
@@ -911,6 +921,8 @@ T_SAFETY_RESTORED = Страховая копия восстановлена.
 T_SAFETY_RESTORE_FAILED = Не удалось восстановить страховую копию.
 # Up to 2 lines. English: Delete the safety copy of %s (%s)?
 T_SAFETY_DELETE_ASK = Удалить страховую копию %s (%s)?
+T_SAFETY_SAVE_OF = Сохранение «%s» с карты %s.
+T_SAFETY_CARD_OF = Вся карта %s.
 # One line. English: Backup by save
 T_SET_SAVE_BACKUP = Копии по сохранениям
 # One line. English: On

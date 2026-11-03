@@ -13,7 +13,7 @@ static void helper_install_now(int doneTitle);
 
 enum { SET_SYNC_ALL, SET_AUTO_SYNC, SET_HELPER, SET_IGR_RETURN, SET_DEVICE, SET_CARD_SIZE, SET_VMC_FOLDERS, SET_LANGUAGE,
        SET_KEEP, SET_SAVE_BACKUP, SET_LIBRARY_DRIVE, SET_FORMAT, SET_UPDATES, SET_CHANNEL, SET_ACCOUNT, SET_ABOUT,
-       SET_DRIVE_LAYOUT,
+       SET_DRIVE_LAYOUT, SET_SAFETY,
        /* the groups: a row of the first page, each opening its own */
        SET_G_DRIVE, SET_G_AUTO, SET_G_CARDS, SET_G_UPDATES, SET_MAX };
 #define SET_X      80     /* the labels; the values end at SET_RIGHT */
@@ -86,6 +86,7 @@ static void build_settings(void)
         }
         snprintf(v, sizeof(v), "%d", vmc_places_count());
         set_item(&i, SET_VMC_FOLDERS, T(T_SET_VMC_FOLDERS), v);
+        set_item(&i, SET_SAFETY, T(T_SAFETY_TITLE), T(cfg.safety ? T_SAVE_BACKUP_ON : T_SAVE_BACKUP_OFF));
         break;
     case SET_G_UPDATES:
         if (updateAvailable)
@@ -505,6 +506,23 @@ static void pick_save_backup(void)
     log_msg("backup by save: %s", k ? "on" : "off");
 }
 
+/* the safety copies, on or off (off unless turned on): what they are, and the room they take, said when they are
+ * turned on */
+static void pick_safety(void)
+{
+    static const char *items[2];
+    int k;
+    items[0] = T(T_SAVE_BACKUP_OFF);
+    items[1] = T(T_SAVE_BACKUP_ON);
+    if ((k = choose(T(T_SAFETY_TITLE), items, 2, cfg.safety)) < 0 || k == cfg.safety)
+        return;
+    if (k && !confirm(T(T_SAFETY_TITLE), T(T_SAFETY_ON_NOTE), T_CONTINUE))
+        return;
+    cfg.safety = k;
+    config_set("cards", "safety", k ? "yes" : "no");
+    log_msg("safety copies: %s", k ? "on" : "off");
+}
+
 /* the Library's saves on Drive too, on or off: what it does is said when it is turned on */
 static void pick_library_drive(void)
 {
@@ -721,8 +739,8 @@ static void about_screen(void)
  * (sd2cloud.ini [manual] return; "auto" = the OPL SD2Cloud would pick), and the choice is kept for next time */
 void exit_menu(void)
 {
-    static const char *items[MAX_APPS + 3], *devices[FDEVS];
-    static char values[MAX_APPS + 3][200];
+    static const char *items[MAX_APPS + 4], *devices[FDEVS];
+    static char values[MAX_APPS + 4][200];
     char q[260], w[260];
     int n = 0, i, k, start = 0;
     if (!appsListed)
@@ -735,6 +753,8 @@ void exit_menu(void)
     snprintf(values[n++], sizeof(values[0]), "files");
     items[n] = T(T_EXIT_BROWSER);
     snprintf(values[n++], sizeof(values[0]), "osd");
+    items[n] = T(T_POWER_OFF);
+    snprintf(values[n++], sizeof(values[0]), "poweroff");
     n = add_custom(cfg.manual_return, items, values, n);
     if (strcasecmp(cfg.manual_return, "auto") != 0 || find_opl(q, sizeof(q)) != 0)
         target_on_sd(cfg.manual_return, q, sizeof(q));
@@ -759,7 +779,9 @@ void exit_menu(void)
         }
         return;
     }
-    if (strcasecmp(values[k], cfg.manual_return) != 0) {
+    /* (the program picked is where the list starts next time. Not the PS2 turned off: the program goes where that says
+     * on its own too, when it can't start, and the console would turn off then) */
+    if (strcasecmp(values[k], cfg.manual_return) != 0 && strcasecmp(values[k], "poweroff") != 0) {
         if (cfg.manual_name[0])   /* the name was the other program's */
             config_set("manual", "name", "");
         config_set("manual", "return", values[k]);
@@ -841,6 +863,9 @@ void settings_screen(void)
             break;
         case SET_LIBRARY_DRIVE:
             pick_library_drive();
+            break;
+        case SET_SAFETY:
+            pick_safety();
             break;
         case SET_DRIVE_LAYOUT:
             drive_offer_settings();

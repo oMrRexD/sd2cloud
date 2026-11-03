@@ -53,6 +53,8 @@ LIBRARY_INI = (b"[BASLUS-21065ALPHA]\r\nhead = 2784000004000000000504030201ea070
 # the sd2psx's own settings, as its firmware writes them on the microSD
 SD2PSX_SETTINGS = (b"[General]\nMode=PS2\nFlippedScreen=OFF\n[PS1]\nAutoboot=ON\nGameID=ON\nEnableControllerCombo=ON\n"
                    b"MaxCardIdx=0\n[PS2]\nAutoboot=OFF\nGameID=ON\nCardSize=8\nVariant=RETAIL\nMaxCardIdx=0\n")
+# the safety copies turned on (they are off unless they are): the scenarios of what makes them, and puts them back
+SAFETY = "[cards]\r\nsafety = yes\r\n"
 # a template that is there when a scenario starts: "Net", with the save of fixtures/save.psu
 TEMPLATE = {"SD2Cloud/templates/Net/save.psu": "save.psu"}
 
@@ -91,6 +93,16 @@ SCENARIOS = [
     {"name": "save-move-replace", "what": "a save moved to a card that has one of its folder: replaced",
      "cards": dict(CARDS, **{"Card2/Card2-1": "game"}), "script": "XXDXXXXC"},
     {"name": "save-delete", "what": "a save deleted", "cards": CARDS, "script": "XXDDXXXC"},
+    # (with the safety copies on, [cards] safety = yes: a copy of it first, a .psu in SD2Cloud/Safety/<its card's
+    # folder>; put back from Tools > "Safety copies", which imports it into the card picked)
+    {"name": "save-delete-safety", "what": "a save deleted with the safety copies on: a copy of it is kept",
+     "cards": CARDS, "settings": SAFETY, "script": "XXDDXXXC"},
+    {"name": "safety-save-restore", "what": "a deleted save put back from its safety copy, into its card",
+     "cards": CARDS, "settings": SAFETY, "script": "XXDDXXXOLDXXXXXXC"},
+    # ("Z": the card pasted into taken as one without room for them. Offered: a new card of their game, X, or the
+    # Library, square)
+    {"name": "save-copy-full", "what": "a save pasted into a card without room for it: put into a new card of its game",
+     "cards": CARDS, "script": "XXXODSZXXXXC"},
     # (after "New card", its size: the cursor starts on the one recommended for what goes into it, and X takes it)
     {"name": "save-new-card", "what": "a save copied to a new card of its game: \"New card\" in its game's folder, in the list "
      "of cards", "cards": CARDS, "script": "XXXS>XXXXXC"},
@@ -274,7 +286,7 @@ SCENARIOS = [
     {"name": "card-move-saves", "what": "the saves of a card the device no longer opens for its game, moved to the one it does",
      "cards": {"Card1/Card1-1": "game", "SLUS-21065/SLUS-21065-1": "game"},
      "files": {".sd2psx/Game2Folder.ini": b"[PS2]\nSLUS-21065=MCCG-10045\nSLUS-21267=MCCG-10045\n"},
-     "script": ">DXTDDDDXXXC"},
+     "settings": SAFETY, "script": ">DXTDDDDXXXC"},
     {"name": "save-export-list", "what": "a save marked on a card, exported from the Files group of the list of cards",
      "cards": CARDS, "script": "XXXO>>>XSXXC"},
     # (a microSD that was in both devices has MemoryCards/PS2 and the MemCard PRO2's own PS2: which device it is in is
@@ -326,19 +338,22 @@ SCENARIOS = [
     # (a card deleted leaves a safety copy, in SD2Cloud/Safety/: put back from Tools > "Safety copies", it is a card
     # again, in its place)
     {"name": "safety-restore", "what": "a deleted card put back from its safety copy",
-     "cards": CARDS, "script": "DTDDDDDDDDXXXLDXXXXXC"},
+     "cards": CARDS, "settings": SAFETY, "script": "DTDDDDDDDDXXXLDXXXXXC"},
+    # (with the safety copies off, as they are unless turned on: no copy of it, and nothing said of one)
+    {"name": "card-delete-no-copy", "what": "a card deleted with the safety copies off: no copy is kept",
+     "cards": CARDS, "script": "TDDDDDDDDXXXC"},
     {"name": "card-delete", "what": "a card deleted from its options: its file and its folder go", "cards": CARDS,
-     "script": "TDDDDDDDDXXXC"},
+     "settings": SAFETY, "script": "TDDDDDDDDXXXC"},
     # (inside a game's folder of two cards, the last one deleted: the folder stays open, on the card left, not on the
     # game after it, which took the deleted one's place in the list. X then opens the card left)
     {"name": "card-delete-in-folder", "what": "a card of a game's folder of two deleted: the folder stays open, on the other",
      "cards": dict(CARDS, **{"SLUS-21065/SLUS-21065-2": "empty", "SLUS-21066/SLUS-21066-1": "empty"}),
-     "script": ">DXDTDDDDDDDDXXXXC"},
+     "settings": SAFETY, "script": ">DXDTDDDDDDDDXXXXC"},
     {"name": "folder-delete", "what": "a game's folder of two cards deleted whole: triangle on its row, the folder's options",
-     "cards": dict(CARDS, **{"SLUS-21065/SLUS-21065-2": "empty"}), "script": ">DTXXXC"},
+     "cards": dict(CARDS, **{"SLUS-21065/SLUS-21065-2": "empty"}), "settings": SAFETY, "script": ">DTXXXC"},
     # "Change size", sixth of its options: the cursor starts on the size recommended for what it has (1 MB)
     {"name": "card-resize", "what": "a card made again of another size (8 MB to 1 MB): its saves as they were", "cards": CARDS,
-     "script": "TDDDDDXXXXC"},
+     "settings": SAFETY, "script": "TDDDDDXXXXC"},
     # "Rename", fifth of a card's options: a numbered card keeps its file, and its name on the sd2psx is typed (X types
     # the key under the cursor, A; START takes it); a folder of the user's own is called something else, asked first
     {"name": "card-rename", "what": "a numbered card's name on the sd2psx typed: its folder's .ini", "cards": CARDS,
@@ -416,7 +431,7 @@ SCENARIOS = [
      "cards": {"Card1/Card1-1": "game", "SLUS-21065/SLUS-21065-1": "empty"}, "script": "TDDDDDDXSXkXXC"},
     # (R2 on the summary: their removal from the card is asked, and X answers it)
     {"name": "split-there-delete", "what": "a card's saves split by game, on the game's card already: deleted from it after",
-     "cards": CARDS, "script": "TDDDDDDXSX2XXC"},
+     "cards": CARDS, "settings": SAFETY, "script": "TDDDDDDXSX2XXC"},
     # Settings (START) > Cards: the size the sd2psx makes a game's first card of, written to its settings.ini
     {"name": "settings-card-size", "what": "the size of the sd2psx's new cards set to 32 MB in its settings.ini",
      "cards": CARDS, "files": {".sd2psx/settings.ini": SD2PSX_SETTINGS}, "script": "SDDDXXDDXXC"},
@@ -434,6 +449,13 @@ SCENARIOS = [
      "cards": CARDS, "files": {"SD2Cloud/token.dat": b"refresh_token = test\r\n"}, "script": "IKX"},
     # (triangle, "H": the list of what comes after IGR, this time; "y2" picks its third, "Turn off the PS2" here,
     # where there is no OPL: the PS2 Browser is the first, SD2Cloud itself the second. Cancelled, it is what comes)
+    # (the PS2 about to be turned off is said for 5 s first, circle ("x" here) going to the program instead: the OPL,
+    # or the PS2 Browser where there is none)
+    {"name": "igr-power-off-not", "what": "after IGR, the PS2 about to be turned off: circle opens the program instead",
+     "cards": CARDS, "files": {"SD2Cloud/token.dat": b"refresh_token = test\r\n"}, "script": "IHy2KXx"},
+    # (circle on the main screen: where to go, "Turn off the PS2" among them, after the programs, "Files" and the PS2
+    # Browser; here, with no programs in APPS, the third)
+    {"name": "exit-power-off", "what": "circle on the main screen: the PS2 turned off", "cards": CARDS, "script": "ODDX"},
     {"name": "igr-after-power-off", "what": "after IGR, triangle: the PS2 turned off picked, then the sync cancelled",
      "cards": CARDS, "files": {"SD2Cloud/token.dat": b"refresh_token = test\r\n"}, "script": "IHy2KX"},
     # and while the sync gets online, the Memory Card's save on its way (the network's first try finds no cable: nothing

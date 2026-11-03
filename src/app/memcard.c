@@ -91,6 +91,10 @@ void memcard_hint(int port, int numbered)
     else
         snprintf(t, sizeof(t), "%s", T(T_MEMCARD));
     panel_title(t);
+    if (mc_free_kb(port) >= 0) {   /* (its free space, as it was when the group was shown) */
+        snprintf(t, sizeof(t), T(T_FREE_KB), mc_free_kb(port));
+        ui_text_center(FONT_TEXT, CARD_CX, CARD_Y + 30, COLOR_TEXT, t);
+    }
     ui_paragraph_center(FONT_SMALL, CARD_CX, CARD_Y + 70, LOOK_CARD_W + 32, COLOR_DIM, T(standalone ? T_MEMCARD_HINT_ALONE : T_MEMCARD_HINT));
 }
 
@@ -280,8 +284,10 @@ int memcard_restore(card_t *c, const drive_file_t *f)
         ui_unlock();
         upload_screen(i, n);
         /* (in place of one of the same folder there, which is kept aside and put back if the backup's can't go in) */
-        if ((k = mcfs_copy_save(c->path, list[i].folder, slotCard.path, NULL)) == MCFS_ERR_EXISTS)
+        if ((k = mcfs_copy_save(c->path, list[i].folder, slotCard.path, NULL)) == MCFS_ERR_EXISTS) {
+            safety_save(&slotCard, list[i].folder, 0);   /* (with the safety copies on: the one there, first) */
             k = mcfs_replace_save(c->path, NULL, list[i].folder, slotCard.path, NULL);
+        }
         log_msg("memory card restore: %s: %d", list[i].folder, k);
         if (k == MCFS_OK)
             ok++;

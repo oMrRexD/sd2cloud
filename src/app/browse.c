@@ -334,7 +334,8 @@ void psu_import(void)
 {
     char name[160], t[300];
     card_t *to;
-    int r, made, again;
+    int r, made, again, replace = 1;
+    there_t th = {0};
     if (!save_can_go(psu.info.folder, NULL)) {
         message_wait(0, NULL, COLOR_WARN, T(T_NO_CARDS_SD));
         return;
@@ -347,13 +348,23 @@ void psu_import(void)
         made = to == &destNew;
         if (made && !dest_new_size(mcfs_save_room(psu.info.bytes, psu.info.files)))
             continue;   /* (circle on the sizes: back to the cards) */
-        if (confirm(t, made ? dest_new_note() : NULL, T_IMPORT_YES))
+        /* (a card that has a save of its folder already: that one is replaced, asked so, with when each was saved) */
+        th.total = 1;
+        th.there = !made && card_has_save(to, psu.info.folder, &th.was);
+        th.now = psu.info.when;
+        th.newer = th.there && th.was > th.now;
+        if (th.there ? ask_there(t, to, &th, &replace) : confirm(t, made ? dest_new_note() : NULL, T_IMPORT_YES))
             break;
     }
     if (!(to = dest_real(to)) || card_free(to, NULL))
         return;
     save_into(to, &psu.v, T_WORKING_IMPORT);
-    r = mcfs_import_psu(psu.path, to->path, save_progress);
+    if (th.there && safety_save(to, psu.info.folder, 1) != 0)   /* (with the safety copies on: the one there, first) */
+        r = MCFS_ERR_CANCELLED;
+    else if (th.there)   /* (the one there kept aside, and put back when this one can't go in) */
+        r = mcfs_replace_save(NULL, psu.path, psu.info.folder, to->path, save_progress);
+    else
+        r = mcfs_import_psu(psu.path, to->path, save_progress);
     save_into_done();
     log_msg("import %s into %s: %d", psu.path, to->id, r);
     cards_recheck(to);

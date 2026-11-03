@@ -182,9 +182,46 @@ void igr_next_wait(void)
         next_close(-1);
 }
 
+#define POWER_OFF_WAIT 5000   /* ms the PS2 turned off is said before, at IGR, nobody maybe at the controller */
+
+/* What comes after IGR is the PS2 turned off: said first, for a few seconds, with circle to go to a program instead
+ * (the one in the settings or, when that is turning off too, the OPL found). What comes, then */
+static const char *power_off_or_not(const char *target)
+{
+    char t[120];
+    int left = -1, l, was = (pad_buttons() & PAD_CIRCLE) != 0, down;
+    u64 end;
+    if (strcasecmp(target, "poweroff") != 0)
+        return target;
+    for (end = now_ms() + POWER_OFF_WAIT; now_ms() < end; sleep_ms(16)) {
+        if ((l = (int)((end - now_ms() + 999) / 1000)) != left) {
+            left = l;
+            snprintf(t, sizeof(t), T(T_POWER_OFF_SOON), left);
+            dlg_new(COLOR_WARN, t);
+            dlg_buttons(BUTTON_CIRCLE, T_POWER_OFF_NO, 0, 0);
+            dlg_show();
+#ifdef DEBUG_BUILD
+            debug_capture_if('w');   /* (script: the PS2 about to be turned off) */
+#endif
+        }
+        down = (pad_buttons() & PAD_CIRCLE) != 0;
+#ifdef DEBUG_BUILD
+        if (debug_take('x'))   /* (script: circle on it) */
+            down = 1, was = 0;
+#endif
+        if (down && !was) {
+            sound_play(SND_BACK);
+            log_msg("IGR: the PS2 not turned off, after all");
+            return strcasecmp(cfg.igr_return, "poweroff") != 0 ? cfg.igr_return : "auto";
+        }
+        was = down;
+    }
+    return target;
+}
+
 /* IGR is over (the sync done, cancelled, or nothing to do): to what comes after it */
 void igr_leave(void)
 {
     igr_next_wait();
-    leave(nx.chosen >= 0 ? nx.values[nx.chosen] : cfg.igr_return);
+    leave(power_off_or_not(nx.chosen >= 0 ? nx.values[nx.chosen] : cfg.igr_return));
 }

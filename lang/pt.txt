@@ -209,6 +209,8 @@ T_IGR_NOTHING = Nenhum cartão de memória foi alterado.
 T_IGR_AFTER = Ao terminar
 T_IGR_AFTER_NOW = Ao terminar: %s
 T_POWER_OFF = Desligar o PS2
+T_POWER_OFF_SOON = O PS2 será desligado em %d s.
+T_POWER_OFF_NO = Não desligar
 # One line. English: Sync now
 T_SYNC_NOW = Sincronizar agora
 # One line. English: Restore a backup
@@ -247,10 +249,12 @@ T_DONE_DELETE = Eliminação concluída.
 T_DELETE_ASK = Deseja excluir "%s"?
 # Up to 3 lines. English: It will be permanently removed from %s. This action cannot be undone.
 T_DELETE_TEXT = Será removido permanentemente de %s. Esta ação não pode ser desfeita.
+T_DELETE_TEXT_SAFE = Será removido de %s. Uma cópia ficará em Ferramentas > Cópias de segurança.
 # Up to 3 lines. English: %s already contains data with the same name.
 T_ERR_EXISTS = %s já contém dados com o mesmo nome.
 # Up to 3 lines. English: There is not enough free space on %s.
 T_ERR_FULL = Não há espaço livre suficiente em %s.
+T_ROOM_NEED_FREE = Necessário: %d KB · Livre: %d KB
 # Up to 3 lines. English: Unable to write to the memory card.
 T_ERR_MC_WRITE = Não foi possível gravar no cartão de memória.
 # Up to 3 lines. English: The copy on %s failed verification.
@@ -787,6 +791,10 @@ T_MARK_SAME_TEXT = Um cartão não pode conter dois saves com a mesma pasta. Des
 T_MARK_SAME_SELECTED = Selecionado: %s (%s)
 # One line. English: This one: %s (%s)
 T_MARK_SAME_THIS = Este: %s (%s)
+T_THERE_SAVED = No cartão: %s
+T_THIS_SAVED = Este save: %s
+T_THERE_NEWER = O save que está no cartão é mais recente.
+T_THERE_NEWER_N = Mais recentes no destino: %d
 # One line. English: Convert to Game ID
 T_MIGRATE = Converter para Game ID
 # One line. English: Convert to Game ID
@@ -895,6 +903,8 @@ T_SAFETY_FAILED_TEXT = Deseja continuar mesmo assim?
 T_SAFETY_NONE = Não há cópias de segurança.
 # Up to 2 lines. English: A safety copy will be created first (Tools > Safety copies).
 T_SAFETY_NOTE = Uma cópia de segurança será criada antes (Ferramentas > Cópias de segurança).
+T_SAFETY_SAVES_NOTE = Uma cópia de cada save substituído ficará em Ferramentas > Cópias de segurança.
+T_SAFETY_ON_NOTE = Antes de excluir ou alterar um cartão, ou de excluir ou substituir um save, uma cópia dele fica em Ferramentas > Cópias de segurança. As cópias ocupam espaço no microSD até serem excluídas.
 # Up to 2 lines. English: Replace %s with its copy from %s?
 T_SAFETY_REPLACE_ASK = Deseja substituir %s pela cópia de %s?
 # Up to 2 lines. English: The card's current content will be replaced.
@@ -909,6 +919,8 @@ T_SAFETY_RESTORED = Cópia de segurança restaurada.
 T_SAFETY_RESTORE_FAILED = Não foi possível restaurar a cópia de segurança.
 # Up to 2 lines. English: Delete the safety copy of %s (%s)?
 T_SAFETY_DELETE_ASK = Deseja excluir a cópia de segurança de %s (%s)?
+T_SAFETY_SAVE_OF = Save de %s, do cartão %s.
+T_SAFETY_CARD_OF = Cartão %s inteiro.
 # One line. English: Backup by save
 T_SET_SAVE_BACKUP = Backup por save
 # One line. English: On

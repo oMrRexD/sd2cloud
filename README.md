@@ -71,8 +71,8 @@ It works with:
     1 to 64 MB on an sd2psx and from 8 to 128 MB on a MemCard PRO2, and the recommended size is marked;
   - **Convert to Game ID** splits a card into one card per game: Game ID cards are the cards the sd2psx switches
     to by itself when a game starts. All of it happens on one screen, which shows the time left;
-  - before any change that could lose data, SD2Cloud keeps a **safety copy** of the card, which you can restore
-    from Tools.
+  - if you turn on **safety copies** (Settings > Cards), SD2Cloud keeps a copy of a card before any change that
+    could lose data, and of a save before it is deleted or replaced, which you can restore from Tools.
 - The cards are sorted into tabs: numbered cards and your own folders, game cards (Game ID) in folders named after
   each game, boot cards, **OPL's VMCs** and the Library. The VMCs tab shows which games use each VMC, and also has
   the VMC folders of the HDD, an MX4SIO or a USB drive.
@@ -207,7 +207,7 @@ The same option in Settings reinstalls or removes the package.
 While it does that, **TRIANGLE** (When done) picks what comes after the sync, this time only: another program of
 `APPS`, SD2Cloud itself, the PS2 Browser or **Turn off the PS2**. The sync goes on while you pick, and the choice
 applies both when it ends and when it is cancelled. To turn the PS2 off after every sync, choose Turn off the PS2 in
-**IGR path**, in the Settings.
+**IGR path**, in the Settings. Before it turns off, SD2Cloud says so for 5 seconds, and O opens the program instead.
 
 SD2Cloud can be in any folder, on the MMCE or on another device. Each time it opens, it records where it is (in
 `sd2cloud.ini` on the MMCE; without an sd2psx, in the package itself, along with that device's drivers), and the

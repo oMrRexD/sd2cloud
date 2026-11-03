@@ -74,8 +74,9 @@ Funciona con:
     tamaño recomendado marcado;
   - **Convertir a Game ID** divide una tarjeta en una tarjeta por juego. Las tarjetas Game ID son las que el sd2psx
     elige solo cuando empieza un juego. Todo ocurre en una sola pantalla, que muestra el tiempo restante;
-  - antes de cualquier cambio que pueda perder datos, SD2Cloud guarda una **copia de seguridad** de la tarjeta, que
-    puedes restaurar desde Utilidades.
+  - si activas las **copias de seguridad** (Ajustes > Tarjetas), SD2Cloud guarda una copia de la tarjeta antes
+    de cualquier cambio que pueda perder datos, y de la partida antes de eliminarla o reemplazarla, que puedes
+    restaurar desde Utilidades.
 - Las tarjetas se ordenan en pestañas: tarjetas numeradas y tus carpetas, tarjetas de juego (Game ID) en carpetas con
   el nombre de cada juego, tarjetas de arranque, los **VMC del OPL** y la Biblioteca. La pestaña de VMC muestra qué
   juegos usan cada VMC, y también incluye las carpetas de VMC del disco duro, de un MX4SIO o de una memoria USB.
@@ -217,7 +218,7 @@ misma opción de los Ajustes reinstala o quita el paquete.
 Mientras tanto, **TRIÁNGULO** (Al terminar) elige qué se abre después de la sincronización, solo esta vez: otro
 programa de `APPS`, el propio SD2Cloud, el Navegador del PS2 o **Apagar la PS2**. La sincronización sigue mientras
 se elige, y la elección vale tanto cuando termina como cuando se cancela. Para apagar la PS2 después de cada
-sincronización, elige Apagar la PS2 en **Salida del IGR**, en los Ajustes.
+sincronización, elige Apagar la PS2 en **Salida del IGR**, en los Ajustes. Antes de apagarse, SD2Cloud lo avisa durante 5 segundos, y O abre el programa en su lugar.
 
 SD2Cloud puede estar en cualquier carpeta, en el MMCE o en otro dispositivo. Cada vez que se abre, registra dónde
 está (en `sd2cloud.ini` del MMCE; sin sd2psx, en el propio paquete, junto con los controladores de ese dispositivo),

@@ -887,6 +887,7 @@ int card_app_update(const buffer_t *app, const buffer_t *helper, const char *ver
    written into it (mc_put_save) and a save deleted (mc_delete_save). */
 
 static int slotType[2];   /* what mc_card_in was last told is in each slot (2 = a PS2 memory card) */
+static int slotFree[2] = {-1, -1};   /* and the free space of the formatted one there, in KB (-1 = none) */
 
 int mc_card_in(int port)
 {
@@ -907,6 +908,7 @@ int mc_card_in(int port)
     }
     slotType[port] = type;   /* (a memory card that answers badly is still one: what mc_ps2_card asks) */
     r = (got == 0 || got == -1) && type == 2 && format ? port : -1;
+    slotFree[port] = r >= 0 ? freeKb : -1;
     if (r != told[port]) {   /* (said when it changes: it is asked each time the Files group is shown) */
         told[port] = r;
         log_msg("memory card: slot %d %s (%d: type %d, formatted %d, %d KB free)", port + 1, r >= 0 ? "has one" : "has none",
@@ -916,6 +918,8 @@ int mc_card_in(int port)
 }
 
 int mc_other_slot(void) { return mc_card_in(1 - mc_slot()); }
+
+int mc_free_kb(int port) { return port >= 0 && port <= 1 ? slotFree[port] : -1; }
 
 int mc_ps2_card(int port)
 {

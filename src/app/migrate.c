@@ -351,7 +351,9 @@ static int mg_go(void)
                     mg.done[s] = MG_KEPT;
                     continue;
                 }
-                /* (that one in its place, kept aside first: back there if this one can't go in) */
+                /* (that one in its place, kept aside first: back there if this one can't go in; with the safety copies
+                 * on, a copy of it too) */
+                safety_save(g->card, mg.saves[s].folder, 0);
                 r = mcfs_replace_save(mg.src->path, NULL, mg.saves[s].folder, g->card->path, mg_step);
             } else
                 r = mcfs_copy_save(mg.src->path, mg.saves[s].folder, g->card->path, mg_step);
@@ -423,7 +425,8 @@ static int mg_go(void)
         dlg_new(COLOR_WARN, t);
         snprintf(t, sizeof(t), T(T_MIGRATE_DELETE_TEXT), copied + there);
         dlg_line(FONT_TEXT, COLOR_TEXT, 8, t);
-        dlg_line(FONT_SMALL, COLOR_DIM, 0, T(T_SAFETY_NOTE));
+        if (cfg.safety)   /* (the safety copies on: said where it goes) */
+            dlg_line(FONT_SMALL, COLOR_DIM, 0, T(T_SAFETY_NOTE));
         dlg_buttons(BUTTON_CIRCLE, T_MIGRATE_KEEP, BUTTON_CROSS, T_DELETE);
         next.wide = 1;
         dlg_show();

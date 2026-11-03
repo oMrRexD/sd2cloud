@@ -304,6 +304,10 @@ void save_versions_screen(card_t *c, save_view_t *v)
     buf_free(&got);
     if (r == 0) {
         message(0, NULL, COLOR_TEXT, T(T_RESTORE_STEP_WRITE));
+        if (safety_save(c, v->s.folder, 1) != 0) {   /* (with the safety copies on: the save as it is now, first) */
+            unlink(fresh);
+            return;
+        }
         r = mcfs_replace_save(NULL, fresh, v->s.folder, c->path, NULL);
     }
     unlink(fresh);

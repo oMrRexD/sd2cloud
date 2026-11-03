@@ -123,8 +123,8 @@ yet, or never synced. The card under the cursor is shown on the right, with the 
 - X opens the card: its saves, shown as in the PS2 browser, newest first.
 - TRIANGLE opens the card's options (see below).
 - START opens the settings (see SETTINGS), and SELECT the tools (see TEMPLATES and SAFETY COPIES).
-- O exits the app. You choose where to go next (the programs in the APPS folder, "Run an ELF..." or the PS2
-  browser), and the last choice is remembered.
+- O exits the app. You choose where to go next (the programs in the APPS folder, "Run an ELF...", the PS2
+  browser or "Turn off the PS2"), and the last choice is remembered (turning off excepted).
 On the screens where X marks and unmarks (the saves of a copy, a template's saves, games and cards, "Export saves
 to a card", "Convert to Game ID"), you can hold X down and move the cursor: everything it passes over is marked
 or unmarked the same way. A quick press of X while the cursor happens to move doesn't count.
@@ -182,9 +182,13 @@ Copying and moving
   stay as you go from card to card, and their count is on screen. TRIANGLE (Cancel) drops the selection, asking
   first when more than one save is marked.
 - START (Paste) pastes them all into the card where you press it: the one that is open, or the one under the
-  cursor in the list of cards. A card without enough space for them is left as it is. Pressed where they can't go
-  (the card they all came from, or "All saves"), START takes you to the list of cards.
-- If that card already has a save in the same folder, SD2Cloud asks: X (Replace) puts the new one in its place;
+  cursor in the list of cards. Pressed where they can't go (the card they all came from, or "All saves"), START
+  takes you to the list of cards.
+- A card without enough space for them is left as it is. SD2Cloud says how much is needed and how much is free,
+  and offers other places: X (New card) makes a new card of their game, when they are all of one game; SQUARE
+  (Library) keeps them in the Library.
+- If that card already has a save in the same folder, SD2Cloud asks, showing when the one on the card and the new
+  one were saved (in yellow when the one on the card is the newer): X (Replace) puts the new one in its place;
   SQUARE (Keep existing), offered when other saves go too, leaves the ones there and copies the rest. The save
   that is replaced is kept aside until the new one is written, and put back if it can't be.
 - In the list's Games tab, when the saves are all from one game, that game's folder comes first, in green, with
@@ -243,10 +247,15 @@ CARDS
 - Delete folder (TRIANGLE on a folder of the Games tab): deletes all of its cards, after asking.
 
 SAFETY COPIES
-Before a card is deleted or resized, before saves are moved out of it, and before a conversion to Game ID removes
-the copied saves, SD2Cloud keeps a copy of the whole card in SD2Cloud/Safety on the MMCE. The 10 newest copies are
-kept. Tools (SELECT) > Safety copies lists them: X restores one (over the card, or as the card again if it was
-deleted) or deletes it.
+They are off unless you turn them on, in Settings > Cards > "Safety copies". When they are on:
+- before a card is deleted or resized, before saves are moved out of it, and before a conversion to Game ID
+  removes the copied saves, SD2Cloud keeps a copy of the whole card;
+- before a save is deleted or replaced (by a copy or a move, a .psu imported, a template, a version from Drive or
+  a restore of the Memory Card), it keeps a copy of the save, as a .psu.
+They go to SD2Cloud/Safety on the MMCE (without an sd2psx, on the device SD2Cloud runs from) and take room there
+until they are deleted. The newest 10 copies of cards and 30 of saves are kept. Tools (SELECT) > Safety copies
+lists them: X restores one (a card over the card, or as the card again if it was deleted; a save into the card
+you pick) or deletes it.
 
 OPL VMCS
 OPL's virtual memory cards (VMC/*.bin on the MMCE) are the cards of the OPL VMCs tab. Each one shows the games
@@ -285,8 +294,8 @@ Importing
   for the card, chosen from the same tabs as the main screen. SQUARE on the file, in the list, goes straight to
   the card, without opening the page.
 - The file is checked as a whole before the card is touched, and what is written is read back and compared.
-- A card that already has a save with the same name, or doesn't have enough space, is left as it is: delete or
-  move that save first.
+- If the card already has a save with the same name, SD2Cloud asks whether to replace it, as when copying (see
+  MAIN SCREEN). A card without enough space is left as it is.
 - Saves in folder format are installed like a .psu. Select the folder, or go into it, and press SQUARE ("Install
   save"): the save's page opens, and "Import to card" puts it on a card. X still opens the folder as usual. Files
   a computer adds to a folder (Thumbs.db, desktop.ini, .DS_Store) are ignored.
@@ -324,6 +333,7 @@ A regular PS2 memory card in the console's other slot (both slots, without an sd
 With an sd2psx, the card it is using is a row of the Files tab too, by its slot: "Memory Card 1" when the sd2psx
 is in slot 1 (the Memory Card in slot 2 is then "Memory Card 2"). It shows the card's picture and name, and X
 opens it as in the Cards tab.
+On the right of its row, the Files tab shows how much free space the Memory Card has.
 - X shows its saves, which are copied, moved, deleted and uploaded to Drive like a card's. Saves can go into it
   from the cards or from .psu files.
 - TRIANGLE, on its saves, has:
@@ -408,8 +418,8 @@ page, O goes back, and START leaves the settings from any page.
     uninstalls it.
   - IGR path: the program started after the IGR sync. The choices are Automatic (the OPL found on the MMCE), the
     programs in the APPS folder, the PS2 browser and "Turn off the PS2".
-- Cards: Device (on a microSD with the cards of both devices), New card size (see CARDS) and OPL VMC folders (see
-  OPL VMCS).
+- Cards: Device (on a microSD with the cards of both devices), New card size (see CARDS), OPL VMC folders (see OPL
+  VMCS) and Safety copies (see SAFETY COPIES).
 - Updates: Check for updates (looks for a new version right away and, if there is one, offers to update) and
   Update channel: Stable (the released versions) or Beta (see UPDATING).
 - Language.
@@ -458,6 +468,7 @@ TRIANGLE (When done), on any of these screens, picks what comes after, this time
 "IGR path", another program of the APPS folder, SD2Cloud itself (its main screen), the PS2 browser or "Turn off
 the PS2". The sync goes on while you pick, the choice shows at the top right, and it applies when the sync ends
 and when it is cancelled. To turn the PS2 off after every sync, choose "Turn off the PS2" in "IGR path".
+Before the PS2 turns off, SD2Cloud says so for 5 seconds: O (Don't turn off) opens the program instead.
 SD2Cloud can be in any folder, on the MMCE or on another device. Each time it opens, it records where it is (in
 sd2cloud.ini on the MMCE, "app_path"; without an sd2psx, in the package itself, along with that device's
 drivers), and the package starts it from there. The package even finds a folder of APPS on the MMCE that was

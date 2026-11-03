@@ -256,12 +256,12 @@ static void mark_icon(void)
     ui_unlock();
 }
 
-/* The game of the saves marked for a copy, when they are all of one (its folder; "" = they aren't): the Games group
- * offers "New card" for it, and its folder comes first there. 1 = it changed (with ui_lock held) */
-static int mark_game(void)
+/* the folder of the game of the saves marked for a copy, when they are all of one ("" = they aren't) */
+static void marked_game(char folder[48])
 {
-    char id[12], first[12] = "", folder[48] = "", f[48];
+    char id[12], first[12] = "";
     int i;
+    folder[0] = 0;
     for (i = 0; marks.copy && i < marks.n; i++)
         if (!save_game_id(marks.save[i].s.folder, id) || (i && strcmp(id, first) != 0)) {
             first[0] = 0;
@@ -269,7 +269,15 @@ static int mark_game(void)
         } else
             snprintf(first, sizeof(first), "%s", id);
     if (first[0])
-        game_folder(first, folder, sizeof(folder));
+        game_folder(first, folder, 48);
+}
+
+/* The game of the saves marked for a copy, when they are all of one (its folder; "" = they aren't): the Games group
+ * offers "New card" for it, and its folder comes first there. 1 = it changed (with ui_lock held) */
+static int mark_game(void)
+{
+    char folder[48], f[48];
+    marked_game(folder);
     if (!strcmp(folder, mk.g.newGame))
         return 0;
     snprintf(mk.g.newGame, sizeof(mk.g.newGame), "%s", folder);
@@ -634,21 +642,39 @@ int paste_here(const card_t *c)
     return marks_of(c) < marks.n;
 }
 
-/* The copy's question (title), when the card has saves of the same folders as some of them (there of total): said
- * under it. X replaces them; square, when others go too, leaves them as they are and copies the others. 1 = go on,
- * *replace said which; 0 = circle */
-int ask_there(const char *title, const card_t *to, int total, int there, int *replace)
+/* The copy's question (title), when the card has saves of the same folders as some of them: said under it, with when
+ * the one there and this one were saved (one save), and in yellow when what would be replaced is the newer. X replaces
+ * them; square, when others go too, leaves them as they are and copies the others. 1 = go on, *replace said which;
+ * 0 = circle */
+int ask_there(const char *title, const card_t *to, const there_t *th, int *replace)
 {
-    char s[200];
-    u32 b, keys = PAD_CROSS | PAD_CIRCLE | (there < total ? PAD_SQUARE : 0);
+    char s[200], w[40];
+    u32 b, keys = PAD_CROSS | PAD_CIRCLE | (th->there < th->total ? PAD_SQUARE : 0);
     dlg_new(COLOR_TITLE, title);
-    if (total == 1)
+    if (th->total == 1)
         snprintf(s, sizeof(s), T(T_ERR_EXISTS), to->base);
     else
-        snprintf(s, sizeof(s), T(T_MIGRATE_THERE_N), there);
-    dlg_line(FONT_TEXT, COLOR_TEXT, 0, s);
+        snprintf(s, sizeof(s), T(T_MIGRATE_THERE_N), th->there);
+    dlg_line(FONT_TEXT, COLOR_TEXT, 6, s);
+    if (th->total == 1 && th->was && th->now) {   /* (when each was saved: the card's one, and this one) */
+        format_save_when(th->was, w, sizeof(w));
+        snprintf(s, sizeof(s), T(T_THERE_SAVED), w);
+        dlg_line(FONT_SMALL, COLOR_DIM, 0, s);
+        format_save_when(th->now, w, sizeof(w));
+        snprintf(s, sizeof(s), T(T_THIS_SAVED), w);
+        dlg_line(FONT_SMALL, COLOR_DIM, 6, s);
+    }
+    if (th->newer) {   /* (what would be replaced was saved after what takes its place) */
+        if (th->total == 1)
+            snprintf(s, sizeof(s), "%s", T(T_THERE_NEWER));
+        else
+            snprintf(s, sizeof(s), T(T_THERE_NEWER_N), th->newer);
+        dlg_line(FONT_SMALL, COLOR_WARN, 0, s);
+    }
+    if (cfg.safety)   /* (and where a copy of each one replaced goes) */
+        dlg_line(FONT_SMALL, COLOR_DIM, 0, T(T_SAFETY_SAVES_NOTE));
     dlg_buttons(BUTTON_CIRCLE, T_BACK, BUTTON_CROSS, T_REPLACE);
-    if (there < total)
+    if (th->there < th->total)
         dlg_button(BUTTON_SQUARE, T_MIGRATE_KEEP_GAME);
     dlg_show();
     b = wait_button(keys, 0);
@@ -659,6 +685,40 @@ int ask_there(const char *title, const card_t *to, int total, int there, int *re
     sound_play(SND_CONFIRM);
     *replace = (b & PAD_CROSS) != 0;
     return 1;
+}
+
+/* The card the marked saves were pasted into hasn't room for them (need bytes; left free): said, with where else they
+ * can go, a new card of their game (all of one game, on a device that makes game cards) or the Library. The place
+ * picked (NULL = circle, or there is none) */
+static card_t *ask_full(const card_t *to, long long need, long long left)
+{
+    char t[200], folder[48];
+    int canNew, canLib;
+    u32 b;
+    marked_game(folder);
+    canNew = folder[0] && !standalone && !library_path(to->path);
+    canLib = library_on() && !library_path(to->path) && paste_here(library_root());
+    snprintf(t, sizeof(t), T(T_ERR_FULL), to->base);
+    if (!canNew && !canLib) {
+        message_wait(0, NULL, COLOR_WARN, t);
+        return NULL;
+    }
+    dlg_new(COLOR_WARN, t);
+    snprintf(t, sizeof(t), T(T_ROOM_NEED_FREE), (int)((need + 1023) / 1024), (int)(left / 1024));
+    dlg_line(FONT_TEXT, COLOR_TEXT, 0, t);
+    dlg_buttons(BUTTON_CIRCLE, T_BACK, canNew ? BUTTON_CROSS : 0, canNew ? T_NEW_CARD : 0);
+    if (canLib)
+        dlg_button(BUTTON_SQUARE, T_TAB_LIBRARY);
+    dlg_show();
+    b = wait_button(PAD_CIRCLE | (canNew ? PAD_CROSS : 0) | (canLib ? PAD_SQUARE : 0), 0);
+    if (b & PAD_CIRCLE || !b) {
+        sound_play(SND_BACK);
+        return NULL;
+    }
+    sound_play(SND_CONFIRM);
+    if (b & PAD_SQUARE)
+        return library_root();
+    return dest_new_place(folder) ? &destNew : NULL;
 }
 
 /* START with saves marked for a copy ("Paste"). into = the card it was pressed on (paste_here): the one whose saves
@@ -674,7 +734,8 @@ int copy_marked(card_t *into)
     char t[300];
     long long size[MARKS_MAX], need = 0, room = 0;
     int i, n = 0, k = 0, total = 0, one = 0, last = MCFS_OK, r = MCFS_OK, made = into == &destNew;
-    int nThere = 0, replace = 1, yes;
+    int replace = 1, yes;
+    there_t th = {0};
     static unsigned char there[MARKS_MAX];   /* (the card has a save of that one's folder already) */
     if (!made && !paste_here(into))
         return 0;   /* (the screens offer START only where it pastes) */
@@ -704,16 +765,23 @@ int copy_marked(card_t *into)
         int j, files, n = mcfs_list_saves(to->path, list, MCFS_MAX_SAVES, &left);
         for (i = 0; i < marks.n; i++) {
             for (j = 0; marks.save[i].card != to && j < n && !there[i]; j++)
-                there[i] = !strcmp(list[j].folder, marks.save[i].s.folder);
+                if ((there[i] = !strcmp(list[j].folder, marks.save[i].s.folder)) != 0) {
+                    th.newer += list[j].when > marks.save[i].s.when;   /* (the one there saved after this one) */
+                    th.was = list[j].when;
+                    th.now = marks.save[i].s.when;
+                }
             was = 0;
             if (there[i] && mcfs_save_info(to->path, marks.save[i].s.folder, &was, &files) == MCFS_OK)
                 need -= size[i] < was ? size[i] : was;
-            nThere += there[i];
+            th.there += there[i];
         }
-        if (n >= 0 && left >= 0 && left < need) {   /* a card without room for them is left as it is */
-            snprintf(t, sizeof(t), T(T_ERR_FULL), to->base);
-            message_wait(0, NULL, COLOR_WARN, t);
-            return 0;
+#ifdef DEBUG_BUILD
+        if (debug_take('Z'))   /* (script: the card taken as one without room for them) */
+            left = 0;
+#endif
+        if (n >= 0 && left >= 0 && left < need) {   /* a card without room for them: another place, or left as it is */
+            card_t *other = ask_full(to, need, left);
+            return other ? copy_marked(other) : 0;
         }
     }
     for (i = 0; i < marks.n; i++)   /* how many go: the ones that card doesn't have already */
@@ -727,8 +795,9 @@ int copy_marked(card_t *into)
         snprintf(t, sizeof(t), T(library_path(to->path) ? T_LIB_CONFIRM_COPY : T_CONFIRM_COPY), name, to->base);
     } else
         snprintf(t, sizeof(t), T(library_path(to->path) ? T_LIB_CONFIRM_COPY_N : T_CONFIRM_COPY_N), total, to->base);
-    if (nThere)
-        yes = ask_there(t, to, total, nThere, &replace);
+    th.total = total;
+    if (th.there)
+        yes = ask_there(t, to, &th, &replace);
     else
         yes = confirm(t, to == &destNew ? dest_new_note() : NULL, T_COPY);
     if (!yes || !(to = dest_real(to)) || card_free(to, from)) {
@@ -737,7 +806,7 @@ int copy_marked(card_t *into)
         return 0;
     }
     if (!replace)   /* (the ones there stay: they don't go, and aren't counted as not copied) */
-        total -= nThere;
+        total -= th.there;
     transferDest = NULL;
     for (i = 0; i < marks.n && r != MCFS_ERR_CANCELLED; i++) {   /* (given up: the ones copied before it stay) */
         card_t *c = marks.save[i].card;
@@ -748,7 +817,9 @@ int copy_marked(card_t *into)
         currentN = ++k;
         totalN = total;
         ui_unlock();
-        if (there[i])   /* (the one there is kept aside, and put back when this one can't go in) */
+        if (there[i] && safety_save(to, marks.save[i].s.folder, total == 1) != 0)   /* (with the safety copies on) */
+            r = MCFS_ERR_CANCELLED;
+        else if (there[i])   /* (the one there is kept aside, and put back when this one can't go in) */
             r = mcfs_replace_save(c->path, NULL, marks.save[i].s.folder, to->path, save_progress);
         else
             r = mcfs_copy_save(c->path, marks.save[i].s.folder, to->path, save_progress);

@@ -73,8 +73,9 @@ Funciona com:
     recomendado indicado;
   - **Converter para Game ID** divide um cartão em um cartão para cada jogo. Os cartões de Game ID são aqueles que
     o sd2psx troca sozinho quando um jogo começa. Tudo acontece numa tela só, que mostra o tempo restante;
-  - antes de qualquer alteração que possa perder dados, o SD2Cloud guarda uma **cópia de segurança** do cartão, que
-    você pode restaurar pelas Ferramentas.
+  - se você ativar as **cópias de segurança** (Ajustes > Cartões), o SD2Cloud guarda uma cópia do cartão antes
+    de qualquer alteração que possa perder dados, e do save antes de ele ser excluído ou substituído, para você
+    restaurar pelas Ferramentas.
 - Os cartões ficam separados em abas: cartões numerados e as suas pastas, cartões de jogos (Game ID) em pastas com
   o nome de cada jogo, cartões de boot, os **VMCs do OPL** e a Biblioteca. A aba de VMCs mostra quais jogos usam
   cada VMC, e também traz as pastas de VMC do HD, de um MX4SIO ou de um pendrive.
@@ -213,7 +214,7 @@ mesma opção dos Ajustes reinstala ou remove o pacote.
 Enquanto isso, o **TRIÂNGULO** (Ao terminar) escolhe o que vem depois da sincronização, só desta vez: outro programa
 da `APPS`, o próprio SD2Cloud, o Browser do PS2 ou **Desligar o PS2**. A sincronização continua enquanto você
 escolhe, e a escolha vale tanto quando ela termina quanto quando é cancelada. Para desligar o PS2 depois de toda
-sincronização, escolha Desligar o PS2 em **Saída do IGR**, nos Ajustes.
+sincronização, escolha Desligar o PS2 em **Saída do IGR**, nos Ajustes. Antes de desligar, o SD2Cloud avisa por 5 segundos, e o O abre o programa em vez disso.
 
 O SD2Cloud pode ficar em qualquer pasta, no MMCE ou em outro dispositivo. Toda vez que abre, ele registra onde está
 (no `sd2cloud.ini` do MMCE; sem sd2psx, no próprio pacote, junto com os drivers desse dispositivo), e o pacote o

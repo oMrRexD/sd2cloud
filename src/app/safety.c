@@ -1,11 +1,16 @@
-/* SD2Cloud -- the safety copies: a card's file kept in the data folder (Safety/) before it is deleted, made again of
- * another size, or has its saves moved off it, the newest ten; and the Tools' list of them, where one is put back. */
+/* SD2Cloud -- the safety copies, when they are turned on (Settings > Cards; [cards] safety = yes): a card's file kept in
+ * the data folder (Safety/) before it is deleted, made again of another size, or has its saves moved off it, the newest
+ * ten; and a save, as a .psu, before it is deleted or replaced, the newest thirty. And the Tools' list of them, where
+ * one is put back. */
 #include "app.h"
 
-#define SAFETY_KEEP 10
-#define SAFETY_MAX  64
+#define SAFETY_KEEP       10   /* cards */
+#define SAFETY_KEEP_SAVES 30   /* saves */
+#define SAFETY_MAX        96
+#define SAVE_MARK         " ~ "   /* between a save copy's card and its own folder, in its name */
 
-/* <data>Safety/<folder>/<n> <base> <yyyy-mm-dd hhhmmmss><ext>: the card's folder and name, and when it was kept. The
+/* <data>Safety/<folder>/<n> <base> <yyyy-mm-dd hhhmmmss><ext>: the card's folder and name, and when it was kept (a save:
+ * <n> <base> ~ <its folder> <yyyy-...>.psu, its card's name and its own). The
  * moment is the console clock's, which may be anything (years ahead, or back to 2000 with a flat battery): the copies
  * are told apart in age by n, one more than the newest's each time, so the clock never decides which ones go */
 typedef struct {
@@ -74,16 +79,92 @@ static int list_copies(void)
 
 static void copy_path(const copy_t *k, char *out, size_t size) { snprintf(out, size, "%sSafety/%s/%s", dataDir, k->folder, k->file); }
 
-/* its card's name, and when it was kept, as the screen says it */
-static void copy_names(const copy_t *k, char *base, size_t baseSize, char *when, size_t whenSize)
+static int is_save_copy(const copy_t *k) { return file_ext(k->file, ".psu"); }
+
+/* its card's name, and when it was kept, as the screen says it (a save's: its card's name, and its own folder in save,
+ * when save isn't NULL) */
+static void copy_names_of(const copy_t *k, char *base, size_t baseSize, char *when, size_t whenSize, char *save, size_t saveSize)
 {
-    const char *s = stamp_of(k->file), *name = k->file;
+    const char *s = stamp_of(k->file), *name = k->file, *mark;
     int y = 0, mo = 0, d = 0, h = 0, mi = 0, len = 0;
     if (number_of(name, &len))
         name += len;
     snprintf(base, baseSize, "%.*s", (int)(s - 1 - name), name);
+    if (save)
+        save[0] = 0;
+    if (is_save_copy(k) && (mark = strstr(base, SAVE_MARK)) != NULL) {
+        if (save)
+            snprintf(save, saveSize, "%s", mark + strlen(SAVE_MARK));
+        base[mark - base] = 0;
+    }
     sscanf(s, "%d-%d-%d %dh%d", &y, &mo, &d, &h, &mi);
     format_when(y, mo, d, h, mi, when, whenSize);
+}
+
+static void copy_names(const copy_t *k, char *base, size_t baseSize, char *when, size_t whenSize)
+{
+    copy_names_of(k, base, baseSize, when, whenSize, NULL, 0);
+}
+
+/* the copies past the newest ones kept, of cards or of saves, let go of */
+static void let_go_of_old(void)
+{
+    char path[320];
+    int i, cardsKept = 0, savesKept = 0;
+    list_copies();
+    for (i = 0; i < nCopies; i++) {
+        int save = is_save_copy(&copies[i]);
+        if (save ? ++savesKept <= SAFETY_KEEP_SAVES : ++cardsKept <= SAFETY_KEEP)
+            continue;
+        copy_path(&copies[i], path, sizeof(path));
+        log_msg("safety copy %s: let go of (%d)", path, unlink(path));
+    }
+}
+
+/* a name's letters that a folder of the microSD can't have, as _ */
+static void name_safe(char *s)
+{
+    for (; *s; s++)
+        if (strchr("\\/:*?\"<>|", *s))
+            *s = '_';
+}
+
+int safety_save(const card_t *c, const char *folder, int ask)
+{
+    buffer_t b = {0};
+    char dir[200], path[400], who[64], base[64], save[40];
+    datetime_t t;
+    int n, r;
+    if (!cfg.safety)
+        return 0;
+    snprintf(who, sizeof(who), "%s", c->folder[0] ? c->folder : c->base[0] ? c->base : "Other");
+    snprintf(base, sizeof(base), "%s", c->base[0] ? c->base : who);
+    snprintf(save, sizeof(save), "%s", folder);
+    name_safe(who);
+    name_safe(base);
+    name_safe(save);
+    r = mcfs_export_psu(c->path, folder, &b);
+    if (r == MCFS_ERR_NOT_FOUND) {   /* (none there: nothing to keep) */
+        buf_free(&b);
+        return 0;
+    }
+    if (r == MCFS_OK) {
+        snprintf(dir, sizeof(dir), "%sSafety/%s/", dataDir, who);
+        ensure_dir(dir);
+        n = list_copies() ? copies[0].n + 1 : 1;
+        local_time(&t);
+        snprintf(path, sizeof(path), "%s%04d %s" SAVE_MARK "%s %04d-%02d-%02d %02dh%02dm%02d.psu", dir, n, base, save,
+                 t.year, t.month, t.day, t.hour, t.minute, t.second);
+        r = file_write_checked(path, b.data, b.len) ? MCFS_OK : MCFS_ERR_IO;
+    }
+    buf_free(&b);
+    if (r != MCFS_OK) {
+        log_msg("safety copy of %s of %s: not made (%d)", folder, c->id, r);
+        return !ask || confirm(T(T_SAFETY_FAILED), T(T_SAFETY_FAILED_TEXT), T_CONTINUE) ? 0 : -1;
+    }
+    log_msg("safety copy of %s of %s: %s", folder, c->id, path);
+    let_go_of_old();
+    return 0;
 }
 
 int safety_copy(const card_t *c)
@@ -91,9 +172,9 @@ int safety_copy(const card_t *c)
     char dir[200], path[320];
     const char *ext = strrchr(c->path, '.');
     datetime_t t;
-    int i, n, r;
-    if (mcfs_slot_port(c->path) >= 0 || card_file_card(c) || !ext)
-        return 0;   /* (not one of the microSD's cards) */
+    int n, r;
+    if (!cfg.safety || mcfs_slot_port(c->path) >= 0 || card_file_card(c) || !ext)
+        return 0;   /* (turned off; or not one of the microSD's cards) */
     snprintf(dir, sizeof(dir), "%sSafety/%s/", dataDir, c->folder);
     ensure_dir(dir);
     n = list_copies() ? copies[0].n + 1 : 1;
@@ -108,13 +189,39 @@ int safety_copy(const card_t *c)
         return confirm(T(T_SAFETY_FAILED), T(T_SAFETY_FAILED_TEXT), T_CONTINUE) ? 0 : -1;
     }
     log_msg("safety copy of %s: %s", c->id, path);
-    list_copies();
-    for (i = nCopies - 1; i >= SAFETY_KEEP; i--) {   /* (the newest ten stay) */
-        copy_path(&copies[i], path, sizeof(path));
-        log_msg("safety copy %s: let go of (%d)", path, unlink(path));
-    }
+    let_go_of_old();
     return 0;
 }
+
+/* a save's copy put back: into the card picked, as a .psu of the Files tab goes (replacing the one of its folder there,
+ * when it has one, if that is agreed to) */
+static void restore_save_copy(const copy_t *k)
+{
+    char from[320];
+    copy_path(k, from, sizeof(from));
+    if (!psu_load(from))
+        return;
+    psu_import();
+    psu_close();
+}
+
+/* what a copy is called: in the list (when), when it was kept; beside it (note), what it is of: a whole card, or a save
+ * of a card, by its game (or folder); over its options (title), the card's name, or the save's game */
+static void copy_text(const copy_t *k, char *when, size_t whenSize, char *note, size_t noteSize, char *title, size_t titleSize)
+{
+    char base[64], save[40], id[12], game[96];
+    copy_names_of(k, base, sizeof(base), when, whenSize, save, sizeof(save));
+    if (is_save_copy(k) && (!save_game_id(save, id) || !game_title(id, game, sizeof(game))))
+        snprintf(game, sizeof(game), "%s", save);
+    if (is_save_copy(k))
+        snprintf(note, noteSize, T(T_SAFETY_SAVE_OF), game, base);
+    else
+        snprintf(note, noteSize, T(T_SAFETY_CARD_OF), base);
+    snprintf(title, titleSize, "%s", is_save_copy(k) ? game : base);
+}
+
+static char copyNotes[SAFETY_MAX][200];
+static const char *copy_note(int i) { return copyNotes[i]; }
 
 /* -------- Tools > "Safety copies": each one put back as its card (in its place, or in place of it) or deleted */
 
@@ -196,7 +303,7 @@ void safety_screen(void)
     static const char *items[SAFETY_MAX];
     static char text[SAFETY_MAX][120];
     const char *acts[2];
-    char base[64], when[40], path[320], t[300];
+    char base[64], when[40], path[320], t[300], whole[160];
     int i, k = 0, a;
     for (;;) {
         message(0, NULL, COLOR_TEXT, T(T_LOADING));
@@ -204,19 +311,25 @@ void safety_screen(void)
             message_wait(0, NULL, COLOR_TEXT, T(T_SAFETY_NONE));
             return;
         }
-        for (i = 0; i < nCopies; i++) {
-            copy_names(&copies[i], base, sizeof(base), when, sizeof(when));
-            snprintf(text[i], sizeof(text[0]), "%s · %s", base, when);
+        for (i = 0; i < nCopies; i++) {   /* (each by when it was kept; beside it, what it is of) */
+            copy_text(&copies[i], text[i], sizeof(text[0]), copyNotes[i], sizeof(copyNotes[0]), whole, sizeof(whole));
             items[i] = text[i];
         }
-        if ((k = choose(T(T_SAFETY_TITLE), items, nCopies, k < nCopies ? k : 0)) < 0)
+        if ((k = choose_noted(T(T_SAFETY_TITLE), items, nCopies, k < nCopies ? k : 0, copy_note)) < 0)
             return;
         acts[0] = T(T_RESTORE);
         acts[1] = T(T_DELETE);
-        if ((a = choose(text[k], acts, 2, 0)) == 0)
-            restore_copy(&copies[k]);
-        else if (a == 1) {
+        copy_text(&copies[k], t, sizeof(t), path, sizeof(path), whole, sizeof(whole));
+        fit(FONT_TEXT, whole, sizeof(whole), 320);
+        if ((a = choose(whole, acts, 2, 0)) == 0) {
+            if (is_save_copy(&copies[k]))
+                restore_save_copy(&copies[k]);
+            else
+                restore_copy(&copies[k]);
+        } else if (a == 1) {
             copy_names(&copies[k], base, sizeof(base), when, sizeof(when));
+            if (is_save_copy(&copies[k]))   /* (a save's: by its game, or its folder) */
+                snprintf(base, sizeof(base), "%s", whole);
             snprintf(t, sizeof(t), T(T_SAFETY_DELETE_ASK), base, when);
             if (confirm(t, NULL, T_DELETE)) {
                 copy_path(&copies[k], path, sizeof(path));
