@@ -208,8 +208,8 @@ T_CARD_EMPTY = На этой карте памяти нет сохранений
 T_IGR_DONE = Загрузка завершена
 # Up to 2 lines. English: No memory cards have changed.
 T_IGR_NOTHING = Ни одна карта памяти не изменилась.
-T_IGR_AFTER = По окончании
-T_IGR_AFTER_NOW = По окончании: %s
+T_IGR_AFTER = Выход
+T_IGR_AFTER_NOW = Выход: %s
 T_POWER_OFF = Выключить PS2
 T_POWER_OFF_SOON = PS2 выключится через %d с.
 T_POWER_OFF_NO = Не выключать

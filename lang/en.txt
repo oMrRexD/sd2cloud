@@ -211,8 +211,8 @@ T_CARD_EMPTY = This memory card contains no saved data.
 T_IGR_DONE = Upload complete
 # Up to 2 lines.
 T_IGR_NOTHING = No memory cards have changed.
-T_IGR_AFTER = When done
-T_IGR_AFTER_NOW = When done: %s
+T_IGR_AFTER = Exit
+T_IGR_AFTER_NOW = Exit: %s
 T_POWER_OFF = Turn off the PS2
 T_POWER_OFF_SOON = The PS2 will turn off in %d s.
 T_POWER_OFF_NO = Don't turn off

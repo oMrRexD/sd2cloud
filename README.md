@@ -187,7 +187,7 @@ The [README.txt](package/README.txt) in the zip explains every screen in detail.
 | Files tab > Google Drive | X: open a folder, a save's `.psu` (its page: import into a card, download, delete from Drive) or a card's backup (opens as a card) · SQUARE: install a card's backup (as from the card), or download any other file · TRIANGLE: delete it (it goes to Drive's trash) · O: back |
 | Tools (SELECT) | Templates (X: create a template or open one; TRIANGLE: set as default, add saves, apply template, template games, rename, delete) · Safety copies (X: restore one, or delete it) |
 | Settings (START) | Sync all cards · Google Drive (account, backups kept, format, backup by save, Library on Drive) · Automatic sync (on or off, SAS package, IGR path) · Cards (device, new card size, OPL VMC folders) · Updates · Language · About |
-| During a sync | O: cancel · SQUARE: skip the card being uploaded · SELECT: the list of the cards in this sync and how each one went (SELECT again goes back). On that list, SQUARE skips a card (press again to undo), and X offers to skip it, mark it as resolved (automatic sync leaves it alone until it changes again) or turn off its sync · At IGR, TRIANGLE (When done): what opens after it, this time only |
+| During a sync | O: cancel · SQUARE: skip the card being uploaded · SELECT: the list of the cards in this sync and how each one went (SELECT again goes back). On that list, SQUARE skips a card (press again to undo), and X offers to skip it, mark it as resolved (automatic sync leaves it alone until it changes again) or turn off its sync · At IGR, TRIANGLE (Exit): what opens after it, this time only |
 
 ## Automatic sync after a game (IGR)
 
@@ -204,7 +204,7 @@ The [README.txt](package/README.txt) in the zip explains every screen in detail.
 From then on, quitting a game with IGR opens SD2Cloud, which uploads the cards that changed and goes back to OPL.
 The same option in Settings reinstalls or removes the package.
 
-While it does that, **TRIANGLE** (When done) picks what comes after the sync, this time only: another program of
+While it does that, **TRIANGLE** (Exit) picks what comes after the sync, this time only: another program of
 `APPS`, SD2Cloud itself, the PS2 Browser or **Turn off the PS2**. The sync goes on while you pick, and the choice
 applies both when it ends and when it is cancelled. To turn the PS2 off after every sync, choose Turn off the PS2 in
 **IGR path**, in the Settings. Before it turns off, SD2Cloud says so for 5 seconds, and O opens the program instead.

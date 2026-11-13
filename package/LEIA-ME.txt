@@ -488,7 +488,7 @@ SINCRONIZAÇÃO AUTOMÁTICA DEPOIS DO JOGO (IGR)
 A partir daí, sair de um jogo pelo IGR abre o SD2Cloud: ele envia os cartões que mudaram, mostra "Envio
 concluído" e volta para o OPL. Nesse modo, o O cancela desde a primeira tela, inclusive enquanto os cartões são
 verificados e enquanto ele se conecta, e cancelar também volta para o OPL.
-O TRIÂNGULO (Ao terminar), em qualquer uma dessas telas, escolhe o que vem depois, só desta vez: o programa de
+O TRIÂNGULO (Saída), em qualquer uma dessas telas, escolhe o que vem depois, só desta vez: o programa de
 "Saída do IGR", outro programa da pasta APPS, o próprio SD2Cloud (a tela principal), o navegador do PS2 ou
 "Desligar o PS2". A sincronização continua enquanto você escolhe, a escolha aparece no canto superior direito e
 vale tanto quando a sincronização termina quanto quando ela é cancelada. Para desligar o PS2 depois de toda

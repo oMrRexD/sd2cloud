@@ -193,7 +193,7 @@ O [LEIA-ME.txt](package/LEIA-ME.txt) que vem no zip explica cada tela em detalhe
 | Aba Arquivos > Google Drive | X: abrir uma pasta, o `.psu` de um save (a página dele: importar para um cartão, baixar, excluir do Drive) ou o backup de um cartão (abre como cartão) · QUADRADO: instalar o backup de um cartão (como pelo próprio cartão), ou baixar qualquer outro arquivo · TRIÂNGULO: excluir (vai para a lixeira do Drive) · O: voltar |
 | Ferramentas (SELECT) | Templates (X: criar um template ou abrir um; TRIÂNGULO: definir como principal, adicionar saves, aplicar template, jogos do template, renomear, excluir) · Cópias de segurança (X: restaurar uma, ou excluí-la) |
 | Ajustes (START) | Sincronizar todos os cartões · Google Drive (conta, backups mantidos, formato, backup por save, Biblioteca no Drive) · Sincronização automática (ativada ou desativada, pacote SAS, saída do IGR) · Cartões (dispositivo, tamanho dos cartões novos, pastas de VMC do OPL) · Atualizações · Idioma · Sobre |
-| Durante uma sincronização | O: cancelar · QUADRADO: pular o cartão que está sendo enviado · SELECT: a lista dos cartões desta sincronização e como foi cada um (SELECT de novo volta). Nessa lista, QUADRADO pula um cartão (de novo: desfaz), e X oferece pular, marcar como resolvido (a sincronização automática deixa o cartão de lado até ele mudar de novo) ou desativar a sincronização dele · No IGR, TRIÂNGULO (Ao terminar): o que abre depois, só desta vez |
+| Durante uma sincronização | O: cancelar · QUADRADO: pular o cartão que está sendo enviado · SELECT: a lista dos cartões desta sincronização e como foi cada um (SELECT de novo volta). Nessa lista, QUADRADO pula um cartão (de novo: desfaz), e X oferece pular, marcar como resolvido (a sincronização automática deixa o cartão de lado até ele mudar de novo) ou desativar a sincronização dele · No IGR, TRIÂNGULO (Saída): o que abre depois, só desta vez |
 
 ## Sincronização automática depois do jogo (IGR)
 
@@ -211,7 +211,7 @@ O [LEIA-ME.txt](package/LEIA-ME.txt) que vem no zip explica cada tela em detalhe
 A partir daí, sair de um jogo pelo IGR abre o SD2Cloud, que envia os cartões que mudaram e volta para o OPL. A
 mesma opção dos Ajustes reinstala ou remove o pacote.
 
-Enquanto isso, o **TRIÂNGULO** (Ao terminar) escolhe o que vem depois da sincronização, só desta vez: outro programa
+Enquanto isso, o **TRIÂNGULO** (Saída) escolhe o que vem depois da sincronização, só desta vez: outro programa
 da `APPS`, o próprio SD2Cloud, o Browser do PS2 ou **Desligar o PS2**. A sincronização continua enquanto você
 escolhe, e a escolha vale tanto quando ela termina quanto quando é cancelada. Para desligar o PS2 depois de toda
 sincronização, escolha Desligar o PS2 em **Saída do IGR**, nos Ajustes. Antes de desligar, o SD2Cloud avisa por 5 segundos, e o O abre o programa em vez disso.

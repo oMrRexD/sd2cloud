@@ -198,7 +198,7 @@ El [README.txt](package/README.txt) que viene en el zip explica cada pantalla en
 | Pestaña Archivos > Google Drive | X: abrir una carpeta, el `.psu` de una partida (su página: importar a una tarjeta, descargar, eliminar de Drive) o la copia de una tarjeta (se abre como tarjeta) · CUADRADO: instalar la copia de una tarjeta (como desde la propia tarjeta), o descargar cualquier otro archivo · TRIÁNGULO: eliminarlo (va a la papelera de Drive) · O: volver |
 | Utilidades (SELECT) | Plantillas (X: crear una plantilla o abrir una; TRIÁNGULO: fijar como principal, agregar partidas, aplicar plantilla, juegos de la plantilla, cambiar nombre, eliminar) · Copias de seguridad (X: restaurar una, o eliminarla) |
 | Ajustes (START) | Sincronizar todas las tarjetas · Google Drive (cuenta, copias conservadas, formato, copia por partida, Biblioteca en Drive) · Sincronización automática (activada o desactivada, paquete SAS, salida del IGR) · Tarjetas (dispositivo, tamaño de tarjetas nuevas, carpetas de VMC del OPL) · Actualizaciones · Idioma · Acerca de |
-| Durante una sincronización | O: cancelar · CUADRADO: omitir la tarjeta que se está subiendo · SELECT: la lista de las tarjetas de esta sincronización y cómo fue cada una (SELECT otra vez vuelve). En esa lista, CUADRADO omite una tarjeta (otra vez: deshace), y X ofrece omitirla, marcarla como resuelta (la sincronización automática la deja de lado hasta que vuelva a cambiar) o desactivar su sincronización · En el IGR, TRIÁNGULO (Al terminar): qué se abre después, solo esta vez |
+| Durante una sincronización | O: cancelar · CUADRADO: omitir la tarjeta que se está subiendo · SELECT: la lista de las tarjetas de esta sincronización y cómo fue cada una (SELECT otra vez vuelve). En esa lista, CUADRADO omite una tarjeta (otra vez: deshace), y X ofrece omitirla, marcarla como resuelta (la sincronización automática la deja de lado hasta que vuelva a cambiar) o desactivar su sincronización · En el IGR, TRIÁNGULO (Salida): qué se abre después, solo esta vez |
 
 ## Sincronización automática después de un juego (IGR)
 
@@ -215,7 +215,7 @@ El [README.txt](package/README.txt) que viene en el zip explica cada pantalla en
 A partir de entonces, salir de un juego con IGR abre SD2Cloud, que sube las tarjetas que cambiaron y vuelve a OPL. La
 misma opción de los Ajustes reinstala o quita el paquete.
 
-Mientras tanto, **TRIÁNGULO** (Al terminar) elige qué se abre después de la sincronización, solo esta vez: otro
+Mientras tanto, **TRIÁNGULO** (Salida) elige qué se abre después de la sincronización, solo esta vez: otro
 programa de `APPS`, el propio SD2Cloud, el Navegador del PS2 o **Apagar la PS2**. La sincronización sigue mientras
 se elige, y la elección vale tanto cuando termina como cuando se cancela. Para apagar la PS2 después de cada
 sincronización, elige Apagar la PS2 en **Salida del IGR**, en los Ajustes. Antes de apagarse, SD2Cloud lo avisa durante 5 segundos, y O abre el programa en su lugar.

@@ -464,7 +464,7 @@ AUTOMATIC SYNC AFTER A GAME (IGR)
 From then on, quitting a game with IGR opens SD2Cloud: it uploads the cards that changed, shows "Upload complete"
 and goes back to OPL. In this mode, O cancels from the very first screen, also while the cards are checked and
 while it connects, and cancelling also goes back to OPL.
-TRIANGLE (When done), on any of these screens, picks what comes after, this time only: the program set in
+TRIANGLE (Exit), on any of these screens, picks what comes after, this time only: the program set in
 "IGR path", another program of the APPS folder, SD2Cloud itself (its main screen), the PS2 browser or "Turn off
 the PS2". The sync goes on while you pick, the choice shows at the top right, and it applies when the sync ends
 and when it is cancelled. To turn the PS2 off after every sync, choose "Turn off the PS2" in "IGR path".
