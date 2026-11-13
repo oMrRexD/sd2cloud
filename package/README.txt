@@ -1,4 +1,4 @@
-SD2Cloud 2.0
+SD2Cloud 2.1
 ============
 
 Manage and back up your PS2 memory cards, right on the console.

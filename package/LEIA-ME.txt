@@ -1,4 +1,4 @@
-SD2Cloud 2.0
+SD2Cloud 2.1
 ============
 
 Gerencie e proteja os cartões de memória do seu PS2, direto no console.
